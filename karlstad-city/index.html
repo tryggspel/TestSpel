@@ -1,50 +1,25 @@
-<!doctype html>
-<html lang="sv">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#111c20">
-  <meta name="description" content="En spelbar pilot där du upptäcker Karlstad genom uppdrag, kultur och en bussresa till en gömd pärla.">
-  <title>Karlstad City Quest · Spelbar pilot</title>
-  <link rel="preconnect" href="https://tile.openstreetmap.org">
-  <link rel="stylesheet" href="./style.css?v=2">
-  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script defer src="./config.js"></script>
-  <script defer src="./game.js?v=2"></script>
-</head>
-<body>
-  <main id="game" aria-label="Karlstad City Quest">
-    <div id="map" role="application" aria-label="Spelkarta över Karlstad"></div>
-    <div class="fallback-map" id="fallbackMap" hidden aria-hidden="true"><span>KARLSTAD</span><i></i><i></i><i></i><i></i><i></i></div>
-    <div class="map-wash" aria-hidden="true"></div>
-    <div class="grain" aria-hidden="true"></div>
-
-    <header class="topbar">
-      <div class="brand"><div class="brand-sun" aria-hidden="true">✳</div><div><div class="eyebrow">ETT SPEL OM STADEN</div><div class="brand-title">KARLSTAD <em>CITY QUEST</em></div></div></div>
-      <div class="top-actions"><span class="chapter">KAPITEL 01 <b>·</b> STADENS HEMLIGHETER</span><div class="score" aria-live="polite">✦ <strong id="score">0</strong> <small>POÄNG</small></div><button class="icon-button" id="sound" aria-label="Slå på ljud" title="Ljud av">♪</button></div>
-    </header>
-
-    <div class="side-label" aria-hidden="true">59°22′ N — 13°30′ Ö <span></span> VÄRMLAND, SVERIGE</div>
-
-    <section class="quest-panel" aria-labelledby="questTitle">
-      <div class="panel-top"><span class="live-dot"></span><span>AKTIVT UPPDRAG</span><span class="panel-count" id="questCount">01 / 05</span></div>
-      <div class="quest-icon" id="questIcon" aria-hidden="true">▤</div>
-      <p class="quest-kicker" id="questKicker">UPPDRAG 01 · VARDAGENS KARLSTAD</p>
-      <h1 id="questTitle">Biblioteket har flyttat</h1>
-      <p class="quest-desc" id="questDescription">Hitta stadens tillfälliga bibliotek. En ny plats, samma berättelser — och en ledtråd som tar dig vidare.</p>
-      <div class="quest-location"><span>⌁</span> <span id="questLocation">Arkaden · Östra Torggatan 9</span></div>
-      <div class="quest-actions"><button class="button-primary" id="playQuest">SPELA UPPDRAGET <span>↗</span></button><button class="button-secondary" id="focusQuest" aria-label="Visa uppdraget på kartan">◎</button></div>
-      <div class="quest-footer"><span>◈ &nbsp;5 UPPDRAG I PILOTEN</span><span id="mapCredit">LADDAR KARTA</span></div>
-    </section>
-
-    <aside class="trail-panel" aria-label="Uppdragskedja"><div class="trail-title">DIN VÄG GENOM STADEN <span id="trailCount">0/5</span></div><ol id="trail"></ol><div class="trail-footer"><button id="reset" type="button">BÖRJA OM ↺</button><span>FRAMSTEG SPARAS HÄR</span></div></aside>
-
-    <div class="bottom-note"><span class="pulse"></span> PILOT · KARLSTAD CITY <span class="bottom-divider">/</span> <span id="bottomHint">TRYCK PÅ DEN LYSANDE MARKÖREN FÖR ATT UTFORSKA</span></div>
-    <button class="events-chip" id="eventsChip" type="button"><span>✦</span><span><b>DET HÄNDER I KARLSTAD</b><small>Upptäck aktuella evenemang</small></span><span class="arrow">↗</span></button>
-
-    <div id="dialogLayer" class="dialog-layer" hidden><div class="dialog-backdrop" data-close="true"></div><section class="mission-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><button class="dialog-close" id="closeDialog" aria-label="Stäng uppdrag">×</button><div id="dialogBody"></div></section></div>
-    <div id="sprintLayer" class="sprint-layer" hidden><canvas id="sprintCanvas" aria-label="Solsprint: samla solfragment genom att byta spår"></canvas><div class="sprint-hud"><div><span class="eyebrow">BONUSBANA · FÖRSTA PERSON</span><h2>SOLSPRINT</h2></div><strong id="sprintCount">0 / 3 ✦</strong></div><div class="sprint-instructions" id="sprintInstructions">BYT SPÅR OCH FÅNGA TRE SOLFRAGMENT</div><div class="sprint-controls"><button id="laneLeft" aria-label="Byt spår åt vänster">← VÄNSTER</button><button id="laneRight" aria-label="Byt spår åt höger">HÖGER →</button></div><button class="sprint-exit" id="exitSprint">AVBRYT ×</button></div>
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  </main>
-</body>
-</html>
+<!doctype html><html lang="sv"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b20"><meta name="description" content="Utforska Karlstad i första person. En filmisk 3D-pilot med stadens berättelser, kultur och gömda pärlor."><title>Karlstad · Efter regnet — City Quest</title>
+<link rel="stylesheet" href="map-leaflet.css"><link rel="stylesheet" href="cinematic.css?v=3"><script defer src="https://cdn.jsdelivr.net/npm/babylonjs@7.54.3/babylon.js" crossorigin="anonymous"></script><script defer src="config.js"></script><script defer src="audio.js?v=3"></script><script defer src="world.js?v=3"></script><script defer src="cinematic.js?v=3"></script>
+</head><body>
+<canvas id="renderCanvas" tabindex="0" aria-label="Karlstad i 3D. WASD för att gå, dra för att se dig omkring och E för att interagera."></canvas>
+<div id="loading" class="loading"><div class="load-wordmark">K<span>✳</span></div><div class="load-title">KARLSTAD</div><div class="load-sub">EFTER REGNET</div><div class="load-line"><i id="loadProgress"></i></div><p id="loadText">Bygger staden…</p><small>EN NY BERÄTTELSE VÄNTAR VID ÄLVEN</small></div>
+<div id="engineError" class="error-screen" hidden><section><span class="eyebrow">KARLSTAD CITY QUEST</span><h1>3D-vyn kunde inte starta.</h1><p id="errorMessage">Webbläsaren behöver stöd för WebGL. Prova att ladda om eller öppna kartversionen.</p><button onclick="location.reload()">FÖRSÖK IGEN</button><a href="map.html">ÖPPNA KARTVERSIONEN ↗</a></section></div>
+<div id="ui" class="ui" data-mode="loading">
+<div class="cinema-bar top-bar"></div><div class="cinema-bar bottom-bar"></div><div id="fade" class="fade"></div><div class="lens-vignette"></div>
+<header class="top-hud"><div class="identity"><span class="sun-icon">✳</span><div><strong>KARLSTAD</strong><span>CITY QUEST <i>/</i> EFTER REGNET</span></div></div><div class="top-buttons"><button id="soundButton" class="quiet-button" aria-label="Aktivera ljud">♫ <span>LJUD</span></button><button id="mapButton" class="quiet-button play-only" aria-label="Öppna uppdragskarta">◈ <span>KARTA</span></button><button id="pauseButton" class="quiet-button play-only" aria-label="Pausa spelet">Ⅱ</button></div></header>
+<div id="introTitles" class="intro-titles"><div class="eyebrow">EN STAD. HUNDRATALS BERÄTTELSER.</div><h1>KARLSTAD<span>EFTER REGNET</span></h1><p>Följ ljuset. Hitta det du inte visste fanns.</p><div class="intro-rule"><i></i><span>59°22′ N · 13°30′ Ö</span></div></div>
+<div class="intro-bottom"><span id="introCaption">KLARÄLVEN · GYLLENE TIMMEN</span><button id="skipIntro">BÖRJA UTFORSKA <b>→</b></button></div>
+<div class="compass play-only" aria-hidden="true"><span id="compassLabel">N</span><i></i><span id="compassDegrees">000°</span></div>
+<div class="district play-only"><span class="eyebrow">DU ÄR HÄR</span><strong id="districtName">Tingvallastaden</strong></div>
+<aside class="radar play-only"><canvas id="radarCanvas" width="360" height="260" aria-label="Översiktskarta för 3D-världen"></canvas><div><span>LOKALT SPÅR</span><b id="distance">— M</b></div></aside>
+<div id="objectiveMarker" class="objective-marker play-only"><i>◇</i><span id="markerLabel">BIBLIOTEKET</span><small id="markerDistance"></small></div><div class="reticle play-only" id="reticle"><i></i><i></i><i></i><i></i><b></b></div><div id="scanFlash" class="scan-flash"></div>
+<section class="mission-hud play-only"><div class="mission-top"><span id="missionNumber">01 / 05</span><span id="missionKind">STADENS BERÄTTELSER</span><span id="score">0 XP</span></div><h2 id="missionTitle">Biblioteket har flyttat</h2><p id="missionHint">Följ den gyllene markören till Arkaden.</p><div class="mission-actions"><button id="guideButton">↗ FÖLJ SPÅRET</button><span id="progressDots" aria-label="Uppdragens framsteg"></span></div></section>
+<button id="interactButton" class="interact-button play-only" hidden><kbd>E</kbd><span id="interactText">UNDERSÖK</span><i>↗</i></button>
+<div class="desktop-controls play-only"><span><kbd>W A S D</kbd> GÅ</span><span><kbd>MUS / DRA</kbd> SE DIG OM</span><span><kbd>SHIFT</kbd> SPRINT</span><span><kbd>E</kbd> SCANNA</span></div>
+<div class="touch-controls play-only"><div id="joystick" class="joystick" aria-label="Styr rörelsen"><div id="joystickKnob"></div></div><div class="touch-actions"><button id="sprintButton" aria-label="Håll för att springa">⇧</button><button id="scanButton" aria-label="Scanna eller interagera">⌖</button></div><span class="look-help">DRA TILL HÖGER FÖR ATT SE DIG OM</span></div>
+<div id="toast" class="toast" role="status"><span>✦</span><div><strong id="toastTitle"></strong><p id="toastText"></p></div></div><div id="rideCaption" class="ride-caption" hidden><span>EN SPELAD RESA GENOM STADEN</span><h2>Mot en grönare hemlighet.</h2><p>Mariebergsskogen · Karlstad</p></div>
+<div id="modal" class="modal" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><button id="closeModal" class="close-button" aria-label="Stäng dialog">×</button><div id="dialogContent"></div></section></div>
+<div id="mapOverlay" class="map-overlay" hidden><div class="map-header"><div><span class="eyebrow">FEM PLATSER · EN BERÄTTELSE</span><h2>Stadens hemligheter</h2></div><button id="closeMap" class="quiet-button" aria-label="Stäng kartan">STÄNG ×</button></div><div class="map-body"><div id="realMap" aria-label="Karta över verkliga platser i Karlstad"></div><div id="mapMissions" class="map-missions"></div></div><div class="map-footer"><span>3D-miljön är en konstnärlig, komprimerad tolkning. Kartan visar de verkliga platserna.</span><a href="map.html">SPELA KARTPILOTEN ↗</a></div></div>
+<div class="build-note">3D PILOT <i>·</i> EN KONSTNÄRLIG TOLKNING AV KARLSTAD</div>
+</div><noscript><p>Spelet behöver JavaScript. <a href="map.html">Öppna kartversionen.</a></p></noscript></body></html>

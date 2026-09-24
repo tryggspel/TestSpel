@@ -1,24 +1,46 @@
-# Karlstad City Quest — pilot
+# Karlstad · Efter regnet — City Quest 3D
 
-Öppna `index.html` från en lokal HTTP-server eller på GitHub Pages. Direktlänk när den ligger på `main`: `https://tryggspel.github.io/TestSpel/karlstad-city/`.
+Spelbar webbpresentation: https://tryggspel.github.io/TestSpel/karlstad-city/
 
-## Vad som går att spela
+Tidigare kartpilot: https://tryggspel.github.io/TestSpel/karlstad-city/map.html
 
-Fem uppdrag i en kedja: Stadsbibliotekets tillfälliga lokaler i Arkaden, Sandgrund Lars Lerin med ett kort förstapersonsminispel, Värmlands Museum, en **simulerad** bussresa och naturum Värmland i Mariebergsskogen. Välj svar, samla poäng och spela från valfri plats. ”Jag är på plats” kan ge bonus med frivillig GPS-kontroll inom cirka 130 meter. Inga platshistorikdata sparas av spelet; framsteg sparas lokalt i webbläsaren. Kartleverantören får dock sedvanliga nätverksanrop när kartan används.
+## Version 3
 
-Musik och korta ljudeffekter kan slås på med ♪. De startar först efter en användarinteraktion. I Solsprint byter du spår med A/D, vänster/höger piltangenter eller skärmknapparna.
+Babylon.js 7.54.3 driver en sammanhängande, konstnärligt byggd 3D-värld. Ett 23 sekunder långt kameraintro övergår till fri rörelse i första person. Miljön har procedurbyggda fasader, skyltfönster, älv, bro, park, människor, fåglar, skuggor, PBR-material, animerat vatten, atmosfärisk himmel, blomning och färgtoning. Musik, stadsambience, fotsteg och scannerljud skapas med Web Audio efter användarinteraktion.
 
-## Karta
+Fem uppdrag: hitta bibliotekets tillfälliga lokaler; samla tre ljusfragment vid Sandgrund; lösa museets ledtråd; göra en filmisk, simulerad bussresa; hitta naturum Värmland. Uppdrag och poäng sparas lokalt i webbläsaren. Den nya 3D-versionen samlar inte in GPS-data.
 
-För att piloten ska kunna spelas utan API-konto används Leaflet och OpenStreetMap i standardläget. Det finns en Google Maps JavaScript API-adapter i `game.js`: ange en webbläsarbegränsad API-nyckel i `config.js` och aktivera Maps JavaScript API och fakturering för att testa Google-kartan. Begränsa nyckeln till webbplatsens domän, välj API-begränsning och kostnadskontroll. Kolla även Google Maps Platform-villkoren för Sverige innan kommersiell drift.
+### Kontroller
 
-Den publika OSM-tile-servern är avsedd för en liten pilot. Använd en tile-leverantör med avtal eller egen kartserver vid kommersiell trafik. Visa alltid kartans attribution. Om kartbiblioteket inte laddar finns en enkel, spelbar reservvy.
+- Dator: WASD/pilar, dra med musen eller klicka för muslås, Shift för sprint, E för scanner, mellanslag för hopp, M för karta, Escape för paus.
+- Telefon: vänster styrspak för rörelse, dra över spelbilden för att se dig omkring, ⇧ för sprint, ⌖ för scanner.
+- Följ spåret: guidat gångläge längs en väg genom miljön. Manuell rörelse avbryter guidningen.
+- Pausmenyn: Mobil, Balanserad eller Filmisk grafik; aktuella stadstips; spela om introt; nollställ framsteg.
+- Reducerad rörelse i operativsystemet hoppar över introt.
 
-## Innehåll och integrationer
+## Verklighet och spelvärld
 
-- Bibliotekets adress: [Karlstads kommun](https://karlstad.se/nyheter/uppleva-och-gora/uppleva-och-gora/2026-09-02-stadsbiblioteket-och-kontaktcenter-har-oppnat-i-sina-tillfalliga-lokaler).
-- Museets plats: [Värmlands Museum](https://varmlandsmuseum.se/besok-oss/hitta-hit/).
-- Evenemang: en datumbegränsad gästutställning på [Sandgrund Lars Lerin](https://sandgrund.org/sandgrund/) visas under sin angivna period 30 maj–8 november 2026. Spelet länkar också till [Visit Karlstad](https://visitkarlstad.se/visit-karlstad/evenemang) och [kommunens kulturkalender](https://karlstad.se/uppleva-och-gora/kultur/kultur-i-karlstad---kalender).
-- Bussmomentet använder ännu inga avgångsdata. [Värmlandstrafik](https://www.varmlandstrafik.se/) öppnas för riktiga resor. En fortsatt integration kan bygga på Trafiklabs GTFS Regional-feed för Värmlandstrafik, men kräver API-nyckel och test av faktiska resor/hållplatser.
+Arkitektur, avstånd, gator och bussväg i 3D är komprimerade konstnärliga tolkningar. De är inte fotogrammetri, exakta byggnadsmodeller eller navigeringsanvisningar. Inga Call of Duty-tillgångar används. Modeller, texturer och ljud skapas av projektets egen kod. Google Fonts levererar Manrope och Barlow Condensed; Babylon.js och Leaflet hämtas från CDN. Reflektionsmiljön kommer från Babylon.js offentliga tillgångar.
 
-Rutten och kartmarkörerna är ett spelupplägg, inte navigeringsanvisningar. Resan i spelet verifierar varken biljett eller faktisk ombordstigning. Projektet är inte ett officiellt samarbete med kommunen eller Värmlandstrafik.
+Den separata kartan visar de verkliga platsernas koordinater med OpenStreetMap. En Google Maps JavaScript API-nyckel kan anges i `config.js`; då använder kartpanelen Google Maps. API, fakturering, domänbegränsning och kostnadskontroll behöver konfigureras av kontoägaren. 3D-världen är fortfarande den egna spelmiljön; Google Maps 3D Tiles ingår inte.
+
+Den publika OSM-servern passar en liten pilot. Kommersiell trafik behöver en lämplig kartleverantör och avtal. Kartans attribution visas.
+
+## Verifierade innehållskällor
+
+- Bibliotekets tillfälliga adress: https://karlstad.se/nyheter/uppleva-och-gora/uppleva-och-gora/2026-09-02-stadsbiblioteket-och-kontaktcenter-har-oppnat-i-sina-tillfalliga-lokaler
+- Sandgrund och datumbegränsat utställningstips: https://sandgrund.org/sandgrund/
+- Värmlands Museum: https://varmlandsmuseum.se/besok-oss/hitta-hit/
+- naturum Värmland: https://karlstad.se/mariebergsskogen/upptack-mariebergsskogen/naturum-varmland
+- Riktiga resor: https://www.varmlandstrafik.se/
+- Aktuella evenemang: https://visitkarlstad.se/visit-karlstad/evenemang
+
+Kontrollerade 24 september 2026. Utställningen med Sven X:et Erixson visas i spelet endast 30 maj–8 november 2026, utifrån enhetens datum. Öppettider, entré och förändringar kontrolleras hos arrangören.
+
+Bussresan saknar tidtabell, biljettkontroll och verifierad ombordstigning. Inga sponsoravtal, kommunala godkännanden eller verkliga rabatter är kopplade till piloten. Det här är en grafisk och funktionell prototyp för att visa konceptet.
+
+## Filer och drift
+
+`index.html`, `cinematic.css`, `world.js`, `cinematic.js`, `audio.js` och `map-leaflet.css` är den nya 3D-klienten. `map.html`, `game.js` och `style.css` är kartpiloten. Ingen byggprocess krävs; kör med valfri HTTP-server eller GitHub Pages. WebGL krävs för 3D, och ett tydligt felmeddelande länkar till kartversionen om motorn inte kan starta.
+
+Grafik är adaptiv men fysisk iPhone-testning behöver göras före extern användartest eller sponsorpresentation. Nästa produktionssteg är konstnärsproducerade modeller av verkliga platser, professionellt ljud, validerade färdvägar, innehållsverktyg och enhetsprovning.
