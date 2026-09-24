@@ -18,7 +18,7 @@ Den publika OSM-tile-servern är avsedd för en liten pilot. Använd en tile-lev
 
 - Bibliotekets adress: [Karlstads kommun](https://karlstad.se/nyheter/uppleva-och-gora/uppleva-och-gora/2026-09-02-stadsbiblioteket-och-kontaktcenter-har-oppnat-i-sina-tillfalliga-lokaler).
 - Museets plats: [Värmlands Museum](https://varmlandsmuseum.se/besok-oss/hitta-hit/).
-- Evenemang: länkar till [Visit Karlstad](https://visitkarlstad.se/visit-karlstad/evenemang) och [kommunens kulturkalender](https://karlstad.se/uppleva-och-gora/kultur/kultur-i-karlstad---kalender). Inga påhittade eller daterade evenemang visas i spelet.
+- Evenemang: en datumbegränsad gästutställning på [Sandgrund Lars Lerin](https://sandgrund.org/sandgrund/) visas under sin angivna period 30 maj–8 november 2026. Spelet länkar också till [Visit Karlstad](https://visitkarlstad.se/visit-karlstad/evenemang) och [kommunens kulturkalender](https://karlstad.se/uppleva-och-gora/kultur/kultur-i-karlstad---kalender).
 - Bussmomentet använder ännu inga avgångsdata. [Värmlandstrafik](https://www.varmlandstrafik.se/) öppnas för riktiga resor. En fortsatt integration kan bygga på Trafiklabs GTFS Regional-feed för Värmlandstrafik, men kräver API-nyckel och test av faktiska resor/hållplatser.
 
 Rutten och kartmarkörerna är ett spelupplägg, inte navigeringsanvisningar. Resan i spelet verifierar varken biljett eller faktisk ombordstigning. Projektet är inte ett officiellt samarbete med kommunen eller Värmlandstrafik.
