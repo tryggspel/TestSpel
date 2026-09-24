@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id), canvas=$('world'), ui=$('hud'), photo=$
 const rnd=(a,b)=>a+Math.random()*(b-a), mix=(a,b,t)=>a+(b-a)*t;
 await photo.decode().catch(()=>{});
 let renderer;
-try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});}catch(e){$('loading').innerHTML='<div>3D-läget kunde inte starta.<p><a href="../phaser/" style="color:#f4d792">Spela den tidigare versionen</a></p></div>';throw e}
+try{renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});}catch(e){const {CanvasSceneRenderer}=await import('./fallback.js');renderer=new CanvasSceneRenderer({canvas});document.documentElement.dataset.graphics='software'}
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
 const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(73,innerWidth/innerHeight,.055,230);scene.add(camera);
 const world=new THREE.Group();scene.add(world);const outside=new THREE.Group();scene.add(outside);
