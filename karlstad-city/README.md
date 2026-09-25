@@ -48,3 +48,14 @@ Grafik är adaptiv men fysisk iPhone-testning behöver göras före extern anvä
 ## Provkörning
 
 Uppdragskedjan, poäng, återupptagning och responsiva vyer har kontrollerats i webbläsare. Se [VALIDATION.md](VALIDATION.md) för testmiljö, resultat och kvarvarande produktionskontroller.
+
+## Version 12 — Karlstad landmarks & Soljakten
+
+- Original, more detailed stylised character rigs with faces, clothing, backpacks, separate knees/elbows and blended walk/run/crouch/jump poses. Sola and Fröding are discoverable story characters near the square.
+- Rebuilt museum with ochre entrance arch and star window, red wing and reflecting pool; white/orange Sandgrund; yellow Rådhuset and square; cathedral clock tower; curved timber/glass naturum with reeds and a deck.
+- Third-person camera by default. V or the camera button switches to first person in City Quest. The camera shortens its distance near buildings. Intro camera now visits the cultural landmarks.
+- Mobile joystick: radial deadzone, response curve, outer-ring sprint, independent captured pointers for movement/look, immediate release, jump and toggle-crouch buttons. Look sensitivity is adjustable in the pause menu. Inputs reset on pause, focus loss and tab hiding.
+- **Soljakten**: select at the intro or pause menu. Free movement through 14 ordered sun fragments, 120 seconds, duck gates, jump barriers, combo points and a device-local best score. No combat. Pausing freezes the timer. Leaving restores the city position and mission progress.
+- SMHI forecast and SCB population cards, with caching, timeout, explicit fallbacks and source attribution. Weather drives stylised light/clouds; choose sunny lighting in the city-data card.
+
+Additional modules: `characters.js`, `landmarks.js`, `controls.js`, `action.js`, `city-data.js`. There is still no build step. Serve the folder over HTTPS. See `SOURCES.md` for references and API scope, and `VALIDATION.md` for actual test coverage and remaining device checks.

@@ -26,14 +26,14 @@ window.KarlstadSoftwareRenderer=class{
   let positions=mesh.getVerticesData('position'),indices=mesh.getIndices(),normals=mesh.getVerticesData('normal'),uv=mesh.getVerticesData('uv');
   if(mesh.name==='Klarälven'){positions=new Float32Array([-24.5,0,-215,24.5,0,-215,24.5,0,215,-24.5,0,215]);indices=[0,2,1,0,3,2];normals=new Float32Array([0,1,0,0,1,0,0,1,0,0,1,0]);uv=new Float32Array([0,0,1,0,1,1,0,1]);}
   if(!positions||!indices)return null;
-  d={positions,indices,normals,uv,points:new Float32Array(positions.length),world:new Float32Array(positions.length),normal:new Float32Array(positions.length),fixed:false};
+  d={positions,indices,normals,uv,colors:mesh.getVerticesData('color'),points:new Float32Array(positions.length),world:new Float32Array(positions.length),normal:new Float32Array(positions.length),fixed:false};
   this.geometry.set(mesh.uniqueId,d);return d;
  }
  draw(time){
   this.resize();const w=this.width,h=this.height,cam=this.world.camera,pixels=this.pixels.data;
   const horizon=h*.5+Math.tan(cam.rotation.x)*h*.6;
   // Atmospheric gradient. The GPU path uses the animated sky and river shaders.
-  for(let y=0;y<h;y++){const sky=y<Math.max(horizon,h*.18),f=Math.min(1,y/Math.max(1,horizon));let r=sky?87+105*f:111,g=sky?123+66*f:126,b=sky?143+25*f:117;const row=y*w*4;for(let x=0;x<w;x++){const i=row+x*4;pixels[i]=r;pixels[i+1]=g;pixels[i+2]=b;pixels[i+3]=255;}}
+  for(let y=0;y<h;y++){const sky=y<Math.max(horizon,h*.18),f=Math.min(1,y/Math.max(1,horizon));let r=sky?65+126*f:123,g=sky?143+68*f:150,b=sky?190+34*f:120;const row=y*w*4;for(let x=0;x<w;x++){const i=row+x*4;pixels[i]=r;pixels[i+1]=g;pixels[i+2]=b;pixels[i+3]=255;}}
   this.depth.fill(0);
   BABYLON.Matrix.PerspectiveFovLHToRef(cam.fov,w/h,cam.minZ,cam.maxZ,this.projection);
   const vp=cam.getViewMatrix().multiply(this.projection).m,cp=cam.position;
@@ -43,7 +43,7 @@ window.KarlstadSoftwareRenderer=class{
    const wm=mesh.computeWorldMatrix().m,world=d.world,normal=d.normal,pp=d.positions;
    if(!d.fixed){for(let i=0;i<pp.length;i+=3){const x=pp[i],y=pp[i+1],z=pp[i+2];world[i]=x*wm[0]+y*wm[4]+z*wm[8]+wm[12];world[i+1]=x*wm[1]+y*wm[5]+z*wm[9]+wm[13];world[i+2]=x*wm[2]+y*wm[6]+z*wm[10]+wm[14];if(d.normals){const nx=d.normals[i],ny=d.normals[i+1],nz=d.normals[i+2];normal[i]=nx*wm[0]+ny*wm[4]+nz*wm[8];normal[i+1]=nx*wm[1]+ny*wm[5]+nz*wm[9];normal[i+2]=nx*wm[2]+ny*wm[6]+nz*wm[10];}}d.fixed=mesh.isWorldMatrixFrozen;}
    const pts=d.points;for(let i=0;i<world.length;i+=3){const x=world[i],y=world[i+1],z=world[i+2];pts[i]=x*vp[0]+y*vp[4]+z*vp[8]+vp[12];pts[i+1]=x*vp[1]+y*vp[5]+z*vp[9]+vp[13];pts[i+2]=x*vp[3]+y*vp[7]+z*vp[11]+vp[15];}
-   const m=this.material(mat),idx=d.indices,uv=d.uv;
+   const m=this.material(mat),idx=d.indices,uv=d.uv,colors=d.colors;
    for(let i=0;i<idx.length;i+=3){
     const ia=idx[i]*3,ib=idx[i+1]*3,ic=idx[i+2]*3;
     if(Math.max(pts[ia+2],pts[ib+2],pts[ic+2])<.07||Math.min(pts[ia+2],pts[ib+2],pts[ic+2])>280)continue;
@@ -56,7 +56,7 @@ window.KarlstadSoftwareRenderer=class{
      const clipped=[];for(let j=0;j<polygon.length;j++){const a=polygon[j],b=polygon[(j+1)%polygon.length],inside=a.z>=.07;if(inside)clipped.push(a);if(inside!==(b.z>=.07)){const t=(.07-a.z)/(b.z-a.z);clipped.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:.07,u:a.u+(b.u-a.u)*t,v:a.v+(b.v-a.v)*t});}}polygon=clipped;
     }
     const screen=polygon.map(v=>({x:(1+v.x/v.z)*w*.5,y:(1-v.y/v.z)*h*.5,iz:1/v.z,u:v.u/v.z,v:v.v/v.z}));
-    for(let j=1;j<screen.length-1;j++)this.triangle(screen[0],screen[j],screen[j+1],m,light);
+    const shade=colors?{...m,r:m.r*(colors[idx[i]*4]+colors[idx[i+1]*4]+colors[idx[i+2]*4])/3,g:m.g*(colors[idx[i]*4+1]+colors[idx[i+1]*4+1]+colors[idx[i+2]*4+1])/3,b:m.b*(colors[idx[i]*4+2]+colors[idx[i+1]*4+2]+colors[idx[i+2]*4+2])/3}:m;for(let j=1;j<screen.length-1;j++)this.triangle(screen[0],screen[j],screen[j+1],shade,light);
    }
   }
   this.surfaceContext.putImageData(this.pixels,0,0);this.ctx.drawImage(this.surface,0,0);
