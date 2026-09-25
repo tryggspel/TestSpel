@@ -1,0 +1,15 @@
+# Focused regression checks
+
+Development dependencies: Babylon.js 7.54.3 and `@napi-rs/canvas` (only needed for headless geometry checks). The game itself still loads the pinned engine CDN and has no build step.
+
+From the repository root:
+
+```sh
+npm install --no-save babylonjs@7.54.3 @napi-rs/canvas
+node karlstad-city/tests/engine-check.cjs
+node karlstad-city/tests/controls-check.cjs
+```
+
+`BABYLON_PATH` may point to a locally available copy of the same pinned Babylon version instead of the npm module.
+
+Engine checks construct the actual scene and verify that five mission destinations, 19 route edges and all 14 sun pickup locations are clear of building collisions. They verify duck/jump gate conditions, course completion, timer expiry, character vertex colours and finite geometry. Control checks exercise joystick deadzone, outer-edge sprint, competing pointer IDs, release and reset. These tests do not measure GPU performance or replace a physical multitouch device test.

@@ -37,3 +37,24 @@ Inga fel från spelets JavaScript rapporterades i den granskade konsolloggen und
 Fysisk iPhone 11/Safari och Android-provning, bildfrekvens och värme vid längre spelpass, full WebGL-grafik, tillgänglighet med hjälpmedel, nätverksavbrott och återhämtning efter förlorad grafikkontext. Google Maps kräver eget konfigurerat konto och API-nyckel; den vägen har inte testats med en nyckel här. Geometri och bussfärd är konstnärliga tolkningar. Aktuella evenemang är kurerade uppgifter och länkar, inte ett automatiskt flöde. Sponsoravtal, verkliga erbjudanden och tidtabells-/biljettintegration ingår inte.
 
 Piloten demonstrerar en fungerande spelmotor, stadsuppdrag och filmiskt berättande. Den motsvarar ännu inte fotorealistisk AAA-grafik.
+
+## Karlstad art / Soljakten update — 25 September 2026
+
+Actual automated checks (Babylon.js 7.54.3 NullEngine, original scene geometry):
+
+- All five mission target coordinates and all 19 navigation edges are free of building/vehicle collisions.
+- All 14 action targets are reachable coordinates. Standing is blocked by duck gates; crouching clears them. Walking is blocked by jump barriers; sufficient jump height clears them.
+- Sequential pickups reach 14/14 and a winning result; timer expiry reaches the losing result. Score accumulates; character meshes carry their original vertex colours; geometry contains no nonfinite coordinates.
+- Joystick deadzone, outer-ring sprint, primary pointer ownership, release by an unrelated finger, immediate primary release, crouch toggle and pause reset pass.
+- Scene is approximately 473k triangles including background, foliage and characters. This is a geometry count, not a measured mobile frame rate. Static geometry is merged by material; character parts are merged by animated body segment.
+
+Browser checks on the deployed version:
+
+- Intro, new third-person explorer, museum arch/star, Sandgrund facade, town hall and original NPCs render in the software compatibility renderer.
+- Library quest: guidance reaches within 5 m, the dialogue opens, correct address awards 150 XP. Switching to Soljakten and back retains 150 XP.
+- Soljakten starts at 120 seconds, keyboard movement collects the first sun. Pausing leaves the timer at 98 across subsequent observations; returning to the city restores city progress.
+- SMHI card shows a fetched temperature, wind, cloud fraction and timestamp. SCB card shows 99,007 residents, municipality, 2025 and “Hämtat från SCB:s API”.
+- 390 × 844 mobile fixture: action controls are visible. Joystick dragging collects a sun and returns movement state to REDO after release. Duck toggle changes to DUCKAR. Joystick + duck passes the gate, reaching 2/14, combo ×2 and 275 points. Jump button clears the duck toggle.
+- Changes after these observations: clearer historical nameplates, larger top controls, a wider portrait camera and narrower landscape mission panel keep the character visible. Script parsing and diff whitespace checks pass.
+
+Coverage limits: the cloud browser uses the compatibility renderer, so GPU shadows, normal maps, bloom, real multitouch feel and sustained iPhone 11 frame rate have not been verified on a physical device. No claim of Fortnite/AAA graphical or performance parity is made. The complete original five-mission playthrough is recorded in the earlier section; this update rechecks the library flow plus all route geometry rather than claiming another full manual playthrough.
