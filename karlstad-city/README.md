@@ -4,7 +4,7 @@ Spelbar webbpresentation: https://tryggspel.github.io/TestSpel/karlstad-city/
 
 Tidigare kartpilot: https://tryggspel.github.io/TestSpel/karlstad-city/map.html
 
-## Version 3
+## Version 5
 
 Babylon.js 7.54.3 driver en sammanhängande, konstnärligt byggd 3D-värld. Ett 23 sekunder långt kameraintro övergår till fri rörelse i första person. Miljön har procedurbyggda fasader, skyltfönster, älv, bro, park, människor, fåglar, skuggor, PBR-material, animerat vatten, atmosfärisk himmel, blomning och färgtoning. Musik, stadsambience, fotsteg och scannerljud skapas med Web Audio efter användarinteraktion.
 
@@ -41,6 +41,6 @@ Bussresan saknar tidtabell, biljettkontroll och verifierad ombordstigning. Inga 
 
 ## Filer och drift
 
-`index.html`, `cinematic.css`, `world.js`, `cinematic.js`, `audio.js` och `map-leaflet.css` är den nya 3D-klienten. `map.html`, `game.js` och `style.css` är kartpiloten. Ingen byggprocess krävs; kör med valfri HTTP-server eller GitHub Pages. WebGL krävs för 3D, och ett tydligt felmeddelande länkar till kartversionen om motorn inte kan starta.
+`index.html`, `cinematic.css`, `world.js`, `cinematic.js`, `audio.js` och `map-leaflet.css` är den nya 3D-klienten. `map.html`, `game.js` och `style.css` är kartpiloten. Ingen byggprocess krävs; kör med valfri HTTP-server eller GitHub Pages. WebGL ger full PBR-grafik. Utan WebGL används Babylon NullEngine och en enklare Canvas-renderare med djupbuffert och perspektivkorrekta texturer (`soft-renderer.js`). Ett felmeddelande länkar till kartversionen om spelmotorn inte kan starta. `device-check.html` visar stående och liggande responsiva layouter; det ersätter inte fysisk enhetsprovning.
 
 Grafik är adaptiv men fysisk iPhone-testning behöver göras före extern användartest eller sponsorpresentation. Nästa produktionssteg är konstnärsproducerade modeller av verkliga platser, professionellt ljud, validerade färdvägar, innehållsverktyg och enhetsprovning.
