@@ -69,7 +69,16 @@ window.createKarlstadWorld = async function(engine, canvas, quality, report) {
   // Detailed Nordic architecture. All static geometry is batched by material at the end.
   function building(x,z,w,d,h,front='south',style=0,label=''){
     const mat=facades[style%facades.length];box(mat,x,h/2,z,w,h,d);rectCollider(x,z,w,d);box(M.stone,x,.6,z,w+.15,1.2,d+.15);for(let y=3.8;y<h;y+=3.2)box(M.trim,x,y,z,w+.3,.15,d+.3);box(M.trim,x,h-.1,z,w+.65,.30,d+.65);box(M.trim,x,h+.15,z,w+.4,.13,d+.4);
-    const roof=B.MeshBuilder.CreateCylinder('hip roof',{diameterTop:0,diameterBottom:1,height:1,tessellation:4},scene);roof.scaling.set((w+.8)*Math.SQRT2,Math.min(w,d)*.31,(d+.8)*Math.SQRT2);roof.rotation.y=Math.PI/4;roof.position.set(x,h+Math.min(w,d)*.155,z);add(roof,M.roof);
+    // Four real hip-roof slopes with eaves aligned to the rectangular footprint.
+    const roof=new B.Mesh('hip roof',scene),halfW=(Math.min(w,d)+.8)/2,halfD=(Math.max(w,d)+.8)/2,ridge=halfD-halfW,rise=Math.min(w,d)*.29;
+    const rv=[[-halfW,0,-halfD],[halfW,0,-halfD],[halfW,0,halfD],[-halfW,0,halfD],[0,rise,-ridge],[0,rise,ridge]];
+    const roofData=new B.VertexData(),rp=[],rn=[],ru=[],ri=[];
+    for(const face of [[0,1,4],[1,2,5,4],[2,3,5],[3,0,4,5]]){
+      const verts=face.map(i=>new V(...rv[i])),normal=V.Cross(verts[2].subtract(verts[0]),verts[1].subtract(verts[0])).normalize(),base=rp.length/3;
+      for(const v of verts){rp.push(v.x,v.y,v.z);rn.push(normal.x,normal.y,normal.z);ru.push((v.x+halfW)/(2*halfW),(v.z+halfD)/(2*halfD))}
+      for(let i=1;i<face.length-1;i++)ri.push(base,base+i,base+i+1);
+    }
+    roofData.positions=rp;roofData.normals=rn;roofData.uvs=ru;roofData.indices=ri;roofData.applyToMesh(roof);roof.position.set(x,h+.2,z);if(w>d)roof.rotation.y=Math.PI/2;add(roof,M.roof);
     for(let i=0;i<2;i++)box(M.red,x+(i?1:-1)*w*.23,h+1.25,z,rnd(.6,.9),2,.8);
     for(const side of ['south','north','west','east']){
     const primary=side===front, horizontal=side==='south'||side==='north',sgn=side==='south'||side==='west'?-1:1, span=horizontal?w:d, cols=Math.floor((span-2)/2.6), rows=Math.floor((h-2.2)/3.15);
@@ -145,7 +154,7 @@ window.createKarlstadWorld = async function(engine, canvas, quality, report) {
   for(const [mat,list] of batches){for(const m of list)m.computeWorldMatrix(true);if(list.length){const merged=B.Mesh.MergeMeshes(list,true,true,undefined,false,false);if(merged){merged.name='city / '+mat.name;merged.isPickable=false;merged.receiveShadows=true;merged.freezeWorldMatrix();if(![M.grass,M.paving,M.asphalt,M.white,puddle].includes(mat))shadows.addShadowCaster(merged);allStatic.push(merged)}}}
   if(shadows.getShadowMap())shadows.getShadowMap().refreshRate=0;
   function setQuality(q){quality=q;if(software)return;engine.setHardwareScalingLevel(q==='high'?1/Math.min(devicePixelRatio,1.65):q==='mobile'?1/Math.min(devicePixelRatio,1):1/Math.min(devicePixelRatio,1.25));shadows.getShadowMap().resize(q==='high'?2048:1024);if(shadows.getShadowMap())shadows.getShadowMap().refreshRate=0;if(pipeline){pipeline.bloomEnabled=q!=='mobile';pipeline.sharpenEnabled=q==='high';pipeline.fxaaEnabled=true}scene.fogDensity=q==='mobile'?.0046:.0038;engine.resize()}
-  function collides(x,z){if(x<-181||x>83||z<-150||z>161)return true;if(x<-52&&x>-102&&Math.abs(z+48)>5.1)return true;for(const c of colliders)if(Math.abs(x-c.x)<c.w&&Math.abs(z-c.z)<c.d)return true;return false}
+  function collides(x,z){const bx=x-bus.position.x,bz=z-bus.position.z,bc=Math.cos(bus.rotation.y),bs=Math.sin(bus.rotation.y);if(Math.abs(bx*bc-bz*bs)<1.72&&Math.abs(bx*bs+bz*bc)<5.15)return true;if(x<-181||x>83||z<-150||z>161)return true;if(x<-52&&x>-102&&Math.abs(z+48)>5.1)return true;for(const c of colliders)if(Math.abs(x-c.x)<c.w&&Math.abs(z-c.z)<c.d)return true;return false}
   function update(t,dt,active){skyMat.setFloat('time',t);waterMat.setFloat('time',t);waterMat.setVector3('eye',camera.position);for(const b of beacons){b.core.rotation.y=t*.6;b.core.position.y=1.45+Math.sin(t*1.8)*.13;b.ring.rotation.y=t*.15;b.aura.visibility=.45+Math.sin(t*1.8)*.08}for(const p of actors){p.root.position.z=p.home.z+Math.sin(t*.11+p.phase)*p.range;p.root.rotation.y=Math.cos(t*.11+p.phase)>0?0:Math.PI;for(let i=0;i<2;i++){p.legs[i].rotation.x=Math.sin(t*3.5+p.phase+i*Math.PI)*.28;p.arms[i].rotation.x=-Math.sin(t*3.5+p.phase+i*Math.PI)*.21}}for(const p of particles){p.mesh.position.y=p.base.y+Math.sin(t*.3+p.phase)*.4;p.mesh.position.x=p.base.x+Math.sin(t*.12+p.phase)*1.8}for(const b of birds){let a=t*.045+b.phase;b.root.position.set(-68+Math.cos(a)*37,19+Math.sin(a*.8)*4,55+Math.sin(a)*65);b.root.rotation.y=-a;b.left.rotation.z=Math.sin(t*3.5+b.phase)*.4;b.right.rotation.z=-Math.sin(t*3.5+b.phase)*.4}}
   setQuality(quality);report(94,'Öppnar Karlstad…');await wait();
   return {scene,camera,engine,collides,update,scanner,hero,bus,beacons,fragments,targets,buildings,trees,drawScanner,setQuality,quality,shadows};
