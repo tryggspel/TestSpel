@@ -16,6 +16,7 @@ Mobilernas layout kontrollerades via `device-check.html`: 390 × 844 och 844 × 
 | Museet | Rätt ledtråd ger 150 XP; totalt 500 XP. Scanningsknappen fungerar i stående mobilvy. |
 | Bussresan | Kamera och buss rör sig över bron. Ankomst till Mariebergsskogen ger 150 XP; totalt 650 XP. |
 | Naturum | Sista frågan går att lösa efter guidning. 200 XP; totalt 850 XP och 5/5 uppdrag. |
+| Kartpanel | Kartbilder, källangivelse och fem verkliga uppdragsplatser tillgängliga. Kartvyn anpassas till samtliga platser. |
 | Slutvy | Solsigill, 850 XP, stadstips och fortsatt utforskning tillgängliga. |
 | Sparning | Ny sidladdning återställde uppdrag 3 med 350 XP respektive uppdrag 4 med 500 XP. |
 | Ljudval | Efter avstängning behöll en ny scanningsinteraktion status LJUD AV. Ljudets kvalitet är inte bedömd genom lyssning. |
