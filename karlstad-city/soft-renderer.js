@@ -22,7 +22,7 @@ window.KarlstadSoftwareRenderer=class{
   this.materials.set(mat.uniqueId,m);return m;
  }
  meshData(mesh){
-  let d=this.geometry.get(mesh.uniqueId);if(d)return d;
+  let d=this.geometry.get(mesh.uniqueId);if(d){if(d.colors)d.colors=mesh.getVerticesData('color');return d;}
   let positions=mesh.getVerticesData('position'),indices=mesh.getIndices(),normals=mesh.getVerticesData('normal'),uv=mesh.getVerticesData('uv');
   if(mesh.name==='Klarälven'){positions=new Float32Array([-24.5,0,-215,24.5,0,-215,24.5,0,215,-24.5,0,215]);indices=[0,2,1,0,3,2];normals=new Float32Array([0,1,0,0,1,0,0,1,0,0,1,0]);uv=new Float32Array([0,0,1,0,1,1,0,1]);}
   if(!positions||!indices)return null;
@@ -31,9 +31,10 @@ window.KarlstadSoftwareRenderer=class{
  }
  draw(time){
   this.resize();const w=this.width,h=this.height,cam=this.world.camera,pixels=this.pixels.data;
+  const night=this.world.apocalypse;
   const horizon=h*.5+Math.tan(cam.rotation.x)*h*.6;
   // Atmospheric gradient. The GPU path uses the animated sky and river shaders.
-  for(let y=0;y<h;y++){const sky=y<Math.max(horizon,h*.18),f=Math.min(1,y/Math.max(1,horizon));let r=sky?65+126*f:123,g=sky?143+68*f:150,b=sky?190+34*f:120;const row=y*w*4;for(let x=0;x<w;x++){const i=row+x*4;pixels[i]=r;pixels[i+1]=g;pixels[i+2]=b;pixels[i+3]=255;}}
+  for(let y=0;y<h;y++){const sky=y<Math.max(horizon,h*.18),f=Math.min(1,y/Math.max(1,horizon));let r=sky?65+126*f:123,g=sky?143+68*f:150,b=sky?190+34*f:120;if(night){const cloud=Math.sin(y*.035+time*.12)*Math.sin(y*.078-time*.065)*4;r=sky?19+24*f+cloud:28;g=sky?33+31*f+cloud:43;b=sky?44+31*f+cloud:48;}const row=y*w*4;for(let x=0;x<w;x++){const i=row+x*4;pixels[i]=r;pixels[i+1]=g;pixels[i+2]=b;pixels[i+3]=255;}}
   this.depth.fill(0);
   BABYLON.Matrix.PerspectiveFovLHToRef(cam.fov,w/h,cam.minZ,cam.maxZ,this.projection);
   const vp=cam.getViewMatrix().multiply(this.projection).m,cp=cam.position;
@@ -50,7 +51,7 @@ window.KarlstadSoftwareRenderer=class{
     let nx=normal[ia]+normal[ib]+normal[ic],ny=normal[ia+1]+normal[ib+1]+normal[ic+1],nz=normal[ia+2]+normal[ib+2]+normal[ic+2],nl=Math.hypot(nx,ny,nz)||1;nx/=nl;ny/=nl;nz/=nl;
     if(mat.backFaceCulling!==false&&nx*(cp.x-world[ia])+ny*(cp.y-world[ia+1])+nz*(cp.z-world[ia+2])<0)continue;
     if((pts[ia]<-pts[ia+2]&&pts[ib]<-pts[ib+2]&&pts[ic]<-pts[ic+2])||(pts[ia]>pts[ia+2]&&pts[ib]>pts[ib+2]&&pts[ic]>pts[ic+2])||(pts[ia+1]<-pts[ia+2]&&pts[ib+1]<-pts[ib+2]&&pts[ic+1]<-pts[ic+2])||(pts[ia+1]>pts[ia+2]&&pts[ib+1]>pts[ib+2]&&pts[ic+1]>pts[ic+2]))continue;
-    const light=.66+Math.max(0,-nx*.65+ny*.72-nz*.4)*.62;
+    const facing=Math.max(0,-nx*.65+ny*.72-nz*.4);const distance=Math.hypot(cp.x-world[ia],cp.z-world[ia+2]);const light=night?.30+facing*.34+Math.max(0,1-distance/27)*.42:.66+facing*.62;
     let polygon=[ia,ib,ic].map(j=>({x:pts[j],y:pts[j+1],z:pts[j+2],u:uv?uv[j/3*2]*m.us:0,v:uv?(1-uv[j/3*2+1])*m.vs:0}));
     if(polygon.some(v=>v.z<.07)){
      const clipped=[];for(let j=0;j<polygon.length;j++){const a=polygon[j],b=polygon[(j+1)%polygon.length],inside=a.z>=.07;if(inside)clipped.push(a);if(inside!==(b.z>=.07)){const t=(.07-a.z)/(b.z-a.z);clipped.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:.07,u:a.u+(b.u-a.u)*t,v:a.v+(b.v-a.v)*t});}}polygon=clipped;
@@ -74,7 +75,7 @@ window.KarlstadSoftwareRenderer=class{
   for(let y=top;y<=bottom;y++,rowA+=ay,rowB+=by){let wa=rowA,wb=rowB,index=y*w+left;
    for(let x=left;x<=right;x++,index++,wa+=ax,wb+=bx){const wc=1-wa-wb;if(wa<-.00001||wb<-.00001||wc<-.00001)continue;const iz=wa*a.iz+wb*b.iz+wc*c.iz;if(iz<=depth[index])continue;depth[index]=iz;let r=rr,g=gg,blue=bb;
     if(texture){let u=(wa*a.u+wb*b.u+wc*c.u)/iz,v=(wa*a.v+wb*b.v+wc*c.v)/iz;const ti=((Math.floor((v-Math.floor(v))*th)%th)*tw+Math.floor((u-Math.floor(u))*tw)%tw)*4;r=r*texture[ti]/255;g=g*texture[ti+1]/255;blue=blue*texture[ti+2]/255;}
-    const fog=Math.min(.68,.0023/iz),i=index*4;p[i]=r*(1-fog)+177*fog;p[i+1]=g*(1-fog)+186*fog;p[i+2]=blue*(1-fog)+176*fog;
+    const night=this.world.apocalypse,fog=Math.min(night?.9:.68,(night?.012:.0023)/iz),i=index*4;p[i]=r*(1-fog)+(night?32:177)*fog;p[i+1]=g*(1-fog)+(night?53:186)*fog;p[i+2]=blue*(1-fog)+(night?60:176)*fog;
    }
   }
  }

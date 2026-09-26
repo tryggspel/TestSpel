@@ -4,6 +4,19 @@ Spelbar webbpresentation: https://tryggspel.github.io/TestSpel/karlstad-city/
 
 Tidigare kartpilot: https://tryggspel.github.io/TestSpel/karlstad-city/map.html
 
+## Zombie Apocalypse Karlstad · version 15
+
+Tryck **ZOMBIE** i spelets övre högra hörn. Alla vanliga stadsbor, inklusive berättarfigurerna Sola och Fröding, förvandlas. Spelet växlar till första person, mörka moln, kallare ljus, dimma, karantänskyltar, aska och ett eget originalkomponerat Web Audio-tema. Stadsuppdragen ersätts av en separat överlevnadsrunda; deras sparfil ändras inte.
+
+- Överlev 135 spelsekunder med tre eskalerande vågor, ladda tre solfyrar genom att hålla deras zoner i tre sekunder och evakuera vid museet efter gryningen.
+- Solstrålar neutraliserar i sju sekunder. Solenergin laddas automatiskt när avtryckaren släpps. Solnova neutraliserar närliggande zombier (14 sekunders återhämtning, 25 energi).
+- Dator: WASD, mus eller F för solstrålar, Q för solnova, Shift för sprint, mellanslag för hopp, C för duckning och Escape för paus.
+- Mobil: vänster spak för rörelse; dess ytterkant ger sprint. Håll och dra på solknappen för att skjuta och sikta samtidigt. Separata knappar för hopp, duckning och solnova.
+- Solfyrar laddar sköld och energi. Radarn visar aktiva och neutraliserade zombier. Vinst/förlust ger poäng och ett lokalt rekord, utan nätkonto.
+- **LÄMNA** återställer dagsljus, stadsbor, position och stadsuppdrag. Inga verkliga personer, företag eller sponsorer har godkänt denna fiktiva zombieberättelse.
+
+AI:n använder ett gemensamt navigationsfält och kollisionskontroll. Strålar och solnova blockeras av byggnader. Effekter återanvänder fasta meshpooler. GPU-vyn har shaders och markdimma; kompatibilitetsrenderaren använder enklare nattljus och dimning. Ingen grafik eller musik har hämtats från Living Dead, Fortnite eller Call of Duty.
+
 ## Version 7
 
 Babylon.js 7.54.3 driver en sammanhängande, konstnärligt byggd 3D-värld. Ett 23 sekunder långt kameraintro övergår till fri rörelse i första person. Miljön har procedurbyggda fasader, skyltfönster, älv, bro, park, människor, fåglar, skuggor, PBR-material, animerat vatten, atmosfärisk himmel, blomning och färgtoning. Musik, stadsambience, fotsteg och scannerljud skapas med Web Audio efter användarinteraktion.

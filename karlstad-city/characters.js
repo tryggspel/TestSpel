@@ -45,6 +45,16 @@ window.KarlstadCharacter = function(scene, options={}) {
     if(options.type==='froding'&&s===1){block('#925846',0,-.32,.11,.24,.33,.077);block('#efe3b5',0,-.32,.154,.2,.29,.018)}
     finish(elbow);
   }
+  // The same townspeople become zombies; keep their original clothes and restore
+  // their exact vertex colours when the player returns to the city adventure.
+  const bodyMeshes=root.getChildMeshes().slice(),originalColours=bodyMeshes.map(m=>m.getVerticesData(B.VertexBuffer.ColorKind).slice());
+  let zombie=false;
+  const eyes=new B.TransformNode('zombie eyes',scene);eyes.parent=head;
+  let eyeMat=scene.getMaterialByName('zombie eye glow');
+  if(!eyeMat){eyeMat=new B.StandardMaterial('zombie eye glow',scene);eyeMat.diffuseColor=col('#d7ff9b');eyeMat.emissiveColor=col('#aaff55');eyeMat.disableLighting=true;}
+  for(const s of [-1,1]){const eye=B.MeshBuilder.CreateSphere('infected eye',{diameter:.076,segments:6},scene);eye.parent=eyes;eye.position.set(s*.082,.207,.205);eye.scaling.z=.35;eye.material=eyeMat;eye.isPickable=false;eye.setVerticesData(B.VertexBuffer.ColorKind,new Float32Array(eye.getTotalVertices()*4).fill(1));}
+  eyes.setEnabled(false);
+  function setZombie(on){zombie=on;eyes.setEnabled(on);bodyMeshes.forEach((m,i)=>{const colours=originalColours[i].slice();if(on)for(let n=0;n<colours.length;n+=4){const r=colours[n],g=colours[n+1],b=colours[n+2],l=r*.3+g*.55+b*.15,skinLike=r>g*1.12&&r>b*1.3;colours[n]=skinLike?l*.54:r*.42+l*.18;colours[n+1]=skinLike?l*.86:g*.48+l*.28;colours[n+2]=skinLike?l*.48:b*.45+l*.15;}m.setVerticesData(B.VertexBuffer.ColorKind,colours);});root.rotation.z=0;head.rotation.z=0;arms.forEach((a,i)=>a.rotation.z=(i?1:-1)*.10);}
   let pace=0,blend=0,crouchAmount=0;
   function animate(dt,speed=0,crouch=false,air=0,t=0){
     const mix=1-Math.exp(-dt*18);blend+=(Math.min(speed/7.8,1)-blend)*mix;crouchAmount+=((crouch?1:0)-crouchAmount)*mix;
@@ -54,6 +64,7 @@ window.KarlstadCharacter = function(scene, options={}) {
     head.rotation.y=Math.sin(t*.7)*.07*(1-run);head.rotation.x=-torso.rotation.x*.45;
     for(let i=0;i<2;i++){const q=i?1:-1;legs[i].rotation.x=swing*q*run*.82-crouchAmount*.95; knees[i].rotation.x=Math.max(0,-swing*q)*run*1.05+crouchAmount*1.75;arms[i].rotation.x=-swing*q*run*.74-crouchAmount*.3;elbows[i].rotation.x=-.22-run*.8;if(air>.1){legs[i].rotation.x-=.25;knees[i].rotation.x+=.5;arms[i].rotation.x=-.7;}}
   }
+  function animateZombie(dt,speed,stunned,t){animate(dt,speed,false,0,t);torso.rotation.x=stunned?-.48:.22;torso.rotation.z=Math.sin(t*2.7)*.075;head.rotation.z=Math.sin(t*1.9)*.14;head.rotation.x=stunned?-.35:.11;hips.position.y=stunned?.65:.90+Math.sin(t*5)*.025;for(let i=0;i<2;i++){arms[i].rotation.x=stunned?.45:-1.18+Math.sin(t*4+i)*.11;arms[i].rotation.z=(i?1:-1)*.19;elbows[i].rotation.x=-.15;}eyes.setEnabled(!stunned);}
   if(options.scale)root.scaling.setAll(options.scale);
-  return {root,hips,head,torso,legs,arms,animate};
+  return {root,hips,head,torso,legs,arms,animate,setZombie,animateZombie,get zombie(){return zombie}};
 };

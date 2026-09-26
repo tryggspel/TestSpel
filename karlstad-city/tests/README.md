@@ -15,3 +15,7 @@ node karlstad-city/tests/controls-check.cjs
 Engine checks construct the actual scene and verify that five mission destinations, 19 route edges and all 14 sun pickup locations are clear of building collisions. They verify duck/jump gate conditions, course completion, timer expiry, character vertex colours and finite geometry. Control checks exercise joystick deadzone, outer-edge sprint, competing pointer IDs, release and reset. These tests do not measure GPU performance or replace a physical multitouch device test.
 
 `soljakten-preview.jpg` is an actual browser capture of the game in its software compatibility renderer, not a concept illustration or a claim of full GPU output.
+
+## Zombie survival regression checks
+
+`node karlstad-city/tests/zombie-check.cjs` builds the real city and tests transformation/restoration of all citizens, accessible relays and exit, ray hits and building occlusion, temporary stun expiry, energy recharge, nova cooldown, all relay gates, dawn before evacuation, victory, defeat, damage grace period and cleanup. Control checks now include simultaneous movement and fire, aiming while holding the trigger, independent pointer ownership, cancellation and reset.
