@@ -13,3 +13,5 @@ node karlstad-city/tests/controls-check.cjs
 `BABYLON_PATH` may point to a locally available copy of the same pinned Babylon version instead of the npm module.
 
 Engine checks construct the actual scene and verify that five mission destinations, 19 route edges and all 14 sun pickup locations are clear of building collisions. They verify duck/jump gate conditions, course completion, timer expiry, character vertex colours and finite geometry. Control checks exercise joystick deadzone, outer-edge sprint, competing pointer IDs, release and reset. These tests do not measure GPU performance or replace a physical multitouch device test.
+
+`soljakten-preview.jpg` is an actual browser capture of the game in its software compatibility renderer, not a concept illustration or a claim of full GPU output.

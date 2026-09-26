@@ -58,3 +58,6 @@ Browser checks on the deployed version:
 - Changes after these observations: clearer historical nameplates, larger top controls, a wider portrait camera and narrower landscape mission panel keep the character visible. Script parsing and diff whitespace checks pass.
 
 Coverage limits: the cloud browser uses the compatibility renderer, so GPU shadows, normal maps, bloom, real multitouch feel and sustained iPhone 11 frame rate have not been verified on a physical device. No claim of Fortnite/AAA graphical or performance parity is made. The complete original five-mission playthrough is recorded in the earlier section; this update rechecks the library flow plus all route geometry rather than claiming another full manual playthrough.
+
+Post-deploy check of version 13: the served script URLs were confirmed as `?v=13`. At 844 × 390, Soljakten starts and the narrowed mission card leaves the explorer's complete silhouette visible between the controls. Top controls, joystick, sprint, duck and jump buttons fit inside the viewport.
+Portrait 390 × 844 was also visually checked after the camera change. The final action card moves another 30 pixels down, using the space above the controls so the player's shoes remain visible. Larger top buttons fit in the portrait header.

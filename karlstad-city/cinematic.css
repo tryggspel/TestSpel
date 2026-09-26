@@ -20,3 +20,4 @@
 /* Keep the explorer's silhouette clear of the compact landscape mission card. */
 @media(max-width:700px){.top-buttons .quiet-button{height:44px;min-width:44px}.top-hud{left:12px;right:12px}.identity strong{font-size:19px}.identity .sun-icon{font-size:23px}.identity{gap:5px}}
 @media(max-width:1000px) and (max-height:520px){.mission-hud,.ui[data-style=action] .mission-hud{left:146px;width:218px;max-width:28vw}.mission-hud h2{font-size:19px}.mission-hud p{font-size:9px}.mission-top{gap:5px}.mission-top span:nth-child(2){max-width:87px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ui[data-style=action] .mission-actions i{width:10px}}
+@media(max-width:700px) and (min-height:521px){.ui[data-style=action] .mission-hud{bottom:165px}}
