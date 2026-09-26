@@ -10,7 +10,7 @@ window.KarlstadZombie=function(world){
  function mesh(kind,name,opts,mat,parent=root){const m=B.MeshBuilder[kind](name,opts,scene);m.material=mat;m.parent=parent;m.isPickable=false;return m;}
  function box(name,w,h,d,x,y,z,mat,parent=root){const m=mesh('CreateBox',name,{width:w,height:h,depth:d},mat,parent);m.position.set(x,y,z);return m;}
  // A deliberately original solar projector, held by a pair of gloved hands.
- const weapon=new B.TransformNode('first person solar projector',scene);weapon.parent=world.camera;
+ const weapon=new B.TransformNode('first person solar projector',scene);weapon.parent=world.camera;weapon.scaling.setAll(.65);weapon.position.set(.12,-.16,.30);
  box('right sleeve',.16,.17,.44,.19,-.32,.17,metal,weapon);
  box('right glove',.15,.16,.23,.18,-.24,.39,black,weapon);
  box('left sleeve',.14,.15,.37,-.08,-.32,.31,metal,weapon).rotation.z=-.43;
@@ -109,7 +109,7 @@ window.KarlstadZombie=function(world){
   novaAge+=dt;novaRing.setEnabled(novaAge<.65);if(novaAge<.65)novaRing.scaling.setAll(1+novaAge*14);
   for(const p of mist)p.m.position.set(p.x+Math.sin(elapsed*.09+p.z)*8,.8,p.z+Math.cos(elapsed*.05)*3);
   for(const a of ashes){const t=elapsed*.35+a.phase;a.m.position.set(player.x+Math.sin(t)*13,.3+((elapsed*.3+a.phase)%7),player.z+Math.cos(t*.8)*15);a.m.rotation.x=t;a.m.rotation.z=t*.7;}
-  weapon.position.set(Math.sin(elapsed*1.7)*.004,-recoil*.36,-recoil);weapon.rotation.x=-recoil*.7;muzzle.rotation.z=elapsed*1.4;core.scaling.setAll(.85+energy/500);pulseLight.intensity=lastShot<.085?2.3:0;
+  weapon.position.set(.12+Math.sin(elapsed*1.7)*.004,-.16-recoil*.36,.30-recoil);weapon.rotation.x=-recoil*.7;muzzle.rotation.z=elapsed*1.4;core.scaling.setAll(.85+energy/500);pulseLight.intensity=lastShot<.085?2.3:0;
   const result=events;events=[];return result;
  }
  const state=()=>({running,elapsed,remaining:Math.max(0,135-elapsed),health,energy,novaCooldown,neutralized,combo,points,wave,finished,won,damage,hitMarker,extract,powered:stations.filter(s=>s.on).length,charge:Math.max(...stations.filter(s=>!s.on).map(s=>s.charge),0)});
