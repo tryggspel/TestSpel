@@ -1,0 +1,16 @@
+/Library/
+/Temp/
+/Obj/
+/Builds/
+/Logs/
+/UserSettings/
+/MemoryCaptures/
+*.csproj
+*.sln
+*.keystore
+*.mobileprovision
+*.p12
+
+.verification/
+Assets/Karlstad/Generated/
+Assets/Karlstad/Generated.meta

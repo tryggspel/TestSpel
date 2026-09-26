@@ -19,3 +19,5 @@ Engine checks construct the actual scene and verify that five mission destinatio
 ## Zombie survival regression checks
 
 `node karlstad-city/tests/zombie-check.cjs` builds the real city and tests transformation/restoration of all citizens, accessible relays and exit, ray hits and building occlusion, temporary stun expiry, energy recharge, nova cooldown, all relay gates, dawn before evacuation, victory, defeat, damage grace period and cleanup. Control checks now include simultaneous movement and fire, aiming while holding the trigger, independent pointer ownership, cancellation and reset.
+
+`zombie-mobile-v16.jpg` is a browser capture on 2026-09-26 of the published web pilot in an 844×390 landscape viewport, using the software compatibility renderer. The Zombie button, single tap solar shot (+125 points), defeat panel and retry were exercised. It is not a capture of the separate Unity native project or a physical-phone GPU benchmark.
