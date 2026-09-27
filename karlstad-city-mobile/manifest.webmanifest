@@ -1,11 +1,11 @@
 {
-  "name":"Karlstad City V25",
+  "name":"Karlstad City V27",
   "short_name":"Karlstad City",
   "start_url":"./",
   "display":"standalone",
   "orientation":"landscape",
   "background_color":"#071015",
   "theme_color":"#0b1115",
-  "description":"Mobile-first browser FPS prototype set in Karlstad.",
+  "description":"Mobile-first Karlstad street-life prototype with Mitt i City, city mode and zombie mode.",
   "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
 }
