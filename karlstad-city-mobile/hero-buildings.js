@@ -1,6 +1,6 @@
 (function(){
   window.KarlstadHeroBuildings={
-    version:16,
+    version:27,
     targets:[
       {
         key:'sandgrund',
@@ -19,6 +19,15 @@
         lon:13.50124,
         radius:80,
         style:'museum'
+      },
+      {
+        key:'mitt-i-city',
+        label:'Mitt i City',
+        match:['mitt i city','mitticity'],
+        lat:59.37988,
+        lon:13.50055,
+        radius:85,
+        style:'mall'
       }
     ],
     squareCluster:{
@@ -34,11 +43,13 @@
     styles:{
       culture:{facade:'#8b7960',accent:'#323b3d',glass:'#27424e',roof:'#313e43'},
       museum:{facade:'#a9a18e',accent:'#4a4540',glass:'#2b4651',roof:'#3d4545'},
+      mall:{facade:'#4f5457',accent:'#9a6c43',glass:'#35515d',roof:'#3a3d3f'},
       square:{facade:'#b49b78',accent:'#383b3a',glass:'#284752',roof:'#39464a'}
     },
     assetOverrides:{
       sandgrund:'procedural:sandgrund-v16',
-      'varmlands-museum':null
+      'varmlands-museum':null,
+      'mitt-i-city':'procedural:mitt-i-city-v27'
     }
   };
 })();
