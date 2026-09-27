@@ -1,39 +1,48 @@
-# Karlstad City V30 — Playable City Loop
+# Karlstad City V31 — Navigation + Recognition
 
 Public mobile-first browser prototype for iPhone and desktop.
 
-## V29 — Visual Upgrade
-- Sharper PBR treatment for asphalt, stone, glass, metal and water.
-- Micro-bump detail on asphalt, paving and sidewalks.
-- Higher environment reflection on glass, water and metal.
-- Road centre markings and zebra crossings added to the central slice.
-- Bus shelters, bollards and more street furniture around Stora torget.
-- Imported cars, buses and people cast shadows where supported.
-- Cars and buses get emissive front/rear lights.
-- Fallback people were rebuilt as more stylised human figures with jacket, shirt, trousers, shoes, hair and hands instead of simple capsules.
+## Why V31 exists
+V30 was still too hard to read as a game world. V31 prioritizes:
+1. knowing where you are,
+2. knowing where you are allowed to go,
+3. knowing where the current mission is,
+4. recognizing central Karlstad.
 
-## V30 — Playable Loop
-- A complete city-mode mission now runs:
-  1. Talk to Mira at Stora torget.
-  2. Follow the objective to Mitt i City.
-  3. Enter the mall and talk to the Centervärd.
-  4. Receive the emergency radio.
-  5. Return to Stora torget.
-  6. Zombie mode unlocks.
-- The minimap draws the active objective with a route line/target marker.
-- Sprint now has stamina.
-- Mobile has a dedicated RUN control.
-- Walking/running has head-bob and procedural footsteps.
-- Bus braking gets a positional audio cue at route endpoints.
-- Moving vehicle impacts can damage and push the player.
-- Collision feedback uses haptics where the browser supports vibration.
-- Existing building/NPC/vehicle collisions, street signs, water safety, spatial traffic/chatter audio and Mitt i City interior remain.
+## Navigation
+- New **VISA VÄGEN** button.
+- Route is calculated through the bundled OSM road network instead of only drawing a straight line.
+- The route is visible both on the minimap and as bright ground markers in the 3D world.
+- The minimap has higher contrast:
+  - light roads = routes/walkable street network
+  - red/brown blocks = buildings / blocked space
+  - blue = water / no-go
+- Current street remains visible under the minimap.
+- Quick-travel panel:
+  - Stora torget
+  - Mitt i City
+  - Sandgrund
+  - Värmlands Museum
+  - O'Learys
 
-Desktop:
-WASD · mouse look · Shift run · Space jump · E interact · Z city/zombie · LMB fire in zombie mode.
+## Anti-stuck
+- Repeated building collisions automatically return the player to the last known safe point.
+- NPC collisions are soft: the pedestrian moves aside instead of trapping the player.
+- Closed building collisions display **STÄNGT · GÅ RUNT**.
+- Moving vehicles still produce a stronger impact.
 
-iPhone:
-left joystick · drag right side to look · RUN · USE · ZOMBIE/CITY · FIRE in zombie mode.
+## Recognition
+- Stora torget now has a stylized **Fredsmonumentet** centerpiece.
+- A stylized **Gustaf Fröding** statue is added near the square.
+- Karlstad sun flags make the square easier to identify.
+- Mitt i City gets a much clearer playable entrance, stronger exterior branding and updated shop signs based on current centre information.
+- River edges get physical rail cues where the local river geometry is available.
+
+## Existing gameplay retained
+- City mission → Mitt i City → emergency radio → return to Stora torget.
+- Zombie mode unlock after the city mission.
+- Coffee in city mode, weapon in zombie mode.
+- Sprint/stamina, footsteps, traffic/chatter positional audio, vehicle impacts, street signs and water safety.
 
 Public URL:
 https://tryggspel.github.io/TestSpel/karlstad-city-mobile/
