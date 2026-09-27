@@ -5,7 +5,7 @@ global.BABYLON=require(process.env.BABYLON_PATH||'babylonjs');global.window=glob
 global.OffscreenCanvas=class{constructor(w,h){return createCanvas(w,h)}};
 global.document={createElement:()=>createCanvas(128,128),removeEventListener(){}};
 global.requestAnimationFrame=f=>setImmediate(f);global.devicePixelRatio=1;
-for(const f of ['characters','landmarks','world','zombie'])vm.runInThisContext(fs.readFileSync('karlstad-city/'+f+'.js','utf8'));
+for(const f of ['characters','landmarks','district','world','zombie'])vm.runInThisContext(fs.readFileSync('karlstad-city/'+f+'.js','utf8'));
 (async()=>{
  const B=BABYLON,V=B.Vector3,engine=new B.NullEngine(),world=await createKarlstadWorld(engine,null,'mobile',()=>{}),game=KarlstadZombie(world),player={x:0,z:52};
  const original=world.actors[0].root.position.clone(),originalColor=world.actors[0].root.getChildMeshes()[0].getVerticesData('color').slice();
@@ -25,9 +25,21 @@ for(const f of ['characters','landmarks','world','zombie'])vm.runInThisContext(f
  while(game.state.elapsed<136){game.enemies.forEach(e=>e.actor.root.setEnabled(false));game.update(.25,player);}
  game.enemies.forEach(e=>e.actor.root.setEnabled(false));for(let i=0;i<31;i++)game.update(.1,game.exit);assert(game.state.won);const elapsed=game.state.elapsed;game.update(2,player);assert.equal(game.state.elapsed,elapsed);
  game.stop();assert(!world.apocalypse);assert(world.actors.every(p=>!p.zombie));assert(world.citizens.every(p=>p.label.isEnabled()));assert(V.Distance(original,world.actors[0].root.position)<.001);assert.deepEqual(world.actors[0].root.getChildMeshes()[0].getVerticesData('color'),originalColor);assert(game.enemies.filter(e=>e.extra).every(e=>!e.actor.root.isEnabled()));
+ // A player can enter and leave the gallery, but walls and display furniture collide.
+ for(let z=100;z<124;z+=.2)assert(!world.collides(25,z),'open gallery entrance and central aisle');
+ assert(world.collides(12.2,116),'outer wall remains solid');assert(world.collides(18.6,115),'display partition remains solid');assert(world.collides(34,109),'recovery counter remains solid');
+ game.start(player);game.enemies.forEach(e=>e.actor.root.setEnabled(false));target.actor.root.setEnabled(true);target.actor.root.position.set(0,0,53);target.attack=0;game.update(.02,player);assert.equal(game.state.health,87);
+ game.enemies.forEach(e=>e.actor.root.setEnabled(false));game.stations[2].on=true;
+ target.actor.root.setEnabled(true);target.actor.root.position.set(25,0,106.8);target.attack=0;
+ for(let i=0;i<100;i++)game.update(.1,{x:25,z:108});assert(game.state.inRefuge);assert.equal(game.state.health,100,'refuge heals shield');assert(game.state.safeReserve<100,'recovery draws a finite reserve');assert(!world.district.safe.contains(target.actor.root.position.x,target.actor.root.position.z),'infected cannot cross the shield');
+ game.update(.1,{x:25,z:103});assert(!game.state.inRefuge,'protection stops when leaving');
+ // Wardens take three body hits. A head hit does double damage. Same pooled effects.
+ game.start(player);game.enemies.forEach(e=>e.actor.root.setEnabled(false));const warden=game.enemies.find(e=>e.kind==='warden');warden.actor.root.setEnabled(true);warden.actor.root.position.set(0,0,60);warden.armor=3;
+ game.shoot(new V(0,1,52),new V(0,0,1));assert.equal(warden.armor,2);assert.equal(warden.stun,0);game.update(.17,player);game.shoot(new V(0,1,52),new V(0,0,1));assert.equal(warden.armor,1);assert.equal(warden.stun,0);game.update(.17,player);game.shoot(new V(0,1,52),new V(0,0,1));assert(warden.stun>0);assert.equal(game.state.hits,3);assert.equal(game.state.shots,3);
+ game.stop();
  // Defeat is reachable; the damage grace period prevents a one-frame horde loss.
  game.start(player);game.enemies.forEach(e=>e.actor.root.setEnabled(false));target.actor.root.setEnabled(true);target.actor.root.position.set(0,0,53);target.attack=0;game.update(.02,player);assert.equal(game.state.health,87);game.update(.02,player);assert.equal(game.state.health,87);
  for(let i=0;i<350&&!game.state.finished;i++){game.enemies.filter(e=>e!==target).forEach(e=>e.actor.root.setEnabled(false));game.update(.1,player);}assert(game.state.finished&&!game.state.won);
  game.stop();world.scene.render();assert(!game.shoot(new V(),new V(0,0,1)));
- console.log('PASS: all citizens transform/restore, relays reachable, ray hits/occlusion, stun expiry, energy, nova cooldown, objective gates, dawn, victory, defeat, damage grace and cleanup');engine.dispose();
+ console.log('PASS: all citizens transform/restore, relays reachable, ray hits/occlusion, stun expiry, energy, nova cooldown, objective gates, dawn, victory, defeat, damage grace cleanup, walkable gallery, finite recovery, refuge barrier, departure and three-hit wardens');engine.dispose();
 })().catch(e=>{console.error(e.stack);process.exitCode=1});

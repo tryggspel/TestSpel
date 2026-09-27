@@ -1,4 +1,11 @@
 /* The survival layer keeps the centre of the FPS view clear. */
+.survivor-rank{margin-top:10px;font:700 8px var(--sans);letter-spacing:.1em;color:#c5dca9}
+.result-rank{display:flex;align-items:center;gap:24px;font:700 72px var(--display);color:#e7efa7;margin:12px 0}
+.result-rank span{font:700 19px var(--sans);letter-spacing:.04em;color:#f3e6b5}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#d5edb326;border:1px solid #d5edb326;margin:20px 0}
+.result-grid>div{padding:15px;background:#153038}.result-grid b{display:block;font:600 30px var(--display);color:#edf1c6}.result-grid span{font-size:8px;letter-spacing:.09em;color:#aec5bb}
+.mastery{font-size:9px;letter-spacing:.09em;color:#dfeac4}.mastery>div{height:5px;background:#304c50;margin-top:10px;overflow:hidden;border-radius:4px}.mastery i{display:block;height:100%;background:#cce39a}
+.skin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:25px 0}.skin-grid button{border:1px solid #849f9644;background:#152e36;padding:17px 7px;display:flex;align-items:center;flex-direction:column;gap:10px;color:#e5efd6}.skin-grid button.selected{border-color:#e1e8a6;background:#314940}.skin-grid button:disabled{opacity:.5;cursor:default}.skin-grid i{display:block;width:49px;height:19px;border-radius:3px;transform:skew(-13deg);box-shadow:0 3px 0 #061d2699}.skin-grid strong{font-size:9px;letter-spacing:.04em}.skin-grid small{font-size:7px;color:#bbcfc6}
 .zombie-switch{position:absolute;right:0;top:55px;display:flex;align-items:center;gap:8px;padding:10px 15px;min-height:44px;border:1px solid #b4ed7f99;background:#15262bea;color:#d3ff9f;border-radius:3px;font:700 12px var(--sans);box-shadow:0 3px 20px #001c28aa;letter-spacing:.12em}
 .zombie-switch:hover{background:#314834}.zombie-switch span{font-size:9px}.ui[data-mode=loading] .zombie-switch,.ui[data-mode=ride] .zombie-switch{display:none}.ui[data-mode=intro] .zombie-switch{top:55px}
 .zombie-hud,.zombie-atmosphere,.zombie-damage,.zombie-hit,.zombie-notice,.zombie-desktop,.nova-button,#fireButton{display:none}
@@ -16,4 +23,11 @@
 }
 @media(max-width:1000px) and (max-height:520px){
  .zombie-hud{top:66px;left:23px;width:174px}.zombie-wordmark>strong{font-size:21px}.zombie-wordmark>span,.zombie-wordmark small{display:none}.zombie-stats{margin-top:9px;gap:16px}.zombie-stats b{font-size:24px}.zombie-stats span{font-size:6px}.zombie-energy{margin-top:6px}.zombie-energy>span{font-size:6px}.ui[data-style=zombie] .radar{top:68px;width:93px;right:22px}.ui[data-style=zombie] .zombie-switch{top:0;right:99px;min-height:40px}.ui[data-style=zombie] .mission-hud{left:153px;bottom:20px;right:auto;width:225px;max-width:29vw;padding:9px 11px}.ui[data-style=zombie] .mission-hud h2{font-size:20px;margin:6px 0}.ui[data-style=zombie] .mission-hud p{font-size:8px}.ui[data-style=zombie] .zombie-notice{top:66px;max-width:42vw;font-size:8px}.ui[data-style=zombie] .toast{top:92px;max-width:330px}.ui[data-style=zombie] .touch-actions{bottom:15px;right:22px}.ui[data-style=zombie] .nova-button{right:116px;bottom:91px}.ui[data-style=zombie] #fireButton{width:72px;height:72px}.ui[data-style=zombie] .objective-marker span{font-size:7px}
+}
+/* Compact mobile telemetry leaves room to read the city and aim. */
+@media(max-width:700px){
+ .zombie-hud{top:79px;width:192px}.zombie-wordmark{display:none}.zombie-stats{margin-top:0}.survivor-rank{font-size:6px;margin-top:8px}.ui[data-style=zombie] .zombie-notice{top:216px}.ui[data-style=zombie] .toast{top:215px}.ui[data-style=zombie] .mission-hud{bottom:204px}.ui[data-style=zombie] .mission-hud h2{font-size:21px}.result-rank{font-size:56px}
+}
+@media(max-width:1000px) and (max-height:520px){
+ .zombie-wordmark{display:none}.zombie-stats{margin-top:0}.survivor-rank{font-size:6px;margin-top:6px}.ui[data-style=zombie] .mission-hud p{display:none}.ui[data-style=zombie] .mission-hud{bottom:18px}.result-grid{margin:12px 0}.result-grid>div{padding:8px}.result-rank{font-size:44px;margin:4px 0}
 }

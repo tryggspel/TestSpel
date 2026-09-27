@@ -1,0 +1,11 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+global.window=global;vm.runInThisContext(fs.readFileSync(require('path').join(__dirname,'../progression.js'),'utf8'));
+const values=new Map(),storage={getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v)},p=KarlstadProgression(storage);
+assert.equal(p.state.level,1);assert(!p.select('river'));assert.equal(p.award('unfinished',{finished:false}).gained,0);
+const win={finished:true,won:true,points:5500,powered:3,peakCombo:8};
+const reward=p.award('one',win);assert.equal(reward.gained,1500);assert.equal(p.state.runs,1);assert.equal(p.state.wins,1);assert.equal(p.state.bestCombo,8);assert(p.select('river'));
+assert.equal(p.award('one',win).gained,0,'reopening a result cannot duplicate XP');
+const restored=KarlstadProgression(storage);assert.equal(restored.state.skin.id,'river');assert.equal(restored.state.xp,1500);assert.equal(restored.award('one',win).gained,0,'deduplication survives reload');
+assert.equal(restored.award('two',{...win,won:false,points:1000,powered:1}).gained,250);assert.equal(restored.state.wins,1);assert.equal(restored.state.runs,2);assert(!restored.select('dawn'));
+const unavailable=KarlstadProgression({getItem(){throw Error('blocked')},setItem(){throw Error('quota')}});assert.equal(unavailable.award('test',win).saved,false);assert.equal(unavailable.state.xp,1500,'session still works when storage is unavailable');
+console.log('PASS: rank, earned skins, replay-safe XP, reload, defeat rewards and unavailable storage');

@@ -6,7 +6,7 @@ global.removeEventListener=()=>{};
 global.OffscreenCanvas=class{constructor(w,h){return createCanvas(w,h)}};
 global.document={createElement:()=>createCanvas(512,512),removeEventListener(){}};
 global.requestAnimationFrame=f=>setImmediate(f);global.devicePixelRatio=1;
-for(const f of ['characters','landmarks','world','action'])vm.runInThisContext(fs.readFileSync('karlstad-city/'+f+'.js','utf8'));
+for(const f of ['characters','landmarks','district','world','action'])vm.runInThisContext(fs.readFileSync('karlstad-city/'+f+'.js','utf8'));
 (async()=>{
  const engine=new BABYLON.NullEngine(),world=await createKarlstadWorld(engine,null,'mobile',()=>{}),failures=[];
  for(const [i,p]of world.targets.entries())if(world.collides(...p))failures.push('Mission '+i+' blocked');

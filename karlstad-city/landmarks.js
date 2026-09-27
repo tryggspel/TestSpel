@@ -53,7 +53,11 @@ window.buildKarlstadLandmarks=function(h){
  box(M.stone,-31,.12,77,10,.28,26);box(copper,-31,.275,77,9.4,.045,25.4);rectCollider(-31,77,10,26);
  const pool=pbr('reflecting pool','#54959a',.08,.68);box(pool,-31,.30,77,9.0,.022,25.0);for(let z=65;z<=89;z+=3)box(M.trim,-31,.32,z,10,.08,.09);
  // Sandgrund: white horizontal pavilion, broad orange sign, colonnade and ramp.
- box(cream,25,3.15,116,26,6.3,19);rectCollider(25,116,26,19);box(M.glass,25,2.75,106.38,24,4.7,.13);box(cream,25,6.05,105.9,28,1.1,3.3);box(M.roof,25,6.75,116,28,.28,22);
+ // Open entrance at x=25; solid walls now have matching collision volumes.
+ for(const x of [12.2,37.8]){box(cream,x,3.15,116,.4,6.3,19);rectCollider(x,116,.4,19);}
+ box(cream,25,3.15,125.3,26,6.3,.4);rectCollider(25,125.3,26,.4);
+ for(const x of [17.45,32.55]){box(M.glass,x,2.75,106.38,10.4,4.7,.13);rectCollider(x,106.38,10.4,.13);}
+ box(cream,25,5.65,106.38,26,1.3,.4);box(cream,25,6.05,105.9,28,1.1,3.3);box(M.roof,25,6.75,116,28,.28,22);
  for(let x=13;x<39;x+=4.2){box(cream,x,2.85,104.6,.27,5.7,.3);box(M.metal,x,2.7,106.2,.07,4.7,.12)}
  plane(sign('SANDGRUND',12,1,'#e87735','#f2eddd'),25,6.04,104.19,14,1.05);plane(sign('LARS LERIN',7,1,'#ece8dd','#293f45'),25,3.9,106.15,7,.6);
  box(falu,25,.08,101.1,28,.16,6.4);for(let x=12;x<40;x+=2)box(cream,x,.175,101.1,.06,.035,6.2);

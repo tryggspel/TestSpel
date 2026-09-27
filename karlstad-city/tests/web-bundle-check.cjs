@@ -1,0 +1,11 @@
+const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('assert');
+const root=path.resolve(__dirname,'..'),scope='https://example.test/karlstad-city/',events={},cache=new Map();let activated=0,claimed=0,network=0;const removed=[];
+const cacheAPI={async addAll(requests){for(const r of requests){const u=new URL(r.url);if(u.origin==='https://example.test'){const p=u.pathname.replace('/karlstad-city/','')||'index.html';assert(fs.existsSync(path.join(root,p)),p+' missing from offline bundle');}cache.set(r.url,{url:r.url,cached:true});}},async match(r){return cache.get(typeof r==='string'?r:r.url)}};
+const sandbox={URL,Request,self:{registration:{scope},clients:{async claim(){claimed++}},skipWaiting(){activated++},addEventListener:(name,fn)=>events[name]=fn},caches:{async open(){return cacheAPI},async keys(){return ['karlstad-web-16','another-app','karlstad-web-17']},async delete(name){removed.push(name)}},fetch:async()=>{network++;throw Error('offline')}};vm.createContext(sandbox);vm.runInContext(fs.readFileSync(path.join(root,'sw.js'),'utf8'),sandbox);
+async function event(name,props={}){let result;events[name]({...props,waitUntil:p=>result=p,respondWith:p=>result=p});return result;}
+(async()=>{await event('install');assert.equal(activated,0,'an update must not interrupt a game');
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const match of html.matchAll(/(?:src|href)="([^"#]+)"/g)){const file=match[1];if(file.startsWith('http')||file.endsWith('map.html'))continue;assert(cache.has(new URL(file,scope).href),'uncached entry dependency '+file);}
+const response=await event('fetch',{request:{method:'GET',mode:'navigate',url:scope+'?mode=zombie'}});assert(response.cached);assert.equal(network,0,'offline launch uses cached index');
+assert.equal(await event('fetch',{request:{method:'GET',mode:'cors',url:'https://tile.openstreetmap.org/1/1/1.png'}}),undefined,'never cache map tiles');
+await event('activate');assert.deepEqual(removed,['karlstad-web-16']);assert.equal(claimed,1);await event('message',{data:'activate'});assert.equal(activated,1);
+console.log('PASS: complete offline shell, mode-query launch, external tile exclusion, isolated cache cleanup and voluntary updates');})().catch(e=>{console.error(e);process.exit(1)});
