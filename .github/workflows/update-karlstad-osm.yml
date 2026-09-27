@@ -11,74 +11,111 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: karlstad-osm-snapshot
+  cancel-in-progress: true
 
 jobs:
-  snapshot-and-deploy:
+  snapshot:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Fetch OSM snapshot
+      - name: Download OSM map extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://api.openstreetmap.org/api/0.6/map?bbox=13.4974,59.3780,13.5086,59.3857'
+          curl --fail --location --silent --show-error             --retry 5 --retry-delay 2 --retry-all-errors             --connect-timeout 15 --max-time 120             "$URL" -o /tmp/karlstad.osm
+          test -s /tmp/karlstad.osm
+          echo "OSM extract: $(wc -c < /tmp/karlstad.osm) bytes"
+
+      - name: Build browser snapshot files
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p karlstad-city-mobile/data
-          BBOX='59.3780,13.4974,59.3857,13.5086'
-          ENDPOINTS=(
-            'https://overpass.kumi.systems/api/interpreter'
-            'https://overpass-api.de/api/interpreter'
-            'https://overpass.private.coffee/api/interpreter'
-          )
+          python3 - <<'PY'
+          import json
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          from datetime import datetime, timezone
 
-          fetch_query() {
-            local name="$1"
-            local query="$2"
-            local out="karlstad-city-mobile/data/$3"
-            local tmp="${out}.tmp"
+          src = Path('/tmp/karlstad.osm')
+          root = ET.parse(src).getroot()
 
-            for endpoint in "${ENDPOINTS[@]}"; do
-              echo "Fetching ${name} from ${endpoint}"
-              if curl --fail --silent --show-error --location                 --retry 2 --retry-delay 2 --connect-timeout 10 --max-time 60                 --data-urlencode "data=${query}"                 "${endpoint}" -o "${tmp}"; then
-                if jq -e '.elements and (.elements | length) > 0' "${tmp}" >/dev/null; then
-                  mv "${tmp}" "${out}"
-                  echo "Saved ${out}: $(jq '.elements | length' "${out}") elements"
-                  return 0
-                fi
-              fi
-              rm -f "${tmp}"
-            done
+          nodes = {}
+          tree_nodes = []
+          for n in root.findall('node'):
+              nid = int(n.attrib['id'])
+              lat = float(n.attrib['lat'])
+              lon = float(n.attrib['lon'])
+              tags = {t.attrib['k']: t.attrib['v'] for t in n.findall('tag')}
+              nodes[nid] = {'lat': lat, 'lon': lon}
+              if tags.get('natural') == 'tree':
+                  tree_nodes.append({
+                      'type':'node','id':nid,'lat':lat,'lon':lon,'tags':tags
+                  })
 
-            echo "::error::Could not fetch ${name} from any Overpass endpoint"
-            return 1
+          buildings, roads, environment = [], [], []
+          for w in root.findall('way'):
+              wid = int(w.attrib['id'])
+              tags = {t.attrib['k']: t.attrib['v'] for t in w.findall('tag')}
+              geom = []
+              missing = False
+              for nd in w.findall('nd'):
+                  ref = int(nd.attrib['ref'])
+                  p = nodes.get(ref)
+                  if not p:
+                      missing = True
+                      break
+                  geom.append({'lat':p['lat'],'lon':p['lon']})
+              if missing or len(geom) < 2:
+                  continue
+              item = {'type':'way','id':wid,'tags':tags,'geometry':geom}
+              if tags.get('building'):
+                  buildings.append(item)
+              if tags.get('highway'):
+                  roads.append(item)
+              if (
+                  tags.get('waterway') in {'river','riverbank'} or
+                  tags.get('natural') == 'water' or
+                  tags.get('leisure') == 'park' or
+                  tags.get('landuse') == 'grass'
+              ):
+                  environment.append(item)
+
+          out = Path('karlstad-city-mobile/data')
+          payloads = {
+              'osm-buildings.json': {'version':0.6,'generator':'Karlstad City snapshot','elements':buildings},
+              'osm-roads.json': {'version':0.6,'generator':'Karlstad City snapshot','elements':roads},
+              'osm-environment.json': {'version':0.6,'generator':'Karlstad City snapshot','elements':environment},
+              'osm-trees.json': {'version':0.6,'generator':'Karlstad City snapshot','elements':tree_nodes},
           }
+          for name, payload in payloads.items():
+              (out/name).write_text(json.dumps(payload, ensure_ascii=False, separators=(',',':')), encoding='utf-8')
 
-          fetch_query buildings "[out:json][timeout:25];way[building](${BBOX});out tags geom;" osm-buildings.json
-          fetch_query roads "[out:json][timeout:25];way[highway](${BBOX});out tags geom;" osm-roads.json
-          fetch_query environment "[out:json][timeout:25];(way[waterway=river](${BBOX});way[natural=water](${BBOX});way[waterway=riverbank](${BBOX});way[leisure=park](${BBOX});way[landuse=grass](${BBOX}););out tags geom;" osm-environment.json
-          fetch_query trees "[out:json][timeout:25];node[natural=tree](${BBOX});out tags;" osm-trees.json
+          meta = {
+              'updated': datetime.now(timezone.utc).isoformat(),
+              'source': 'OpenStreetMap API 0.6 map extract',
+              'bbox': [13.4974,59.3780,13.5086,59.3857],
+              'counts': {
+                  'buildings': len(buildings),
+                  'roads': len(roads),
+                  'environment': len(environment),
+                  'trees': len(tree_nodes)
+              }
+          }
+          (out/'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding='utf-8')
+          print(json.dumps(meta, indent=2))
 
-          printf '{"updated":"%s","bbox":"%s"}\n' "$(date -u +%FT%TZ)" "${BBOX}" > karlstad-city-mobile/data/meta.json
-
-      - name: Validate snapshot
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "Buildings: $(jq '.elements|length' karlstad-city-mobile/data/osm-buildings.json)"
-          echo "Roads: $(jq '.elements|length' karlstad-city-mobile/data/osm-roads.json)"
-          echo "Environment: $(jq '.elements|length' karlstad-city-mobile/data/osm-environment.json)"
-          echo "Trees: $(jq '.elements|length' karlstad-city-mobile/data/osm-trees.json)"
-          test "$(jq '.elements|length' karlstad-city-mobile/data/osm-buildings.json)" -gt 150
-          test "$(jq '.elements|length' karlstad-city-mobile/data/osm-roads.json)" -gt 150
+          if len(buildings) < 150:
+              raise SystemExit(f'Too few buildings: {len(buildings)}')
+          if len(roads) < 150:
+              raise SystemExit(f'Too few roads: {len(roads)}')
+          PY
 
       - name: Commit snapshot
         shell: bash
@@ -93,15 +130,3 @@ jobs:
             git commit -m "Update bundled Karlstad OSM snapshot"
             git push
           fi
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v6
-
-      - name: Upload Karlstad City
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: karlstad-city-mobile
-
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
