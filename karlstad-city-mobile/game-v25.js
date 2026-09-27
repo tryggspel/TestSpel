@@ -476,6 +476,9 @@ const hold=(id,on,off)=>{const e=document.getElementById(id);e.addEventListener(
 document.getElementById('v31guide')?.addEventListener('pointerdown',e=>{e.preventDefault();toggleGuide(scene,camera)});
 const places=document.getElementById('v31placesPanel');
 document.getElementById('v31places')?.addEventListener('pointerdown',e=>{e.preventDefault();places?.classList.toggle('show')});
+const mapWrap=document.getElementById('v28mapWrap'),mapBtn=document.getElementById('v31mapBtn');
+mapBtn?.addEventListener('pointerdown',e=>{e.preventDefault();const big=!mapWrap?.classList.contains('big');mapWrap?.classList.toggle('big',big);if(mapBtn)mapBtn.textContent=big?'STÄNG KARTA':'KARTA';if(big)places?.classList.remove('show')});
+
 for(const btn of places?.querySelectorAll('[data-place]')||[])btn.addEventListener('pointerdown',e=>{e.preventDefault();teleportTo(camera,btn.dataset.place);places.classList.remove('show')});
 
 const panel=document.getElementById('v25panel');document.getElementById('v25settings').addEventListener('pointerdown',e=>{e.preventDefault();panel.classList.add('show')});document.getElementById('v25close').addEventListener('click',()=>panel.classList.remove('show'));document.getElementById('v25touch').addEventListener('input',e=>{const v=Number(e.target.value);State.touchSens=.00515*(v/100);text('v25touchVal',v+'%')});document.getElementById('v25mouse').addEventListener('input',e=>{const v=Number(e.target.value);State.mouseSens=.0022*(v/100);text('v25mouseVal',v+'%')});document.getElementById('v25quality').addEventListener('input',e=>quality(engine,e.target.value));quality(engine,1);
