@@ -101,6 +101,52 @@ function v29StreetProps(){
  const positions=[[-44,-24],[-30,-24],[30,-24],[44,-24],[-44,24],[-30,24],[30,24],[44,24]];
  for(const [x,z] of positions){const b=B.MeshBuilder.CreateCylinder('V29 bollard',{height:.72,diameter:.16,tessellation:12},scene);b.position.set(x,.36,z);b.material=V29.shelter;b.checkCollisions=true}
 }
+
+function v31SignMaterial(name,text,bg='#13222a',fg='#ffffff',w=768,h=180){
+ const t=new B.DynamicTexture(name,{width:w,height:h},scene,true),g=t.getContext();g.fillStyle=bg;g.fillRect(0,0,w,h);g.strokeStyle='#ffffffaa';g.lineWidth=7;g.strokeRect(6,6,w-12,h-12);g.fillStyle=fg;g.textAlign='center';g.textBaseline='middle';g.font='800 62px Arial';g.fillText(text,w/2,h/2+3);t.update();
+ const m=new B.StandardMaterial(name+' mat',scene);m.diffuseTexture=t;m.emissiveTexture=t;m.disableLighting=true;m.backFaceCulling=false;return m
+}
+function v31PeaceMonument(){
+ const root=new B.TransformNode('Fredsmonumentet V31',scene);root.position.set(0,0,0);
+ const stone=mat('peace red granite','#7e4b49',.62,.08),bronze=mat('peace bronze','#4b5b4b',.42,.58);
+ const base=B.MeshBuilder.CreateBox('peace base',{width:3.2,height:.55,depth:3.2},scene);base.parent=root;base.position.y=.275;base.material=stone;base.checkCollisions=true;
+ const plinth=B.MeshBuilder.CreateBox('peace plinth',{width:2.2,height:2.1,depth:2.0},scene);plinth.parent=root;plinth.position.y=1.6;plinth.material=stone;plinth.checkCollisions=true;
+ const torso=B.MeshBuilder.CreateCapsule('peace figure',{height:1.65,radius:.24,tessellation:16},scene);torso.parent=root;torso.position.y=3.35;torso.material=bronze;
+ const head=B.MeshBuilder.CreateSphere('peace head',{diameter:.38,segments:14},scene);head.parent=root;head.position.y=4.26;head.material=bronze;
+ for(const side of [-1,1]){
+  const arm=B.MeshBuilder.CreateCapsule('peace arm',{height:1.02,radius:.075,tessellation:10},scene);arm.parent=root;arm.position.set(side*.42,3.88,0);arm.rotation.z=side*-1.02;arm.material=bronze;
+  const hand=B.MeshBuilder.CreateSphere('peace hand',{diameter:.16,segments:10},scene);hand.parent=root;hand.position.set(side*.78,4.18,0);hand.material=bronze;
+ }
+ const sword=B.MeshBuilder.CreateBox('broken sword',{width:.08,height:.78,depth:.06},scene);sword.parent=root;sword.position.set(.78,4.5,0);sword.rotation.z=-.35;sword.material=bronze;
+ const bird=B.MeshBuilder.CreateBox('peace dove',{width:.48,height:.08,depth:.22},scene);bird.parent=root;bird.position.set(-.83,4.5,0);bird.rotation.z=.18;bird.material=bronze;
+ const label=B.MeshBuilder.CreatePlane('peace label',{width:4.5,height:.72,sideOrientation:B.Mesh.DOUBLESIDE},scene);label.parent=root;label.position.set(0,2.1,-1.03);label.material=v31SignMaterial('peace label mat','FREDSMONUMENTET','#5f3d3c','#f7eee7',900,180);
+ for(const m of root.getChildMeshes()){m.receiveShadows=true;shadows.addShadowCaster(m)}
+}
+function v31Froding(){
+ const root=new B.TransformNode('Gustaf Fröding V31',scene);root.position.set(-42,0,28);
+ const bronze=mat('froding bronze','#465447',.48,.56),stone=mat('froding stone','#74746d',.72,.12);
+ const base=B.MeshBuilder.CreateBox('froding base',{width:1.5,height:.6,depth:1.5},scene);base.parent=root;base.position.y=.3;base.material=stone;base.checkCollisions=true;
+ const body=B.MeshBuilder.CreateCapsule('froding body',{height:1.55,radius:.22,tessellation:14},scene);body.parent=root;body.position.y=1.55;body.material=bronze;
+ const head=B.MeshBuilder.CreateSphere('froding head',{diameter:.36,segments:12},scene);head.parent=root;head.position.y=2.42;head.material=bronze;
+ const hat=B.MeshBuilder.CreateCylinder('froding hat',{height:.12,diameter:.52,tessellation:18},scene);hat.parent=root;hat.position.y=2.64;hat.material=bronze;
+ const sign=B.MeshBuilder.CreatePlane('froding label',{width:3.2,height:.55,sideOrientation:B.Mesh.DOUBLESIDE},scene);sign.parent=root;sign.position.set(0,1.0,-.78);sign.material=v31SignMaterial('froding label mat','GUSTAF FRÖDING','#26342f','#f4efe5',768,160);
+ for(const m of root.getChildMeshes()){m.receiveShadows=true;shadows.addShadowCaster(m)}
+}
+function v31KarlstadFlags(){
+ function flagTex(name){const t=new B.DynamicTexture(name,{width:512,height:320},scene,true),g=t.getContext();g.fillStyle='#f7f7f4';g.fillRect(0,0,512,320);g.fillStyle='#f4bd32';g.beginPath();g.arc(256,160,54,0,Math.PI*2);g.fill();g.strokeStyle='#f4bd32';g.lineWidth=14;for(let i=0;i<12;i++){const a=i*Math.PI/6;g.beginPath();g.moveTo(256+Math.cos(a)*72,160+Math.sin(a)*72);g.lineTo(256+Math.cos(a)*108,160+Math.sin(a)*108);g.stroke()}t.update();const m=new B.StandardMaterial(name+' mat',scene);m.diffuseTexture=t;m.emissiveTexture=t;m.disableLighting=true;m.backFaceCulling=false;return m}
+ const fm=flagTex('Karlstad sun flag');
+ for(const x of [-9,9]){const pole=B.MeshBuilder.CreateCylinder('Karlstad flag pole',{height:8.8,diameter:.09,tessellation:12},scene);pole.position.set(x,4.4,-5);pole.material=M.metal;pole.checkCollisions=true;const flag=B.MeshBuilder.CreatePlane('Karlstad flag',{width:2.7,height:1.65,sideOrientation:B.Mesh.DOUBLESIDE},scene);flag.position.set(x+1.35,7.6,-5);flag.material=fm}
+}
+function v31WaterBoundaries(){
+ const rail=mat('V31 river rail','#3f484b',.38,.68);let budget=70;
+ for(const w of waterZones){if(w.kind!=='river'||budget<=0)continue;const pts=w.pts||[],off=(w.width||34)/2+1.0;
+  for(let i=1;i<pts.length&&budget>0;i++){const a=pts[i-1],b=pts[i],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<4)continue;const ux=dx/len,uz=dz/len,nx=-uz,nz=ux;
+   for(const side of [-1,1]){const mx=(a.x+b.x)/2+nx*off*side,mz=(a.z+b.z)/2+nz*off*side;if(Math.hypot(mx,mz)>260)continue;const top=B.MeshBuilder.CreateBox('V31 river railing',{width:len,height:.07,depth:.07},scene);top.position.set(mx,1.08,mz);top.rotation.y=Math.atan2(dx,dz);top.material=rail;top.checkCollisions=true;for(let d=0;d<=len;d+=3.4){const p=B.MeshBuilder.CreateBox('V31 river post',{width:.07,height:1.05,depth:.07},scene);p.position.set(a.x+ux*d+nx*off*side,.54,a.z+uz*d+nz*off*side);p.material=rail;p.checkCollisions=true;budget--}
+    budget--
+   }
+  }
+ }
+}
 function dressSquare(){function safe(x,z){return roadDistanceSq(x,z)>4}const lamps=[[-42,-29],[-21,-29],[0,-29],[21,-29],[42,-29],[-42,29],[-21,29],[0,29],[21,29],[42,29]];for(const [x,z] of lamps){if(!safe(x,z))continue;const p=lampPoleSource.createInstance('torget lamp'),h=lampHeadSource.createInstance('torget lamp head');p.position.set(x,2.25,z);h.position.set(x,4.55,z)}const benches=[[-28,-19,0],[0,-19,0],[28,-19,0],[-28,19,Math.PI],[0,19,Math.PI],[28,19,Math.PI]];for(const [x,z,r] of benches){if(!safe(x,z))continue;const s=benchSeatSource.createInstance('torget bench'),b=benchBackSource.createInstance('torget bench back');s.position.set(x,.58,z);b.position.set(x,.95,z-.27);s.rotation.y=b.rotation.y=r}const planters=[[-39,-18],[39,-18],[-39,18],[39,18]];for(const [x,z] of planters){if(!safe(x,z))continue;const p=planterSource.createInstance('torget planter'),g=planterGreenSource.createInstance('torget planter green');p.position.set(x,.275,z);g.position.set(x,1.05,z)}}
 
 function arcgisUrl(root,layer,outFields='*'){
@@ -218,7 +264,7 @@ try{
 setProgress(38,'Bygger verkliga byggnadsytor…');await new Promise(r=>requestAnimationFrame(r));
 const orderedBuildings=[...(data.buildings?.features||[])].sort((a,b)=>featureDistanceSq(a)-featureDistanceSq(b));heroById=resolveHeroBuildings(orderedBuildings);sceneStats.hero=heroById.size;scene.metadata={...(scene.metadata||{}),heroTargets:[...heroById.values()].map(h=>({key:h.key,label:h.label,id:h.id,style:h.style}))};console.info('Hero building targets',scene.metadata.heroTargets);for(const [i,f] of orderedBuildings.entries()){if(String(f.properties?.BALSTATUS||'Gällande').toLowerCase().includes('planerad'))continue;sceneStats.buildings+=createBuilding(f,i);if(i%60===0)await new Promise(r=>requestAnimationFrame(r))}
 setProgress(58,'Optimerar byggnader…');for(const [material,meshes] of buildingGroups){if(!meshes.length)continue;const merged=B.Mesh.MergeMeshes(meshes,true,true,undefined,false,false);if(merged){merged.name='real buildings / '+material.name;merged.material=material;merged.checkCollisions=true;merged.receiveShadows=true;merged.isPickable=false;merged.freezeWorldMatrix();shadows.addShadowCaster(merged)}await new Promise(r=>requestAnimationFrame(r))}for(const m of heroMeshes){m.freezeWorldMatrix();m.receiveShadows=true}setProgress(62,'Förbereder tak…');for(const r of roofMeshes){r.receiveShadows=true;r.freezeWorldMatrix?.()}await new Promise(r=>requestAnimationFrame(r));
-setProgress(66,'Lägger ut gator, trottoarer och Klarälven…');for(const [i,f] of (data.roads?.features||[]).entries())sceneStats.roads+=createRoad(f,i);dressSquare();v29RoadMarkings();v29StreetProps();if(sidewalkMeshes.length>1){const sw=B.Mesh.MergeMeshes(sidewalkMeshes,true,true,undefined,false,false);if(sw){sw.name='real sidewalks';sw.material=M.sidewalk;sw.receiveShadows=true;sw.freezeWorldMatrix()}}if(roadMeshes.length>1){const mergedRoad=B.Mesh.MergeMeshes(roadMeshes,true,true,undefined,false,false);if(mergedRoad){mergedRoad.name='real roads';mergedRoad.material=M.asphalt;mergedRoad.receiveShadows=true;mergedRoad.freezeWorldMatrix()}}for(const [i,f] of (data.land?.features||[]).entries())sceneStats.land+=createLand(f,i);
+setProgress(66,'Lägger ut gator, trottoarer och Klarälven…');for(const [i,f] of (data.roads?.features||[]).entries())sceneStats.roads+=createRoad(f,i);dressSquare();v29RoadMarkings();v29StreetProps();v31PeaceMonument();v31Froding();v31KarlstadFlags();if(sidewalkMeshes.length>1){const sw=B.Mesh.MergeMeshes(sidewalkMeshes,true,true,undefined,false,false);if(sw){sw.name='real sidewalks';sw.material=M.sidewalk;sw.receiveShadows=true;sw.freezeWorldMatrix()}}if(roadMeshes.length>1){const mergedRoad=B.Mesh.MergeMeshes(roadMeshes,true,true,undefined,false,false);if(mergedRoad){mergedRoad.name='real roads';mergedRoad.material=M.asphalt;mergedRoad.receiveShadows=true;mergedRoad.freezeWorldMatrix()}}for(const [i,f] of (data.land?.features||[]).entries())sceneStats.land+=createLand(f,i);v31WaterBoundaries();
 setProgress(78,'Planterar tillgängliga träd…');for(const [i,f] of (data.trees?.features||[]).slice(0,450).entries())sceneStats.trees+=createTree(f,i);
 setProgress(91,'Optimerar scenen för mobilen…');scene.blockMaterialDirtyMechanism=true;for(const material of scene.materials)material.freeze?.();console.info('Visual cleanup filtered footprints:',sceneStats.filtered);
 window.KarlstadRealCityAPI={scene,camera,engine,ORIGIN,BBOX,local,sceneStats,buildingFootprints,roadCorridors,namedRoads,waterZones,getData:()=>data};
