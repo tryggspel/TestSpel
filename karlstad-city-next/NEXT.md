@@ -58,3 +58,14 @@ The no-LOD2 pilot now adds a visual generation layer on top of the real geodata:
 - denser two-cluster tree crowns without multiplying unique materials.
 
 These details are generated separately from the footprint/collision layer so measured heights, hero assets or future municipal LOD2 can replace the visual shell without changing gameplay coordinates.
+
+
+## Real City V8
+
+Localhost data loading is now resilient:
+
+- building and road requests are split into smaller Overpass queries,
+- three Overpass endpoints are tried automatically,
+- successful core OSM data is cached locally for later launches,
+- trees and environment layers load separately so they cannot block the core city,
+- V7 Safari roof/facade performance limits remain in place.
