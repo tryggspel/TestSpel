@@ -13,14 +13,14 @@
 <canvas id="renderCanvas" aria-label="Verkliga centrala Karlstad i 3D"></canvas>
 <div id="loading" class="loading"><div><b>KARLSTAD · REAL CITY</b><p id="loadText">Hämtar öppna geodata…</p><div class="progress"><i id="loadProgress"></i></div></div></div>
 <div class="hud">
-  <div class="panel brand"><span>REAL CITY V31 · NAVIGATION + RECOGNITION</span><strong>KARLSTAD CITY · NAVIGATION + RECOGNITION</strong><small>V31 prioriterar orientering och igenkänning: tydlig karta med gåbara vägar kontra hus/vatten, VISA VÄGEN-rutt genom gatunätet, snabbresa till landmärken, anti-stuck-kollisioner och tydligare Karlstad-identitet.</small></div>
+  <div class="panel brand"><span>REAL CITY V32 · HERO DISTRICT</span><strong>KARLSTAD CITY · HERO DISTRICT</strong><small>V32 koncentrerar spelet till en tät hero-loop: Stora torget → Västra Torggatan/Järnvägsgatan → Mitt i City, med tydliga landmärken, riktmärken, direktgenvägar och mer liv i gaturummet.</small></div>
   <div id="status" class="panel status">STARTAR…</div>
   <div class="reticle"></div>
   <div id="error" class="error"></div>
   <div id="look" class="look"></div>
   <div id="joy" class="joy"><div id="knob" class="knob"></div></div>
   <div class="mobile-hint">VÄNSTER: GÅ · HÖGER: SE DIG OM</div>
-  <div class="panel source"><b>V31:</b> VISA VÄGEN · snabbresa · tydlig minimap · anti-stuck · Fredsmonumentet · Fröding · Karlstad-flaggor · tydligare Mitt i City-entré.</div>
+  <div class="panel source"><b>V32:</b> Hero District · Domkyrkan · Rådhuset · Mitt i City · objektivkompass · direktgenvägar · Sola-collectibles · tydligare stadsliv.</div>
   <div class="actions"><button id="sandgrund">SANDGRUND</button><button id="collision">COLL OFF</button><button id="reset">RESET</button><a href="index.html">← KARLSTAD CITY NEXT</a></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/earcut@2.2.4/dist/earcut.min.js"></script>
@@ -29,7 +29,9 @@
 <script src="hero-buildings.js"></script>
 <script src="sandgrund-landmark.js"></script>
 <script src="mitticity-landmark.js"></script>
+<script src="v32-landmarks.js"></script>
 <script src="real-city.js"></script>
+<script src="v32-hero-loop.js"></script>
 <script src="game-v25.js"></script>
 <script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}</script>
 </body>
