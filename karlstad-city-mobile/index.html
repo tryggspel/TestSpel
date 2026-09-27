@@ -13,14 +13,14 @@
 <canvas id="renderCanvas" aria-label="Verkliga centrala Karlstad i 3D"></canvas>
 <div id="loading" class="loading"><div><b>KARLSTAD · REAL CITY</b><p id="loadText">Hämtar öppna geodata…</p><div class="progress"><i id="loadProgress"></i></div></div></div>
 <div class="hud">
-  <div class="panel brand"><span>REAL CITY V25 · MOBILE FIRST</span><strong>KARLSTAD CITY · MOBILE FPS</strong><small>V25 är den publika mobile-first-prototypen: touch-look, FPS-kontroller, PWA-stöd och iPhone-test via GitHub Pages.</small></div>
+  <div class="panel brand"><span>REAL CITY V27 · MITT I CITY</span><strong>KARLSTAD CITY · STREET LIFE</strong><small>V27 fokuserar på Mitt i City, fler människor och trafik, stabil OSM-snapshot och city mode med kaffe innan zombie mode.</small></div>
   <div id="status" class="panel status">STARTAR…</div>
   <div class="reticle"></div>
   <div id="error" class="error"></div>
   <div id="look" class="look"></div>
   <div id="joy" class="joy"><div id="knob" class="knob"></div></div>
   <div class="mobile-hint">VÄNSTER: GÅ · HÖGER: SE DIG OM</div>
-  <div class="panel source"><b>V16:</b> OSM-reserv på localhost · verkliga footprints/gator · procedurala fasader/tak · LOD2 kan senare ersätta utvalda byggnader.</div>
+  <div class="panel source"><b>V27:</b> stabil OSM-snapshot · Mitt i City landmark/interiör · city mode med kaffe · zombie mode separat · mer trafik och fler NPC:er.</div>
   <div class="actions"><button id="sandgrund">SANDGRUND</button><button id="collision">COLL OFF</button><button id="reset">RESET</button><a href="index.html">← KARLSTAD CITY NEXT</a></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/earcut@2.2.4/dist/earcut.min.js"></script>
@@ -28,6 +28,7 @@
 <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.28.0/babylonjs.loaders.min.js"></script>
 <script src="hero-buildings.js"></script>
 <script src="sandgrund-landmark.js"></script>
+<script src="mitticity-landmark.js"></script>
 <script src="real-city.js"></script>
 <script src="game-v25.js"></script>
 <script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}</script>
