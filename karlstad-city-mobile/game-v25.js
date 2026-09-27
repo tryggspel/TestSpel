@@ -13,6 +13,117 @@ const ASSETS={
 };
 const State={started:false,health:100,ammo:24,reserve:120,score:0,kills:0,phase:-1,mode:'city',mouseSens:.00285,touchSens:.0062,ads:false,fireHeld:false,lastShot:0,weapon:null,coffee:null,pivot:null,muzzle:null,npcs:[],zombies:[],containers:{},traffic:[],core:null,extract:null,nearNpc:null,quality:1,waveSpawned:false,mapRoads:[],mapBuildings:[],waterZones:[],lastLandPos:null,waterEnteredAt:0,lastWaterCheck:0,lastCollisionAt:0,lastPos:null,lastDelta:null,audioCtx:null,audioReady:false,vehicleAudio:[],lastChatter:0,lastMapDraw:0,currentStreet:'STORA TORGET'};
 function split(u){const i=u.lastIndexOf('/');return{root:u.slice(0,i+1),file:u.slice(i+1)}}
+function addCollider(scene,root,kind='npc'){
+ const dims=kind==='bus'?[3.0,3.0,10.2]:kind==='car'?[2.05,1.6,4.25]:kind==='zombie'?[.72,1.8,.72]:[.68,1.8,.68];
+ const c=B.MeshBuilder.CreateBox('V28 collider '+kind,{width:dims[0],height:dims[1],depth:dims[2]},scene);
+ c.parent=root;c.position.y=dims[1]/2;c.visibility=0;c.isPickable=false;c.checkCollisions=true;c.metadata={collisionKind:kind,owner:root};
+ root.metadata={...(root.metadata||{}),collider:c};return c;
+}
+function pointSegDist(px,pz,a,b){
+ const vx=b.x-a.x,vz=b.z-a.z,wx=px-a.x,wz=pz-a.z,c1=vx*wx+vz*wz;
+ if(c1<=0)return Math.hypot(px-a.x,pz-a.z);const c2=vx*vx+vz*vz;if(c2<=c1)return Math.hypot(px-b.x,pz-b.z);
+ const t=c1/c2,qx=a.x+t*vx,qz=a.z+t*vz;return Math.hypot(px-qx,pz-qz);
+}
+function pointInRing(x,z,ring){let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const a=ring[i],b=ring[j];const hit=((a.z>z)!==(b.z>z))&&(x<(b.x-a.x)*(z-a.z)/((b.z-a.z)||1e-8)+a.x);if(hit)inside=!inside}return inside}
+function isWaterAt(x,z){
+ for(const w of State.waterZones){
+  if(w.kind==='polygon'&&pointInRing(x,z,w.ring))return true;
+  if(w.kind==='river'){for(let i=1;i<w.pts.length;i++)if(pointSegDist(x,z,w.pts[i-1],w.pts[i])<(w.width||30)/2)return true}
+ }
+ return false;
+}
+function mapLocalGeom(geom){return (geom||[]).map(p=>local(p.lon,p.lat))}
+async function loadV28MapData(scene){
+ try{
+  const [roadsRaw,buildRaw,envRaw]=await Promise.all([
+   fetch('./data/osm-roads.json',{cache:'force-cache'}).then(r=>r.json()),
+   fetch('./data/osm-buildings.json',{cache:'force-cache'}).then(r=>r.json()),
+   fetch('./data/osm-environment.json',{cache:'force-cache'}).then(r=>r.json())
+  ]);
+  State.mapRoads=(roadsRaw.elements||[]).filter(e=>e.type==='way'&&e.geometry?.length>1).map(e=>({name:e.tags?.name||'',type:e.tags?.highway||'',pts:mapLocalGeom(e.geometry)}));
+  State.mapBuildings=(buildRaw.elements||[]).filter(e=>e.type==='way'&&e.geometry?.length>2).map(e=>({pts:mapLocalGeom(e.geometry)}));
+  State.waterZones=[];
+  for(const e of envRaw.elements||[]){
+   if(e.type!=='way'||!e.geometry?.length)continue;
+   const t=e.tags||{},pts=mapLocalGeom(e.geometry);
+   if(t.waterway==='river')State.waterZones.push({kind:'river',pts,width:Math.max(22,Math.min(70,parseFloat(t.width)||34))});
+   else if(t.natural==='water'||t.waterway==='riverbank')State.waterZones.push({kind:'polygon',ring:pts});
+  }
+  createStreetSigns(scene,State.mapRoads);
+ }catch(e){console.warn('V28 map data unavailable',e)}
+}
+function signMat(scene,name){
+ const t=new B.DynamicTexture('street sign '+name,{width:768,height:180},scene,true),g=t.getContext();
+ g.fillStyle='#1f4e84';g.fillRect(0,0,768,180);g.strokeStyle='#f0f3f4';g.lineWidth=12;g.strokeRect(7,7,754,166);
+ g.fillStyle='#ffffff';g.font='800 66px Arial';g.textAlign='center';g.textBaseline='middle';g.fillText(name.toUpperCase(),384,94);
+ t.update();const m=new B.StandardMaterial('street sign mat '+name,scene);m.diffuseTexture=t;m.emissiveTexture=t;m.disableLighting=true;m.backFaceCulling=false;return m;
+}
+function createStreetSigns(scene,roads){
+ const reject=/tillf|leveranser|rondell|crossing|gångbana|bana/i,seen=new Set(),priority=['Drottninggatan','Järnvägsgatan','Västra Torggatan','Östra Torggatan','Tingvallagatan','Västra Kyrkogatan','Östra Kyrkogatan','Kungsgatan','Hamngatan','Norra Strandgatan','Sandgrundsgatan','Museigatan'];
+ const named=roads.filter(r=>r.name&&!reject.test(r.name)&&r.pts.length>1);
+ named.sort((a,b)=>(priority.indexOf(a.name)<0?99:priority.indexOf(a.name))-(priority.indexOf(b.name)<0?99:priority.indexOf(b.name)));
+ let count=0;
+ for(const r of named){if(seen.has(r.name)||count>=24)continue;seen.add(r.name);const mid=r.pts[Math.floor(r.pts.length/2)],next=r.pts[Math.min(r.pts.length-1,Math.floor(r.pts.length/2)+1)];if(!mid||!next)continue;
+  const pole=B.MeshBuilder.CreateCylinder('street pole '+r.name,{height:2.65,diameter:.075,tessellation:10},scene);pole.position.set(mid.x,1.325,mid.z);const pm=new B.PBRMaterial('street pole mat '+count,scene);pm.albedoColor=B.Color3.FromHexString('#5f6668');pm.metallic=.72;pm.roughness=.34;pole.material=pm;pole.checkCollisions=true;pole.isPickable=false;
+  const pl=B.MeshBuilder.CreatePlane('street '+r.name,{width:Math.min(4.5,1.6+r.name.length*.13),height:.52,sideOrientation:B.Mesh.DOUBLESIDE},scene);pl.position.set(mid.x,2.62,mid.z);pl.material=signMat(scene,r.name);pl.billboardMode=B.Mesh.BILLBOARDMODE_Y;pl.isPickable=false;count++;
+ }
+}
+function nearestStreet(camera){
+ let best='',bd=22;
+ for(const r of State.mapRoads){if(!r.name)continue;for(let i=1;i<r.pts.length;i++){const d=pointSegDist(camera.position.x,camera.position.z,r.pts[i-1],r.pts[i]);if(d<bd){bd=d;best=r.name}}}
+ return best||'CENTRALA KARLSTAD';
+}
+function drawMap(camera){
+ const now=performance.now();if(now-State.lastMapDraw<90)return;State.lastMapDraw=now;
+ const c=document.getElementById('v28map');if(!c)return;const g=c.getContext('2d'),W=c.width,H=c.height,range=TOUCH?92:115,cx=camera.position.x,cz=camera.position.z,sx=x=>W/2+(x-cx)/range*(W/2),sy=z=>H/2+(z-cz)/range*(H/2);
+ g.fillStyle='#142128';g.fillRect(0,0,W,H);
+ g.fillStyle='#25343a';for(const b of State.mapBuildings){const pts=b.pts;if(!pts.length)continue;let near=false;for(const p of pts){if(Math.abs(p.x-cx)<range*1.2&&Math.abs(p.z-cz)<range*1.2){near=true;break}}if(!near)continue;g.beginPath();g.moveTo(sx(pts[0].x),sy(pts[0].z));for(let i=1;i<pts.length;i++)g.lineTo(sx(pts[i].x),sy(pts[i].z));g.closePath();g.fill()}
+ g.strokeStyle='#819098';g.lineCap='round';for(const r of State.mapRoads){const pts=r.pts;if(pts.length<2)continue;let near=false;for(const p of pts){if(Math.abs(p.x-cx)<range*1.3&&Math.abs(p.z-cz)<range*1.3){near=true;break}}if(!near)continue;g.lineWidth=/primary|secondary/.test(r.type)?5:/tertiary|residential/.test(r.type)?3:1.7;g.beginPath();g.moveTo(sx(pts[0].x),sy(pts[0].z));for(let i=1;i<pts.length;i++)g.lineTo(sx(pts[i].x),sy(pts[i].z));g.stroke()}
+ g.strokeStyle='#3d87a6';g.lineWidth=7;for(const w of State.waterZones){if(w.kind==='river'){const pts=w.pts;if(pts.length<2)continue;g.beginPath();g.moveTo(sx(pts[0].x),sy(pts[0].z));for(let i=1;i<pts.length;i++)g.lineTo(sx(pts[i].x),sy(pts[i].z));g.stroke()}else if(w.kind==='polygon'){const pts=w.ring;if(!pts.length)continue;g.fillStyle='#286d8d';g.beginPath();g.moveTo(sx(pts[0].x),sy(pts[0].z));for(let i=1;i<pts.length;i++)g.lineTo(sx(pts[i].x),sy(pts[i].z));g.closePath();g.fill()}}
+ const marks=[['TORGET',local(13.50295,59.380767),'#e3bc4d'],['MITT I CITY',local(13.50055,59.37988),'#79d15a'],["O'LEARYS",local(13.503791,59.380512),'#d0644d']];
+ g.font='800 17px Arial';g.textAlign='center';for(const [label,p,col] of marks){if(Math.abs(p.x-cx)>range||Math.abs(p.z-cz)>range)continue;g.fillStyle=col;g.beginPath();g.arc(sx(p.x),sy(p.z),7,0,Math.PI*2);g.fill();g.fillStyle='#fff';g.fillText(label,sx(p.x),sy(p.z)-12)}
+ g.save();g.translate(W/2,H/2);g.rotate(-camera.rotation.y);g.fillStyle='#fff';g.strokeStyle='#071015';g.lineWidth=3;g.beginPath();g.moveTo(0,-15);g.lineTo(10,11);g.lineTo(0,7);g.lineTo(-10,11);g.closePath();g.fill();g.stroke();g.restore();
+ g.fillStyle='#ffffff99';g.font='900 18px Arial';g.textAlign='left';g.fillText('N',10,22);
+ const street=nearestStreet(camera);if(street!==State.currentStreet){State.currentStreet=street;text('v28street',street.toUpperCase())}
+}
+function ensureAudio(){
+ if(State.audioReady&&State.audioCtx){State.audioCtx.resume?.();return State.audioCtx}
+ try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;State.audioCtx=State.audioCtx||new AC();State.audioCtx.resume?.();State.audioReady=true;initTrafficAudio();return State.audioCtx}catch(e){return null}
+}
+function pannerAt(ctx,pos){
+ const p=ctx.createPanner();p.panningModel='HRTF';p.distanceModel='inverse';p.refDistance=2.5;p.maxDistance=70;p.rolloffFactor=1.35;
+ p.positionX.value=pos.x;p.positionY.value=pos.y||1;p.positionZ.value=pos.z;return p;
+}
+function oneShot(kind,pos){
+ const ctx=ensureAudio();if(!ctx)return;const now=ctx.currentTime,p=pannerAt(ctx,pos||new B.Vector3());
+ const g=ctx.createGain();g.gain.setValueAtTime(kind==='bump'?.08:kind==='splash'?.06:.025,now);g.gain.exponentialRampToValueAtTime(.0001,now+(kind==='bump'?.22:kind==='splash'?.45:.5));p.connect(g);g.connect(ctx.destination);
+ if(kind==='bump'){const o=ctx.createOscillator();o.type='triangle';o.frequency.setValueAtTime(92,now);o.frequency.exponentialRampToValueAtTime(42,now+.18);o.connect(p);o.start(now);o.stop(now+.22)}
+ else{const len=Math.floor(ctx.sampleRate*(kind==='splash'?.42:.42)),buf=ctx.createBuffer(1,len,ctx.sampleRate),ch=buf.getChannelData(0);for(let i=0;i<len;i++)ch[i]=(Math.random()*2-1)*Math.exp(-i/(len*.55));const src=ctx.createBufferSource(),f=ctx.createBiquadFilter();f.type=kind==='splash'?'bandpass':'lowpass';f.frequency.value=kind==='splash'?950:650;f.Q.value=.65;src.buffer=buf;src.connect(f);f.connect(p);src.start(now)}
+}
+function initTrafficAudio(){
+ const ctx=State.audioCtx;if(!ctx)return;for(const v of State.vehicleAudio){try{v.osc.stop()}catch(e){}}
+ State.vehicleAudio=[];
+ for(const t of State.traffic){const o=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain(),p=pannerAt(ctx,t.r.position);o.type=t.kind==='bus'?'sawtooth':'triangle';o.frequency.value=t.kind==='bus'?58:78;f.type='lowpass';f.frequency.value=t.kind==='bus'?280:360;g.gain.value=t.kind==='bus'?.025:.014;o.connect(f);f.connect(p);p.connect(g);g.connect(ctx.destination);o.start();State.vehicleAudio.push({track:t,osc:o,panner:p,gain:g})}
+}
+function updateAudio(camera){
+ const ctx=State.audioCtx;if(!ctx)return;const L=ctx.listener,p=camera.position,f=camera.getDirection(B.Axis.Z);
+ if(L.positionX){L.positionX.value=p.x;L.positionY.value=p.y;L.positionZ.value=p.z;if(L.forwardX){L.forwardX.value=f.x;L.forwardY.value=f.y;L.forwardZ.value=f.z}}
+ for(const a of State.vehicleAudio){const q=a.track.r.position;a.panner.positionX.value=q.x;a.panner.positionY.value=1;a.panner.positionZ.value=q.z}
+ const now=performance.now();if(now-State.lastChatter>4200&&State.npcs.length){let best=null,bd=18;for(const n of State.npcs){const d=B.Vector3.Distance(camera.position,n.position);if(d<bd){bd=d;best=n}}if(best){State.lastChatter=now+Math.random()*1800;oneShot('chatter',best.position)}}
+}
+function handleWater(camera){
+ const now=performance.now();if(now-State.lastWaterCheck<90)return;State.lastWaterCheck=now;
+ const inside=isWaterAt(camera.position.x,camera.position.z),overlay=document.getElementById('v28water');
+ if(inside){camera.cameraDirection.scaleInPlace(.38);overlay?.classList.add('show');if(!State.waterEnteredAt){State.waterEnteredAt=now;oneShot('splash',camera.position)}
+  if(now-State.waterEnteredAt>1150&&State.lastLandPos){camera.position.copyFrom(State.lastLandPos);State.health=Math.max(1,State.health-10);State.waterEnteredAt=0;overlay?.classList.remove('show');dialog('Klarälven','För djupt. Du flyttades tillbaka till stranden.');update()}
+ }else{State.waterEnteredAt=0;overlay?.classList.remove('show');State.lastLandPos=camera.position.clone()}
+}
+function collisionFeedback(camera,mesh){
+ const now=performance.now();if(now-State.lastCollisionAt<230)return;State.lastCollisionAt=now;const e=document.getElementById('v28bump');if(e){e.textContent=mesh?.metadata?.collisionKind==='npc'?'URSÄKTA!':'DUNS';e.classList.add('show');setTimeout(()=>e.classList.remove('show'),170)}
+ oneShot('bump',mesh?.absolutePosition||camera.position);
+ const d=State.lastDelta;if(d&&d.lengthSquared()>.0001){const n=d.normalize();camera.position.addInPlace(n.scale(-.15));camera.cameraDirection.scaleInPlace(-.2)}
+}
+
 function css(){const s=document.createElement('style');s.textContent=`
 html,body{overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #v25hud{position:fixed;inset:0;pointer-events:none;z-index:22;color:#fff;font-family:Inter,system-ui,sans-serif}
