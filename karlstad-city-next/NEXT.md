@@ -128,3 +128,18 @@ Geometry-cleanup pass before real landmark assets:
 - hero entrance treatment is deliberately toned down; named landmarks keep only a small canopy and all heroes use a subtler facade band.
 
 Hero architecture remains separate and ready for later GLB/LOD2 replacement.
+
+
+## Real City V15
+
+First dedicated landmark replacement: Sandgrund Lars Lerin.
+
+- adds a separate `sandgrund-landmark.js` builder,
+- keeps the real OSM footprint and collision position,
+- replaces the generic hero extrusion for Sandgrund with a custom low horizontal pavilion shell,
+- adds long glazed facade bands, dark mullions, exact footprint-following flat roof, entrance canopy and Sandgrund signage,
+- keeps the landmark mesh separate from generic building merges,
+- records the replacement as `procedural:sandgrund-v15` so it can later be swapped for GLB/LOD2 without changing gameplay coordinates,
+- adds a SANDGRUND focus button for quick local visual testing.
+
+The V15 shell is reference-informed game art, not survey-accurate architecture. Official public sources confirm the building was designed by Uno Asplund, opened in 1960 and is functionally inspired; exact facade dimensions/materials still require dedicated reference imagery, scan data or LOD2.
