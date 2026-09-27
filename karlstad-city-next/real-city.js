@@ -46,15 +46,41 @@ async function loadMunicipal(){
  const pairs=await Promise.allSettled(Object.entries(urls).map(async([k,u])=>[k,await getJson(u,6000)]));const data={};for(const p of pairs)if(p.status==='fulfilled')data[p.value[0]]=p.value[1];
  if(!data.buildings?.features?.length)throw Error('Kommunens byggnadslager kunde inte läsas');return data;
 }
+const OVERPASS_ENDPOINTS=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
+async function overpass(query,ms=12000){
+ let lastError;
+ for(const endpoint of OVERPASS_ENDPOINTS){
+  try{return await getJson(endpoint+'?data='+encodeURIComponent(query),ms)}
+  catch(e){lastError=e;console.warn('Overpass endpoint failed:',endpoint,e.message)}
+ }
+ throw lastError||Error('Ingen Overpass-endpoint svarade');
+}
+function osmFeatureProps(e){return{...e.tags,FID:e.id,OBJECTID:e.id,OBJEKTTYP:e.tags?.building||'',BALSTATUS:'Gällande'}}
+function parseBuildings(j){const out=[];for(const e of j.elements||[]){if(e.type!=='way'||!e.geometry?.length||!e.tags?.building)continue;const coords=e.geometry.map(p=>[p.lon,p.lat]);if(coords.length>2)out.push({type:'Feature',properties:osmFeatureProps(e),geometry:{type:'Polygon',coordinates:[coords]}})}return out}
+function parseRoads(j){const out=[];for(const e of j.elements||[]){if(e.type!=='way'||!e.geometry?.length||!e.tags?.highway)continue;out.push({type:'Feature',properties:{...osmFeatureProps(e),KLASS:e.tags.highway},geometry:{type:'LineString',coordinates:e.geometry.map(p=>[p.lon,p.lat])}})}return out}
 async function loadOsmFallback(){
- const q=`[out:json][timeout:18];(way[building](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[highway](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[waterway=river](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[natural=water](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[waterway=riverbank](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[leisure=park](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[landuse=grass](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east}););out tags geom;`;
- const url='https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),j=await getJson(url,20000),buildings=[],roads=[],land=[];
- for(const e of j.elements||[]){const props={...e.tags,FID:e.id,OBJECTID:e.id,OBJEKTTYP:e.tags?.building||'',BALSTATUS:'Gällande'};if(e.type!=='way'||!e.geometry?.length)continue;const coords=e.geometry.map(p=>[p.lon,p.lat]);if(e.tags?.building){if(coords.length>2)buildings.push({type:'Feature',properties:props,geometry:{type:'Polygon',coordinates:[coords]}})}else if(e.tags?.highway)roads.push({type:'Feature',properties:{...props,KLASS:e.tags.highway},geometry:{type:'LineString',coordinates:coords}});else if(e.tags?.waterway==='river')land.push({type:'Feature',properties:{...props,OBJEKTTYP:'river',width:e.tags.width},geometry:{type:'LineString',coordinates:coords}});else if(e.tags?.natural==='water'||e.tags?.waterway==='riverbank'||e.tags?.leisure==='park'||e.tags?.landuse==='grass')land.push({type:'Feature',properties:{...props,OBJEKTTYP:e.tags.natural||e.tags.waterway||e.tags.leisure||e.tags.landuse},geometry:{type:'Polygon',coordinates:[coords]}})}
- sceneStats.source='OpenStreetMap fallback';return{buildings:{features:buildings},roads:{features:roads},land:{features:land},trees:{features:[]}};
+ const cacheKey='karlstad-real-city-core-v8';
+ try{const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');if(cached?.buildings?.features?.length&&cached?.roads?.features?.length){sceneStats.source='OpenStreetMap cache';return cached}}catch(e){}
+ const qb=`[out:json][timeout:12];way[building](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});out tags geom;`;
+ const qr=`[out:json][timeout:12];way[highway](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});out tags geom;`;
+ const results=await Promise.allSettled([overpass(qb,12000),overpass(qr,12000)]);
+ const buildings=results[0].status==='fulfilled'?parseBuildings(results[0].value):[];
+ const roads=results[1].status==='fulfilled'?parseRoads(results[1].value):[];
+ if(!buildings.length||!roads.length)throw Error('OSM kärndata kunde inte läsas');
+ const data={buildings:{features:buildings},roads:{features:roads},land:{features:[]},trees:{features:[]}};
+ sceneStats.source='OpenStreetMap fallback';
+ try{localStorage.setItem(cacheKey,JSON.stringify(data))}catch(e){console.warn('OSM cache skipped:',e.message)}
+ return data;
+}
+async function loadOsmEnvironment(){
+ const q=`[out:json][timeout:12];(way[waterway=river](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[natural=water](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[waterway=riverbank](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[leisure=park](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[landuse=grass](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east}););out tags geom;`;
+ const j=await overpass(q,12000),land=[];
+ for(const e of j.elements||[]){if(e.type!=='way'||!e.geometry?.length)continue;const props={...osmFeatureProps(e),OBJEKTTYP:e.tags?.natural||e.tags?.waterway||e.tags?.leisure||e.tags?.landuse||''},coords=e.geometry.map(p=>[p.lon,p.lat]);if(e.tags?.waterway==='river')land.push({type:'Feature',properties:{...props,OBJEKTTYP:'river',width:e.tags.width},geometry:{type:'LineString',coordinates:coords}});else if(coords.length>2)land.push({type:'Feature',properties:props,geometry:{type:'Polygon',coordinates:[coords]}})}
+ return land;
 }
 async function loadOsmTrees(){
- const q=`[out:json][timeout:12];node[natural=tree](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});out tags;`;
- const url='https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q),j=await getJson(url,14000),trees=[];
+ const q=`[out:json][timeout:10];node[natural=tree](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});out tags;`;
+ const j=await overpass(q,10000),trees=[];
  for(const e of j.elements||[]){if(e.type!=='node')continue;trees.push({type:'Feature',properties:{OBJECTID:e.id,tradslag:e.tags?.species||e.tags?.genus||'',dbh:e.tags?.diameter_crown||40},geometry:{type:'Point',coordinates:[e.lon,e.lat]}})}
  return trees;
 }
@@ -85,10 +111,13 @@ setProgress(58,'Optimerar byggnader…');for(const [material,meshes] of building
 setProgress(66,'Lägger ut gator, trottoarer och Klarälven…');for(const [i,f] of (data.roads?.features||[]).entries())sceneStats.roads+=createRoad(f,i);if(sidewalkMeshes.length>1){const sw=B.Mesh.MergeMeshes(sidewalkMeshes,true,true,undefined,false,false);if(sw){sw.name='real sidewalks';sw.material=M.sidewalk;sw.receiveShadows=true;sw.freezeWorldMatrix()}}if(roadMeshes.length>1){const mergedRoad=B.Mesh.MergeMeshes(roadMeshes,true,true,undefined,false,false);if(mergedRoad){mergedRoad.name='real roads';mergedRoad.material=M.asphalt;mergedRoad.receiveShadows=true;mergedRoad.freezeWorldMatrix()}}for(const [i,f] of (data.land?.features||[]).entries())sceneStats.land+=createLand(f,i);
 setProgress(78,'Planterar tillgängliga träd…');for(const [i,f] of (data.trees?.features||[]).slice(0,450).entries())sceneStats.trees+=createTree(f,i);
 setProgress(91,'Optimerar scenen för mobilen…');scene.blockMaterialDirtyMechanism=true;for(const material of scene.materials)material.freeze?.();
-setProgress(100,'Karlstad klart');status.textContent=`${engine.__backend} · ${sceneStats.source==='OpenStreetMap fallback'?'OSM · ':''}${sceneStats.buildings} HUS · ${sceneStats.roads} VÄGAR · ${sceneStats.trees} TRÄD`;
+setProgress(100,'Karlstad klart');status.textContent=engine.__backend+' · '+(sceneStats.source.includes('OpenStreetMap')?'OSM · ':'')+sceneStats.buildings+' HUS · '+sceneStats.roads+' VÄGAR · '+sceneStats.trees+' TRÄD';
 setTimeout(()=>loading.classList.add('hidden'),350);
+if(localPilot){
+ loadOsmEnvironment().then(features=>{for(const [i,f] of features.entries())sceneStats.land+=createLand(f,i)}).catch(e=>console.warn('Environment layer deferred:',e));
+}
 if(sceneStats.trees===0){
- loadOsmTrees().then(features=>{for(const [i,f] of features.slice(0,450).entries())sceneStats.trees+=createTree(f,i);status.textContent=`${engine.__backend} · ${sceneStats.source==='OpenStreetMap fallback'?'OSM · ':''}${sceneStats.buildings} HUS · ${sceneStats.roads} VÄGAR · ${sceneStats.trees} TRÄD`;}).catch(e=>console.warn('Tree layer deferred:',e));
+ loadOsmTrees().then(features=>{for(const [i,f] of features.slice(0,450).entries())sceneStats.trees+=createTree(f,i);status.textContent=engine.__backend+' · '+(sceneStats.source.includes('OpenStreetMap')?'OSM · ':'')+sceneStats.buildings+' HUS · '+sceneStats.roads+' VÄGAR · '+sceneStats.trees+' TRÄD';}).catch(e=>console.warn('Tree layer deferred:',e));
 }
 const spawn=new B.Vector3(0,1.8,0);camera.position.copyFrom(spawn);camera.setTarget(new B.Vector3(0,1.8,-35));$('reset').addEventListener('click',()=>{camera.position.copyFrom(spawn);camera.rotation.set(0,Math.PI,0);camera.setTarget(new B.Vector3(0,1.8,-35))});$('collision').addEventListener('click',()=>{camera.checkCollisions=!camera.checkCollisions;camera.applyGravity=camera.checkCollisions;$('collision').textContent=camera.checkCollisions?'COLL ON':'COLL OFF';});
 let joy={active:false,id:null,x:0,y:0},joyEl=$('joy'),knob=$('knob');function joyPos(x,y){const r=joyEl.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=x-cx,dy=y-cy,max=33,len=Math.hypot(dx,dy)||1;if(len>max){dx*=max/len;dy*=max/len}joy.x=dx/max;joy.y=dy/max;knob.style.left=38+dx+'px';knob.style.top=38+dy+'px'}joyEl.addEventListener('pointerdown',e=>{joy.active=true;joy.id=e.pointerId;joyEl.setPointerCapture(e.pointerId);joyPos(e.clientX,e.clientY)});joyEl.addEventListener('pointermove',e=>{if(joy.active&&e.pointerId===joy.id)joyPos(e.clientX,e.clientY)});function joyEnd(e){if(e.pointerId===joy.id){joy.active=false;joy.x=joy.y=0;knob.style.left=knob.style.top='38px'}}joyEl.addEventListener('pointerup',joyEnd);joyEl.addEventListener('pointercancel',joyEnd);
