@@ -59,14 +59,20 @@ function osmFeatureProps(e){return{...e.tags,FID:e.id,OBJECTID:e.id,OBJEKTTYP:e.
 function parseBuildings(j){const out=[];for(const e of j.elements||[]){if(e.type!=='way'||!e.geometry?.length||!e.tags?.building)continue;const coords=e.geometry.map(p=>[p.lon,p.lat]);if(coords.length>2)out.push({type:'Feature',properties:osmFeatureProps(e),geometry:{type:'Polygon',coordinates:[coords]}})}return out}
 function parseRoads(j){const out=[];for(const e of j.elements||[]){if(e.type!=='way'||!e.geometry?.length||!e.tags?.highway)continue;out.push({type:'Feature',properties:{...osmFeatureProps(e),KLASS:e.tags.highway},geometry:{type:'LineString',coordinates:e.geometry.map(p=>[p.lon,p.lat])}})}return out}
 async function loadOsmFallback(){
- const cacheKey='karlstad-real-city-core-v8';
+ const cacheKey='karlstad-real-city-core-v9';
  try{const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');if(cached?.buildings?.features?.length&&cached?.roads?.features?.length){sceneStats.source='OpenStreetMap cache';return cached}}catch(e){}
  const qb=`[out:json][timeout:12];way[building](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});out tags geom;`;
  const qr=`[out:json][timeout:12];way[highway](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});out tags geom;`;
- const results=await Promise.allSettled([overpass(qb,12000),overpass(qr,12000)]);
- const buildings=results[0].status==='fulfilled'?parseBuildings(results[0].value):[];
- const roads=results[1].status==='fulfilled'?parseRoads(results[1].value):[];
- if(!buildings.length||!roads.length)throw Error('OSM kärndata kunde inte läsas');
+ let results,buildings=[],roads=[];
+ for(let attempt=1;attempt<=3;attempt++){
+  results=await Promise.allSettled([overpass(qb,12000),overpass(qr,12000)]);
+  buildings=results[0].status==='fulfilled'?parseBuildings(results[0].value):[];
+  roads=results[1].status==='fulfilled'?parseRoads(results[1].value):[];
+  if(buildings.length&&roads.length)break;
+  setProgress(14+attempt*3,'OSM svarade inte komplett – försöker igen ('+attempt+'/3)…');
+  await new Promise(r=>setTimeout(r,700*attempt));
+ }
+ if(!buildings.length||!roads.length)throw Error('OSM kärndata kunde inte läsas efter 3 försök');
  const data={buildings:{features:buildings},roads:{features:roads},land:{features:[]},trees:{features:[]}};
  sceneStats.source='OpenStreetMap fallback';
  try{localStorage.setItem(cacheKey,JSON.stringify(data))}catch(e){console.warn('OSM cache skipped:',e.message)}
@@ -101,7 +107,7 @@ const localPilot=location.hostname==='localhost'||location.hostname==='127.0.0.1
 let data;
 if(localPilot){
  setProgress(12,'Laddar lokal Real City-pilot via OSM…');
- try{data=await loadOsmFallback()}catch(e){console.error(e);showError('OSM-reserven svarade inte. Ladda om sidan om en stund.');data={buildings:{features:[]},roads:{features:[]},land:{features:[]},trees:{features:[]}}}
+ try{data=await loadOsmFallback()}catch(e){console.error(e);showError('OSM-reserven svarade inte efter tre automatiska försök. Försök ladda om sidan.');data={buildings:{features:[]},roads:{features:[]},land:{features:[]},trees:{features:[]}}}
 }else{
  try{setProgress(12,'Hämtar Karlstads byggnadsytor…');data=await loadMunicipal()}catch(e){console.warn(e);setProgress(18,'Kommunens live-endpoint svarade inte. Försöker OSM-reserv…');try{data=await loadOsmFallback();showError('Kommunens ArcGIS-endpoint kunde inte nås från webbläsaren. Piloten kör därför OSM som reservkälla i denna session.')}catch(e2){console.error(e2);showError('Varken Karlstads öppna endpoint eller reservkällan kunde läsas. Kontrollera internetanslutningen och ladda om.');data={buildings:{features:[]},roads:{features:[]},land:{features:[]},trees:{features:[]}}}}
 }
