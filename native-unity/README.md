@@ -30,6 +30,10 @@ Editorhjälp: WASD, mellanslag, C, håll höger musknapp för sikte och vänster
 
 ## Bygg för telefon
 
+**Mac → iPhone:** stäng projektet i Unity och kör `Bygg-iPhone.command` i denna katalog. Skriptet kontrollerar Unity-versionens installationsplats, iOS-modulen och att Xcode har slutfört första starten. Det skapar scenen, startar om Unity-processen för Input System-inställningen, exporterar iOS-projektet och öppnar exporten i Xcode. Unity behöver en aktiverad licens på datorn. Skriptet loggar varje Unity-steg i `Builds/Logs` och stannar vid fel; det aktiverar inga konton eller accepterar licensvillkor.
+
+I Xcode väljer du `Unity-iPhone` → **Signing & Capabilities** → ditt **Team**, ansluter din iPhone och väljer den som körmål. Tryck **Run** för att bygga, signera och installera. Exporten är inte en färdig IPA; signering och installation sker i Xcode. Skriptets Bash-syntax och stopp på fel operativsystem har kontrollerats här. Hela Mac-/iPhone-flödet återstår att köra.
+
 **Android:** välj `Karlstad → 2. Build Android development APK`. Resultatet ska hamna i `Builds/Android/KarlstadMobile-dev.apk`. Menyn kräver installerad Android-byggmodul och ett lyckat Unitybygge. ARM64, IL2CPP, Vulkan med GLES3 som alternativ. Detta är utvecklingsbygge, inte en butikssignerad release.
 
 **iOS:** välj `Karlstad → 3. Export iOS Xcode project`. Öppna exporten i Xcode på Mac, välj rätt utvecklingsteam och unik bundle identifier, bygg och signera för en fysisk iPhone. iOS 15 är projektets lägsta inställning. Apple-signering/TestFlight och enhetsprovisionering är inte konfigurerade här. Lokal nätverksförklaring läggs till för Wi-Fi-samspel.
