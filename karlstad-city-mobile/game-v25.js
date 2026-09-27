@@ -101,13 +101,20 @@ function toggleGuide(scene,camera){
 }
 function teleportTo(camera,key){
  const spots={
-  torget:{label:'STORA TORGET',p:local(13.50295,59.380767),offset:new B.Vector3(0,1.8,10)},
-  mitticity:{label:'MITT I CITY',p:local(13.50055,59.37988),offset:new B.Vector3(0,1.8,16)},
-  sandgrund:{label:'SANDGRUND',p:local(13.502961,59.384639),offset:new B.Vector3(0,1.8,24)},
-  museum:{label:'VÄRMLANDS MUSEUM',p:local(13.50124,59.38492),offset:new B.Vector3(8,1.8,18)},
-  olearys:{label:"O'LEARYS",p:local(13.503791,59.380512),offset:new B.Vector3(8,1.8,12)}
+  torget:{label:'STORA TORGET',p:local(13.50295,59.380767),r:10},
+  mitticity:{label:'MITT I CITY',p:local(13.50055,59.37988),r:14},
+  sandgrund:{label:'SANDGRUND',p:local(13.502961,59.384639),r:22},
+  museum:{label:'VÄRMLANDS MUSEUM',p:local(13.50124,59.38492),r:18},
+  olearys:{label:"O'LEARYS",p:local(13.503791,59.380512),r:13}
  };
- const s=spots[key];if(!s)return;camera.position.copyFrom(s.p.add(s.offset));camera.setTarget(new B.Vector3(s.p.x,2,s.p.z));State.safePos=camera.position.clone();clearGuide();missionFlash(s.label)
+ const dest=spots[key];if(!dest)return;
+ function blocked(x,z){for(const b of State.mapBuildings)if(pointInRing(x,z,b.pts))return true;return isWaterAt(x,z)}
+ let chosen=null;
+ for(let ring=0;ring<4&&!chosen;ring++){
+  const rad=dest.r+ring*5;for(let i=0;i<16;i++){const a=i*Math.PI/8,x=dest.p.x+Math.cos(a)*rad,z=dest.p.z+Math.sin(a)*rad;if(!blocked(x,z)){chosen=new B.Vector3(x,1.8,z);break}}
+ }
+ chosen=chosen||new B.Vector3(dest.p.x,1.8,dest.p.z+dest.r);
+ camera.position.copyFrom(chosen);camera.setTarget(new B.Vector3(dest.p.x,2,dest.p.z));State.safePos=camera.position.clone();clearGuide();missionFlash(dest.label)
 }
 
 function isWaterAt(x,z){
