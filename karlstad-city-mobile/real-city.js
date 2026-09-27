@@ -37,6 +37,12 @@ buildingMats[0].albedoTexture=procTex('plaster tex','plaster','#c4a982','#8d775d
 const pavingTex=procTex('torget stone grid','stone','#b4b2a7','#8d8d84');pavingTex.uScale=12;pavingTex.vScale=10;M.paving.albedoTexture=pavingTex;
 const asphaltTex=procTex('asphalt grain','plaster','#666e71','#51595b');asphaltTex.uScale=10;asphaltTex.vScale=10;M.asphalt.albedoTexture=asphaltTex;
 const sidewalkTex=procTex('sidewalk slabs','stone','#b0b1a8','#8f918a');sidewalkTex.uScale=7;sidewalkTex.vScale=7;M.sidewalk.albedoTexture=sidewalkTex;
+const bumpNoise=procTex('V29 micro bump','plaster','#777777','#2f2f2f');bumpNoise.uScale=18;bumpNoise.vScale=18;M.asphalt.bumpTexture=bumpNoise;M.asphalt.bumpTexture.level=.18;
+const stoneBump=procTex('V29 stone bump','stone','#999999','#565656');stoneBump.uScale=12;stoneBump.vScale=12;M.paving.bumpTexture=stoneBump;M.paving.bumpTexture.level=.13;M.sidewalk.bumpTexture=stoneBump;M.sidewalk.bumpTexture.level=.08;
+M.glass.environmentIntensity=.78;M.glass.microSurface=.92;M.water.environmentIntensity=.8;M.water.microSurface=.94;M.metal.environmentIntensity=.72;
+const V29={marking:mat('V29 road marking','#e8e1c7',.58,.04),cross:mat('V29 crossing','#f2eee2',.54,.02),shelter:mat('V29 shelter metal','#30383b',.34,.72),shelterGlass:mat('V29 shelter glass','#547786',.12,.28),accent:mat('V29 city accent','#d9a93d',.46,.22)};
+V29.marking.emissiveColor=B.Color3.FromHexString('#24221c');V29.cross.emissiveColor=B.Color3.FromHexString('#25231e');V29.shelterGlass.alpha=.62;V29.shelterGlass.transparencyMode=B.PBRMaterial.PBRMATERIAL_ALPHABLEND;
+
 
 
 const lowDetail=matchMedia('(pointer:coarse), (max-width:900px)').matches;const isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);let windowBudget=lowDetail?340:720,doorBudget=lowDetail?75:150,roofBudget=(lowDetail||isSafari)?90:180,corniceBudget=lowDetail?42:80;const frameSource=B.MeshBuilder.CreateBox('window frame source',{width:1.02,height:1.34,depth:.065},scene);frameSource.material=M.frame;frameSource.position.y=-500;frameSource.isPickable=false;const windowSource=B.MeshBuilder.CreateBox('window source',{width:.82,height:1.12,depth:.075},scene);windowSource.material=M.glass;windowSource.position.y=-500;windowSource.isPickable=false;const doorSource=B.MeshBuilder.CreateBox('door source',{width:1.1,height:2.15,depth:.08},scene);doorSource.material=M.door;doorSource.position.y=-500;doorSource.isPickable=false;const corniceSource=B.MeshBuilder.CreateBox('cornice source',{width:1,height:.2,depth:.16},scene);corniceSource.material=M.frame;corniceSource.position.y=-500;corniceSource.isPickable=false;const plinthSource=B.MeshBuilder.CreateBox('plinth source',{width:1,height:.36,depth:.13},scene);plinthSource.material=M.frame;plinthSource.position.y=-500;plinthSource.isPickable=false;const heroCanopySource=B.MeshBuilder.CreateBox('hero canopy source',{width:3.2,height:.14,depth:.9},scene);heroCanopySource.material=M.frame;heroCanopySource.position.y=-500;const heroBandSource=B.MeshBuilder.CreateBox('hero band source',{width:1,height:.12,depth:.09},scene);heroBandSource.material=M.frame;heroBandSource.position.y=-500;
@@ -58,6 +64,43 @@ const ground=B.MeshBuilder.CreateGround('ground',{width:1300,height:1300,subdivi
 const square=B.MeshBuilder.CreateGround('Stora torget paving',{width:108,height:82,subdivisions:1},scene);square.position.set(0,.012,0);square.material=M.paving;square.receiveShadows=true;square.isPickable=false;
 const lampPoleSource=B.MeshBuilder.CreateCylinder('lamp pole source',{height:4.5,diameter:.12,tessellation:8},scene);lampPoleSource.material=M.metal;lampPoleSource.position.y=-500;const lampHeadSource=B.MeshBuilder.CreateSphere('lamp head source',{diameter:.38,segments:6},scene);lampHeadSource.material=M.frame;lampHeadSource.position.y=-500;const benchSeatSource=B.MeshBuilder.CreateBox('bench seat source',{width:2.2,height:.16,depth:.55},scene);benchSeatSource.material=M.bench;benchSeatSource.position.y=-500;const benchBackSource=B.MeshBuilder.CreateBox('bench back source',{width:2.2,height:.72,depth:.12},scene);benchBackSource.material=M.bench;benchBackSource.position.y=-500;const planterSource=B.MeshBuilder.CreateCylinder('planter source',{height:.55,diameter:1.25,tessellation:10},scene);planterSource.material=M.planter;planterSource.position.y=-500;const planterGreenSource=B.MeshBuilder.CreateIcoSphere('planter green source',{radius:.62,subdivisions:1},scene);planterGreenSource.material=M.tree;planterGreenSource.position.y=-500;
 function roadDistanceSq(x,z){let best=Infinity;for(const r of roadCorridors)for(let i=0;i<r.pts.length-1;i++)best=Math.min(best,segDistSq(x,z,r.pts[i],r.pts[i+1])-r.half*r.half);return best}
+
+function v29RoadMarkings(){
+ let budget=matchMedia('(pointer:coarse)').matches?115:210;
+ for(const r of roadCorridors){
+  if(budget<=0)break;
+  const cls=String(r.properties?.KLASS||r.properties?.highway||'').toLowerCase();
+  if(!/(primary|secondary|tertiary|residential|0|1|2|3|4|5)/.test(cls))continue;
+  for(let i=1;i<r.pts.length&&budget>0;i++){
+   const a=r.pts[i-1],b=r.pts[i],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<4)continue;
+   const ux=dx/len,uz=dz/len,ang=Math.atan2(dx,dz);
+   for(let d=4;d<len-1&&budget>0;d+=9){
+    const dash=B.MeshBuilder.CreateBox('V29 lane dash',{width:.13,height:.025,depth:2.35},scene);
+    dash.position.set(a.x+ux*d,.071,a.z+uz*d);dash.rotation.y=ang;dash.material=V29.marking;dash.isPickable=false;budget--;
+   }
+  }
+ }
+ function crossing(x,z,rot,w=5.6){
+  for(let i=-4;i<=4;i++){const stripe=B.MeshBuilder.CreateBox('V29 zebra',{width:w,height:.028,depth:.38},scene);stripe.position.set(x+Math.sin(rot)*i*.68,.078,z+Math.cos(rot)*i*.68);stripe.rotation.y=rot;stripe.material=V29.cross;stripe.isPickable=false}
+ }
+ crossing(0,-34,0,6.8);crossing(0,34,0,6.8);crossing(-48,0,Math.PI/2,6.2);crossing(48,0,Math.PI/2,6.2);
+}
+function v29BusShelter(x,z,rot=0){
+ const root=new B.TransformNode('V29 bus shelter',scene);root.position.set(x,0,z);root.rotation.y=rot;
+ for(const sx of [-1.55,1.55]){const p=B.MeshBuilder.CreateBox('bus shelter post',{width:.08,height:2.45,depth:.08},scene);p.parent=root;p.position.set(sx,1.225,0);p.material=V29.shelter;p.checkCollisions=true}
+ const roof=B.MeshBuilder.CreateBox('bus shelter roof',{width:3.35,height:.12,depth:1.35},scene);roof.parent=root;roof.position.set(0,2.42,0);roof.material=V29.shelter;
+ const back=B.MeshBuilder.CreateBox('bus shelter glass',{width:3.15,height:2.05,depth:.055},scene);back.parent=root;back.position.set(0,1.22,-.58);back.material=V29.shelterGlass;
+ const side=B.MeshBuilder.CreateBox('bus shelter side',{width:.055,height:2.05,depth:1.12},scene);side.parent=root;side.position.set(-1.56,1.22,0);side.material=V29.shelterGlass;
+ const bench=B.MeshBuilder.CreateBox('bus shelter bench',{width:2.0,height:.12,depth:.38},scene);bench.parent=root;bench.position.set(.2,.62,-.26);bench.material=M.bench;
+ const sign=B.MeshBuilder.CreateCylinder('bus stop pole',{height:2.7,diameter:.08,tessellation:10},scene);sign.parent=root;sign.position.set(1.9,1.35,.1);sign.material=V29.shelter;
+ const plate=B.MeshBuilder.CreateBox('bus stop sign',{width:.44,height:.52,depth:.06},scene);plate.parent=root;plate.position.set(1.9,2.48,.1);plate.material=V29.accent;
+ return root;
+}
+function v29StreetProps(){
+ v29BusShelter(36,-30,Math.PI/2);v29BusShelter(-35,30,-Math.PI/2);
+ const positions=[[-44,-24],[-30,-24],[30,-24],[44,-24],[-44,24],[-30,24],[30,24],[44,24]];
+ for(const [x,z] of positions){const b=B.MeshBuilder.CreateCylinder('V29 bollard',{height:.72,diameter:.16,tessellation:12},scene);b.position.set(x,.36,z);b.material=V29.shelter;b.checkCollisions=true}
+}
 function dressSquare(){function safe(x,z){return roadDistanceSq(x,z)>4}const lamps=[[-42,-29],[-21,-29],[0,-29],[21,-29],[42,-29],[-42,29],[-21,29],[0,29],[21,29],[42,29]];for(const [x,z] of lamps){if(!safe(x,z))continue;const p=lampPoleSource.createInstance('torget lamp'),h=lampHeadSource.createInstance('torget lamp head');p.position.set(x,2.25,z);h.position.set(x,4.55,z)}const benches=[[-28,-19,0],[0,-19,0],[28,-19,0],[-28,19,Math.PI],[0,19,Math.PI],[28,19,Math.PI]];for(const [x,z,r] of benches){if(!safe(x,z))continue;const s=benchSeatSource.createInstance('torget bench'),b=benchBackSource.createInstance('torget bench back');s.position.set(x,.58,z);b.position.set(x,.95,z-.27);s.rotation.y=b.rotation.y=r}const planters=[[-39,-18],[39,-18],[-39,18],[39,18]];for(const [x,z] of planters){if(!safe(x,z))continue;const p=planterSource.createInstance('torget planter'),g=planterGreenSource.createInstance('torget planter green');p.position.set(x,.275,z);g.position.set(x,1.05,z)}}
 
 function arcgisUrl(root,layer,outFields='*'){
@@ -175,7 +218,7 @@ try{
 setProgress(38,'Bygger verkliga byggnadsytor…');await new Promise(r=>requestAnimationFrame(r));
 const orderedBuildings=[...(data.buildings?.features||[])].sort((a,b)=>featureDistanceSq(a)-featureDistanceSq(b));heroById=resolveHeroBuildings(orderedBuildings);sceneStats.hero=heroById.size;scene.metadata={...(scene.metadata||{}),heroTargets:[...heroById.values()].map(h=>({key:h.key,label:h.label,id:h.id,style:h.style}))};console.info('Hero building targets',scene.metadata.heroTargets);for(const [i,f] of orderedBuildings.entries()){if(String(f.properties?.BALSTATUS||'Gällande').toLowerCase().includes('planerad'))continue;sceneStats.buildings+=createBuilding(f,i);if(i%60===0)await new Promise(r=>requestAnimationFrame(r))}
 setProgress(58,'Optimerar byggnader…');for(const [material,meshes] of buildingGroups){if(!meshes.length)continue;const merged=B.Mesh.MergeMeshes(meshes,true,true,undefined,false,false);if(merged){merged.name='real buildings / '+material.name;merged.material=material;merged.checkCollisions=true;merged.receiveShadows=true;merged.isPickable=false;merged.freezeWorldMatrix();shadows.addShadowCaster(merged)}await new Promise(r=>requestAnimationFrame(r))}for(const m of heroMeshes){m.freezeWorldMatrix();m.receiveShadows=true}setProgress(62,'Förbereder tak…');for(const r of roofMeshes){r.receiveShadows=true;r.freezeWorldMatrix?.()}await new Promise(r=>requestAnimationFrame(r));
-setProgress(66,'Lägger ut gator, trottoarer och Klarälven…');for(const [i,f] of (data.roads?.features||[]).entries())sceneStats.roads+=createRoad(f,i);dressSquare();if(sidewalkMeshes.length>1){const sw=B.Mesh.MergeMeshes(sidewalkMeshes,true,true,undefined,false,false);if(sw){sw.name='real sidewalks';sw.material=M.sidewalk;sw.receiveShadows=true;sw.freezeWorldMatrix()}}if(roadMeshes.length>1){const mergedRoad=B.Mesh.MergeMeshes(roadMeshes,true,true,undefined,false,false);if(mergedRoad){mergedRoad.name='real roads';mergedRoad.material=M.asphalt;mergedRoad.receiveShadows=true;mergedRoad.freezeWorldMatrix()}}for(const [i,f] of (data.land?.features||[]).entries())sceneStats.land+=createLand(f,i);
+setProgress(66,'Lägger ut gator, trottoarer och Klarälven…');for(const [i,f] of (data.roads?.features||[]).entries())sceneStats.roads+=createRoad(f,i);dressSquare();v29RoadMarkings();v29StreetProps();if(sidewalkMeshes.length>1){const sw=B.Mesh.MergeMeshes(sidewalkMeshes,true,true,undefined,false,false);if(sw){sw.name='real sidewalks';sw.material=M.sidewalk;sw.receiveShadows=true;sw.freezeWorldMatrix()}}if(roadMeshes.length>1){const mergedRoad=B.Mesh.MergeMeshes(roadMeshes,true,true,undefined,false,false);if(mergedRoad){mergedRoad.name='real roads';mergedRoad.material=M.asphalt;mergedRoad.receiveShadows=true;mergedRoad.freezeWorldMatrix()}}for(const [i,f] of (data.land?.features||[]).entries())sceneStats.land+=createLand(f,i);
 setProgress(78,'Planterar tillgängliga träd…');for(const [i,f] of (data.trees?.features||[]).slice(0,450).entries())sceneStats.trees+=createTree(f,i);
 setProgress(91,'Optimerar scenen för mobilen…');scene.blockMaterialDirtyMechanism=true;for(const material of scene.materials)material.freeze?.();console.info('Visual cleanup filtered footprints:',sceneStats.filtered);
 window.KarlstadRealCityAPI={scene,camera,engine,ORIGIN,BBOX,local,sceneStats,buildingFootprints,roadCorridors,namedRoads,waterZones,getData:()=>data};
