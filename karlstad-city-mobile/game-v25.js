@@ -59,16 +59,21 @@ function nearestRouteNode(pos){
 }
 function computeRoute(start,target){
  const g=State.routeGraph||buildRouteGraph(),a=nearestRouteNode(start),b=nearestRouteNode(target);if(!a||!b)return[start.clone(),target.clone()];
- const dist=new Map([[a.k,0]]),prev=new Map(),q=new Set(g.keys());
- while(q.size){
-  let uk=null,ud=Infinity;for(const k of q){const d=dist.get(k);if(d!=null&&d<ud){ud=d;uk=k}}
-  if(uk==null||uk===b.k)break;q.delete(uk);const u=g.get(uk);
-  for(const [vk,w] of u.edges){if(!q.has(vk))continue;const alt=ud+w;if(alt<(dist.get(vk)??Infinity)){dist.set(vk,alt);prev.set(vk,uk)}}
+ const came=new Map(),score=new Map([[a.k,0]]),open=[],inOpen=new Set([a.k]);
+ const heur=k=>B.Vector3.Distance(g.get(k).p,b.p);
+ function push(k,f){open.push([k,f]);let i=open.length-1;while(i>0){const p=(i-1)>>1;if(open[p][1]<=f)break;open[i]=open[p];i=p}open[i]=[k,f]}
+ function pop(){if(!open.length)return null;const top=open[0],last=open.pop();if(open.length&&last){let i=0;open[0]=last;while(true){let l=i*2+1,r=l+1,m=i;if(l<open.length&&open[l][1]<open[m][1])m=l;if(r<open.length&&open[r][1]<open[m][1])m=r;if(m===i)break;const t=open[i];open[i]=open[m];open[m]=t;i=m}}return top}
+ push(a.k,heur(a.k));let steps=0;
+ while(open.length&&steps++<16000){
+  const [uk]=pop();if(!inOpen.has(uk))continue;inOpen.delete(uk);if(uk===b.k)break;
+  const u=g.get(uk),base=score.get(uk)??Infinity;
+  for(const [vk,w] of u.edges){const tentative=base+w;if(tentative<(score.get(vk)??Infinity)){came.set(vk,uk);score.set(vk,tentative);push(vk,tentative+heur(vk));inOpen.add(vk)}}
  }
- if(!dist.has(b.k))return[start.clone(),target.clone()];
- const keys=[];let cur=b.k;keys.push(cur);while(cur!==a.k&&prev.has(cur)){cur=prev.get(cur);keys.push(cur)}keys.reverse();
- const pts=[start.clone(),...keys.map(k=>g.get(k).p.clone()),target.clone()];
- const compact=[];for(const p of pts){if(!compact.length||B.Vector3.Distance(compact[compact.length-1],p)>.8)compact.push(p)}return compact
+ if(!score.has(b.k))return[start.clone(),target.clone()];
+ const keys=[];let cur=b.k;keys.push(cur);while(cur!==a.k&&came.has(cur)){cur=came.get(cur);keys.push(cur)}keys.reverse();
+ const pts=[start.clone(),...keys.map(k=>g.get(k).p.clone()),target.clone()],compact=[];
+ for(const p of pts){if(!compact.length||B.Vector3.Distance(compact[compact.length-1],p)>.8)compact.push(p)}
+ return compact
 }
 function clearGuide(){
  for(const m of State.guideMeshes){try{m.dispose()}catch(e){}}State.guideMeshes=[];State.routePoints=[];State.guideOn=false;
