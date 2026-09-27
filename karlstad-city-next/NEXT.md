@@ -143,3 +143,20 @@ First dedicated landmark replacement: Sandgrund Lars Lerin.
 - adds a SANDGRUND focus button for quick local visual testing.
 
 The V15 shell is reference-informed game art, not survey-accurate architecture. Official public sources confirm the building was designed by Uno Asplund, opened in 1960 and is functionally inspired; exact facade dimensions/materials still require dedicated reference imagery, scan data or LOD2.
+
+
+## Real City V16
+
+Sandgrund accuracy pass based on Karlstad municipal culture-environment documentation plus exterior photo references:
+
+- white panelled facade instead of the neutral V15 shell,
+- aluminium-framed narrow clerestory windows on the entrance/street facade,
+- larger landscape glazing retained on the river side,
+- separate higher north roof volume with shallow gable and lower south mono-pitch roof,
+- dark sheet-metal roof with a blue-grey roof-edge strip,
+- stronger white entrance frame/canopy with angular support posts,
+- entrance ramp and black railings,
+- orange Sandgrund signage, with the V15 mirrored-text issue corrected,
+- second Sandgrund sign on an adjacent facade when geometry allows.
+
+The footprint/collision remains geodata-based. Detailed facade/roof dimensions are still reference-informed rather than surveyed.
