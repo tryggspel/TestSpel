@@ -1,6 +1,6 @@
 (function(){
   window.KarlstadHeroBuildings={
-    version:14,
+    version:15,
     targets:[
       {
         key:'sandgrund',
@@ -37,7 +37,7 @@
       square:{facade:'#b49b78',accent:'#383b3a',glass:'#284752',roof:'#39464a'}
     },
     assetOverrides:{
-      sandgrund:null,
+      sandgrund:'procedural:sandgrund-v15',
       'varmlands-museum':null
     }
   };
