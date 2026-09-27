@@ -11,7 +11,7 @@ const ASSETS={
  civilian:'https://cdn.3dassets.dev/assets/36337/v1/model.glb',
  infected:'https://cdn.3dassets.dev/assets/11976/v1/model.glb'
 };
-const State={started:false,health:100,ammo:24,reserve:120,score:0,kills:0,phase:-1,mode:'city',mouseSens:.00285,touchSens:.0062,ads:false,fireHeld:false,lastShot:0,weapon:null,coffee:null,pivot:null,muzzle:null,npcs:[],zombies:[],containers:{},traffic:[],core:null,extract:null,nearNpc:null,quality:1,waveSpawned:false,mapRoads:[],mapBuildings:[],waterZones:[],lastLandPos:null,waterEnteredAt:0,lastWaterCheck:0,lastCollisionAt:0,lastPos:null,lastDelta:null,audioCtx:null,audioReady:false,vehicleAudio:[],lastChatter:0,lastMapDraw:0,currentStreet:'STORA TORGET',stamina:100,sprintHeld:false,bobPhase:0,footDistance:0,lastStepAt:0,hasRadio:false,lastSave:0,missionDone:false,impactCooldown:0};
+const State={started:false,health:100,ammo:24,reserve:120,score:0,kills:0,phase:-1,mode:'city',mouseSens:.00285,touchSens:.0062,ads:false,fireHeld:false,lastShot:0,weapon:null,coffee:null,pivot:null,muzzle:null,npcs:[],zombies:[],containers:{},traffic:[],core:null,extract:null,nearNpc:null,quality:1,waveSpawned:false,mapRoads:[],mapBuildings:[],waterZones:[],lastLandPos:null,waterEnteredAt:0,lastWaterCheck:0,lastCollisionAt:0,lastPos:null,lastDelta:null,audioCtx:null,audioReady:false,vehicleAudio:[],lastChatter:0,lastMapDraw:0,currentStreet:'STORA TORGET',stamina:100,sprintHeld:false,bobPhase:0,footDistance:0,lastStepAt:0,hasRadio:false,lastSave:0,missionDone:false,impactCooldown:0,guideOn:false,routePoints:[],routeGraph:null,guideMeshes:[],safePos:null,collisionBurst:0,lastCollisionMesh:null,quickTarget:null};
 function split(u){const i=u.lastIndexOf('/');return{root:u.slice(0,i+1),file:u.slice(i+1)}}
 function addContactShadow(scene,root,rx=.45,rz=.45){
  const disc=B.MeshBuilder.CreateDisc('V29 contact shadow',{radius:1,tessellation:28},scene);disc.parent=root;disc.rotation.x=Math.PI/2;disc.position.y=.018;disc.scaling.set(rx,rz,1);
@@ -38,6 +38,73 @@ function pointSegDist(px,pz,a,b){
  const t=c1/c2,qx=a.x+t*vx,qz=a.z+t*vz;return Math.hypot(px-qx,pz-qz);
 }
 function pointInRing(x,z,ring){let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){const a=ring[i],b=ring[j];const hit=((a.z>z)!==(b.z>z))&&(x<(b.x-a.x)*(z-a.z)/((b.z-a.z)||1e-8)+a.x);if(hit)inside=!inside}return inside}
+function routeKey(p){return (Math.round(p.x*2)/2).toFixed(1)+','+(Math.round(p.z*2)/2).toFixed(1)}
+function buildRouteGraph(){
+ const nodes=new Map();
+ function node(p){const k=routeKey(p);if(!nodes.has(k))nodes.set(k,{k,p:new B.Vector3(p.x,0,p.z),edges:[]});return nodes.get(k)}
+ for(const r of State.mapRoads){
+  if(!r.pts||r.pts.length<2)continue;
+  const bad=/motorway|trunk_link/i.test(r.type||'');if(bad)continue;
+  for(let i=1;i<r.pts.length;i++){
+   const a=node(r.pts[i-1]),b=node(r.pts[i]),d=B.Vector3.Distance(a.p,b.p);if(!Number.isFinite(d)||d<.3||d>80)continue;
+   a.edges.push([b.k,d]);b.edges.push([a.k,d]);
+  }
+ }
+ State.routeGraph=nodes;return nodes
+}
+function nearestRouteNode(pos){
+ const g=State.routeGraph||buildRouteGraph();let best=null,bd=Infinity;
+ for(const n of g.values()){const dx=n.p.x-pos.x,dz=n.p.z-pos.z,d=dx*dx+dz*dz;if(d<bd){bd=d;best=n}}
+ return best
+}
+function computeRoute(start,target){
+ const g=State.routeGraph||buildRouteGraph(),a=nearestRouteNode(start),b=nearestRouteNode(target);if(!a||!b)return[start.clone(),target.clone()];
+ const dist=new Map([[a.k,0]]),prev=new Map(),q=new Set(g.keys());
+ while(q.size){
+  let uk=null,ud=Infinity;for(const k of q){const d=dist.get(k);if(d!=null&&d<ud){ud=d;uk=k}}
+  if(uk==null||uk===b.k)break;q.delete(uk);const u=g.get(uk);
+  for(const [vk,w] of u.edges){if(!q.has(vk))continue;const alt=ud+w;if(alt<(dist.get(vk)??Infinity)){dist.set(vk,alt);prev.set(vk,uk)}}
+ }
+ if(!dist.has(b.k))return[start.clone(),target.clone()];
+ const keys=[];let cur=b.k;keys.push(cur);while(cur!==a.k&&prev.has(cur)){cur=prev.get(cur);keys.push(cur)}keys.reverse();
+ const pts=[start.clone(),...keys.map(k=>g.get(k).p.clone()),target.clone()];
+ const compact=[];for(const p of pts){if(!compact.length||B.Vector3.Distance(compact[compact.length-1],p)>.8)compact.push(p)}return compact
+}
+function clearGuide(){
+ for(const m of State.guideMeshes){try{m.dispose()}catch(e){}}State.guideMeshes=[];State.routePoints=[];State.guideOn=false;
+ const b=document.getElementById('v31guide');if(b)b.textContent='VISA VÄGEN'
+}
+function buildGuideVisual(scene,route){
+ clearGuide();State.routePoints=route;State.guideOn=true;
+ const mat=new B.StandardMaterial('V31 guide glow',scene);mat.emissiveColor=B.Color3.FromHexString('#ffd34e');mat.diffuseColor=B.Color3.FromHexString('#6f5e22');mat.disableLighting=true;mat.alpha=.92;
+ let total=0,prev=route[0],nextAt=2.2,count=0;
+ for(let i=1;i<route.length&&count<95;i++){
+  const a=prev,b=route[i],seg=B.Vector3.Distance(a,b);if(seg<.1){prev=b;continue}
+  const dir=b.subtract(a).normalize();
+  while(total+seg>=nextAt&&count<95){
+   const d=nextAt-total,p=a.add(dir.scale(d));
+   const ring=B.MeshBuilder.CreateTorus('V31 guide '+count,{diameter:.58,thickness:.085,tessellation:14},scene);ring.position.set(p.x,.105,p.z);ring.rotation.x=Math.PI/2;ring.material=mat;ring.isPickable=false;State.guideMeshes.push(ring);nextAt+=3.0;count++;
+  }total+=seg;prev=b;
+ }
+ const target=route[route.length-1],beacon=B.MeshBuilder.CreateCylinder('V31 objective beacon',{height:3.8,diameter:.32,tessellation:12},scene);beacon.position.set(target.x,1.9,target.z);beacon.material=mat;beacon.isPickable=false;State.guideMeshes.push(beacon);
+ const b=document.getElementById('v31guide');if(b)b.textContent='DÖLJ VÄGEN'
+}
+function toggleGuide(scene,camera){
+ if(State.guideOn){clearGuide();return}
+ const target=objectivePoint();if(!target){missionFlash('INGET AKTIVT MÅL');return}
+ const route=computeRoute(camera.position,target);buildGuideVisual(scene,route);missionFlash('VÄGEN VISAS')
+}
+function teleportTo(camera,key){
+ const spots={
+  torget:{label:'STORA TORGET',p:local(13.50295,59.380767),offset:new B.Vector3(0,1.8,10)},
+  mitticity:{label:'MITT I CITY',p:local(13.50055,59.37988),offset:new B.Vector3(0,1.8,16)},
+  sandgrund:{label:'SANDGRUND',p:local(13.502961,59.384639),offset:new B.Vector3(0,1.8,24)},
+  museum:{label:'VÄRMLANDS MUSEUM',p:local(13.50124,59.38492),offset:new B.Vector3(8,1.8,18)},
+  olearys:{label:"O'LEARYS",p:local(13.503791,59.380512),offset:new B.Vector3(8,1.8,12)}
+ };
+ const s=spots[key];if(!s)return;camera.position.copyFrom(s.p.add(s.offset));camera.setTarget(new B.Vector3(s.p.x,2,s.p.z));State.safePos=camera.position.clone();clearGuide();missionFlash(s.label)
+}
+
 function isWaterAt(x,z){
  for(const w of State.waterZones){
   if(w.kind==='polygon'&&pointInRing(x,z,w.ring))return true;
