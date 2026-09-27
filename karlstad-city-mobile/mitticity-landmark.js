@@ -122,11 +122,11 @@ function tableSet(B,scene,root,front,inward,lateral,wood,dark){
 
 window.KarlstadLandmarks.createMittICity=function(ctx){
   const {B,scene,ring,holes,earcut,shadows,props}=ctx;
-  const root=new B.TransformNode('LANDMARK Mitt i City V27',scene);
+  const root=new B.TransformNode('LANDMARK Mitt i City V31',scene);
   root.metadata={
-    key:'mitt-i-city',label:'Mitt i City',version:27,
+    key:'mitt-i-city',label:'Mitt i City',version:31,
     source:'OSM footprint + official Mitt i City information + public architectural references',
-    note:'V27 is a gameplay-optimized interpretation, not a survey-accurate BIM model'
+    note:'V31 is a gameplay-optimized interpretation using the OSM footprint and current official centre references; not a survey-accurate BIM model'
   };
   const facade=pbr(B,scene,'Mitt i City charcoal','#4c5052',.78,.06);
   const facade2=pbr(B,scene,'Mitt i City upper','#626769',.72,.08);
@@ -184,7 +184,7 @@ window.KarlstadLandmarks.createMittICity=function(ctx){
   const ceiling=B.MeshBuilder.CreateBox('Mitt i City arcade ceiling',{width:8.3,height:.16,depth:entranceDepth},scene);
   ceiling.position=pointFrom(front,entranceDepth/2+1.5,0,4.35);ceiling.rotation.y=front.angle;ceiling.material=white;ceiling.parent=root;
 
-  const labels=['APOTEKET','INDISKA','LEVI\'S','GLITTER','KJELL & COMPANY','KAFÉ BÖNAN'];
+  const labels=['APOTEKET','INDISKA','LEVI\'S','RITUALS','CERVERA','KAFÉ BÖNAN'];
   for(let i=0;i<3;i++){
     shop(B,scene,root,front,labels[i],4+i*4,-4.35,-1,glass,frame);
     shop(B,scene,root,front,labels[i+3],4+i*4,4.35,1,glass,frame);
@@ -218,17 +218,28 @@ window.KarlstadLandmarks.createMittICity=function(ctx){
   }
 
   createEntryMarker(B,scene,root,front,green);
+  const entrySign=B.MeshBuilder.CreatePlane('Mitt i City PLAYABLE ENTRANCE',{width:5.9,height:.9,sideOrientation:B.Mesh.DOUBLESIDE},scene);
+  entrySign.position=pointFrom(front,-.9,0,4.75);entrySign.rotation.y=front.angle+Math.PI;
+  entrySign.material=dynSign(B,scene,'Mitt i City ENTRÉ','ENTRÉ · MITT I CITY','#5a983e','#ffffff',1200,220);entrySign.parent=root;
+  const streetBanner=B.MeshBuilder.CreatePlane('Mitt i City street banner',{width:4.0,height:2.1,sideOrientation:B.Mesh.DOUBLESIDE},scene);
+  streetBanner.position=pointFrom(front,-.62,Math.min(front.len*.28,6.5),5.65);streetBanner.rotation.y=front.angle+Math.PI;
+  streetBanner.material=dynSign(B,scene,'Mitt i City banner','MITT I CITY','#b13b74','#ffffff',900,460);streetBanner.parent=root;
   root.metadata.entry={x:front.mx-front.nx*1.5,z:front.mz-front.nz*1.5};
   const collisionMesh=walls[0]||upper1;
   collisionMesh.metadata={...(collisionMesh.metadata||{}),landmark:'mitt-i-city',entry:root.metadata.entry};
-  return{root,collisionMesh,visualMeshes:[...walls,upper1,upper2,dome],height:12.8,kind:'mitt-i-city-v27'};
+  return{root,collisionMesh,visualMeshes:[...walls,upper1,upper2,dome],height:12.8,kind:'mitt-i-city-v31'};
 };
 
 function createEntryMarker(B,scene,root,front,green){
   const p=pointFrom(front,1.5,0,.04);
-  const ring=B.MeshBuilder.CreateTorus('Mitt i City entry marker',{diameter:2.2,thickness:.055,tessellation:28},scene);
-  ring.position.copyFrom(p);ring.rotation.x=Math.PI/2;
-  const m=new B.StandardMaterial('Mitt i City entry glow',scene);m.emissiveColor=B.Color3.FromHexString('#78d35a');m.disableLighting=true;
-  ring.material=m;ring.parent=root;ring.visibility=.72;
+  const m=new B.StandardMaterial('Mitt i City entry glow',scene);m.emissiveColor=B.Color3.FromHexString('#78d35a');m.diffuseColor=B.Color3.FromHexString('#2f5e2d');m.disableLighting=true;
+  for(let i=0;i<5;i++){
+    const ring=B.MeshBuilder.CreateTorus('Mitt i City entry marker '+i,{diameter:2.2+i*.26,thickness:.045,tessellation:28},scene);
+    ring.position.set(p.x,p.y+.018+i*.012,p.z);ring.rotation.x=Math.PI/2;ring.material=m;ring.parent=root;ring.visibility=.36+i*.1;
+  }
+  const postMat=pbr(B,scene,'Mitt i City entry posts','#5a983e',.44,.2);
+  for(const side of [-1,1]){
+    const post=B.MeshBuilder.CreateBox('Mitt i City entrance post',{width:.22,height:3.6,depth:.22},scene);post.position=pointFrom(front,.1,side*3.2,1.8);post.material=postMat;post.parent=root;post.checkCollisions=true;
+  }
 }
 })();
