@@ -85,3 +85,17 @@ Visual-cleanup pass for the Stora torget vertical slice:
 - stores five nearby large building IDs/names in scene metadata as hero-building candidates for later custom replacement.
 
 The square furniture placement is visual/gameplay dressing, not surveyed municipal placement.
+
+
+## Real City V12
+
+Street/square polish pass:
+
+- replaces the old full-width sidewalk-under-road ribbon with separate left/right sidewalk strips,
+- raises road/sidewalk surfaces to distinct heights to eliminate the visible z-fighting from V11,
+- adds procedural asphalt grain and sidewalk slab textures,
+- moves square furniture placement after road generation and skips candidate furniture positions too close to road corridors,
+- tightens filtering for extreme thin/high-aspect footprint artifacts,
+- upgrades desktop shadow filtering to medium quality while keeping mobile on the cheaper setting.
+
+This remains a procedural gameplay interpretation of Stora torget; street furniture is not surveyed placement.
