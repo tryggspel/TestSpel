@@ -32,3 +32,11 @@ node karlstad-city/tests/web-bundle-check.cjs
 `BABYLON_PATH` kan ange en lokal kopia av samma Babylon-version. Tester med NullEngine verifierar logik, geometri och kollisioner. De mäter inte GPU-prestanda eller känslan på en fysisk pekskärm.
 
 Nästa kvalitetsgrind är en riktig iPhone 11: bildfrekvens, värme, sikte under samtidig rörelse och eld, avbrott, hemskärmsstart och offlineomstart. Webbversionen är fortfarande en prototyp. Fotogrammetri/uppmätta Karlstadmodeller, mer avancerad animation, nätverksteam och serverlagrad progression återstår.
+
+## Publiceringskontroll 2026-09-27
+
+Webbpaketet är publicerat genom GitHub Pages. I den tillgängliga Chrome-testmiljön startar zombierundan, en solstråle träffar och förbrukar 8 energi, paus/återuppta fungerar, låsta kosmetiska utseenden visas korrekt och webbappen bekräftar att offlinepaketet sparats. Faktisk frånkopplad omstart är ännu inte provad. Uppdragskedjan, vinst/förlust, skyddet, interiörens kollisioner och XP-persistens passerar de automatiska kontrollerna.
+
+Testwebbläsaren saknar WebGL och använder därför kompatibilitetsrenderaren. Inga mätningar från den miljön ska tolkas som GPU- eller telefonprestanda. Ett korrigerande webbpaket **18** märker förenklad grafik i gränssnittet och inaktiverar grafikval som kräver acceleration. Det förändrar inte rundans regler eller sparformat.
+
+`tests/responsive.html` öppnar exakt samma spel i porträtt-, landskaps- eller desktopstorlek för manuell layoutkontroll.
