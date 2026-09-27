@@ -81,6 +81,20 @@ async function overpass(query,ms=12000){
 function osmFeatureProps(e){return{...e.tags,FID:e.id,OBJECTID:e.id,OBJEKTTYP:e.tags?.building||'',BALSTATUS:'Gällande'}}
 function parseBuildings(j){const out=[];for(const e of j.elements||[]){if(e.type!=='way'||!e.geometry?.length||!e.tags?.building)continue;const coords=e.geometry.map(p=>[p.lon,p.lat]);if(coords.length>2)out.push({type:'Feature',properties:osmFeatureProps(e),geometry:{type:'Polygon',coordinates:[coords]}})}return out}
 function parseRoads(j){const out=[];for(const e of j.elements||[]){if(e.type!=='way'||!e.geometry?.length||!e.tags?.highway)continue;out.push({type:'Feature',properties:{...osmFeatureProps(e),KLASS:e.tags.highway},geometry:{type:'LineString',coordinates:e.geometry.map(p=>[p.lon,p.lat])}})}return out}
+function parseEnvironment(j){const land=[];for(const e of j.elements||[]){if(e.type!=='way'||!e.geometry?.length)continue;const props={...osmFeatureProps(e),OBJEKTTYP:e.tags?.natural||e.tags?.waterway||e.tags?.leisure||e.tags?.landuse||''},coords=e.geometry.map(p=>[p.lon,p.lat]);if(e.tags?.waterway==='river')land.push({type:'Feature',properties:{...props,OBJEKTTYP:'river',width:e.tags.width},geometry:{type:'LineString',coordinates:coords}});else if(coords.length>2)land.push({type:'Feature',properties:props,geometry:{type:'Polygon',coordinates:[coords]}})}return land}
+function parseTrees(j){const trees=[];for(const e of j.elements||[]){if(e.type!=='node')continue;trees.push({type:'Feature',properties:{OBJECTID:e.id,tradslag:e.tags?.species||e.tags?.genus||'',dbh:e.tags?.diameter_crown||40},geometry:{type:'Point',coordinates:[e.lon,e.lat]}})}return trees}
+async function loadBundledOsm(){
+ const [b,r,e,t]=await Promise.all([
+  getJson('./data/osm-buildings.json',8000),
+  getJson('./data/osm-roads.json',8000),
+  getJson('./data/osm-environment.json',8000),
+  getJson('./data/osm-trees.json',8000)
+ ]);
+ const buildings=parseBuildings(b),roads=parseRoads(r),land=parseEnvironment(e),trees=parseTrees(t);
+ if(!buildings.length||!roads.length)throw Error('Bundlad OSM-snapshot saknar kärndata');
+ sceneStats.source='OpenStreetMap snapshot';
+ return{buildings:{features:buildings},roads:{features:roads},land:{features:land},trees:{features:trees}};
+}
 async function loadOsmFallback(){
  const cacheKey='karlstad-real-city-core-v9';
  try{const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');if(cached?.buildings?.features?.length&&cached?.roads?.features?.length){sceneStats.source='OpenStreetMap cache';return cached}}catch(e){}
@@ -104,16 +118,14 @@ async function loadOsmFallback(){
 async function loadOsmEnvironment(){
  const cacheKey='karlstad-real-city-environment-v11';try{const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');if(Array.isArray(cached)&&cached.length)return cached}catch(e){}
  const q=`[out:json][timeout:12];(way[waterway=river](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[natural=water](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[waterway=riverbank](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[leisure=park](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});way[landuse=grass](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east}););out tags geom;`;
- const j=await overpass(q,12000),land=[];
- for(const e of j.elements||[]){if(e.type!=='way'||!e.geometry?.length)continue;const props={...osmFeatureProps(e),OBJEKTTYP:e.tags?.natural||e.tags?.waterway||e.tags?.leisure||e.tags?.landuse||''},coords=e.geometry.map(p=>[p.lon,p.lat]);if(e.tags?.waterway==='river')land.push({type:'Feature',properties:{...props,OBJEKTTYP:'river',width:e.tags.width},geometry:{type:'LineString',coordinates:coords}});else if(coords.length>2)land.push({type:'Feature',properties:props,geometry:{type:'Polygon',coordinates:[coords]}})}
+ const j=await overpass(q,12000),land=parseEnvironment(j);
  try{if(land.length)localStorage.setItem(cacheKey,JSON.stringify(land))}catch(e){}return land;
 }
 async function loadOsmTrees(){
  const cacheKey='karlstad-real-city-trees-v10';
  try{const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');if(Array.isArray(cached)&&cached.length)return cached}catch(e){}
  const q=`[out:json][timeout:10];node[natural=tree](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});out tags;`;
- const j=await overpass(q,10000),trees=[];
- for(const e of j.elements||[]){if(e.type!=='node')continue;trees.push({type:'Feature',properties:{OBJECTID:e.id,tradslag:e.tags?.species||e.tags?.genus||'',dbh:e.tags?.diameter_crown||40},geometry:{type:'Point',coordinates:[e.lon,e.lat]}})}
+ const j=await overpass(q,10000),trees=parseTrees(j);
  try{if(trees.length)localStorage.setItem(cacheKey,JSON.stringify(trees))}catch(e){}
  return trees;
 }
@@ -138,20 +150,26 @@ function label(text,lon,lat,color='#ffcb70'){const p=local([lon,lat]),root=new B
 label('STORA TORGET',13.50295,59.380767);label('SANDGRUND',13.502961,59.384639,'#9de0c9');label('VÄRMLANDS MUSEUM',13.50124,59.38492,'#9de0c9');
 const localPilot=location.hostname==='localhost'||location.hostname==='127.0.0.1';
 let data;
-setProgress(12,'Hämtar OpenStreetMap-data för Karlstad…');
+setProgress(12,'Laddar lokal Karlstad-karta…');
 try{
- data=await loadOsmFallback();
- if(sceneStats.source==='OpenStreetMap fallback')sceneStats.source='OpenStreetMap primary';
-}catch(osmError){
- console.warn('OSM primary failed',osmError);
- setProgress(18,'OSM svarade inte. Försöker Karlstads kommun som reserv…');
+ data=await loadBundledOsm();
+}catch(snapshotError){
+ console.warn('Bundled OSM snapshot failed',snapshotError);
+ setProgress(16,'Lokal karta saknas – hämtar OpenStreetMap live…');
  try{
-  data=await loadMunicipal();
-  sceneStats.source='Karlstads kommun fallback';
- }catch(municipalError){
-  console.error(municipalError);
-  showError('Kartdata kunde inte läsas just nu. Försök ladda om sidan.');
-  data={buildings:{features:[]},roads:{features:[]},land:{features:[]},trees:{features:[]}};
+  data=await loadOsmFallback();
+  if(sceneStats.source==='OpenStreetMap fallback')sceneStats.source='OpenStreetMap live';
+ }catch(osmError){
+  console.warn('OSM live failed',osmError);
+  setProgress(20,'OSM live svarade inte. Försöker Karlstads kommun…');
+  try{
+   data=await loadMunicipal();
+   sceneStats.source='Karlstads kommun fallback';
+  }catch(municipalError){
+   console.error(municipalError);
+   showError('Kartdata kunde inte läsas just nu. Försök ladda om sidan.');
+   data={buildings:{features:[]},roads:{features:[]},land:{features:[]},trees:{features:[]}};
+  }
  }
 }
 setProgress(38,'Bygger verkliga byggnadsytor…');await new Promise(r=>requestAnimationFrame(r));
@@ -162,7 +180,7 @@ setProgress(78,'Planterar tillgängliga träd…');for(const [i,f] of (data.tree
 setProgress(91,'Optimerar scenen för mobilen…');scene.blockMaterialDirtyMechanism=true;for(const material of scene.materials)material.freeze?.();console.info('Visual cleanup filtered footprints:',sceneStats.filtered);
 setProgress(100,'Karlstad klart');status.textContent=engine.__backend+' · '+(sceneStats.source.includes('OpenStreetMap')?'OSM · ':'')+sceneStats.buildings+' HUS · '+sceneStats.roads+' VÄGAR · '+sceneStats.trees+' TRÄD · '+sceneStats.hero+' HERO · '+sceneStats.landmarks+' LANDMARK';
 setTimeout(()=>loading.classList.add('hidden'),350);
-if(sceneStats.source.includes('OpenStreetMap')||sceneStats.land===0){
+if(sceneStats.land===0){
  loadOsmEnvironment().then(features=>{for(const [i,f] of features.entries())sceneStats.land+=createLand(f,i)}).catch(e=>console.warn('OSM environment layer deferred:',e));
 }
 if(sceneStats.trees===0){
