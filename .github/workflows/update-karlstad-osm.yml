@@ -1,0 +1,107 @@
+name: Update Karlstad OSM Snapshot
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-karlstad-osm.yml'
+  schedule:
+    - cron: '17 3 * * 1'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  snapshot-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Fetch OSM snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p karlstad-city-mobile/data
+          BBOX='59.3780,13.4974,59.3857,13.5086'
+          ENDPOINTS=(
+            'https://overpass.kumi.systems/api/interpreter'
+            'https://overpass-api.de/api/interpreter'
+            'https://overpass.private.coffee/api/interpreter'
+          )
+
+          fetch_query() {
+            local name="$1"
+            local query="$2"
+            local out="karlstad-city-mobile/data/$3"
+            local tmp="${out}.tmp"
+
+            for endpoint in "${ENDPOINTS[@]}"; do
+              echo "Fetching ${name} from ${endpoint}"
+              if curl --fail --silent --show-error --location                 --retry 2 --retry-delay 2 --connect-timeout 10 --max-time 60                 --data-urlencode "data=${query}"                 "${endpoint}" -o "${tmp}"; then
+                if jq -e '.elements and (.elements | length) > 0' "${tmp}" >/dev/null; then
+                  mv "${tmp}" "${out}"
+                  echo "Saved ${out}: $(jq '.elements | length' "${out}") elements"
+                  return 0
+                fi
+              fi
+              rm -f "${tmp}"
+            done
+
+            echo "::error::Could not fetch ${name} from any Overpass endpoint"
+            return 1
+          }
+
+          fetch_query buildings "[out:json][timeout:25];way[building](${BBOX});out tags geom;" osm-buildings.json
+          fetch_query roads "[out:json][timeout:25];way[highway](${BBOX});out tags geom;" osm-roads.json
+          fetch_query environment "[out:json][timeout:25];(way[waterway=river](${BBOX});way[natural=water](${BBOX});way[waterway=riverbank](${BBOX});way[leisure=park](${BBOX});way[landuse=grass](${BBOX}););out tags geom;" osm-environment.json
+          fetch_query trees "[out:json][timeout:25];node[natural=tree](${BBOX});out tags;" osm-trees.json
+
+          printf '{"updated":"%s","bbox":"%s"}\n' "$(date -u +%FT%TZ)" "${BBOX}" > karlstad-city-mobile/data/meta.json
+
+      - name: Validate snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Buildings: $(jq '.elements|length' karlstad-city-mobile/data/osm-buildings.json)"
+          echo "Roads: $(jq '.elements|length' karlstad-city-mobile/data/osm-roads.json)"
+          echo "Environment: $(jq '.elements|length' karlstad-city-mobile/data/osm-environment.json)"
+          echo "Trees: $(jq '.elements|length' karlstad-city-mobile/data/osm-trees.json)"
+          test "$(jq '.elements|length' karlstad-city-mobile/data/osm-buildings.json)" -gt 150
+          test "$(jq '.elements|length' karlstad-city-mobile/data/osm-roads.json)" -gt 150
+
+      - name: Commit snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add karlstad-city-mobile/data
+          if git diff --cached --quiet; then
+            echo "Snapshot unchanged"
+          else
+            git commit -m "Update bundled Karlstad OSM snapshot"
+            git push
+          fi
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Karlstad City
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: karlstad-city-mobile
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
