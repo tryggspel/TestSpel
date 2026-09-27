@@ -122,11 +122,11 @@ function tableSet(B,scene,root,front,inward,lateral,wood,dark){
 
 window.KarlstadLandmarks.createMittICity=function(ctx){
   const {B,scene,ring,holes,earcut,shadows,props}=ctx;
-  const root=new B.TransformNode('LANDMARK Mitt i City V31',scene);
+  const root=new B.TransformNode('LANDMARK Mitt i City V32',scene);
   root.metadata={
-    key:'mitt-i-city',label:'Mitt i City',version:31,
+    key:'mitt-i-city',label:'Mitt i City',version:32,
     source:'OSM footprint + official Mitt i City information + public architectural references',
-    note:'V31 is a gameplay-optimized interpretation using the OSM footprint and current official centre references; not a survey-accurate BIM model'
+    note:'V32 is a gameplay-optimized interpretation using the OSM footprint and current official centre references; not a survey-accurate BIM model'
   };
   const facade=pbr(B,scene,'Mitt i City charcoal','#4c5052',.78,.06);
   const facade2=pbr(B,scene,'Mitt i City upper','#626769',.72,.08);
@@ -227,7 +227,7 @@ window.KarlstadLandmarks.createMittICity=function(ctx){
   root.metadata.entry={x:front.mx-front.nx*1.5,z:front.mz-front.nz*1.5};
   const collisionMesh=walls[0]||upper1;
   collisionMesh.metadata={...(collisionMesh.metadata||{}),landmark:'mitt-i-city',entry:root.metadata.entry};
-  return{root,collisionMesh,visualMeshes:[...walls,upper1,upper2,dome],height:12.8,kind:'mitt-i-city-v31'};
+  return{root,collisionMesh,visualMeshes:[...walls,upper1,upper2,dome],height:12.8,kind:'mitt-i-city-v32'};
 };
 
 function createEntryMarker(B,scene,root,front,green){
