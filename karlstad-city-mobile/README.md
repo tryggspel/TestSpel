@@ -1,39 +1,50 @@
-# Karlstad City V32 — Hero District
+# Karlstad City V33 — Sharp City
 
-V32 is a deliberate concentration of the game around a recognizable, readable central Karlstad loop.
+V33 focuses on the two issues that were hurting the build most: the expanded map blocking play, and the 3D world looking grainy/low-resolution.
 
-## Hero loop
-**Stora torget → Västra Torggatan / Järnvägsgatan → Mitt i City → back toward the square.**
+## Automap fix
+- Expanded KARTA is now a **non-blocking translucent automap overlay**.
+- The player can keep walking, looking around and using mobile controls while the large map is visible.
+- The map button remains above the overlay and switches back to MINIKARTA.
+- Expanded map zooms farther out than the minimap so it actually helps orientation instead of just enlarging the same view.
+- Mission route, landmarks, blocked buildings and water remain visible.
 
-The goal is not a bigger map. The goal is a denser, more legible and more enjoyable piece of Karlstad.
+## Sharp rendering
+- Balanced mode now renders at **native hardware scaling (1.0)** on iPhone/mobile.
+- Sharp mode uses modest supersampling; FPS mode remains available.
+- Reduced excessive sharpen and contrast that were amplifying noise.
+- Fog is reduced substantially.
+- Bloom is reduced so edges stay clean.
+- Mobile shadow map increased and PCF quality unified.
 
-## Recognition upgrades
-- Dedicated procedural hero model for **Karlstads domkyrka**, placed from the current OSM footprint.
-- Dedicated procedural hero model for **Rådhuset**, placed from the current OSM footprint.
-- Existing Mitt i City, Sandgrund, Värmlands Museum, Fredsmonumentet and Fröding features remain.
-- More permanent wayfinding in the 3D world around the hero district.
-- Karlstad city-life props: café tables, parasols, bike racks and directional pylons.
-- Subtle route studs along the important central street network.
+## Materials
+- The old 128px procedural surfaces were replaced with cleaner **512px deterministic textures**.
+- Asphalt no longer uses the high-frequency micro-grain bump that made the image crawl/shimmer.
+- Sidewalks and square paving use larger, cleaner slab patterns.
+- Texture anisotropic filtering is increased.
+- Glass/metal/water keep PBR reflection but with cleaner material response.
+- More central facades get readable ground-floor storefront glass/awnings.
 
-## Navigation upgrades
-- Always-visible objective compass with target name, direction and distance.
-- Existing **VISA VÄGEN** route remains.
-- Direct shortcuts for **MITT I CITY** and **TORGET** are visible in the HUD.
-- Quick travel now also includes **Rådhuset** and **Domkyrkan**.
-- High-contrast map continues to distinguish streets, blocked buildings and water.
+## Duke-inspired readability
+The reference is level-design clarity, not copied art/assets:
+- clear street edges,
+- readable building masses,
+- obvious entrances,
+- strong signs and wayfinding,
+- a central enterable destination,
+- an automap that can stay visible while playing.
 
-## Fun / exploration
-- Four optional **Sola** collectibles are placed through the hero district.
-- Each Sola gives +250 score.
-- Finding all four gives a +1000 completion bonus.
-- Collectibles are deliberately placed to make the player move through recognizable locations rather than wander through generic blocks.
+V33 adds crisp curb strips on the main central streets, pavement arrows between Stora torget and Mitt i City, a stronger Mitt i City entrance portal, and a few high-contrast city signs/billboards.
 
-## Core gameplay retained
-- City mission starts with coffee.
-- Mitt i City mission and emergency radio.
-- Return to Stora torget.
-- Zombie mode unlocks after the city mission.
-- Collisions, anti-stuck recovery, water safety, positional traffic/chatter audio, sprint/stamina and route guidance remain.
+## Existing V32 gameplay retained
+- Hero District
+- Stora torget → Mitt i City mission loop
+- Domkyrkan, Rådhuset, Sandgrund, Museum
+- VISA VÄGEN
+- quick travel
+- Sola collectibles
+- city/zombie modes
+- collisions / anti-stuck / water / traffic audio
 
 Public URL:
 https://tryggspel.github.io/TestSpel/karlstad-city-mobile/
