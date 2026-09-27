@@ -69,3 +69,19 @@ Localhost data loading is now resilient:
 - successful core OSM data is cached locally for later launches,
 - trees and environment layers load separately so they cannot block the core city,
 - V7 Safari roof/facade performance limits remain in place.
+
+
+## Real City V11
+
+Visual-cleanup pass for the Stora torget vertical slice:
+
+- filters implausibly thin/small footprint artifacts before mesh generation,
+- adds procedural facade textures for plaster, brick and stone,
+- adds separate dark window frames, deeper glass, facade cornices and plinth bands,
+- adds small roof overhangs while preserving the Safari roof budget,
+- gives Stora torget a distinct paved surface,
+- adds lightweight instanced lamps, benches, planters and greenery as gameplay dressing,
+- caches the deferred environment layer as well as core OSM/tree data,
+- stores five nearby large building IDs/names in scene metadata as hero-building candidates for later custom replacement.
+
+The square furniture placement is visual/gameplay dressing, not surveyed municipal placement.
