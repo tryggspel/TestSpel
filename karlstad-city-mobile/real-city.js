@@ -138,11 +138,21 @@ function label(text,lon,lat,color='#ffcb70'){const p=local([lon,lat]),root=new B
 label('STORA TORGET',13.50295,59.380767);label('SANDGRUND',13.502961,59.384639,'#9de0c9');label('VÄRMLANDS MUSEUM',13.50124,59.38492,'#9de0c9');
 const localPilot=location.hostname==='localhost'||location.hostname==='127.0.0.1';
 let data;
-if(localPilot){
- setProgress(12,'Laddar lokal Real City-pilot via OSM…');
- try{data=await loadOsmFallback()}catch(e){console.error(e);showError('OSM-reserven svarade inte efter tre automatiska försök. Försök ladda om sidan.');data={buildings:{features:[]},roads:{features:[]},land:{features:[]},trees:{features:[]}}}
-}else{
- try{setProgress(12,'Hämtar Karlstads byggnadsytor…');data=await loadMunicipal()}catch(e){console.warn(e);setProgress(18,'Kommunens live-endpoint svarade inte. Försöker OSM-reserv…');try{data=await loadOsmFallback();showError('Kommunens ArcGIS-endpoint kunde inte nås från webbläsaren. Piloten kör därför OSM som reservkälla i denna session.')}catch(e2){console.error(e2);showError('Varken Karlstads öppna endpoint eller reservkällan kunde läsas. Kontrollera internetanslutningen och ladda om.');data={buildings:{features:[]},roads:{features:[]},land:{features:[]},trees:{features:[]}}}}
+setProgress(12,'Hämtar OpenStreetMap-data för Karlstad…');
+try{
+ data=await loadOsmFallback();
+ if(sceneStats.source==='OpenStreetMap fallback')sceneStats.source='OpenStreetMap primary';
+}catch(osmError){
+ console.warn('OSM primary failed',osmError);
+ setProgress(18,'OSM svarade inte. Försöker Karlstads kommun som reserv…');
+ try{
+  data=await loadMunicipal();
+  sceneStats.source='Karlstads kommun fallback';
+ }catch(municipalError){
+  console.error(municipalError);
+  showError('Kartdata kunde inte läsas just nu. Försök ladda om sidan.');
+  data={buildings:{features:[]},roads:{features:[]},land:{features:[]},trees:{features:[]}};
+ }
 }
 setProgress(38,'Bygger verkliga byggnadsytor…');await new Promise(r=>requestAnimationFrame(r));
 const orderedBuildings=[...(data.buildings?.features||[])].sort((a,b)=>featureDistanceSq(a)-featureDistanceSq(b));heroById=resolveHeroBuildings(orderedBuildings);sceneStats.hero=heroById.size;scene.metadata={...(scene.metadata||{}),heroTargets:[...heroById.values()].map(h=>({key:h.key,label:h.label,id:h.id,style:h.style}))};console.info('Hero building targets',scene.metadata.heroTargets);for(const [i,f] of orderedBuildings.entries()){if(String(f.properties?.BALSTATUS||'Gällande').toLowerCase().includes('planerad'))continue;sceneStats.buildings+=createBuilding(f,i);if(i%60===0)await new Promise(r=>requestAnimationFrame(r))}
@@ -152,8 +162,8 @@ setProgress(78,'Planterar tillgängliga träd…');for(const [i,f] of (data.tree
 setProgress(91,'Optimerar scenen för mobilen…');scene.blockMaterialDirtyMechanism=true;for(const material of scene.materials)material.freeze?.();console.info('Visual cleanup filtered footprints:',sceneStats.filtered);
 setProgress(100,'Karlstad klart');status.textContent=engine.__backend+' · '+(sceneStats.source.includes('OpenStreetMap')?'OSM · ':'')+sceneStats.buildings+' HUS · '+sceneStats.roads+' VÄGAR · '+sceneStats.trees+' TRÄD · '+sceneStats.hero+' HERO · '+sceneStats.landmarks+' LANDMARK';
 setTimeout(()=>loading.classList.add('hidden'),350);
-if(localPilot){
- loadOsmEnvironment().then(features=>{for(const [i,f] of features.entries())sceneStats.land+=createLand(f,i)}).catch(e=>console.warn('Environment layer deferred:',e));
+if(sceneStats.source.includes('OpenStreetMap')||sceneStats.land===0){
+ loadOsmEnvironment().then(features=>{for(const [i,f] of features.entries())sceneStats.land+=createLand(f,i)}).catch(e=>console.warn('OSM environment layer deferred:',e));
 }
 if(sceneStats.trees===0){
  loadOsmTrees().then(features=>{for(const [i,f] of features.slice(0,450).entries())sceneStats.trees+=createTree(f,i);status.textContent=engine.__backend+' · '+(sceneStats.source.includes('OpenStreetMap')?'OSM · ':'')+sceneStats.buildings+' HUS · '+sceneStats.roads+' VÄGAR · '+sceneStats.trees+' TRÄD · '+sceneStats.hero+' HERO · '+sceneStats.landmarks+' LANDMARK';}).catch(e=>console.warn('Tree layer deferred:',e));
