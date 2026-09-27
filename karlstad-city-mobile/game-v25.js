@@ -13,6 +13,19 @@ const ASSETS={
 };
 const State={started:false,health:100,ammo:24,reserve:120,score:0,kills:0,phase:-1,mode:'city',mouseSens:.00285,touchSens:.0062,ads:false,fireHeld:false,lastShot:0,weapon:null,coffee:null,pivot:null,muzzle:null,npcs:[],zombies:[],containers:{},traffic:[],core:null,extract:null,nearNpc:null,quality:1,waveSpawned:false,mapRoads:[],mapBuildings:[],waterZones:[],lastLandPos:null,waterEnteredAt:0,lastWaterCheck:0,lastCollisionAt:0,lastPos:null,lastDelta:null,audioCtx:null,audioReady:false,vehicleAudio:[],lastChatter:0,lastMapDraw:0,currentStreet:'STORA TORGET'};
 function split(u){const i=u.lastIndexOf('/');return{root:u.slice(0,i+1),file:u.slice(i+1)}}
+function addContactShadow(scene,root,rx=.45,rz=.45){
+ const disc=B.MeshBuilder.CreateDisc('V29 contact shadow',{radius:1,tessellation:28},scene);disc.parent=root;disc.rotation.x=Math.PI/2;disc.position.y=.018;disc.scaling.set(rx,rz,1);
+ const m=new B.StandardMaterial('V29 shadow mat '+Math.random(),scene);m.diffuseColor=B.Color3.Black();m.emissiveColor=B.Color3.Black();m.alpha=.16;m.disableLighting=true;disc.material=m;disc.isPickable=false;disc.renderingGroupId=0;return disc;
+}
+function addVehicleLights(scene,root,kind){
+ const white=new B.StandardMaterial('V29 headlight '+Math.random(),scene);white.emissiveColor=B.Color3.FromHexString('#fff2c8');white.disableLighting=true;
+ const red=new B.StandardMaterial('V29 taillight '+Math.random(),scene);red.emissiveColor=B.Color3.FromHexString('#d62525');red.disableLighting=true;
+ const zFront=kind==='bus'?4.6:1.95,zBack=-zFront,x=kind==='bus'?1.05:.72,y=kind==='bus'?1.15:.64;
+ for(const side of [-1,1]){
+  const h=B.MeshBuilder.CreateSphere('V29 vehicle headlight',{diameter:kind==='bus'?.18:.12,segments:10},scene);h.parent=root;h.position.set(side*x,y,zFront);h.material=white;
+  const t=B.MeshBuilder.CreateSphere('V29 vehicle taillight',{diameter:kind==='bus'?.18:.12,segments:10},scene);t.parent=root;t.position.set(side*x,y,zBack);t.material=red;
+ }
+}
 function addCollider(scene,root,kind='npc'){
  const dims=kind==='bus'?[3.0,3.0,10.2]:kind==='car'?[2.05,1.6,4.25]:kind==='zombie'?[.72,1.8,.72]:[.68,1.8,.68];
  const c=B.MeshBuilder.CreateBox('V28 collider '+kind,{width:dims[0],height:dims[1],depth:dims[2]},scene);
@@ -172,8 +185,39 @@ function update(){
 }
 function objective(v){text('v25obj',v)}function dialog(name,v){const e=document.getElementById('v25dialog');e.innerHTML='<b>'+name+'</b> · '+v;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),4600)}
 async function loadContainer(scene,key,url){try{const s=split(url),c=await B.SceneLoader.LoadAssetContainerAsync(s.root,s.file,scene);State.containers[key]=c;return c}catch(e){console.warn('V25 asset failed',key,e);return null}}
-function spawn(scene,key,name,pos,rot=0,scale=1){const c=State.containers[key];if(!c)return null;try{const i=c.instantiateModelsToScene(n=>name+' '+n,false),r=new B.TransformNode(name,scene);for(const n of i.rootNodes||[])n.parent=r;r.position.copyFrom(pos);r.rotation.y=rot;r.scaling.setAll(scale);for(const m of r.getChildMeshes()){m.receiveShadows=true;m.isPickable=false}return r}catch(e){return null}}
-function fallbackNpc(scene,name,pos){const r=new B.TransformNode(name,scene);r.position.copyFrom(pos);const m=new B.PBRMaterial(name+' mat',scene);m.albedoColor=B.Color3.FromHexString('#324b58');m.roughness=.72;const body=B.MeshBuilder.CreateCapsule(name+' body',{height:1.65,radius:.25,tessellation:14},scene);body.parent=r;body.position.y=.85;body.material=m;const head=B.MeshBuilder.CreateSphere(name+' head',{diameter:.42,segments:14},scene);head.parent=r;head.position.y=1.75;const skin=new B.PBRMaterial(name+' skin',scene);skin.albedoColor=B.Color3.FromHexString('#b98b72');skin.roughness=.8;head.material=skin;return r}
+function spawn(scene,key,name,pos,rot=0,scale=1){
+ const c=State.containers[key];if(!c)return null;
+ try{
+  const i=c.instantiateModelsToScene(n=>name+' '+n,false),r=new B.TransformNode(name,scene);
+  for(const n of i.rootNodes||[])n.parent=r;r.position.copyFrom(pos);r.rotation.y=rot;r.scaling.setAll(scale);
+  const sg=scene.lights.map(l=>l.getShadowGenerator?.()).find(Boolean);
+  for(const m of r.getChildMeshes()){m.receiveShadows=true;m.isPickable=false;sg?.addShadowCaster?.(m)}
+  addContactShadow(scene,r,key==='bus'?1.9:key==='car'?1.35:.46,key==='bus'?4.4:key==='car'?1.85:.55);
+  if(key==='car'||key==='bus')addVehicleLights(scene,r,key);
+  return r
+ }catch(e){return null}
+}
+function fallbackNpc(scene,name,pos){
+ const r=new B.TransformNode(name,scene);r.position.copyFrom(pos);
+ const coat=new B.PBRMaterial(name+' coat',scene);coat.albedoColor=B.Color3.FromHexString(name.includes('INFECTED')?'#3b4340':'#334f63');coat.roughness=.86;
+ const shirt=new B.PBRMaterial(name+' shirt',scene);shirt.albedoColor=B.Color3.FromHexString(name.includes('INFECTED')?'#6a6d5c':'#d6d0c0');shirt.roughness=.9;
+ const pants=new B.PBRMaterial(name+' pants',scene);pants.albedoColor=B.Color3.FromHexString('#2d3235');pants.roughness=.92;
+ const skin=new B.PBRMaterial(name+' skin',scene);skin.albedoColor=B.Color3.FromHexString(name.includes('INFECTED')?'#83906b':'#c69b82');skin.roughness=.82;
+ const hair=new B.PBRMaterial(name+' hair',scene);hair.albedoColor=B.Color3.FromHexString('#2a211c');hair.roughness=.95;
+ const torso=B.MeshBuilder.CreateCapsule(name+' torso',{height:.9,radius:.24,tessellation:16},scene);torso.parent=r;torso.position.y=1.25;torso.scaling.x=.88;torso.material=coat;
+ const chest=B.MeshBuilder.CreateBox(name+' chest',{width:.34,height:.36,depth:.16},scene);chest.parent=r;chest.position.set(0,1.37,-.18);chest.material=shirt;
+ const head=B.MeshBuilder.CreateSphere(name+' head',{diameter:.39,segments:16},scene);head.parent=r;head.position.y=1.91;head.scaling.set(.92,1.05,.94);head.material=skin;
+ const hairCap=B.MeshBuilder.CreateSphere(name+' hair',{diameter:.405,segments:12,slice:.5},scene);hairCap.parent=r;hairCap.position.set(0,2.03,0);hairCap.scaling.y=.45;hairCap.material=hair;
+ for(const side of [-1,1]){
+  const leg=B.MeshBuilder.CreateCapsule(name+' leg '+side,{height:.82,radius:.095,tessellation:10},scene);leg.parent=r;leg.position.set(side*.12,.53,0);leg.material=pants;
+  const shoe=B.MeshBuilder.CreateBox(name+' shoe '+side,{width:.18,height:.11,depth:.33},scene);shoe.parent=r;shoe.position.set(side*.12,.095,-.08);shoe.material=hair;
+  const arm=B.MeshBuilder.CreateCapsule(name+' arm '+side,{height:.68,radius:.075,tessellation:10},scene);arm.parent=r;arm.position.set(side*.31,1.28,0);arm.rotation.z=side*.09;arm.material=coat;
+  const hand=B.MeshBuilder.CreateSphere(name+' hand '+side,{diameter:.13,segments:10},scene);hand.parent=r;hand.position.set(side*.34,.93,0);hand.material=skin;
+ }
+ const sg=scene.lights.map(l=>l.getShadowGenerator?.()).find(Boolean);for(const m of r.getChildMeshes()){m.receiveShadows=true;sg?.addShadowCaster?.(m)}
+ addContactShadow(scene,r,.43,.5);
+ return r
+}
 function makeNpc(scene,name,line,pos,rot=0){let r=spawn(scene,'civilian','NPC '+name,pos,rot,1)||fallbackNpc(scene,'NPC '+name,pos);r.metadata={npc:true,npcName:name,npcLine:line};addCollider(scene,r,'npc');State.npcs.push(r);return r}
 function nearestNpc(camera){let best=null,bd=3.7;for(const n of State.npcs){const d=B.Vector3.Distance(camera.position,n.position);if(d<bd){bd=d;best=n}}return best}
 function makeMarker(scene,pos,color='#e5bb50'){const m=B.MeshBuilder.CreateTorus('objective marker',{diameter:2.4,thickness:.09,tessellation:32},scene);m.position.copyFrom(pos);m.position.y=.15;const x=new B.StandardMaterial('marker mat',scene);x.emissiveColor=B.Color3.FromHexString(color);x.disableLighting=true;m.material=x;return m}
