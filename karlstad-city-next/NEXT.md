@@ -99,3 +99,18 @@ Street/square polish pass:
 - upgrades desktop shadow filtering to medium quality while keeping mobile on the cheaper setting.
 
 This remains a procedural gameplay interpretation of Stora torget; street furniture is not surveyed placement.
+
+
+## Real City V13
+
+Hero-building layer:
+
+- adds a separate `hero-buildings.js` registry instead of hard-coding landmark logic into the world generator,
+- resolves Sandgrund Lars Lerin and Värmlands Museum by OSM name when available, with coordinate/radius fallback,
+- selects four large Stora torget buildings as a local hero cluster,
+- keeps hero meshes separate from merged generic building meshes so they can later be replaced individually,
+- gives heroes independent high-detail windows, entrance canopy/columns and facade accent bands,
+- records resolved hero IDs/styles in scene metadata,
+- reserves explicit asset-override slots for future GLB/LOD2 replacements.
+
+Hero styling in V13 is a procedural game-art pass, not a claim of survey-accurate facade appearance.
