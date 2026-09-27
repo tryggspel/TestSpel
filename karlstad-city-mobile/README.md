@@ -1,24 +1,19 @@
-# Karlstad City V25 — Mobile First
+# Karlstad City V27 — Mitt i City Street Life
 
-Public browser prototype for iPhone/desktop testing.
+Public mobile-first browser prototype for iPhone and desktop.
 
-## V22–V25 consolidated
+## V27
+- Stable bundled OSM snapshot remains the city-data base.
+- Mitt i City is now a dedicated hero landmark using the real OSM footprint.
+- The landmark includes a playable mall entrance/interior slice, shop fronts, food/cafe area, mezzanine, escalator and landmark signage.
+- City mode starts with a coffee cup instead of a weapon.
+- Zombie mode is optional and can be toggled with Z on desktop or the ZOMBIE/CITY button on mobile.
+- More pedestrians are placed around Stora torget and Mitt i City.
+- Traffic population is increased.
+- Rendering is sharpened without the previous heavy washed-out look.
 
-- V22: control reset — faster mouse look, continuous fire, better ADS sensitivity.
-- V23: mobile-first controls — landscape HUD, larger movement stick, touch look, FIRE/AIM/USE/JUMP/RELOAD.
-- V24: visual cleanup — cleaner weapon presentation, rebalanced exposure, reduced washed-out look, PBR assets.
-- V25: public PWA build — installable shell, service worker, quality presets, intended for GitHub Pages/HTTPS testing on iPhone.
+Desktop: WASD · mouse look · Shift sprint · Space jump · E interact · Z toggle city/zombie · LMB fire in zombie mode.
+iPhone: left joystick · drag right side to look · USE · ZOMBIE/CITY · FIRE in zombie mode.
 
-## Controls
-
-Desktop: WASD · mouse look · LMB fire · RMB ADS · Shift sprint · Space jump · E interact · R reload.
-
-iPhone: left joystick move · drag right side to look · FIRE · AIM · USE · JUMP · RELOAD.
-
-## Public test target
-
-Once GitHub Pages is enabled for this repo using **GitHub Actions**, the expected URL is:
-
-https://tryggspel.github.io/TestSpel/
-
-The workflow publishes only the `karlstad-city-mobile` directory as the Pages site.
+Public URL:
+https://tryggspel.github.io/TestSpel/karlstad-city-mobile/
