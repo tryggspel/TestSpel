@@ -44,3 +44,17 @@ RealityScan is no longer intended for scanning the whole city. Use it only for a
 ## Mobile gate
 
 Before replacing the existing renderer, validate on physical iPhone 11 and a current Android phone. Initial target: stable 30 fps, responsive touch input, bounded memory, fast first meaningful frame and no gameplay regressions.
+
+
+## Real City V5
+
+The no-LOD2 pilot now adds a visual generation layer on top of the real geodata:
+
+- procedural facade windows and entrances with a strict mobile detail budget,
+- deterministic flat, gabled and hipped roof generation,
+- wider sidewalk ribbons below real road centerlines,
+- OSM water/river/park fallback layers for localhost testing,
+- a first Klarälven ribbon derived from real river geometry,
+- denser two-cluster tree crowns without multiplying unique materials.
+
+These details are generated separately from the footprint/collision layer so measured heights, hero assets or future municipal LOD2 can replace the visual shell without changing gameplay coordinates.
