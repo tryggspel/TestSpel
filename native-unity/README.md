@@ -72,7 +72,8 @@ python3 Tools/verify.py --dotnet /path/to/dotnet
 - 39 kompilerade/körda kontrollpunkter för XP, dubbelutbetalning, lagkapacitet, sammanläggning, inbjudans mottagare, engångsanvändning, utgångstid, gästrättigheter, frånkoppling och mobilens inmatningsmatematik.
 - C# 9-syntax kontrollerad med Roslyn i samtliga C#-källfiler under Assets.
 - Centrala Netcode-API:er jämförda med Unitys publicerade paketkälla, URP-version mot officiell dokumentation.
-- Unity Editor, IL-postprocessning av RPC:er, scenbygge, shaderkompilering, Android/iOS-bygge, rendering, ljud, kontroller på telefon och två verkliga klienter **har inte kunnat köras här**. Läs `Docs/TESTPLAN.md` för nästa verifieringsgrind.
+- Unity Editor **6000.3.25f1** installerades och startades i batchläge 2026-09-27. Byggförsöket slutade med exitkod 1: licensinitiering misslyckades och Package Manager kraschade när miljön nekade läsning av nätverksgränssnitt. Se [byggförsökets resultat](Docs/BYGGSTATUS.md).
+- Spelkompilering, IL-postprocessning av RPC:er, scenbygge, shaderkompilering, Android/iOS-bygge, rendering, ljud, kontroller på telefon och två verkliga klienter **är fortfarande inte verifierade i Unity**. Läs `Docs/TESTPLAN.md` för nästa verifieringsgrind.
 
 ## Underlag och kommersiell fortsättning
 
