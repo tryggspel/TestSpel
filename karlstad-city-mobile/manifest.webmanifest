@@ -1,11 +1,11 @@
 {
-  "name":"Karlstad City V28",
+  "name":"Karlstad City V30",
   "short_name":"Karlstad City",
   "start_url":"./",
   "display":"standalone",
   "orientation":"landscape",
   "background_color":"#071015",
   "theme_color":"#0b1115",
-  "description":"Mobile-first Karlstad game prototype with collisions, minimap, street names, water response, spatial audio and Mitt i City.",
+  "description":"Mobile-first Karlstad playable city loop with Mitt i City, collisions, minimap, street names, water, spatial audio, sprint and zombie mode.",
   "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
 }
