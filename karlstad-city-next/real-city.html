@@ -13,14 +13,14 @@
 <canvas id="renderCanvas" aria-label="Verkliga centrala Karlstad i 3D"></canvas>
 <div id="loading" class="loading"><div><b>KARLSTAD · REAL CITY</b><p id="loadText">Hämtar öppna geodata…</p><div class="progress"><i id="loadProgress"></i></div></div></div>
 <div class="hud">
-  <div class="panel brand"><span>REAL CITY V6 · UTAN LOD2</span><strong>STORA TORGET → SANDGRUND</strong><small>Riktiga geometrier från öppna geodata. V6 använder instansierade fasaddetaljer och chunkad takoptimering för snabbare laddning på Mac och iPhone.</small></div>
+  <div class="panel brand"><span>REAL CITY V7 · UTAN LOD2</span><strong>STORA TORGET → SANDGRUND</strong><small>Riktiga geometrier från öppna geodata. V7 begränsar takdetaljer på Safari och hoppar över tunga tak-merge-steg för snabbare laddning.</small></div>
   <div id="status" class="panel status">STARTAR…</div>
   <div class="reticle"></div>
   <div id="error" class="error"></div>
   <div id="look" class="look"></div>
   <div id="joy" class="joy"><div id="knob" class="knob"></div></div>
   <div class="mobile-hint">VÄNSTER: GÅ · HÖGER: SE DIG OM</div>
-  <div class="panel source"><b>V6:</b> OSM-reserv på localhost · verkliga footprints/gator · procedurala fasader/tak · LOD2 kan senare ersätta utvalda byggnader.</div>
+  <div class="panel source"><b>V7:</b> OSM-reserv på localhost · verkliga footprints/gator · procedurala fasader/tak · LOD2 kan senare ersätta utvalda byggnader.</div>
   <div class="actions"><button id="collision">COLL OFF</button><button id="reset">RESET</button><a href="index.html">← KARLSTAD CITY NEXT</a></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/earcut@2.2.4/dist/earcut.min.js"></script>
