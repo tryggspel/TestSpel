@@ -1,6 +1,6 @@
 (function(){
   window.KarlstadHeroBuildings={
-    version:27,
+    version:32,
     targets:[
       {
         key:'sandgrund',
@@ -28,6 +28,24 @@
         lon:13.50055,
         radius:85,
         style:'mall'
+      },
+      {
+        key:'domkyrka',
+        label:'Karlstads domkyrka',
+        match:['karlstads domkyrka','domkyrka'],
+        lat:59.3815484,
+        lon:13.5064970,
+        radius:45,
+        style:'church'
+      },
+      {
+        key:'radhuset',
+        label:'Rådhuset',
+        match:['rådhuset','radhuset'],
+        lat:59.3807845,
+        lon:13.5014353,
+        radius:40,
+        style:'civic'
       }
     ],
     squareCluster:{
@@ -44,12 +62,16 @@
       culture:{facade:'#8b7960',accent:'#323b3d',glass:'#27424e',roof:'#313e43'},
       museum:{facade:'#a9a18e',accent:'#4a4540',glass:'#2b4651',roof:'#3d4545'},
       mall:{facade:'#4f5457',accent:'#9a6c43',glass:'#35515d',roof:'#3a3d3f'},
+      church:{facade:'#d8c58f',accent:'#9c8154',glass:'#304653',roof:'#606457'},
+      civic:{facade:'#cdb071',accent:'#8f723e',glass:'#314a54',roof:'#2f3538'},
       square:{facade:'#b49b78',accent:'#383b3a',glass:'#284752',roof:'#39464a'}
     },
     assetOverrides:{
       sandgrund:'procedural:sandgrund-v16',
       'varmlands-museum':null,
-      'mitt-i-city':'procedural:mitt-i-city-v27'
+      'mitt-i-city':'procedural:mitt-i-city-v32',
+      domkyrka:'procedural:karlstads-domkyrka-v32',
+      radhuset:'procedural:karlsads-radhus-v32'
     }
   };
 })();
