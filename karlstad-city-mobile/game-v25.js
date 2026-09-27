@@ -109,9 +109,15 @@ function pannerAt(ctx,pos){
 }
 function oneShot(kind,pos){
  const ctx=ensureAudio();if(!ctx)return;const now=ctx.currentTime,p=pannerAt(ctx,pos||new B.Vector3());
- const g=ctx.createGain();g.gain.setValueAtTime(kind==='bump'?.08:kind==='splash'?.06:.025,now);g.gain.exponentialRampToValueAtTime(.0001,now+(kind==='bump'?.22:kind==='splash'?.45:.5));p.connect(g);g.connect(ctx.destination);
- if(kind==='bump'){const o=ctx.createOscillator();o.type='triangle';o.frequency.setValueAtTime(92,now);o.frequency.exponentialRampToValueAtTime(42,now+.18);o.connect(p);o.start(now);o.stop(now+.22)}
- else{const len=Math.floor(ctx.sampleRate*(kind==='splash'?.42:.42)),buf=ctx.createBuffer(1,len,ctx.sampleRate),ch=buf.getChannelData(0);for(let i=0;i<len;i++)ch[i]=(Math.random()*2-1)*Math.exp(-i/(len*.55));const src=ctx.createBufferSource(),f=ctx.createBiquadFilter();f.type=kind==='splash'?'bandpass':'lowpass';f.frequency.value=kind==='splash'?950:650;f.Q.value=.65;src.buffer=buf;src.connect(f);f.connect(p);src.start(now)}
+ const level=kind==='bump'?.08:kind==='splash'?.06:kind==='step'?.022:kind==='brake'?.035:.025;
+ const dur=kind==='bump'?.22:kind==='splash'?.45:kind==='step'?.13:kind==='brake'?.55:.5;
+ const g=ctx.createGain();g.gain.setValueAtTime(level,now);g.gain.exponentialRampToValueAtTime(.0001,now+dur);p.connect(g);g.connect(ctx.destination);
+ if(kind==='bump'||kind==='brake'){
+  const o=ctx.createOscillator();o.type=kind==='brake'?'sawtooth':'triangle';o.frequency.setValueAtTime(kind==='brake'?210:92,now);o.frequency.exponentialRampToValueAtTime(kind==='brake'?72:42,now+dur*.82);o.connect(p);o.start(now);o.stop(now+dur)
+ }else{
+  const len=Math.floor(ctx.sampleRate*dur),buf=ctx.createBuffer(1,len,ctx.sampleRate),ch=buf.getChannelData(0);for(let i=0;i<len;i++)ch[i]=(Math.random()*2-1)*Math.exp(-i/(len*(kind==='step'?.2:.55)));
+  const src=ctx.createBufferSource(),f=ctx.createBiquadFilter();f.type=kind==='splash'?'bandpass':'lowpass';f.frequency.value=kind==='splash'?950:kind==='step'?260:650;f.Q.value=kind==='step'?.9:.65;src.buffer=buf;src.connect(f);f.connect(p);src.start(now)
+ }
 }
 function initTrafficAudio(){
  const ctx=State.audioCtx;if(!ctx)return;for(const v of State.vehicleAudio){try{v.osc.stop()}catch(e){}}
@@ -132,11 +138,35 @@ function handleWater(camera){
  }else{State.waterEnteredAt=0;overlay?.classList.remove('show');State.lastLandPos=camera.position.clone()}
 }
 function collisionFeedback(camera,mesh){
- const now=performance.now();if(now-State.lastCollisionAt<230)return;State.lastCollisionAt=now;const e=document.getElementById('v28bump');if(e){e.textContent=mesh?.metadata?.collisionKind==='npc'?'URSÄKTA!':'DUNS';e.classList.add('show');setTimeout(()=>e.classList.remove('show'),170)}
- oneShot('bump',mesh?.absolutePosition||camera.position);
- const d=State.lastDelta;if(d&&d.lengthSquared()>.0001){const n=d.normalize();camera.position.addInPlace(n.scale(-.15));camera.cameraDirection.scaleInPlace(-.2)}
+ const now=performance.now();if(now-State.lastCollisionAt<230)return;State.lastCollisionAt=now;
+ const kind=mesh?.metadata?.collisionKind||'world',movingVehicle=(kind==='car'||kind==='bus')&&State.traffic.some(t=>t.r===mesh?.metadata?.owner);
+ const e=document.getElementById('v28bump');if(e){e.textContent=kind==='npc'?'URSÄKTA!':movingVehicle?'BANG!':'DUNS';e.classList.add('show');setTimeout(()=>e.classList.remove('show'),190)}
+ oneShot('bump',mesh?.absolutePosition||camera.position);if(navigator.vibrate)navigator.vibrate(movingVehicle?35:12);
+ if(movingVehicle&&now>State.impactCooldown){State.impactCooldown=now+900;State.health=Math.max(1,State.health-(kind==='bus'?9:5));update()}
+ const d=State.lastDelta;if(d&&d.lengthSquared()>.0001){const n=d.normalize();camera.position.addInPlace(n.scale(movingVehicle?-.34:-.17));camera.cameraDirection.scaleInPlace(movingVehicle?-.46:-.22)}
 }
 
+function objectivePoint(){
+ if(State.mode==='zombie'&&State.phase===1){let best=null,bd=Infinity;for(const z of State.zombies){if(!z||z.metadata.dead||!z.isEnabled())continue;const d=z.position.lengthSquared();if(d<bd){bd=d;best=z.position}}return best?.clone?.()||null}
+ if(State.mode==='zombie'&&State.phase===2)return local(13.503791,59.380512);
+ if(State.phase<4){const m=State.npcs.find(n=>n.metadata?.npcName==='Mira');return m?.position?.clone?.()||new B.Vector3(-12,0,-9)}
+ if(State.phase===4||State.phase===5)return local(13.50055,59.37988);
+ if(State.phase===7)return local(13.50295,59.380767);
+ return null;
+}
+function updateMovementFeel(camera,dt){
+ const d=State.lastDelta||B.Vector3.Zero(),moved=Math.hypot(d.x,d.z),moving=moved>.0015,sprinting=State.sprintHeld&&State.stamina>1&&moving;
+ if(sprinting)State.stamina=Math.max(0,State.stamina-.34*dt);else State.stamina=Math.min(100,State.stamina+.22*dt);
+ const fill=document.getElementById('v30staminaFill');if(fill)fill.style.width=State.stamina+'%';
+ camera.speed=sprinting?1.48:.88;if(TOUCH&&sprinting)camera.cameraDirection.scaleInPlace(1.14);
+ if(moving){
+  State.footDistance+=moved;State.bobPhase+=moved*(sprinting?8.5:6.4);
+  const stepEvery=sprinting?1.45:1.85;if(State.footDistance>stepEvery){State.footDistance=0;if(State.audioReady)oneShot('step',camera.position)}
+  camera.rotation.z=Math.sin(State.bobPhase)* (sprinting?.007:.0042);
+ }else camera.rotation.z*=.72;
+ const fovTarget=State.ads?.78:(sprinting?1.105:1.04);camera.fov+=(fovTarget-camera.fov)*.11*dt;
+ if(State.coffee&&State.mode==='city'){State.coffee.position.x=.34+Math.sin(State.bobPhase*.55)*(moving?.012:0)}
+}
 function css(){const s=document.createElement('style');s.textContent=`
 html,body{overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #v25hud{position:fixed;inset:0;pointer-events:none;z-index:22;color:#fff;font-family:Inter,system-ui,sans-serif}
@@ -189,7 +219,9 @@ function update(){
  if(State.mode==='city'){text('v25itemlabel','ITEM');text('v25itemmain','KAFFE');text('v25itemsub','CITY MODE')}
  else{text('v25itemlabel','AMMO');text('v25itemmain',State.ammo+'/'+State.reserve);text('v25itemsub','ZOMBIE MODE')}
 }
-function objective(v){text('v25obj',v)}function dialog(name,v){const e=document.getElementById('v25dialog');e.innerHTML='<b>'+name+'</b> · '+v;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),4600)}
+function objective(v){text('v25obj',v)}
+function missionFlash(v){const e=document.getElementById('v30mission');if(!e)return;e.textContent=v;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),1700)}
+function dialog(name,v){const e=document.getElementById('v25dialog');e.innerHTML='<b>'+name+'</b> · '+v;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),4600)}
 async function loadContainer(scene,key,url){try{const s=split(url),c=await B.SceneLoader.LoadAssetContainerAsync(s.root,s.file,scene);State.containers[key]=c;return c}catch(e){console.warn('V25 asset failed',key,e);return null}}
 function spawn(scene,key,name,pos,rot=0,scale=1){
  const c=State.containers[key];if(!c)return null;
@@ -227,7 +259,16 @@ function fallbackNpc(scene,name,pos){
 function makeNpc(scene,name,line,pos,rot=0){let r=spawn(scene,'civilian','NPC '+name,pos,rot,1)||fallbackNpc(scene,'NPC '+name,pos);r.metadata={npc:true,npcName:name,npcLine:line};addCollider(scene,r,'npc');State.npcs.push(r);return r}
 function nearestNpc(camera){let best=null,bd=3.7;for(const n of State.npcs){const d=B.Vector3.Distance(camera.position,n.position);if(d<bd){bd=d;best=n}}return best}
 function makeMarker(scene,pos,color='#e5bb50'){const m=B.MeshBuilder.CreateTorus('objective marker',{diameter:2.4,thickness:.09,tessellation:32},scene);m.position.copyFrom(pos);m.position.y=.15;const x=new B.StandardMaterial('marker mat',scene);x.emissiveColor=B.Color3.FromHexString(color);x.disableLighting=true;m.material=x;return m}
-function interact(scene,camera){const n=nearestNpc(camera);if(!n)return;dialog(n.metadata.npcName,n.metadata.npcLine);if(n.metadata.npcName==='Mira'&&State.phase<4){State.phase=4;objective('GÅ TILL MITT I CITY · JÄRNVÄGSGATAN');}else if(n.metadata.npcName==='Centervärd'&&State.mode==='city'){State.phase=6;State.score+=500;update();objective('UTFORSKA GALLERIAN · Z / MODE STARTAR ZOMBIE MODE');}else if(State.phase===2&&n.metadata.npcName==='Alex'){State.phase=3;State.score+=2500;update();objective('MISSION COMPLETE · KARLSTAD HÅLLER LINJEN')}}
+function interact(scene,camera){
+ const n=nearestNpc(camera);if(!n)return;dialog(n.metadata.npcName,n.metadata.npcLine);
+ if(n.metadata.npcName==='Mira'&&State.phase<4){
+  State.phase=4;objective('GÅ TILL MITT I CITY · JÄRNVÄGSGATAN');missionFlash('CITY MISSION · MITT I CITY');
+ }else if(n.metadata.npcName==='Centervärd'&&State.mode==='city'&&State.phase>=5&&State.phase<7){
+  State.phase=7;State.hasRadio=true;State.score+=600;update();objective('NÖDRADIO HÄMTAD · ÅTERVÄND TILL STORA TORGET');missionFlash('NÖDRADIO HÄMTAD');
+ }else if(State.phase===2&&n.metadata.npcName==='Alex'){
+  State.phase=3;State.score+=2500;State.missionDone=true;update();objective('MISSION COMPLETE · KARLSTAD HÅLLER LINJEN');missionFlash('ZOMBIE MISSION KLAR');
+ }
+}
 function fallbackEnemy(scene,pos,id){const r=fallbackNpc(scene,'INFECTED '+id,pos);for(const m of r.getChildMeshes()){if(m.material?.albedoColor)m.material.albedoColor=B.Color3.FromHexString('#5b6652');m.isPickable=true;m.metadata={zombieRoot:r}}return r}
 function enemy(scene,pos,id){let r=spawn(scene,'infected','INFECTED '+id,pos,0,1)||fallbackEnemy(scene,pos,id);r.metadata={zombie:true,hp:100,dead:false};for(const m of r.getChildMeshes()){m.isPickable=true;m.metadata={...(m.metadata||{}),zombieRoot:r}}addCollider(scene,r,'zombie');State.zombies.push(r);return r}
 function wave(scene){State.phase=1;objective('RENSA TORGET · 6 INFECTED');[[-20,-18],[18,-19],[-28,10],[26,13],[-8,27],[13,30]].forEach((p,i)=>enemy(scene,new B.Vector3(p[0],0,p[1]),i))}
@@ -247,13 +288,17 @@ function coffee(scene,camera){
  const hand=B.MeshBuilder.CreateSphere('coffee hand mesh',{diameter:.15,segments:12},scene);hand.parent=root;hand.position.set(.07,-.07,.02);hand.material=skin;
 }
 function setMode(scene,mode){
- State.mode=mode;const zombie=mode==='zombie';
+ const zombie=mode==='zombie';
+ if(zombie&&State.phase<8){missionFlash('SLUTFÖR CITY MISSION FÖRST');dialog('Mira','Gå till Mitt i City, hämta nödradion och kom tillbaka till torget först.');return}
+ State.mode=mode;
  State.weapon?.setEnabled(zombie);State.coffee?.setEnabled(!zombie);
  for(const z of State.zombies)z?.setEnabled?.(zombie);
  const modeBtn=document.getElementById('v27mode');if(modeBtn)modeBtn.textContent=zombie?'CITY':'ZOMBIE';
  for(const id of ['v25fire','v25aim','v25reload']){const e=document.getElementById(id);if(e){e.style.opacity=zombie?'1':'.28';e.style.pointerEvents=zombie?'auto':'none'}}
- if(zombie&&!State.waveSpawned){State.waveSpawned=true;wave(scene)}
- if(!zombie){objective(State.phase>=6?'UTFORSKA MITT I CITY · MODE STARTAR ZOMBIE MODE':State.phase>=4?'GÅ TILL MITT I CITY · JÄRNVÄGSGATAN':'PRATA MED MIRA · STORA TORGET')}
+ if(zombie&&!State.waveSpawned){State.waveSpawned=true;wave(scene);missionFlash('ZOMBIE MODE · TORGET')}
+ if(!zombie){
+  objective(State.phase>=8?'CITY MISSION KLAR · Z / MODE = ZOMBIE MODE':State.phase===7?'ÅTERVÄND TILL STORA TORGET':State.phase>=4?'GÅ TILL MITT I CITY · JÄRNVÄGSGATAN':'PRATA MED MIRA · STORA TORGET')
+ }
  update();
 }
 async function world(scene){
