@@ -114,3 +114,17 @@ Hero-building layer:
 - reserves explicit asset-override slots for future GLB/LOD2 replacements.
 
 Hero styling in V13 is a procedural game-art pass, not a claim of survey-accurate facade appearance.
+
+
+## Real City V14
+
+Geometry-cleanup pass before real landmark assets:
+
+- gabled/hipped procedural roofs are now restricted to simple rectangular-ish footprints,
+- complex/L-shaped footprints receive exact polygon-following flat caps instead of oversized bounding-box roofs,
+- roof overhang is reduced,
+- road and sidewalk ribbons receive tiny deterministic height offsets at intersections to suppress z-fighting,
+- asphalt/sidewalk materials are lighter and less contrasty,
+- hero entrance treatment is deliberately toned down; named landmarks keep only a small canopy and all heroes use a subtler facade band.
+
+Hero architecture remains separate and ready for later GLB/LOD2 replacement.
