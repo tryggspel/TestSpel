@@ -85,9 +85,12 @@ async function loadOsmEnvironment(){
  return land;
 }
 async function loadOsmTrees(){
+ const cacheKey='karlstad-real-city-trees-v10';
+ try{const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');if(Array.isArray(cached)&&cached.length)return cached}catch(e){}
  const q=`[out:json][timeout:10];node[natural=tree](${BBOX.south},${BBOX.west},${BBOX.north},${BBOX.east});out tags;`;
  const j=await overpass(q,10000),trees=[];
  for(const e of j.elements||[]){if(e.type!=='node')continue;trees.push({type:'Feature',properties:{OBJECTID:e.id,tradslag:e.tags?.species||e.tags?.genus||'',dbh:e.tags?.diameter_crown||40},geometry:{type:'Point',coordinates:[e.lon,e.lat]}})}
+ try{if(trees.length)localStorage.setItem(cacheKey,JSON.stringify(trees))}catch(e){}
  return trees;
 }
 function estimateHeight(props,ring){const tagged=parseFloat(props.height);if(Number.isFinite(tagged))return clamp(tagged,3,35);const levels=parseFloat(props['building:levels']);if(Number.isFinite(levels))return clamp(levels*3.05+1,4,32);const t=String(props.OBJEKTTYP||props.building||'').toLowerCase(),a=area2D(ring),r=hash(props.FID||props.OBJECTID||a);let h=t.includes('samhäll')||t.includes('civic')?12:t.includes('industri')?8:t.includes('komplement')?4.2:t.includes('kyrk')||t.includes('samfund')?14:t.includes('verksam')?10:9;if(a>900)h+=3;if(a>2200)h+=2;return clamp(h+(r-.5)*5,4,22)}
