@@ -19,23 +19,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      EDUKE32_RELEASE: v0.2.4
       EDUKE32_UPSTREAM_SHA: 37b56eefaf8125eaa853c417512019cc7ad94b81
     steps:
       - name: Checkout Karlstad repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Set up Emscripten
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: 6.0.5
-          actions-cache-folder: emsdk-cache
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
 
       - name: Generate Karlstad BUILD map
         run: |
@@ -46,49 +36,43 @@ jobs:
             --meta /tmp/karlstad-build/karlstad-map-meta.json
           ls -lh /tmp/karlstad-build
 
-      - name: Checkout pinned EDuke32-WASM
+      - name: Download pinned EDuke32-WASM web release
         run: |
-          git clone https://github.com/DigitalCyberSoft/eduke32-wasm.git /tmp/eduke32-wasm
-          cd /tmp/eduke32-wasm
-          git checkout "$EDUKE32_UPSTREAM_SHA"
-
-      - name: Build EDuke32 browser transport
-        working-directory: /tmp/eduke32-wasm/platform/emscripten
-        run: |
-          npm ci
-          npm test
-          npm run build:net
-
-      - name: Build EDuke32 WebAssembly
-        working-directory: /tmp/eduke32-wasm
-        run: |
-          emcc --version
-          make PLATFORM=EMSCRIPTEN EM_SINGLE_FILE=0 NETDUKE32=1 -j"$(nproc)"
+          mkdir -p /tmp/e32
+          curl -L --fail --retry 3 \
+            "https://github.com/DigitalCyberSoft/eduke32-wasm/releases/download/${EDUKE32_RELEASE}/eduke32-wasm-web.zip" \
+            -o /tmp/e32/web.zip
+          unzip -q /tmp/e32/web.zip -d /tmp/e32/unpacked
+          find /tmp/e32/unpacked -maxdepth 3 -type f -printf '%p %k KB\n' | head -30
 
       - name: Assemble Karlstad prototype
         run: |
+          SRC_DIR="$(dirname "$(find /tmp/e32/unpacked -type f -name eduke32.js | head -1)")"
+          test -f "$SRC_DIR/eduke32.js"
+          test -f "$SRC_DIR/eduke32.wasm"
+          test -f "$SRC_DIR/eduke32.data"
           rm -rf eduke32-karlstad
           mkdir -p eduke32-karlstad
-          cp /tmp/eduke32-wasm/eduke32.js eduke32-karlstad/
-          cp /tmp/eduke32-wasm/eduke32.wasm eduke32-karlstad/
-          cp /tmp/eduke32-wasm/eduke32.data eduke32-karlstad/
-          cp /tmp/eduke32-wasm/platform/emscripten/eduke32-net.js eduke32-karlstad/
-          cp /tmp/eduke32-wasm/platform/emscripten/grp-manifest.json eduke32-karlstad/ 2>/dev/null || true
+          cp "$SRC_DIR/eduke32.js" eduke32-karlstad/
+          cp "$SRC_DIR/eduke32.wasm" eduke32-karlstad/
+          cp "$SRC_DIR/eduke32.data" eduke32-karlstad/
+          cp "$SRC_DIR/eduke32-net.js" eduke32-karlstad/ 2>/dev/null || true
+          cp "$SRC_DIR/grp-manifest.json" eduke32-karlstad/ 2>/dev/null || true
           cp /tmp/karlstad-build/KARLSTAD.MAP eduke32-karlstad/
           cp /tmp/karlstad-build/karlstad-map-meta.json eduke32-karlstad/
-          cp /tmp/eduke32-wasm/source/build/buildlic.txt eduke32-karlstad/BUILDLIC.TXT
-          cp /tmp/eduke32-wasm/assets/shareware/LICENSE.TXT eduke32-karlstad/SHAREWARE-LICENSE.TXT
+          curl -L --fail https://raw.githubusercontent.com/DigitalCyberSoft/eduke32-wasm/${EDUKE32_UPSTREAM_SHA}/source/build/buildlic.txt -o eduke32-karlstad/BUILDLIC.TXT
+          curl -L --fail https://raw.githubusercontent.com/DigitalCyberSoft/eduke32-wasm/${EDUKE32_UPSTREAM_SHA}/assets/shareware/LICENSE.TXT -o eduke32-karlstad/SHAREWARE-LICENSE.TXT
           python3 eduke32-karlstad-prototype/tools/patch_shell.py \
-            --infile /tmp/eduke32-wasm/platform/emscripten/index.html \
+            --infile "$SRC_DIR/index.html" \
             --outfile eduke32-karlstad/index.html
           BUILD_ID="karlstad-${GITHUB_RUN_NUMBER}-$(git rev-parse --short HEAD)"
           sed -i "s/__BUILD_ID__/${BUILD_ID}/g" eduke32-karlstad/index.html
           printf '%s\n' \
             'Karlstad City BUILD/EDuke32 WASM prototype' \
-            "Upstream EDuke32-WASM: ${EDUKE32_UPSTREAM_SHA}" \
+            "EDuke32-WASM release: ${EDUKE32_RELEASE}" \
+            "Upstream source pin: ${EDUKE32_UPSTREAM_SHA}" \
             "Build: ${BUILD_ID}" \
             'Map generated from TestSpel/karlstad-city-mobile/data/osm-buildings.json.' \
-            'Prototype only. BUILD source license is included as BUILDLIC.TXT.' \
             > eduke32-karlstad/PROTOTYPE.txt
           ls -lh eduke32-karlstad
 
