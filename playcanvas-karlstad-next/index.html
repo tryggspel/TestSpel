@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#071015">
-<title>Karlstad City · Core Lock 1.3 · Graphics Pass 1.4</title>
+<title>Karlstad City · Core Lock 1.3 · Content + Graphics 1.5</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071015;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
 #game{width:100%;height:100%;display:block;touch-action:none}
@@ -14,14 +14,16 @@
 #status{position:absolute;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));padding:8px 10px;border:1px solid #ffffff20;border-radius:9px;background:#071015cc;font:700 10px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;text-align:right}
 #reticle{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border:1px solid #fff;border-radius:50%;opacity:.7}
 #mission{position:absolute;left:50%;top:max(56px,calc(env(safe-area-inset-top) + 56px));transform:translateX(-50%);padding:8px 12px;border-radius:999px;background:#071015c9;border:1px solid #ffffff22;font-size:10px;letter-spacing:.08em;white-space:nowrap}
-#joy{position:absolute;left:max(20px,env(safe-area-inset-left));bottom:max(24px,calc(env(safe-area-inset-bottom) + 24px));width:132px;height:132px;border:2px solid #ffffff30;border-radius:50%;background:#07101566;pointer-events:auto;touch-action:none}
+#joy{position:absolute;z-index:7;left:max(20px,env(safe-area-inset-left));bottom:max(24px,calc(env(safe-area-inset-bottom) + 24px));width:132px;height:132px;border:2px solid #ffffff30;border-radius:50%;background:#07101566;pointer-events:auto;touch-action:none}
 #joy i{position:absolute;left:43px;top:43px;width:46px;height:46px;border-radius:50%;background:#ffffff50;border:1px solid #ffffff99}
-#look{position:absolute;right:0;top:72px;bottom:0;width:58%;pointer-events:auto;touch-action:none}
-#buttons{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(20px,calc(env(safe-area-inset-bottom) + 20px));display:grid;grid-template-columns:repeat(2,72px);gap:9px;pointer-events:auto}
+#look{position:absolute;z-index:2;right:0;top:72px;bottom:0;width:55%;pointer-events:auto;touch-action:none}
+#buttons{position:absolute;z-index:8;right:max(18px,env(safe-area-inset-right));bottom:max(20px,calc(env(safe-area-inset-bottom) + 20px));display:grid;grid-template-columns:repeat(2,72px);gap:9px;pointer-events:auto}
 #buttons button{height:58px;border-radius:15px;border:1px solid #ffffff35;background:#07151dcc;color:#fff;font:900 11px/1 system-ui;letter-spacing:.08em;touch-action:none}
 #buttons .fire{background:#6a2925d8;border-color:#d8675b77}
 #error{display:none;position:fixed;z-index:220;left:50%;top:18%;transform:translateX(-50%);width:min(620px,88vw);max-height:34vh;overflow:auto;padding:12px 14px;background:#501717f2;border:1px solid #ffb0b077;border-radius:10px;color:#fff;white-space:pre-wrap;font:11px/1.4 ui-monospace,monospace}
 #error.show{display:block}
+#bark{position:absolute;left:50%;top:66%;transform:translate(-50%,8px);opacity:0;padding:8px 13px;border-radius:999px;background:#071015dc;border:1px solid #e7c14966;color:#ffe47a;font:900 11px/1 system-ui;letter-spacing:.07em;white-space:nowrap;transition:opacity .14s,transform .14s}
+#bark.show{opacity:1;transform:translate(-50%,0)}
 #loading.failed .loadbox{transform:translateY(14vh)}
 #loading.failed .loadbox p{color:#ffb5a8;opacity:1}
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
@@ -32,15 +34,16 @@
 <canvas id="game"></canvas>
 <div id="loading"><div class="loadbox"><strong>KARLSTAD CITY</strong><p id="loadText">Startar PlayCanvas…</p><div class="bar"><i id="loadBar"></i></div></div></div>
 <div class="hud">
-  <div class="brand"><b>KARLSTAD CITY · CORE LOCK 1.3 · GRAPHICS 1.4</b><span>1.2.2 GAME FEEL LOCKED · STATIC HERO DETAIL PASS</span></div>
+  <div class="brand"><b>KARLSTAD CITY · CORE LOCK 1.3 · CONTENT + GRAPHICS 1.5</b><span>1.2.2 GAME FEEL LOCKED · STYLIZED KARLSTAD · REWARD PASS</span></div>
   <div id="status">STARTAR…</div>
   <div id="mission">UPPDRAG: FÖLJ GULDMARKÖRERNA TILL MITT I CITY</div>
+  <div id="bark"></div>
   <div id="reticle"></div>
   <div id="error"></div>
   <div id="joy"><i></i></div>
   <div id="look"></div>
   <div id="buttons"><button id="mapBtn">KARTA</button><button id="useBtn">USE</button><button id="jumpBtn">JUMP</button><button id="fireBtn" class="fire">FIRE</button></div>
 </div>
-<script type="module" src="./app.js?v=1.4.0"></script>
+<script type="module" src="./app.js?v=1.5.0"></script>
 </body>
 </html>
