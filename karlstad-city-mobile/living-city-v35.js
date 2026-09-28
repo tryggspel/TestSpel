@@ -123,7 +123,7 @@ function person(scene,i){
 function car(scene,i,parked=false){
   const r=new B.TransformNode((parked?'V35 parked car ':'V35 traffic car ')+i,scene);
   const body=B.MeshBuilder.CreateBox('V35 car body '+i,{width:1.78,height:.56,depth:3.85},scene);body.parent=r;body.position.y=.58;body.material=CITY.mats.car[i%CITY.mats.car.length];
-  const cabin=B.MeshBuilder.CreateBox('V35 car cabin '+i,{width:1.52,height:.62,depth:1.85},scene);cabin.parent=r;cabbin=undefined;
+  const cabin=B.MeshBuilder.CreateBox('V35 car cabin '+i,{width:1.52,height:.62,depth:1.85},scene);cabin.parent=r;
   cabin.position.set(0,1.04,-.18);cabin.material=CITY.mats.glass;
   const bumper=B.MeshBuilder.CreateBox('V35 car bumper '+i,{width:1.72,height:.18,depth:.18},scene);bumper.parent=r;bumper.position.set(0,.42,1.93);bumper.material=CITY.mats.dark;
   for(const x of [-.83,.83])for(const z of [-1.24,1.22]){
