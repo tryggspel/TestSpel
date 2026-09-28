@@ -42,11 +42,13 @@ button{border:0;border-radius:12px;padding:18px 14px;font-weight:850;font-size:1
 </div>
 <button id="city">🎸 BARA KARLSTAD CITY</button>
 <button id="stop">■ STOPP</button>
-<div class="version">WORLD-CLASS AUDIO PROTOTYPE V6</div>
-<div class="note">V6 bygger hela soundtracket direkt i Web Audio: filmiska stråk, stereogitarrer, growl-bas, live-liknande trummor, hero lead, arena-kör och mastering. Zombie Mode vrider samma Karlstad-identitet till tung industrial horror.</div>
+<div class="version">WORLD-CLASS AUDIO PROTOTYPE V7</div>
+<div class="note">V7 förrenderar hela mixen innan uppspelning. Du får filmiska stråk, stereogitarrer, growl-bas, live-liknande trummor, hero lead och arena-kör utan att datorn behöver syntetisera hundratals ljud samtidigt under spelning.</div>
 </main>
 <script>
 let ctx=null, master=null, timers=[],roomVerb=null,roomGain=null;
+let playCtx=null,activeSource=null,renderSerial=0;
+const renderCache={};
 const A=440, midi=n=>A*Math.pow(2,(n-69)/12);
 function softCurve(amount=2.2){
   const n=1024,curve=new Float32Array(n);
@@ -73,7 +75,7 @@ function boot(){
   const comp=ctx.createDynamicsCompressor();
   comp.threshold.value=-18;comp.knee.value=18;comp.ratio.value=3.4;comp.attack.value=.012;comp.release.value=.22;
 
-  const clip=ctx.createWaveShaper();clip.curve=softCurve(1.65);clip.oversample="2x";
+  const clip=ctx.createWaveShaper();clip.curve=softCurve(1.65);clip.oversample="none";
   const final=ctx.createGain();final.gain.value=.86;
 
   roomVerb=ctx.createConvolver();roomVerb.buffer=makeImpulse(2.2,3.2);
@@ -325,7 +327,7 @@ function guitarNote(n,t,d,v=.055,pan=0,muted=false){
   os[0].type="sawtooth";os[1].type="square";os[2].type="triangle";
   os[0].frequency.value=midi(n);os[1].frequency.value=midi(n)*Math.pow(2,5/1200);os[2].frequency.value=midi(n+12);
   pre.gain.value=.32;bp.type="bandpass";bp.frequency.value=1450;bp.Q.value=.72;lp.type="lowpass";lp.frequency.value=muted?2100:3300;
-  sh.curve=softCurve(muted?4.6:3.6);sh.oversample="4x";
+  sh.curve=softCurve(muted?4.6:3.6);sh.oversample="2x";
   amp.gain.setValueAtTime(.0001,t);amp.gain.linearRampToValueAtTime(v,t+.006);
   amp.gain.setValueAtTime(v*(muted?.52:.82),t+d*(muted?.38:.72));amp.gain.exponentialRampToValueAtTime(.0001,t+d);
   os.forEach(o=>o.connect(pre));pre.connect(bp);bp.connect(lp);lp.connect(sh);sh.connect(amp);
@@ -488,30 +490,116 @@ function setMode(title,sub,z=false){
   document.getElementById("zombie").classList.toggle("active",z);
 }
 function later(ms,fn){timers.push(setTimeout(fn,ms))}
-function clearAll(){timers.forEach(clearTimeout);timers=[]}
-document.getElementById("play").onclick=async()=>{
-  clearAll();boot();await ctx.resume();
-  const t=ctx.currentTime+.08,intro=matchNightIntro(t);
-  const mainStart=t+intro,d=mainSection(mainStart,12);
-  siren(mainStart+d,2.9);subDrop(mainStart+d+2.62,.75,.30);zombieSection(mainStart+d+2.9,12);
-  setMode("FBK-MATCHKVÄLL","Läktaren vaknar till liv innan Karlstad City-temat tar över.",false);
-  later((intro-.15)*1000,()=>setMode("KARLSTAD CITY","Stadspuls, stråk och läktarkör går över i gameplay.",false));
-  later((intro+d-1.0)*1000,()=>setMode("NÅGOT ÄR FEL…","Siren. Strömmen dör. Läktaren försvinner.",true));
-  later((intro+d+2.82)*1000,()=>setMode("☣ ZOMBIE APOCALYPSE","Tungt gitarrlager, dubbla trummor och den övergivna läktarkören tar över.",true));
-};
-document.getElementById("zombie").onclick=async()=>{
-  clearAll();boot();await ctx.resume();const t=ctx.currentTime+.06;
-  siren(t,.95);subDrop(t+.72,.65,.28);zombieSection(t+.95,12);setMode("☣ ZOMBIE APOCALYPSE","Direktläge – tungt riff, dubbla trummor, subbas och förvrängd arena.",true);
-};
-document.getElementById("city").onclick=async()=>{
-  clearAll();boot();await ctx.resume();
-  const t=ctx.currentTime+.08,intro=matchNightIntro(t),mainStart=t+intro;
-  mainSection(mainStart,12);
-  setMode("FBK-MATCHKVÄLL","Publiken bygger upp ett eget Karlstad-intro innan huvudtemat tar över.",false);
-  later((intro-.15)*1000,()=>setMode("KARLSTAD CITY","Full version: stråk, gitarr, bas, live-känsla, hero lead och läktarkör.",false));
-};
+function clearAll(){
+  timers.forEach(clearTimeout);timers=[];
+  renderSerial++;
+  if(activeSource){try{activeSource.stop()}catch(e){} activeSource=null}
+}
+function ensurePlaybackContext(){
+  if(!playCtx || playCtx.state==="closed"){
+    try{playCtx=new (window.AudioContext||window.webkitAudioContext)({latencyHint:"playback"})}
+    catch(e){playCtx=new (window.AudioContext||window.webkitAudioContext)()}
+  }
+  return playCtx.resume();
+}
+function setupOfflineMix(off){
+  ctx=off;
+  master=ctx.createGain();master.gain.value=.70;
+
+  const comp=ctx.createDynamicsCompressor();
+  comp.threshold.value=-18;comp.knee.value=16;comp.ratio.value=3.0;comp.attack.value=.014;comp.release.value=.24;
+
+  const clip=ctx.createWaveShaper();clip.curve=softCurve(1.45);clip.oversample="none";
+  const final=ctx.createGain();final.gain.value=.84;
+
+  // Short offline-only room. All reverb is baked into the finished buffer.
+  roomVerb=ctx.createConvolver();roomVerb.buffer=makeImpulse(.72,4.4);
+  roomGain=ctx.createGain();roomGain.gain.value=.125;
+
+  roomVerb.connect(roomGain);roomGain.connect(comp);
+  master.connect(comp);comp.connect(clip);clip.connect(final);final.connect(ctx.destination);
+}
+async function renderProgram(kind){
+  if(renderCache[kind]) return renderCache[kind];
+
+  const sr=24000;
+  const duration=kind==="full"?58:(kind==="city"?35:23);
+  const off=new OfflineAudioContext(2,Math.ceil(duration*sr),sr);
+
+  const old={ctx,master,roomVerb,roomGain};
+  setupOfflineMix(off);
+
+  const t=.16;
+  if(kind==="full"){
+    const intro=matchNightIntro(t);
+    const mainStart=t+intro,d=mainSection(mainStart,12);
+    siren(mainStart+d,2.9);
+    subDrop(mainStart+d+2.62,.75,.30);
+    zombieSection(mainStart+d+2.9,12);
+  }else if(kind==="city"){
+    const intro=matchNightIntro(t);
+    mainSection(t+intro,12);
+  }else{
+    siren(t,.95);
+    subDrop(t+.72,.65,.28);
+    zombieSection(t+.95,12);
+  }
+
+  let buffer;
+  try{
+    buffer=await off.startRendering();
+  }finally{
+    ctx=old.ctx;master=old.master;roomVerb=old.roomVerb;roomGain=old.roomGain;
+  }
+  renderCache[kind]=buffer;
+  return buffer;
+}
+async function playProgram(kind){
+  const mySerial=++renderSerial;
+  timers.forEach(clearTimeout);timers=[];
+  if(activeSource){try{activeSource.stop()}catch(e){}activeSource=null}
+
+  await ensurePlaybackContext();
+
+  setMode("MIXAR SOUNDTRACK…","Förrenderar hela stereomixen en gång. Uppspelningen blir sedan mycket lättare för datorn.",kind==="zombie");
+
+  const started=performance.now();
+  const buffer=await renderProgram(kind);
+  if(mySerial!==renderSerial)return;
+
+  // Keep a little headroom and play one single source node: this is the key performance fix.
+  const src=playCtx.createBufferSource(),g=playCtx.createGain();
+  g.gain.value=.92;
+  src.buffer=buffer;src.connect(g);g.connect(playCtx.destination);
+  activeSource=src;
+  src.onended=()=>{if(activeSource===src)activeSource=null};
+  src.start();
+
+  if(kind==="full"){
+    const intro=10*(60/96);
+    const main=12*4*(60/108);
+    setMode("FBK-MATCHKVÄLL","Förrenderad mix spelar nu utan realtidssynt.",false);
+    later((intro-.15)*1000,()=>setMode("KARLSTAD CITY","Full stereomix: stråk, gitarr, bas, hero lead och läktarkör.",false));
+    later((intro+main-1.0)*1000,()=>setMode("NÅGOT ÄR FEL…","Siren. Strömmen dör. Läktaren försvinner.",true));
+    later((intro+main+2.82)*1000,()=>setMode("☣ ZOMBIE APOCALYPSE","Industrial horror, subbas och den övergivna arenakören tar över.",true));
+  }else if(kind==="city"){
+    const intro=10*(60/96);
+    setMode("FBK-MATCHKVÄLL","Förrenderad Karlstad-mix spelar nu.",false);
+    later((intro-.15)*1000,()=>setMode("KARLSTAD CITY","Full version utan Zombie Mode.",false));
+  }else{
+    setMode("☣ ZOMBIE APOCALYPSE","Förrenderad Zombie-mix spelar nu utan realtidsbelastning.",true);
+  }
+
+  const sec=((performance.now()-started)/1000).toFixed(1);
+  document.querySelector(".version").textContent="WORLD-CLASS AUDIO PROTOTYPE V7 · RENDER "+sec+"s";
+}
+document.getElementById("play").onclick=()=>playProgram("full");
+document.getElementById("city").onclick=()=>playProgram("city");
+document.getElementById("zombie").onclick=()=>playProgram("zombie");
 document.getElementById("stop").onclick=()=>{
-  clearAll();if(ctx){ctx.close();ctx=null}setMode("Stoppad","Välj Karlstad → Zombie eller starta Zombie Mode direkt.",false);
+  clearAll();
+  setMode("Stoppad","Välj Karlstad → Zombie, bara Karlstad City eller Zombie Mode direkt.",false);
 };
+
 </script>
 </body></html>
