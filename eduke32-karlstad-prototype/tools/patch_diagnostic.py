@@ -88,12 +88,17 @@ SCRIPT = r"""
 """
 
 def patch(src: str) -> str:
-    marker = '<script type="module" src="eduke32-net.js?v=__BUILD_ID__"></script>'
-    if marker not in src:
-        marker = '<script src="eduke32.js?v=__BUILD_ID__"></script>'
-    if marker not in src:
-        raise RuntimeError("Could not find engine script marker")
-    return src.replace(marker, STYLE + "\n" + SCRIPT + "\n" + marker, 1)
+    # Release HTML already contains a concrete build id (for example
+    # ?v=44-37b56ee), not the __BUILD_ID__ placeholder used in source.
+    # Insert immediately before the engine script regardless of its cache tag.
+    needle = '<script src="eduke32.js?v='
+    pos = src.find(needle)
+    if pos < 0:
+        needle = '<script src="eduke32.js"'
+        pos = src.find(needle)
+    if pos < 0:
+        raise RuntimeError("Could not find eduke32.js engine script")
+    return src[:pos] + STYLE + "\n" + SCRIPT + "\n" + src[pos:]
 
 def main():
     ap=argparse.ArgumentParser()
