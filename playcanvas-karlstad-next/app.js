@@ -19,7 +19,7 @@ const PLAYER_RADIUS=0.42;
 const EYE=1.68;
 const CORE_LOCK=Object.freeze({version:'1.3.0',baseline:'1.2.2',lookSensitivity:.12,walkSpeed:7.2,sprintMultiplier:1.55,jumpVelocity:6.2,gravity:16,playerRadius:.42,mobileMaxPixelRatio:1.25,desktopMaxPixelRatio:1.6,maxBuildings:95,detailRadius:92});
 window.KarlstadCoreLock=CORE_LOCK;
-const GRAPHICS_PASS=Object.freeze({version:'1.6.0',core:'1.3.0',mode:'landmark-identity',heroBudget:8,rule:'no-core-feel-changes'});
+const GRAPHICS_PASS=Object.freeze({version:'1.7.0',core:'1.3.0',mode:'landmark-storefront',heroBudget:8,rule:'no-core-feel-changes'});
 window.KarlstadGraphicsPass=GRAPHICS_PASS;
 const TOUCH_TUNE=Object.freeze({deadzone:.13,expo:.42,maxStick:.34,lookScale:.9});
 let app,player,camera,yaw=54,pitch=-5;
@@ -268,35 +268,53 @@ function addHeroLandmarkPass14(b){
 }
 
 function addContentGraphicsPass15(){
-  // Real-world anchor: O'Learys Karlstad, Tingvallagatan 9.
-  // Stylized on purpose: clear silhouette / colour identity over photorealism.
+  // Keep the 1.5 reward breadcrumbs, but the old O'Learys slab is retired.
+  // The actual storefront is now owned by Landmark Storefront 1.7.
   const [ox,oz]=localXY(OLEARYS.lon,OLEARYS.lat);
-  addBox('g15-olearys-facade',ox,2.55,oz,.34,5.1,13.8,M.olearysGreen);
-  addBox('g15-olearys-dark-band',ox-.22,4.62,oz,.16,.62,11.8,M.olearysDark);
-  addBox('g15-olearys-awning',ox-.82,2.75,oz,1.45,.18,10.7,M.olearysDark);
-  addBox('g15-olearys-door',ox-.24,1.45,oz-3.65,.18,2.8,2.1,M.door);
-  addBox('g15-olearys-window-a',ox-.25,1.85,oz+.35,.17,2.55,4.35,M.windowWarm);
-  addBox('g15-olearys-window-b',ox-.25,1.85,oz+4.5,.17,2.55,2.65,M.windowCool);
-  addBox('g15-olearys-sign',ox-.27,4.62,oz,.13,.48,8.3,M.marking);
-  addBox('g15-olearys-green-cap',ox-.31,5.22,oz,.12,.16,11.7,M.olearysGreen);
-  addPlanter(ox-1.55,oz-5.35); addPlanter(ox-1.55,oz+5.35);
-
-  // Extra reward breadcrumbs: draw the player toward the landmark and main route.
   addPickup(ox-4.0,oz-4.8,'xp',25);
   addPickup(ox-4.0,oz+4.8,'energy',35);
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
   addPickup(mx+7,mz+4,'xp',30);
 }
 
-function addLandmarkIdentityPass16(){
-  // 1.6 remains deliberately cheap: static primitives only, no textures,
-  // no new per-frame systems and no changes to Core Lock movement/camera.
+function addOLearysStorefront17(){
   const [ox,oz]=localXY(OLEARYS.lon,OLEARYS.lat);
-  // O'Learys: stronger sports-bar silhouette and a visible street-side badge.
-  addBox('g16-olearys-sign-back',ox-.43,4.62,oz,.10,.82,9.25,M.olearysDark);
-  addBox('g16-olearys-sign-face',ox-.49,4.62,oz,.08,.48,8.45,M.marking);
-  addCylinder('g16-olearys-badge',ox-.62,4.05,oz-5.55,.43,.18,M.olearysGreen);
-  addCylinder('g16-olearys-badge-ring',ox-.68,4.05,oz-5.55,.28,.20,M.marking);
+  const fx=ox-1.15;
+
+  // A real storefront mass instead of the old thin green placeholder.
+  addBox('o17-body',ox+1.45,2.65,oz,3.6,5.3,13.2,M.olearysDark);
+  addBox('o17-facade',fx,2.65,oz,.28,5.3,12.8,M.olearysGreen);
+
+  // Strong sign band and canopy.
+  addBox('o17-sign-band',fx-.08,4.65,oz,.14,.78,10.8,M.marking);
+  addBox('o17-sign-cap',fx-.12,5.22,oz,.12,.18,11.4,M.olearysGreen);
+  addBox('o17-awning',fx-.72,2.95,oz,1.28,.18,9.8,M.olearysDark);
+
+  // Door + three separate window bays to create a readable restaurant frontage.
+  addBox('o17-door-frame',fx-.06,1.5,oz-3.65,.14,3.0,2.35,M.olearysDark);
+  addBox('o17-door',fx-.11,1.5,oz-3.65,.08,2.7,1.75,M.door);
+  addBox('o17-window-a',fx-.07,1.88,oz+.15,.10,2.55,3.25,M.windowWarm);
+  addBox('o17-window-b',fx-.07,1.88,oz+3.75,.10,2.55,2.75,M.windowCool);
+  addBox('o17-window-c',fx-.07,1.88,oz-6.1,.10,2.55,2.65,M.windowCool);
+  addBox('o17-pilaster-a',fx-.02,2.7,oz-6.25,.22,5.0,.42,M.olearysDark);
+  addBox('o17-pilaster-b',fx-.02,2.7,oz+6.25,.22,5.0,.42,M.olearysDark);
+
+  // Projecting circular street sign.
+  const badgeBack=addCylinder('o17-badge-back',fx-.95,4.05,oz-5.4,.72,.12,M.olearysDark);
+  badgeBack.setEulerAngles(0,0,90);
+  const badgeFace=addCylinder('o17-badge-face',fx-1.01,4.05,oz-5.4,.58,.08,M.marking);
+  badgeFace.setEulerAngles(0,0,90);
+  const badgeCore=addCylinder('o17-badge-core',fx-1.07,4.05,oz-5.4,.33,.06,M.olearysGreen);
+  badgeCore.setEulerAngles(0,0,90);
+
+  addBox('o17-threshold',fx-.88,.05,oz-3.65,1.35,.04,2.75,M.sidewalk);
+  addPlanter(ox-.95,oz-6.5);
+  addPlanter(ox-.95,oz+6.0);
+}
+
+function addLandmarkIdentityPass16(){
+  // 1.7 keeps the locked gameplay core and upgrades landmark identity only.
+  addOLearysStorefront17();
 
   // Mitt i City: make the entrance read as the shopping-hub objective at a glance.
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
@@ -417,7 +435,7 @@ function initScene(){
   // Enhancement passes are fail-soft: never let content detail kill the playable base scene.
   try { addGraphicsPass12(); } catch(e) { console.error('[Graphics 1.2 decorations skipped]',e); }
   try { addContentGraphicsPass15(); } catch(e) { console.error('[Content/Graphics 1.5 skipped]',e); }
-  try { addLandmarkIdentityPass16(); } catch(e) { console.error('[Landmark Identity 1.6 skipped]',e); }
+  try { addLandmarkIdentityPass16(); } catch(e) { console.error('[Landmark Storefront 1.7 skipped]',e); }
 
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
   objectiveMarker=addCylinder('mitt-i-city-marker',mx,5,mz,.72,10,M.marker);
@@ -610,7 +628,7 @@ async function boot(){
     const osm=await r.json();
     bootStage='Byggnader';
     const n=addBuildings(osm);
-    loadText.textContent='Lägger Core Lock 1.3 + Landmark Identity 1.6… '+n+' byggnader'; loadBar.style.width='82%';
+    loadText.textContent='Lägger Core Lock 1.3 + Landmark Storefront 1.7… '+n+' byggnader'; loadBar.style.width='82%';
 
     bootStage='Kontroller';
     setupDesktop();setupTouch();
