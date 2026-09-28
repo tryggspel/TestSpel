@@ -13,12 +13,16 @@ const MALL={lat:59.37988,lon:13.50055};
 const RADIUS=260;
 const PLAYER_RADIUS=0.42;
 const EYE=1.68;
-let app,player,camera,yaw=210,pitch=-3;
+let app,player,camera,yaw=54,pitch=-5;
 let vy=0,onGround=true;
 let colliders=[];
 let moveX=0,moveY=0;
 let lookDX=0,lookDY=0;
 const keys=new Set();
+let objectiveMarker=null,objectiveLight=null;
+let pickups=[];
+let pickupCount=0;
+let lowFpsSeconds=0;
 
 function fail(e){
   console.error(e);
@@ -43,7 +47,7 @@ function mat(hex,metal=0,gloss=.25){
 const M={
   ground:null,plaza:null,building:null,stone:null,plaster:null,brick:null,light:null,glass:null,
   hero:null,heroDark:null,road:null,sidewalk:null,marking:null,grass:null,tree:null,trunk:null,
-  metal:null,marker:null
+  metal:null,marker:null,windowCool:null,windowWarm:null,door:null,accent:null,concrete:null
 };
 
 function addBox(name,x,y,z,sx,sy,sz,material){
@@ -84,6 +88,88 @@ function addLamp(x,z){
   addCylinder('lamp-post',x,2.2,z,.055,4.4,M.metal);
   addSphere('lamp-head',x,4.45,z,.18,M.marking);
 }
+function addBollard(x,z){
+  addCylinder('bollard',x,.42,z,.11,.84,M.metal);
+  addCylinder('bollard-cap',x,.85,z,.13,.05,M.marking);
+}
+function addBench(x,z,rot=0){
+  const seat=addBox('bench-seat',x,.48,z,2.2,.16,.62,M.heroDark);
+  const back=addBox('bench-back',x,.92,z-.26,2.2,.72,.12,M.heroDark);
+  const l1=addBox('bench-leg',x-.72,.25,z,.12,.5,.38,M.metal);
+  const l2=addBox('bench-leg',x+.72,.25,z,.12,.5,.38,M.metal);
+  [seat,back,l1,l2].forEach(e=>e.setEulerAngles(0,rot,0));
+}
+function addPlanter(x,z){
+  addBox('planter',x,.34,z,1.35,.68,1.35,M.concrete);
+  addSphere('planter-green',x,1.15,z,.62,M.tree);
+}
+function addPlazaPattern(){
+  // Crisp paving seams make Stora Torget read as a designed plaza rather than one flat slab.
+  for(let x=-28;x<=28;x+=7) addBox('plaza-seam-x',x,.044,0,.055,.012,52,M.marking);
+  for(let z=-24;z<=24;z+=6) addBox('plaza-seam-z',0,.045,z,60,.012,.055,M.marking);
+
+  // A strong center landmark gives the player a Duke-style orientation anchor.
+  addBox('torget-landmark-base',0,.22,-3,4.2,.44,4.2,M.concrete);
+  addCylinder('torget-landmark',0,2.5,-3,.72,4.7,M.hero);
+  addSphere('torget-landmark-cap',0,5.08,-3,.9,M.marker);
+
+  [[-18,-18,0],[18,-18,180],[-18,17,0],[18,17,180]].forEach(p=>addBench(p[0],p[1],p[2]));
+  [[-25,-20],[25,-20],[-25,20],[25,20]].forEach(p=>addPlanter(p[0],p[1]));
+  for(let z=-18;z<=18;z+=6){ addBollard(-31,z); addBollard(31,z); }
+}
+function addRoadDetails(){
+  for(let z=-240;z<=240;z+=14) addBox('lane-dash-v',-26,.045,z,.16,.018,5.7,M.marking);
+  for(let x=-240;x<=240;x+=14) addBox('lane-dash-h',x,.046,20,5.7,.018,.16,M.marking);
+  [[-34,-7],[-18,-7],[-34,47],[-18,47]].forEach(p=>addBollard(p[0],p[1]));
+}
+function addRouteMarkers(){
+  const [mx,mz]=localXY(MALL.lon,MALL.lat);
+  const d=Math.hypot(mx,mz),steps=Math.max(3,Math.floor(d/17));
+  for(let i=1;i<steps;i++){
+    const t=i/steps;
+    const x=mx*t,z=mz*t;
+    const e=addCylinder('route-pip',x,.065,z,.18,.035,M.marker);
+    e.__routePhase=i*.47;
+  }
+}
+function addPickup(x,z){
+  const e=addSphere('city-token',x,1.05,z,.34,M.marker);
+  e.__baseY=1.05;
+  e.__phase=pickups.length*.9;
+  pickups.push(e);
+}
+function addGraphicsPass12(){
+  addPlazaPattern();
+  addRoadDetails();
+  addRouteMarkers();
+  // Small rewards make the square worth exploring rather than only crossing.
+  [[-12,-10],[12,-9],[-12,11],[12,10]].forEach(p=>addPickup(p[0],p[1]));
+}
+function addFacadePass12(b,hero,seed){
+  const near=b.dist<92;
+  if(!near&&!hero) return;
+  const cool=(seed&1)?M.windowCool:M.windowWarm;
+  const frontZ=b.cz-b.sz/2-.035;
+  const backZ=b.cz+b.sz/2+.035;
+  const floors=Math.max(1,Math.min(4,Math.round(b.h/3.2)-1));
+  for(let i=0;i<floors;i++){
+    const y=3.0+i*2.85;
+    if(y>b.h-.8) break;
+    addBox((b.name||'building')+'-win-f-'+i,b.cx,y,frontZ,b.sx*.72,.64,.055,cool);
+    addBox((b.name||'building')+'-win-b-'+i,b.cx,y,backZ,b.sx*.72,.64,.055,cool);
+  }
+  // Ground-floor rhythm: darker storefront plus a readable door/canopy.
+  addBox((b.name||'building')+'-ground-band',b.cx,1.22,frontZ-.02,b.sx*.78,1.75,.07,M.heroDark);
+  addBox((b.name||'building')+'-door',b.cx,1.12,frontZ-.065,1.25,2.15,.11,M.door);
+  if(hero){
+    addBox((b.name||'building')+'-accent',b.cx,b.h-.72,frontZ-.08,b.sx*.64,.42,.12,M.marker);
+    addBox((b.name||'building')+'-canopy',b.cx,2.45,frontZ-.72,4.1,.18,1.5,M.accent);
+  }
+  if(/Domkyrka/i.test(b.name)){
+    addBox('domkyrka-tower',b.cx,b.h+4.8,b.cz,4.2,9.6,4.2,M.stone);
+    addCylinder('domkyrka-spire',b.cx,b.h+10.4,b.cz,.72,2.2,M.heroDark);
+  }
+}
 function addStreetProps(){
   const trees=[
     [-22,-25],[-13,-27],[14,-26],[24,-22],[-35,5],[-36,18],[34,4],[36,18],
@@ -111,7 +197,12 @@ function initScene(){
   M.tree=mat(0x365843,0,.05);
   M.trunk=mat(0x654a37,0,.08);
   M.metal=mat(0x3a4145,.2,.5);
-  M.marker=mat(0xe7c149,0,.52);
+  M.marker=mat(0xe7c149,0,.62);
+  M.windowCool=mat(0x435f70,.16,.78);
+  M.windowWarm=mat(0x8a704f,.08,.72);
+  M.door=mat(0x263036,.12,.68);
+  M.accent=mat(0xb33b30,.05,.38);
+  M.concrete=mat(0x6c6e6a,0,.15);
 
   // Big, cheap surfaces first: readable city structure without texture downloads.
   addBox('ground',0,-.35,0,620,.6,620,M.ground);
@@ -153,14 +244,19 @@ function initScene(){
   }
 
   addStreetProps();
+  addGraphicsPass12();
 
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
-  addCylinder('mitt-i-city-marker',mx,5,mz,.72,10,M.marker);
+  objectiveMarker=addCylinder('mitt-i-city-marker',mx,5,mz,.72,10,M.marker);
   addBox('mitt-i-city-plaza',mx,.02,mz,19,.05,14,M.sidewalk);
   addCrosswalk(mx+12,mz,'z');
   const beacon=new pc.Entity('beacon');
   beacon.addComponent('light',{type:'omni',range:24,intensity:1.7,color:new pc.Color(1,.72,.22)});
-  beacon.setPosition(mx,4.5,mz); app.root.addChild(beacon);
+  beacon.setPosition(mx,4.5,mz); app.root.addChild(beacon); objectiveLight=beacon;
+  // Architectural target frame: readable from Stora Torget even before the player sees the mall facade.
+  addBox('mitt-i-city-gate-left',mx-5.1,2.9,mz,1.0,5.8,1.0,M.heroDark);
+  addBox('mitt-i-city-gate-right',mx+5.1,2.9,mz,1.0,5.8,1.0,M.heroDark);
+  addBox('mitt-i-city-gate-top',mx,5.35,mz,11.2,.9,1.0,M.accent);
 }
 
 function polygonArea(pts){
@@ -200,6 +296,7 @@ function addBuildings(osm){
     if(hero){
       addBox((b.name||'building')+'-roof',b.cx,b.h+.18,b.cz,b.sx*1.03,.32,b.sz*1.03,M.heroDark);
     }
+    addFacadePass12(b,hero,seed);
 
     colliders.push({minx:b.cx-b.sx/2-.15,maxx:b.cx+b.sx/2+.15,minz:b.cz-b.sz/2-.15,maxz:b.cz+b.sz/2+.15});
     count++;
@@ -253,6 +350,7 @@ function setupTouch(){
 
 function update(dt){
   const sens=0.12;
+  const now=performance.now()*.001;
   yaw-=lookDX*sens; pitch=Math.max(-78,Math.min(78,pitch-lookDY*sens)); lookDX=lookDY=0;
   player.setEulerAngles(0,yaw,0); camera.setLocalEulerAngles(pitch,0,0);
 
@@ -273,8 +371,24 @@ function update(dt){
 
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
   const d=Math.hypot(p.x-mx,p.z-mz);
-  status.textContent='FPS '+Math.round(app.stats.frame.fps)+'\nMITT I CITY '+Math.round(d)+' m';
-  if(d<8) mission.textContent='MÅL NÅTT · MITT I CITY';
+
+  // Animated landmark + pickups: low-cost motion gives the scene a living focal point.
+  if(objectiveMarker) objectiveMarker.setEulerAngles(0,(now*34)%360,0);
+  if(objectiveLight&&objectiveLight.light) objectiveLight.light.intensity=1.45+Math.sin(now*2.2)*.28;
+  pickups.forEach((e,i)=>{
+    if(!e.enabled) return;
+    e.setLocalEulerAngles(0,(now*80+i*33)%360,0);
+    const ep=e.getPosition();
+    e.setPosition(ep.x,e.__baseY+Math.sin(now*2.4+e.__phase)*.16,ep.z);
+    if(Math.hypot(p.x-ep.x,p.z-ep.z)<1.35){
+      e.enabled=false; pickupCount++;
+      mission.textContent='CITY TOKEN '+pickupCount+'/'+pickups.length+' · UTFORSKA TORGET';
+    }
+  });
+
+  const fps=Math.round(app.stats.frame.fps);
+  status.textContent='FPS '+fps+'\nMITT I CITY '+Math.round(d)+' m\nTOKENS '+pickupCount+'/'+pickups.length;
+  if(d<8) mission.textContent='MÅL NÅTT · MITT I CITY · GRAPHICS PASS 1.2';
 }
 
 async function boot(){
@@ -282,14 +396,17 @@ async function boot(){
     loadText.textContent='Initierar PlayCanvas…'; loadBar.style.width='25%';
     app=new pc.Application(canvas,{graphicsDeviceOptions:{alpha:false,antialias:true,powerPreference:'high-performance'}});
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-    app.setCanvasResolution(pc.RESOLUTION_AUTO,Math.min(window.devicePixelRatio||1,1.35));
+    // Correct PlayCanvas DPR handling: maxPixelRatio controls sharpness; resolution AUTO receives no fake width.
+    const coarse=matchMedia('(pointer:coarse)').matches;
+    app.graphicsDevice.maxPixelRatio=Math.min(window.devicePixelRatio||1,coarse?1.5:1.7);
+    app.setCanvasResolution(pc.RESOLUTION_AUTO);
     initScene();
     loadText.textContent='Läser Karlstads geodata…'; loadBar.style.width='55%';
     const r=await fetch('../karlstad-city-mobile/data/osm-buildings.json',{cache:'force-cache'});
     if(!r.ok) throw new Error('OSM '+r.status);
     const osm=await r.json();
     const n=addBuildings(osm);
-    loadText.textContent='Lägger grafikpass 1.1… '+n+' byggnader'; loadBar.style.width='82%';
+    loadText.textContent='Lägger Graphics Pass 1.2… '+n+' byggnader'; loadBar.style.width='82%';
     setupDesktop();setupTouch();
     app.on('update',update);
     app.start();
