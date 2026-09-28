@@ -39,7 +39,7 @@ button{border:0;border-radius:12px;padding:18px 14px;font-weight:850;font-size:1
 <button id="zombie">☣ ZOMBIE MODE NU</button>
 </div>
 <button id="stop">■ STOPP</button>
-<div class="note">Det här är en syntbaserad prototyp direkt i webbläsaren. Ingen ljudfil behöver laddas ner.</div>
+<div class="note">Syntbaserad prototyp direkt i webbläsaren. Normalmusiken har nu original stråk + läktarkör/handklapp för tydligare Karlstad/arena-känsla. Ingen ljudfil behöver laddas ner.</div>
 </main>
 <script>
 let ctx=null, master=null, timers=[];
@@ -106,8 +106,73 @@ function karlstadTerraceStrings(start,bars,b){
       stringNote(n,st+offs[i]*b,lens[i]*b,.050);
       if(i===3||i===7) stringNote(n-12,st+offs[i]*b,lens[i]*b,.028);
     });
-    // soft crowd-like harmonic answer, still purely instrumental
     [62,65,67].forEach((n,j)=>stringNote(n,st+7.15*b,.72*b,.018+j*.003));
+  }
+}
+
+// Synthetic terrace choir: non-verbal original chant, shaped with vocal formants.
+function crowdVoice(n,t,d,vowel="oh",v=.018,pan=0){
+  const formants={
+    oh:[430,820,2650],
+    ah:[720,1120,2500],
+    eh:[530,1780,2480]
+  }[vowel]||[430,820,2650];
+  const bus=ctx.createGain(),p=ctx.createStereoPanner?ctx.createStereoPanner():null;
+  bus.gain.setValueAtTime(.0001,t);
+  bus.gain.linearRampToValueAtTime(v,t+.035);
+  bus.gain.setValueAtTime(v,Math.max(t+.05,t+d-.12));
+  bus.gain.exponentialRampToValueAtTime(.0001,t+d);
+  if(p){bus.connect(p);p.pan.value=pan;p.connect(master)}else bus.connect(master);
+
+  for(let k=0;k<3;k++){
+    const o=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain();
+    o.type=k===0?"sawtooth":"triangle";
+    o.frequency.value=midi(n)*Math.pow(2,([ -10,3,12 ][k])/1200);
+    f.type="bandpass";f.frequency.value=formants[k];f.Q.value=k===0?2.2:3.6;
+    g.gain.value=[.75,.46,.24][k];
+    o.connect(f);f.connect(g);g.connect(bus);
+    o.start(t);o.stop(t+d+.02);
+  }
+}
+function terraceClap(t,v=.055){
+  for(let burst=0;burst<3;burst++){
+    const tt=t+burst*.018,len=Math.ceil(ctx.sampleRate*.055);
+    const b=ctx.createBuffer(1,len,ctx.sampleRate),a=b.getChannelData(0);
+    for(let i=0;i<len;i++)a[i]=(Math.random()*2-1)*(1-i/len);
+    const s=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();
+    s.buffer=b;f.type="bandpass";f.frequency.value=1250+burst*430;f.Q.value=.9;
+    g.gain.setValueAtTime(v*(1-burst*.2),tt);g.gain.exponentialRampToValueAtTime(.0001,tt+.055);
+    s.connect(f);f.connect(g);g.connect(master);s.start(tt);s.stop(tt+.06);
+  }
+}
+function karlstadTerraceCrowd(start,bars,b){
+  // Original two-part "oh / ah / hey"-style arena response.
+  const phrases=[
+    {off:0,   n:57, d:.68, vowel:"oh"},
+    {off:.78, n:57, d:.62, vowel:"oh"},
+    {off:1.55,n:62, d:.82, vowel:"ah"},
+    {off:2.62,n:60, d:.48, vowel:"eh"},
+    {off:3.18,n:57, d:.90, vowel:"oh"}
+  ];
+  for(let base=2;base<bars;base+=4){
+    const st=start+base*4*b;
+    phrases.forEach((p,i)=>{
+      const tt=st+p.off*b;
+      // Six slightly spread voices create a small stand rather than a solo singer.
+      [-.82,-.5,-.18,.18,.5,.82].forEach((pan,j)=>{
+        crowdVoice(p.n+(j%3===0?12:0),tt+(j*.009),p.d*b,p.vowel,.0105,pan);
+      });
+      if(i===2||i===4) terraceClap(tt+p.d*b*.88,.048);
+    });
+    // Bigger answer one bar later, like the rest of the arena joining in.
+    const answer=st+4.15*b;
+    [55,55,60,57].forEach((n,i)=>{
+      const tt=answer+[0,.72,1.46,2.38][i]*b;
+      [-.9,-.62,-.34,0,.34,.62,.9].forEach((pan,j)=>{
+        crowdVoice(n+(j%4===0?12:0),tt+j*.007,[.58,.58,.72,1.05][i]*b,i<2?"oh":(i===2?"ah":"eh"),.0115,pan);
+      });
+      terraceClap(tt+[.58,.58,.72,1.05][i]*b*.9,.052);
+    });
   }
 }
 function mainSection(start,bars=8){
@@ -126,8 +191,9 @@ function mainSection(start,bars=8){
     const st=start+cyc*4*b;
     mel.forEach((n,i)=>{tone(n+12,st+i*.5*b,.42*b,.065,"square");if(i%4===0)tone(n,st+i*.5*b+.07,.34*b,.025,"triangle")});
   }
-  // A warm local terrace/singalong signature only in normal Karlstad mode.
+  // Warm Karlstad/arena signature only in normal mode.
   karlstadTerraceStrings(start,bars,b);
+  karlstadTerraceCrowd(start,bars,b);
   return bars*4*b;
 }
 function siren(start,d=2.6){
@@ -168,7 +234,7 @@ document.getElementById("play").onclick=async()=>{
   clearAll();boot();await ctx.resume();
   const t=ctx.currentTime+.08,d=mainSection(t,8);
   siren(t+d,2.6);zombieSection(t+d+2.6,10);
-  setMode("KARLSTAD CITY","Lugn stadspuls – temat byggs upp.",false);
+  setMode("KARLSTAD CITY","Stadspuls, stråk och en egen Karlstad-läktarkör byggs upp.",false);
   later((d-1.0)*1000,()=>setMode("NÅGOT ÄR FEL…","Siren. Strömmen dör. Staden förändras.",true));
   later((d+2.55)*1000,()=>setMode("☣ ZOMBIE APOCALYPSE","Samma Karlstad-tema, nu korrumperat.",true));
 };
