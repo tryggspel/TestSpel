@@ -125,6 +125,69 @@ def ensure_orientation(ring, clockwise):
     return ring
 
 
+def orient(a, b, c):
+    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+
+
+def on_segment(a, b, p):
+    return (
+        min(a[0], b[0]) <= p[0] <= max(a[0], b[0])
+        and min(a[1], b[1]) <= p[1] <= max(a[1], b[1])
+    )
+
+
+def segments_intersect(a, b, c, d):
+    o1, o2 = orient(a, b, c), orient(a, b, d)
+    o3, o4 = orient(c, d, a), orient(c, d, b)
+    if ((o1 > 0 > o2) or (o2 > 0 > o1)) and ((o3 > 0 > o4) or (o4 > 0 > o3)):
+        return True
+    if o1 == 0 and on_segment(a, b, c): return True
+    if o2 == 0 and on_segment(a, b, d): return True
+    if o3 == 0 and on_segment(c, d, a): return True
+    if o4 == 0 and on_segment(c, d, b): return True
+    return False
+
+
+def point_in_ring(p, ring):
+    x, y = p
+    inside = False
+    j = len(ring) - 1
+    for i in range(len(ring)):
+        xi, yi = ring[i]
+        xj, yj = ring[j]
+        if (yi > y) != (yj > y):
+            x_at_y = (xj - xi) * (y - yi) / (yj - yi) + xi
+            if x < x_at_y:
+                inside = not inside
+        j = i
+    return inside
+
+
+def ring_self_intersects(ring):
+    n = len(ring)
+    for i in range(n):
+        a, b = ring[i], ring[(i + 1) % n]
+        for j in range(i + 1, n):
+            # Adjacent edges share one endpoint by design; ignore those pairs.
+            if j == i or j == (i + 1) % n or (i == 0 and j == n - 1):
+                continue
+            c, d = ring[j], ring[(j + 1) % n]
+            if segments_intersect(a, b, c, d):
+                return True
+    return False
+
+
+def rings_overlap(a, b):
+    for i in range(len(a)):
+        a1, a2 = a[i], a[(i + 1) % len(a)]
+        for j in range(len(b)):
+            b1, b2 = b[j], b[(j + 1) % len(b)]
+            if segments_intersect(a1, a2, b1, b2):
+                return True
+    # Nested holes are invalid for this one-sector prototype too.
+    return point_in_ring(a[0], b) or point_in_ring(b[0], a)
+
+
 def building_rings(osm_path: Path):
     data = json.loads(osm_path.read_text(encoding="utf-8"))
     mall_xy = local_xy(MALL_LON, MALL_LAT)
@@ -151,7 +214,26 @@ def building_rings(osm_path: Path):
             continue
         candidates.append((dist_m, area_m2, ring))
     candidates.sort(key=lambda x: (x[0], -x[1]))
-    return [ensure_orientation(x[2], clockwise=False) for x in candidates[:MAX_BUILDINGS]]
+
+    # A BUILD sector may contain hole loops, but those loops may not overlap,
+    # cross, touch, or nest. Raw OSM building ways frequently overlap/touch
+    # (building parts, duplicated amenity footprints, shared outlines). Feeding
+    # those directly into one sector creates invalid geometry and a black screen
+    # after the WASM runtime starts. Keep the nearest non-overlapping footprint
+    # set for this prototype; later versions can split the city into many sectors.
+    accepted = []
+    for _, _, raw_ring in candidates:
+        ring = ensure_orientation(raw_ring, clockwise=False)
+        if ring_self_intersects(ring):
+            continue
+        if point_in_ring((0, 0), ring):
+            continue  # never spawn the player inside a solid building hole
+        if any(rings_overlap(ring, prev) for prev in accepted):
+            continue
+        accepted.append(ring)
+        if len(accepted) >= MAX_BUILDINGS:
+            break
+    return accepted
 
 
 def pack_sector(wall_count):
@@ -245,6 +327,12 @@ def generate(osm_path: Path, out_path: Path, meta_path: Path | None = None):
     bad_holes = [i for i, ring in enumerate(rings) if ring_area(ring) >= 0]
     if bad_holes:
         raise RuntimeError(f"BUILD hole loops must be counter-clockwise (negative signed area): {bad_holes[:8]}")
+    for i, ring in enumerate(rings):
+        if ring_self_intersects(ring):
+            raise RuntimeError(f"BUILD hole loop self-intersects: {i}")
+        for j in range(i):
+            if rings_overlap(ring, rings[j]):
+                raise RuntimeError(f"BUILD hole loops overlap/touch/nest: {j}, {i}")
 
     loops = [outer] + rings
     walls = []
