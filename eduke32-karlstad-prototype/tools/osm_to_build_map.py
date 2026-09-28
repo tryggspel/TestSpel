@@ -114,10 +114,13 @@ def simplify_closed(ring):
 
 
 def ensure_orientation(ring, clockwise):
+    # BUILD uses screen-style coordinates where +Y points down. In that
+    # coordinate system a visually clockwise loop has POSITIVE shoelace area.
+    # Sector outer loops must be clockwise; hole loops must be counter-clockwise.
     a = ring_area(ring)
-    if clockwise and a > 0:
+    if clockwise and a < 0:
         return list(reversed(ring))
-    if not clockwise and a < 0:
+    if not clockwise and a > 0:
         return list(reversed(ring))
     return ring
 
@@ -234,6 +237,14 @@ def generate(osm_path: Path, out_path: Path, meta_path: Path | None = None):
     outer = ensure_orientation([
         (-half_x,-half_y), (half_x,-half_y), (half_x,half_y), (-half_x,half_y)
     ], clockwise=True)
+
+    # Fail the build rather than publishing an inside-out BUILD sector.
+    # Positive area = clockwise in BUILD's +Y-down coordinate system.
+    if ring_area(outer) <= 0:
+        raise RuntimeError("BUILD outer loop must be clockwise (positive signed area)")
+    bad_holes = [i for i, ring in enumerate(rings) if ring_area(ring) >= 0]
+    if bad_holes:
+        raise RuntimeError(f"BUILD hole loops must be counter-clockwise (negative signed area): {bad_holes[:8]}")
 
     loops = [outer] + rings
     walls = []
