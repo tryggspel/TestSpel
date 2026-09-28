@@ -40,6 +40,104 @@ let bootStage='module';
 let lastRound=null;
 let resetTouch=()=>{};
 
+const MUSIC_STATE={
+  ready:false,unlocked:false,muted:false,mode:'silent',fadeJobs:new Map(),roundTimer:0,
+  main:null,arena:null,transition:null,zombie:null
+};
+function musicInit(){
+  if(MUSIC_STATE.ready)return;
+  const make=(file,loop=false)=>{const a=new Audio('./audio/'+file);a.preload='auto';a.loop=loop;a.playsInline=true;a.volume=0;return a};
+  MUSIC_STATE.main=make('karlstad-main.mp3',true);
+  MUSIC_STATE.arena=make('karlstad-arena-layer.mp3',false);
+  MUSIC_STATE.transition=make('karlstad-zombie-transition.mp3',false);
+  MUSIC_STATE.zombie=make('karlstad-zombie-main.mp3',true);
+  MUSIC_STATE.ready=true;
+  // Warm the browser cache without delaying PlayCanvas boot.
+  for(const file of ['karlstad-main.mp3','karlstad-arena-layer.mp3','karlstad-zombie-transition.mp3','karlstad-zombie-main.mp3']){
+    fetch('./audio/'+file,{cache:'force-cache'}).catch(()=>{});
+  }
+}
+function musicCancelFade(a){
+  const id=MUSIC_STATE.fadeJobs.get(a);if(id)cancelAnimationFrame(id);MUSIC_STATE.fadeJobs.delete(a);
+}
+function musicFade(a,to,ms=650,pauseAfter=false){
+  if(!a)return;
+  musicCancelFade(a);
+  const target=MUSIC_STATE.muted?0:Math.max(0,Math.min(1,to));
+  const from=Number.isFinite(a.volume)?a.volume:0,start=performance.now();
+  const step=now=>{
+    const k=Math.min(1,(now-start)/Math.max(1,ms)),e=k*k*(3-2*k);
+    a.volume=Math.max(0,Math.min(1,from+(target-from)*e));
+    if(k<1)MUSIC_STATE.fadeJobs.set(a,requestAnimationFrame(step));
+    else{MUSIC_STATE.fadeJobs.delete(a);if(pauseAfter&&target<=.001){try{a.pause()}catch{}}}
+  };
+  MUSIC_STATE.fadeJobs.set(a,requestAnimationFrame(step));
+}
+function musicPlay(a,restart=false){
+  if(!a||!MUSIC_STATE.unlocked)return;
+  if(restart){try{a.currentTime=0}catch{}}
+  const p=a.play();p?.catch?.(()=>{});
+}
+function musicUnlock(){
+  musicInit();MUSIC_STATE.unlocked=true;
+}
+function musicCity(withArena=false){
+  musicUnlock();clearTimeout(MUSIC_STATE.roundTimer);MUSIC_STATE.mode='city';
+  if(MUSIC_STATE.transition){try{MUSIC_STATE.transition.pause();MUSIC_STATE.transition.currentTime=0}catch{}}
+  musicFade(MUSIC_STATE.zombie,0,500,true);
+  if(MUSIC_STATE.main){
+    if(MUSIC_STATE.main.paused)musicPlay(MUSIC_STATE.main,false);
+    musicFade(MUSIC_STATE.main,.23,850);
+  }
+  if(withArena&&MUSIC_STATE.arena){
+    musicPlay(MUSIC_STATE.arena,true);musicFade(MUSIC_STATE.arena,.08,550);
+    setTimeout(()=>{if(MUSIC_STATE.mode==='city')musicFade(MUSIC_STATE.arena,0,1800,true)},9000);
+  }
+}
+function musicRoundStart(){
+  musicUnlock();clearTimeout(MUSIC_STATE.roundTimer);MUSIC_STATE.mode='round';
+  musicFade(MUSIC_STATE.arena,0,250,true);
+  musicFade(MUSIC_STATE.main,.035,550,false);
+  if(MUSIC_STATE.transition){
+    MUSIC_STATE.transition.volume=MUSIC_STATE.muted?0:.58;
+    musicPlay(MUSIC_STATE.transition,true);
+  }
+  MUSIC_STATE.roundTimer=setTimeout(()=>{
+    if(MUSIC_STATE.mode!=='round')return;
+    musicPlay(MUSIC_STATE.zombie,true);musicFade(MUSIC_STATE.zombie,.25,900);
+    musicFade(MUSIC_STATE.main,0,600,true);
+  },900);
+}
+function musicRoundEnd(){
+  clearTimeout(MUSIC_STATE.roundTimer);MUSIC_STATE.mode='results';
+  musicFade(MUSIC_STATE.zombie,0,800,true);
+  musicFade(MUSIC_STATE.main,.13,1300,false);
+}
+function musicPause(){
+  if(MUSIC_STATE.mode==='round')musicFade(MUSIC_STATE.zombie,.07,320,false);
+  else if(MUSIC_STATE.mode==='city')musicFade(MUSIC_STATE.main,.08,320,false);
+}
+function musicResume(){
+  if(MUSIC_STATE.mode==='round')musicFade(MUSIC_STATE.zombie,.25,420,false);
+  else if(MUSIC_STATE.mode==='city')musicFade(MUSIC_STATE.main,.23,420,false);
+}
+function musicSetMuted(v){
+  MUSIC_STATE.muted=!!v;
+  if(MUSIC_STATE.muted){
+    [MUSIC_STATE.main,MUSIC_STATE.arena,MUSIC_STATE.transition,MUSIC_STATE.zombie].forEach(a=>musicFade(a,0,120,false));
+  }else if(MUSIC_STATE.mode==='round'){
+    musicFade(MUSIC_STATE.zombie,.25,250,false);
+  }else{
+    musicFade(MUSIC_STATE.main,.23,250,false);
+  }
+}
+const GAME_MUSIC=Object.freeze({
+  init:musicInit,unlock:musicUnlock,city:musicCity,roundStart:musicRoundStart,roundEnd:musicRoundEnd,
+  pause:musicPause,resume:musicResume,setMuted:musicSetMuted,
+  snapshot:()=>({ready:MUSIC_STATE.ready,unlocked:MUSIC_STATE.unlocked,muted:MUSIC_STATE.muted,mode:MUSIC_STATE.mode})
+});
+window.KarlstadMusic=GAME_MUSIC;
+
 function resetInput(){
   keys.clear(); moveX=moveY=lookDX=lookDY=0;
   resetTouch();
@@ -650,10 +748,11 @@ async function boot(){
     bootStage='Kontroller';
     setupDesktop();setupTouch();
     bootStage='Sista rundan';
+    musicInit();
     const [ox,oz]=localXY(OLEARYS.lon,OLEARYS.lat);
     const [mx,mz]=localXY(MALL.lon,MALL.lat);
     lastRound=createLastRound(pc,{
-      app,player,camera,canvas,origin:{x:ox,z:oz},mall:{x:mx,z:mz},colliders,blocked,resetInput,
+      app,player,camera,canvas,origin:{x:ox,z:oz},mall:{x:mx,z:mz},colliders,blocked,resetInput,music:GAME_MUSIC,
       pickupCount:()=>pickupCount,
       resetPickups:()=>{pickups.forEach(e=>e.enabled=true);pickupCount=0;cityPower=0;},
       teleport:(x,z,heading,tilt)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=heading;pitch=tilt;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);}
