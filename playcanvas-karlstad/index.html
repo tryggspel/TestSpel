@@ -20,8 +20,10 @@
 #buttons{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(20px,calc(env(safe-area-inset-bottom) + 20px));display:grid;grid-template-columns:repeat(2,72px);gap:9px;pointer-events:auto}
 #buttons button{height:58px;border-radius:15px;border:1px solid #ffffff35;background:#07151dcc;color:#fff;font:900 11px/1 system-ui;letter-spacing:.08em;touch-action:none}
 #buttons .fire{background:#6a2925d8;border-color:#d8675b77}
-#error{display:none;position:absolute;left:50%;top:22%;transform:translateX(-50%);width:min(620px,86vw);padding:12px 14px;background:#501717e8;border:1px solid #ffb0b044;border-radius:10px;font:12px/1.45 ui-monospace,monospace}
+#error{display:none;position:fixed;z-index:220;left:50%;top:18%;transform:translateX(-50%);width:min(620px,88vw);max-height:34vh;overflow:auto;padding:12px 14px;background:#501717f2;border:1px solid #ffb0b077;border-radius:10px;color:#fff;white-space:pre-wrap;font:11px/1.4 ui-monospace,monospace}
 #error.show{display:block}
+#loading.failed .loadbox{transform:translateY(14vh)}
+#loading.failed .loadbox p{color:#ffb5a8;opacity:1}
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:9px}}
 </style>
@@ -39,6 +41,6 @@
   <div id="look"></div>
   <div id="buttons"><button id="mapBtn">KARTA</button><button id="useBtn">USE</button><button id="jumpBtn">JUMP</button><button id="fireBtn" class="fire">FIRE</button></div>
 </div>
-<script type="module" src="./app.js"></script>
+<script type="module" src="./app.js?v=1.2.1"></script>
 </body>
 </html>
