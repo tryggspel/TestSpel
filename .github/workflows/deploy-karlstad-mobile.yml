@@ -6,6 +6,7 @@ on:
     paths:
       - 'karlstad-city-mobile/**'
       - 'playcanvas-karlstad/**'
+      - 'playcanvas-karlstad-next/**'
       - 'eduke32-karlstad/**'
       - 'eduke32-vanilla/**'
       - 'eduke32-diagnostic/**'
@@ -41,6 +42,10 @@ jobs:
           if [ -d playcanvas-karlstad ]; then
             mkdir -p _site/playcanvas-karlstad
             cp -R playcanvas-karlstad/. _site/playcanvas-karlstad/
+          fi
+          if [ -d playcanvas-karlstad-next ]; then
+            mkdir -p _site/playcanvas-karlstad-next
+            cp -R playcanvas-karlstad-next/. _site/playcanvas-karlstad-next/
           fi
           if [ -d eduke32-karlstad ]; then
             mkdir -p _site/eduke32-karlstad
