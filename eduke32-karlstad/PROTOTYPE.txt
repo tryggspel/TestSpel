@@ -1,5 +1,5 @@
 Karlstad City BUILD/EDuke32 WASM prototype
 EDuke32-WASM release: v0.2.4
 Upstream source pin: 37b56eefaf8125eaa853c417512019cc7ad94b81
-Build: karlstad-4-d09be52
+Build: karlstad-5-f54cfbf
 Map generated from TestSpel/karlstad-city-mobile/data/osm-buildings.json.
