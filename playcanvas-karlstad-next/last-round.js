@@ -134,7 +134,10 @@ export function createLastRound(pc, host) {
     try {const p = host.canvas.requestPointerLock?.(); p?.catch?.(() => {});} catch {}
   }
   function start() {
-    game.start(); host.resetPickups(); host.teleport(layout.spawn.x, layout.spawn.z, 0, -5);
+    game.start(); host.resetPickups();
+    const firstFan=game.actors[1];
+    const heading=Math.atan2(layout.spawn.x-firstFan.x,layout.spawn.z-firstFan.z)*180/Math.PI;
+    host.teleport(layout.spawn.x, layout.spawn.z, heading, -2);
     document.body.classList.add('round-playing');
     setPanel(null); previousTime = performance.now();
     $('roundHud').hidden = false; $('roundLaunch').hidden = true;
@@ -260,7 +263,7 @@ export function createLastRound(pc, host) {
   window.addEventListener('blur', () => {host.resetInput(); pressAt = null; if (game.phase === 'playing') pause();});
   document.addEventListener('visibilitychange', () => {if (document.hidden && game.phase === 'playing') pause();});
   $('fireBtn').textContent = 'SOLSTÖT'; $('useBtn').textContent = 'PRATA'; $('jumpBtn').textContent = 'HOPPA';
-  window.KarlstadRound = Object.freeze({version: '1.8.1', snapshot: () => ({phase: game.phase, score: game.score, energy: game.energy,
+  window.KarlstadRound = Object.freeze({version: '1.8.2', snapshot: () => ({phase: game.phase, score: game.score, energy: game.energy,
     remaining: game.remaining, seed, captured: game.captured, shots: game.shots, bestChain: game.bestChain,
     player: {x: host.player.getPosition().x, z: host.player.getPosition().z}, forward: {x: host.camera.forward.x, y: host.camera.forward.y, z: host.camera.forward.z},
     actors: game.actors.map(a => ({id: a.id, x: a.x, z: a.z, active: a.active})), goal: {...layout.goal}})});
