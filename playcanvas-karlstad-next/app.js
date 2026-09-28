@@ -1,4 +1,5 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
+import {createLastRound} from './last-round.js?v=1.8.0';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -36,6 +37,14 @@ let barkTimer=0;
 let audioCtx=null;
 let lowFpsSeconds=0;
 let bootStage='module';
+let lastRound=null;
+let resetTouch=()=>{};
+
+function resetInput(){
+  keys.clear(); moveX=moveY=lookDX=lookDY=0;
+  resetTouch();
+  const knob=document.querySelector('#joy i'); if(knob) knob.style.transform='';
+}
 
 function fail(e){
   console.error('[Karlstad boot]',bootStage,e);
@@ -514,9 +523,9 @@ function tryMove(dx,dz){
 }
 
 function setupDesktop(){
-  window.addEventListener('keydown',e=>{keys.add(e.code); if(e.code==='Space')e.preventDefault();});
+  window.addEventListener('keydown',e=>{if(lastRound?.blocksInput())return; keys.add(e.code); if(e.code==='Space')e.preventDefault();});
   window.addEventListener('keyup',e=>keys.delete(e.code));
-  canvas.addEventListener('click',()=>canvas.requestPointerLock?.());
+  canvas.addEventListener('click',()=>{if(!lastRound?.blocksInput()){try{canvas.requestPointerLock?.()?.catch?.(()=>{});}catch{}}});
   window.addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas){lookDX+=e.movementX;lookDY+=e.movementY;}});
 }
 function setupTouch(){
@@ -542,14 +551,20 @@ function setupTouch(){
   look.addEventListener('pointermove',e=>{if(e.pointerId!==lp)return;lookDX+=(e.clientX-lx)*TOUCH_TUNE.lookScale;lookDY+=(e.clientY-ly)*TOUCH_TUNE.lookScale;lx=e.clientX;ly=e.clientY;e.preventDefault();});
   const le=e=>{if(lp!==null&&e.pointerId!==lp)return;lp=null;};
   look.addEventListener('pointerup',le);look.addEventListener('pointercancel',le);
+  joy.addEventListener('lostpointercapture',je);look.addEventListener('lostpointercapture',le);
+  resetTouch=()=>{
+    const oldJp=jp,oldLp=lp;jp=lp=null;
+    if(oldJp!==null&&joy.hasPointerCapture(oldJp))joy.releasePointerCapture(oldJp);
+    if(oldLp!==null&&look.hasPointerCapture(oldLp))look.releasePointerCapture(oldLp);
+  };
 
   document.getElementById('jumpBtn').addEventListener('pointerdown',e=>{keys.add('Space');setTimeout(()=>keys.delete('Space'),100);e.preventDefault();});
-  document.getElementById('fireBtn').addEventListener('pointerdown',e=>{document.getElementById('fireBtn').textContent='BANG!';setTimeout(()=>document.getElementById('fireBtn').textContent='FIRE',120);e.preventDefault();});
-  document.getElementById('useBtn').addEventListener('pointerdown',e=>{mission.textContent='USE · INTERAKTION KOMMER I P2';setTimeout(()=>mission.textContent='UPPDRAG: TA DIG TILL MITT I CITY',1200);e.preventDefault();});
-  document.getElementById('mapBtn').addEventListener('pointerdown',e=>{mission.textContent='KARTA · MÅL: MITT I CITY';setTimeout(()=>mission.textContent='UPPDRAG: TA DIG TILL MITT I CITY',1200);e.preventDefault();});
+  document.getElementById('useBtn').addEventListener('pointerdown',e=>{lastRound?.use();e.preventDefault();});
+  document.getElementById('mapBtn').addEventListener('pointerdown',e=>{lastRound?.showMap();e.preventDefault();});
 }
 
 function update(dt){
+  if(lastRound?.blocksInput()){lastRound.update();return;}
   const sens=CORE_LOCK.lookSensitivity;
   const now=performance.now()*.001;
   yaw-=lookDX*sens; pitch=Math.max(-78,Math.min(78,pitch-lookDY*sens)); lookDX=lookDY=0;
@@ -583,6 +598,7 @@ function update(dt){
     e.setPosition(ep.x,e.__baseY+Math.sin(now*2.4+e.__phase)*.16,ep.z);
     if(Math.hypot(p.x-ep.x,p.z-ep.z)<1.35){
       e.enabled=false; pickupCount++; cityPower+=e.__value||0;
+      lastRound?.onPickup(e.__type,e.__value||0);
       rewardSound(e.__type);
       const barkText=PICKUP_BARKS[(pickupCount-1)%PICKUP_BARKS.length]+(e.__type==='energy'?' ENERGI +'+e.__value:' XP +'+e.__value);
       showBark(barkText);
@@ -596,6 +612,7 @@ function update(dt){
   status.textContent='FPS '+fps+'\nMITT I CITY '+Math.round(d)+' m\nPOWER '+cityPower+' · '+pickupCount+'/'+pickups.length;
   if(od<9 && d>=8) mission.textContent="O'LEARYS · TINGVALLAGATAN 9 · LANDMARK";
   if(d<8) mission.textContent='MÅL NÅTT · MITT I CITY · CORE LOCK 1.3';
+  lastRound?.update();
 }
 
 async function boot(){
@@ -632,6 +649,15 @@ async function boot(){
 
     bootStage='Kontroller';
     setupDesktop();setupTouch();
+    bootStage='Sista rundan';
+    const [ox,oz]=localXY(OLEARYS.lon,OLEARYS.lat);
+    const [mx,mz]=localXY(MALL.lon,MALL.lat);
+    lastRound=createLastRound(pc,{
+      app,player,camera,canvas,origin:{x:ox,z:oz},mall:{x:mx,z:mz},colliders,blocked,resetInput,
+      pickupCount:()=>pickupCount,
+      resetPickups:()=>{pickups.forEach(e=>e.enabled=true);pickupCount=0;cityPower=0;},
+      teleport:(x,z,heading,tilt)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=heading;pitch=tilt;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);}
+    });
     app.on('update',update);
 
     bootStage='Startar spel';
