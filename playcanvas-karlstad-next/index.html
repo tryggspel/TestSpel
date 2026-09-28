@@ -31,7 +31,7 @@
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:9px}}
 </style>
 <link rel="stylesheet" href="./last-round.css?v=1.8.0">
-</head>
+<link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">\n<link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">\n</head>
 <body>
 <canvas id="game"></canvas>
 <div id="loading"><div class="loadbox"><strong>KARLSTAD CITY</strong><p id="loadText">Startar PlayCanvas…</p><div class="bar"><i id="loadBar"></i></div></div></div>
@@ -99,6 +99,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=1.8.2"></script>
+<script type="module" src="./app.js?v=1.8.3-audio"></script>
 </body>
 </html>
