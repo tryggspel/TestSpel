@@ -134,6 +134,7 @@ export function createLastRound(pc, host) {
     try {const p = host.canvas.requestPointerLock?.(); p?.catch?.(() => {});} catch {}
   }
   function start() {
+    host.music?.unlock?.(); host.music?.roundStart?.();
     game.start(); host.resetPickups();
     const firstFan=game.actors[1];
     const heading=Math.atan2(layout.spawn.x-firstFan.x,layout.spawn.z-firstFan.z)*180/Math.PI;
@@ -145,16 +146,17 @@ export function createLastRound(pc, host) {
     sound('start'); lockPointer();
   }
   function explore() {
+    host.music?.unlock?.(); host.music?.city?.(true);
     game.phase = 'ready'; setPanel(null); $('roundHud').hidden = true; $('roundLaunch').hidden = false;
     document.body.classList.remove('round-playing');
     host.resetInput(); lockPointer(); toast('KARLSTAD ÄR DITT', 'Träffa vakten vid O’Learys eller välj Sista rundan.', 3);
   }
   function pause(name = 'pause') {
     if (panel || game.phase !== 'playing') return;
-    game.pause(); setPanel(name);
+    game.pause(); host.music?.pause?.(); setPanel(name);
   }
   function resume() {
-    game.resume(); setPanel(null); previousTime = performance.now(); lockPointer();
+    game.resume(); host.music?.resume?.(); setPanel(null); previousTime = performance.now(); lockPointer();
   }
   function toast(title, subtitle = '', seconds = 2) {
     $('roundToastTitle').textContent = title; $('roundToastText').textContent = subtitle;
@@ -196,7 +198,7 @@ export function createLastRound(pc, host) {
   function showMap() {
     if (panel === 'map') {game.phase === 'paused' ? resume() : setPanel(null); return;}
     if (panel) return;
-    if (game.phase === 'playing') game.pause(); setPanel('map'); drawMap();
+    if (game.phase === 'playing') {game.pause(); host.music?.pause?.();} setPanel('map'); drawMap();
   }
   function drawMap() {
     const c = $('roundMap').getContext('2d'), size = 500;
@@ -226,6 +228,7 @@ export function createLastRound(pc, host) {
     $('roundResultRecord').textContent = won && best > previousBest ? 'NYTT PERSONBÄSTA!' : `DITT REKORD: ${best.toLocaleString('sv-SE')}`;
     $('roundResultTarget').textContent = target ? (won && game.score > target ? `Du slog utmaningen på ${target} poäng!` : `Kompisens resultat: ${target} poäng`) : `Runda ${seed} · samma placeringar varje försök`;
     $('roundShare').textContent = 'UTMANA EN VÄN'; $('roundShare').disabled = !won;
+    host.music?.roundEnd?.();
     setPanel('result'); sound(won ? 'win' : 'boss');
   }
   async function share() {
@@ -245,7 +248,7 @@ export function createLastRound(pc, host) {
   $('roundLaunch').addEventListener('click', () => setPanel('intro'));
   $('roundPause').addEventListener('click', () => game.phase === 'playing' ? pause() : setPanel('intro'));
   $('roundMapClose').addEventListener('click', () => {game.phase === 'paused' ? resume() : setPanel(null);});
-  $('roundMute').addEventListener('click', () => {soundEnabled = !soundEnabled; $('roundMute').textContent = soundEnabled ? 'LJUD PÅ' : 'LJUD AV';});
+  $('roundMute').addEventListener('click', () => {soundEnabled = !soundEnabled; host.music?.setMuted?.(!soundEnabled); $('roundMute').textContent = soundEnabled ? 'LJUD PÅ' : 'LJUD AV';});
   $('fireBtn').addEventListener('pointerdown', beginShot); host.canvas.addEventListener('pointerdown', beginShot);
   window.addEventListener('pointerup', endShot); window.addEventListener('pointercancel', () => {pressAt = null; pressPointer = null;});
   document.addEventListener('pointerlockchange', () => {
