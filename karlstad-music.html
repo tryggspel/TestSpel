@@ -39,7 +39,7 @@ button{border:0;border-radius:12px;padding:18px 14px;font-weight:850;font-size:1
 <button id="zombie">☣ ZOMBIE MODE NU</button>
 </div>
 <button id="stop">■ STOPP</button>
-<div class="note">Syntbaserad prototyp direkt i webbläsaren. Normalmusiken har nu original stråk + läktarkör/handklapp för tydligare Karlstad/arena-känsla. Ingen ljudfil behöver laddas ner.</div>
+<div class="note">Syntbaserad prototyp direkt i webbläsaren. Normalmusiken öppnar nu med en kort FBK-matchkväll-känsla, original stråk + läktarkör/handklapp. I Zombie Mode hörs samma lokala identitet långt bort och förvrängd. Ingen ljudfil behöver laddas ner.</div>
 </main>
 <script>
 let ctx=null, master=null, timers=[];
@@ -175,6 +175,79 @@ function karlstadTerraceCrowd(start,bars,b){
     });
   }
 }
+
+// Short pre-game arena sequence: crowd swell -> claps -> original chant -> music.
+function arenaRumble(t,d=1.4,v=.032){
+  const len=Math.ceil(ctx.sampleRate*d),b=ctx.createBuffer(1,len,ctx.sampleRate),a=b.getChannelData(0);
+  for(let i=0;i<len;i++){
+    const x=i/len;
+    a[i]=(Math.random()*2-1)*(0.45+0.55*Math.sin(x*Math.PI));
+  }
+  const s=ctx.createBufferSource(),lp=ctx.createBiquadFilter(),g=ctx.createGain();
+  s.buffer=b;lp.type="lowpass";lp.frequency.value=700;
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+d*.42);
+  g.gain.linearRampToValueAtTime(v*.45,t+d);
+  s.connect(lp);lp.connect(g);g.connect(master);s.start(t);s.stop(t+d);
+}
+function matchNightIntro(start){
+  const b=60/96;
+  arenaRumble(start,2.2,.045);
+  [0,.5,1,1.5].forEach(x=>terraceClap(start+(x+1.15)*b,.06));
+  // Big but original two-part terrace chant.
+  const seq=[
+    {o:2.05,n:57,d:.7,v:"oh"},
+    {o:2.85,n:57,d:.62,v:"oh"},
+    {o:3.62,n:62,d:.92,v:"ah"},
+    {o:4.72,n:60,d:.54,v:"eh"},
+    {o:5.35,n:57,d:1.18,v:"oh"}
+  ];
+  seq.forEach((p,i)=>{
+    const tt=start+p.o*b;
+    [-.95,-.72,-.48,-.24,0,.24,.48,.72,.95].forEach((pan,j)=>{
+      crowdVoice(p.n+(j%4===0?12:0),tt+j*.008,p.d*b,p.v,.0128,pan);
+    });
+    if(i===2||i===4) terraceClap(tt+p.d*b*.88,.065);
+  });
+  // Strings answer the stand before the gameplay groove enters.
+  [62,65,69,67,65,62].forEach((n,i)=>stringNote(n,start+(6.75+i*.48)*b,.42*b,.042));
+  return 10*b;
+}
+
+// Ghost of the same local arena identity, slowed and damaged inside Zombie Mode.
+function hauntedArenaVoice(n,t,d,v=.012,pan=0){
+  const dry=ctx.createGain(),delay=ctx.createDelay(2.0),fb=ctx.createGain(),lp=ctx.createBiquadFilter(),p=ctx.createStereoPanner?ctx.createStereoPanner():null;
+  delay.delayTime.value=.34;fb.gain.value=.32;lp.type="lowpass";lp.frequency.value=980;
+  delay.connect(fb);fb.connect(delay);delay.connect(lp);
+  if(p){dry.connect(p);lp.connect(p);p.pan.value=pan;p.connect(master)}else{dry.connect(master);lp.connect(master)}
+  const form=[390,760,2200];
+  for(let k=0;k<3;k++){
+    const o=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain();
+    o.type=k===0?"sawtooth":"triangle";
+    o.frequency.value=midi(n)*Math.pow(2,([-18,-5,6][k])/1200);
+    f.type="bandpass";f.frequency.value=form[k];f.Q.value=3.2;
+    g.gain.setValueAtTime(.0001,t);
+    g.gain.linearRampToValueAtTime(v*[.85,.5,.22][k],t+.15);
+    g.gain.setValueAtTime(v*[.85,.5,.22][k],Math.max(t+.2,t+d-.45));
+    g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(f);f.connect(g);g.connect(dry);g.connect(delay);
+    o.start(t);o.stop(t+d+.1);
+  }
+}
+function hauntedArenaChant(start,bars,b){
+  // Sparse, half-time calls so it feels like an abandoned arena in the distance.
+  for(let bar=2;bar<bars;bar+=4){
+    const st=start+bar*4*b;
+    const seq=[
+      {o:0,n:45,d:1.55},
+      {o:1.95,n:46,d:1.1},
+      {o:3.55,n:41,d:1.8}
+    ];
+    seq.forEach((p,i)=>{
+      const tt=st+p.o*b;
+      [-.7,-.25,.25,.7].forEach((pan,j)=>hauntedArenaVoice(p.n+(j===0?12:0),tt+j*.035,p.d*b,.0085,pan));
+    });
+  }
+}
 function mainSection(start,bars=8){
   const bpm=105,b=60/bpm,roots=[38,41,36,43];
   const chords=[[50,57,62],[53,60,65],[48,55,60],[55,62,67]];
@@ -221,6 +294,7 @@ function zombieSection(start,bars=10){
     const st=start+cyc*4*b;
     mel.forEach((n,i)=>tone(n+12,st+i*.5*b,.38*b,.085,"square",0,drive));
   }
+  hauntedArenaChant(start,bars,b);
   return bars*4*b;
 }
 function setMode(title,sub,z=false){
@@ -232,15 +306,17 @@ function later(ms,fn){timers.push(setTimeout(fn,ms))}
 function clearAll(){timers.forEach(clearTimeout);timers=[]}
 document.getElementById("play").onclick=async()=>{
   clearAll();boot();await ctx.resume();
-  const t=ctx.currentTime+.08,d=mainSection(t,8);
-  siren(t+d,2.6);zombieSection(t+d+2.6,10);
-  setMode("KARLSTAD CITY","Stadspuls, stråk och en egen Karlstad-läktarkör byggs upp.",false);
-  later((d-1.0)*1000,()=>setMode("NÅGOT ÄR FEL…","Siren. Strömmen dör. Staden förändras.",true));
-  later((d+2.55)*1000,()=>setMode("☣ ZOMBIE APOCALYPSE","Samma Karlstad-tema, nu korrumperat.",true));
+  const t=ctx.currentTime+.08,intro=matchNightIntro(t);
+  const mainStart=t+intro,d=mainSection(mainStart,8);
+  siren(mainStart+d,2.6);zombieSection(mainStart+d+2.6,10);
+  setMode("FBK-MATCHKVÄLL","Läktaren vaknar till liv innan Karlstad City-temat tar över.",false);
+  later((intro-.15)*1000,()=>setMode("KARLSTAD CITY","Stadspuls, stråk och läktarkör går över i gameplay.",false));
+  later((intro+d-1.0)*1000,()=>setMode("NÅGOT ÄR FEL…","Siren. Strömmen dör. Läktaren försvinner.",true));
+  later((intro+d+2.55)*1000,()=>setMode("☣ ZOMBIE APOCALYPSE","Den gamla läktarkören hörs nu långt bort, långsam och förvrängd.",true));
 };
 document.getElementById("zombie").onclick=async()=>{
   clearAll();boot();await ctx.resume();const t=ctx.currentTime+.06;
-  siren(t,.95);zombieSection(t+.95,12);setMode("☣ ZOMBIE APOCALYPSE","Direktläge – hörlurar rekommenderas.",true);
+  siren(t,.95);zombieSection(t+.95,12);setMode("☣ ZOMBIE APOCALYPSE","Direktläge – övergiven arena, förvrängd läktarkör och industripuls.",true);
 };
 document.getElementById("stop").onclick=()=>{
   clearAll();if(ctx){ctx.close();ctx=null}setMode("Stoppad","Välj Karlstad → Zombie eller starta Zombie Mode direkt.",false);
