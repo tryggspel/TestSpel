@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "sample_rate": 44100,
+  "tracks": {
+    "karlstad-main": {
+      "file": "karlstad-main.mp3",
+      "duration": 35.556,
+      "bytes": 570140,
+      "bitrate": "128k"
+    },
+    "karlstad-arena-layer": {
+      "file": "karlstad-arena-layer.mp3",
+      "duration": 17.778,
+      "bytes": 249827,
+      "bitrate": "112k"
+    },
+    "karlstad-zombie-transition": {
+      "file": "karlstad-zombie-transition.mp3",
+      "duration": 3.1,
+      "bytes": 44295,
+      "bitrate": "112k"
+    },
+    "karlstad-zombie-main": {
+      "file": "karlstad-zombie-main.mp3",
+      "duration": 26.667,
+      "bytes": 427616,
+      "bitrate": "128k"
+    }
+  }
+}
