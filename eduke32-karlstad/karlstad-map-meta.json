@@ -1,0 +1,17 @@
+{
+  "format": 7,
+  "origin": {
+    "name": "Stora torget",
+    "lon": 13.50295,
+    "lat": 59.380767
+  },
+  "mitt_i_city": {
+    "lon": 13.50055,
+    "lat": 59.37988
+  },
+  "units_per_m": 512.0,
+  "building_loops": 109,
+  "walls": 612,
+  "sprites": 5,
+  "size_bytes": 19870
+}
