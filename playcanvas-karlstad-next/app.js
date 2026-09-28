@@ -15,6 +15,8 @@ const PLAYER_RADIUS=0.42;
 const EYE=1.68;
 const CORE_LOCK=Object.freeze({version:'1.3.0',baseline:'1.2.2',lookSensitivity:.12,walkSpeed:7.2,sprintMultiplier:1.55,jumpVelocity:6.2,gravity:16,playerRadius:.42,mobileMaxPixelRatio:1.25,desktopMaxPixelRatio:1.6,maxBuildings:95,detailRadius:92});
 window.KarlstadCoreLock=CORE_LOCK;
+const GRAPHICS_PASS=Object.freeze({version:'1.4.0',core:'1.3.0',mode:'static-hero-detail',heroBudget:5});
+window.KarlstadGraphicsPass=GRAPHICS_PASS;
 let app,player,camera,yaw=54,pitch=-5;
 let vy=0,onGround=true;
 let colliders=[];
@@ -177,6 +179,45 @@ function addFacadePass12(b,hero,seed){
     addCylinder('domkyrka-spire',b.cx,b.h+10.4,b.cz,.72,2.2,M.heroDark);
   }
 }
+
+function addHeroLandmarkPass14(b){
+  // Graphics Pass 1.4 is intentionally static: reused primitive meshes/materials,
+  // no textures, no new update loops and no changes to movement/camera/collision.
+  const n=b.name||'';
+  const frontZ=b.cz-b.sz/2-.11;
+  const frontX=b.cx+b.sx/2+.11;
+  const w=Math.max(4,Math.min(b.sx,18));
+
+  if(/Mitt i City/i.test(n)){
+    addBox('g14-mitt-glass-entry',b.cx,2.15,frontZ-.05,Math.min(8,w*.62),3.7,.12,M.glass);
+    addBox('g14-mitt-sign',b.cx,4.75,frontZ-.13,Math.min(9,w*.7),.68,.14,M.accent);
+    addBox('g14-mitt-canopy',b.cx,2.72,frontZ-.82,Math.min(7,w*.58),.16,1.55,M.heroDark);
+    addPlanter(b.cx-4.8,frontZ-1.8); addPlanter(b.cx+4.8,frontZ-1.8);
+    return;
+  }
+
+  if(/Domkyrka/i.test(n)){
+    addBox('g14-dom-portal',b.cx,2.55,frontZ-.09,4.8,5.1,.16,M.stone);
+    addBox('g14-dom-door',b.cx,1.95,frontZ-.19,2.35,3.75,.17,M.door);
+    addBox('g14-dom-pilaster-l',b.cx-3.05,4.2,frontZ-.08,.42,7.8,.18,M.light);
+    addBox('g14-dom-pilaster-r',b.cx+3.05,4.2,frontZ-.08,.42,7.8,.18,M.light);
+    return;
+  }
+
+  if(/Rådhus|Radhus|Residens/i.test(n)){
+    addBox('g14-radhus-cornice',b.cx,b.h-.6,frontZ-.08,w*.88,.42,.15,M.light);
+    addBox('g14-radhus-portal',b.cx,1.7,frontZ-.18,2.25,3.25,.16,M.door);
+    for(let i=-1;i<=1;i++) addBox('g14-radhus-window-'+i,b.cx+i*3.2,4.25,frontZ-.15,1.55,2.2,.12,M.windowCool);
+    addBox('g14-radhus-side-accent',frontX,Math.min(5.2,b.h*.52),b.cz,.12,2.8,Math.min(7,b.sz*.55),M.stone);
+    return;
+  }
+
+  if(/Sandgrund/i.test(n)){
+    addBox('g14-sandgrund-glass',b.cx,2.45,frontZ-.12,Math.min(12,w*.82),4.1,.14,M.glass);
+    addBox('g14-sandgrund-sign',b.cx,5.0,frontZ-.18,Math.min(8,w*.58),.56,.14,M.heroDark);
+    addBox('g14-sandgrund-terrace',b.cx,.18,frontZ-2.2,Math.min(13,w*.86),.22,3.9,M.light);
+  }
+}
 function addStreetProps(){
   const trees=[
     [-22,-25],[-13,-27],[14,-26],[24,-22],[-35,5],[-36,18],[34,4],[36,18],
@@ -291,7 +332,7 @@ function addBuildings(osm){
   const cityMats=[M.stone,M.plaster,M.brick,M.light,M.building,M.glass];
   for(const b of items.slice(0,CORE_LOCK.maxBuildings)){
     if(Math.hypot(b.cx,b.cz)<9) continue;
-    const hero=/Mitt i City|Domkyrka|Residenset|Sandgrund|bibliotek|Wermland/i.test(b.name);
+    const hero=/Mitt i City|Domkyrka|Rådhus|Radhus|Residenset|Sandgrund|bibliotek|Wermland/i.test(b.name);
     const seed=hashStr((b.name||'byggnad')+'|'+Math.round(b.cx)+'|'+Math.round(b.cz));
     const facade=hero?M.hero:cityMats[seed%cityMats.length];
     addBox(b.name||'building',b.cx,b.h/2,b.cz,b.sx,b.h,b.sz,facade);
@@ -305,6 +346,7 @@ function addBuildings(osm){
       addBox((b.name||'building')+'-roof',b.cx,b.h+.18,b.cz,b.sx*1.03,.32,b.sz*1.03,M.heroDark);
     }
     try { addFacadePass12(b,hero,seed); } catch(e) { console.warn('[Facade detail skipped]',b.name||b.cx,e); }
+    if(hero){ try { addHeroLandmarkPass14(b); } catch(e) { console.warn('[Graphics 1.4 hero detail skipped]',b.name||b.cx,e); } }
 
     colliders.push({minx:b.cx-b.sx/2-.15,maxx:b.cx+b.sx/2+.15,minz:b.cz-b.sz/2-.15,maxz:b.cz+b.sz/2+.15});
     count++;
@@ -429,7 +471,7 @@ async function boot(){
     const osm=await r.json();
     bootStage='Byggnader';
     const n=addBuildings(osm);
-    loadText.textContent='Lägger Core Lock 1.3… '+n+' byggnader'; loadBar.style.width='82%';
+    loadText.textContent='Lägger Core Lock 1.3 + Graphics 1.4… '+n+' byggnader'; loadBar.style.width='82%';
 
     bootStage='Kontroller';
     setupDesktop();setupTouch();
