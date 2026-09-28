@@ -12,6 +12,12 @@ const ASSETS={
  infected:'https://cdn.3dassets.dev/assets/11976/v1/model.glb'
 };
 const State={started:false,health:100,ammo:24,reserve:120,score:0,kills:0,phase:-1,mode:'city',mouseSens:.00285,touchSens:.0053,ads:false,fireHeld:false,lastShot:0,weapon:null,coffee:null,pivot:null,muzzle:null,npcs:[],zombies:[],containers:{},traffic:[],core:null,extract:null,nearNpc:null,quality:1,waveSpawned:false,mapRoads:[],mapBuildings:[],waterZones:[],lastLandPos:null,waterEnteredAt:0,lastWaterCheck:0,lastCollisionAt:0,lastPos:null,lastDelta:null,audioCtx:null,audioReady:false,vehicleAudio:[],lastChatter:0,lastMapDraw:0,currentStreet:'STORA TORGET',stamina:100,sprintHeld:false,bobPhase:0,footDistance:0,lastStepAt:0,hasRadio:false,lastSave:0,missionDone:false,impactCooldown:0,guideOn:false,routePoints:[],routeGraph:null,guideMeshes:[],safePos:null,collisionBurst:0,lastCollisionMesh:null,quickTarget:null,lastCompassAt:0,offRouteSince:0,solas:[],solasFound:0,autoTour:false,autoRoute:[],autoIndex:0,autoLastPhase:null,autoLookPauseUntil:0,autoSpeed:.082,autoScene:null,lastAudioUpdate:0,lastPerfCheck:0,perfScale:1.28};
+const MUSIC={
+ ready:false,unlocked:false,main:null,arena:null,zombie:null,transition:null,
+ cityStarted:false,fadeJobs:new Map(),zombieTimer:0,
+ base:'./audio/'
+};
+
 function split(u){const i=u.lastIndexOf('/');return{root:u.slice(0,i+1),file:u.slice(i+1)}}
 function addContactShadow(scene,root,rx=.45,rz=.45){
  const disc=B.MeshBuilder.CreateDisc('V29 contact shadow',{radius:1,tessellation:28},scene);disc.parent=root;disc.rotation.x=Math.PI/2;disc.position.y=.018;disc.scaling.set(rx,rz,1);
@@ -297,6 +303,67 @@ function ensureAudio(){
  if(State.audioReady&&State.audioCtx){State.audioCtx.resume?.();return State.audioCtx}
  try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;State.audioCtx=State.audioCtx||new AC();State.audioCtx.resume?.();State.audioReady=true;initTrafficAudio();return State.audioCtx}catch(e){return null}
 }
+
+function initMusic(){
+ if(MUSIC.ready)return;
+ const make=(file,loop=false)=>{const a=new Audio(MUSIC.base+file);a.preload='auto';a.loop=loop;a.playsInline=true;a.crossOrigin='anonymous';return a};
+ MUSIC.main=make('karlstad-main.mp3',true);
+ MUSIC.arena=make('karlstad-arena-layer.mp3',false);
+ MUSIC.zombie=make('karlstad-zombie-main.mp3',true);
+ MUSIC.transition=make('karlstad-zombie-transition.mp3',false);
+ MUSIC.main.volume=0;MUSIC.arena.volume=0;MUSIC.zombie.volume=0;MUSIC.transition.volume=.62;
+ MUSIC.ready=true;
+ // Start fetching all small game-ready assets immediately; playback still waits for a user gesture.
+ for(const a of [MUSIC.main,MUSIC.arena,MUSIC.zombie,MUSIC.transition]){try{a.load()}catch(e){}}
+}
+function musicCancelFade(a){
+ const id=MUSIC.fadeJobs.get(a);if(id)cancelAnimationFrame(id);MUSIC.fadeJobs.delete(a)
+}
+function musicFade(a,to,ms=650,pauseAfter=false){
+ if(!a)return;musicCancelFade(a);const from=Number.isFinite(a.volume)?a.volume:0,start=performance.now();
+ const step=now=>{const k=Math.min(1,(now-start)/Math.max(1,ms)),e=k*k*(3-2*k);a.volume=Math.max(0,Math.min(1,from+(to-from)*e));
+  if(k<1)MUSIC.fadeJobs.set(a,requestAnimationFrame(step));else{MUSIC.fadeJobs.delete(a);if(pauseAfter&&to<=.001){try{a.pause()}catch(e){}}}
+ };MUSIC.fadeJobs.set(a,requestAnimationFrame(step))
+}
+function musicPlay(a){
+ if(!a||!MUSIC.unlocked)return;
+ const p=a.play();if(p?.catch)p.catch(()=>{})
+}
+function playCityMusic(first=false){
+ initMusic();if(!MUSIC.unlocked)return;
+ clearTimeout(MUSIC.zombieTimer);
+ if(MUSIC.transition){try{MUSIC.transition.pause();MUSIC.transition.currentTime=0}catch(e){}}
+ if(MUSIC.zombie)musicFade(MUSIC.zombie,0,520,true);
+ if(MUSIC.main){
+  if(MUSIC.main.paused){try{MUSIC.main.currentTime=0}catch(e){}musicPlay(MUSIC.main)}
+  musicFade(MUSIC.main,.23,900);
+ }
+ // Arena identity is a short overlay only once per session, never a blocking intro.
+ if(first&&!MUSIC.cityStarted&&MUSIC.arena){
+  MUSIC.cityStarted=true;try{MUSIC.arena.currentTime=0}catch(e){};MUSIC.arena.volume=0;musicPlay(MUSIC.arena);musicFade(MUSIC.arena,.085,700);
+  setTimeout(()=>musicFade(MUSIC.arena,0,1700,true),9200)
+ }
+}
+function playZombieMusic(){
+ initMusic();if(!MUSIC.unlocked)return;
+ clearTimeout(MUSIC.zombieTimer);
+ if(MUSIC.arena)musicFade(MUSIC.arena,0,260,true);
+ if(MUSIC.main)musicFade(MUSIC.main,0,700,true);
+ if(MUSIC.transition){
+  try{MUSIC.transition.pause();MUSIC.transition.currentTime=0}catch(e){};MUSIC.transition.volume=.62;musicPlay(MUSIC.transition)
+ }
+ // Start the heavy loop under the transition, so the mode switch feels immediate rather than loading.
+ MUSIC.zombieTimer=setTimeout(()=>{
+  if(State.mode!=='zombie'||!MUSIC.zombie)return;
+  try{MUSIC.zombie.currentTime=0}catch(e){};MUSIC.zombie.volume=0;musicPlay(MUSIC.zombie);musicFade(MUSIC.zombie,.27,900)
+ },1150)
+}
+function unlockMusic(){
+ initMusic();if(MUSIC.unlocked)return;
+ MUSIC.unlocked=true;
+ // Safari/iOS accepts playback because this is called from the first pointer/key gesture.
+ playCityMusic(true)
+}
 function pannerAt(ctx,pos){
  const p=ctx.createPanner();p.panningModel='HRTF';p.distanceModel='inverse';p.refDistance=2.5;p.maxDistance=70;p.rolloffFactor=1.35;
  p.positionX.value=pos.x;p.positionY.value=pos.y||1;p.positionZ.value=pos.z;return p;
@@ -557,6 +624,7 @@ function setMode(scene,mode){
  const zombie=mode==='zombie';
  if(zombie&&State.phase<8){missionFlash('SLUTFÖR CITY MISSION FÖRST');dialog('Mira','Gå till Mitt i City, hämta nödradion och kom tillbaka till torget först.');return}
  State.mode=mode;
+ if(zombie)playZombieMusic();else playCityMusic(false);
  State.weapon?.setEnabled(zombie);State.coffee?.setEnabled(!zombie);
  for(const z of State.zombies)z?.setEnabled?.(zombie);
  const modeBtn=document.getElementById('v27mode');if(modeBtn)modeBtn.textContent=zombie?'CITY':'ZOMBIE';
@@ -600,10 +668,10 @@ async function init(){ui();let tries=0;while((!B.Engine.LastCreatedScene||!B.Eng
 try{camera.inputs.removeByType('FreeCameraMouseInput')}catch(e){}camera.fov=1.035;camera.speed=.88;camera.checkCollisions=true;camera.applyGravity=true;camera.ellipsoid=new B.Vector3(.38,.88,.38);scene.imageProcessingConfiguration.exposure=1.02;scene.imageProcessingConfiguration.contrast=1.20;scene.imageProcessingConfiguration.vignetteWeight=.18;scene.fogDensity=.00034;
 for(const l of scene.lights||[])if(l instanceof B.DirectionalLight)l.intensity=Math.min(Math.max(l.intensity,2.25),2.5);if(TOUCH)engine.setHardwareScalingLevel(1.28);
 const baseLook=document.getElementById('look');if(baseLook)baseLook.style.pointerEvents='none';const baseBrand=document.querySelector('.brand span');if(baseBrand)baseBrand.textContent='REAL CITY V34.1 · PLAYABLE CORE FIX';
-await Promise.all([world(scene),loadV28MapData(scene)]);createSolaCollectibles(scene);start(scene,camera);State.lastPos=camera.position.clone();State.lastLandPos=camera.position.clone();State.safePos=camera.position.clone();camera.onCollide=mesh=>collisionFeedback(camera,mesh);document.addEventListener('pointerdown',ensureAudio,{once:true,capture:true});
-canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('pointerdown',e=>{ensureAudio();if(TOUCH)return;if(document.pointerLockElement!==canvas){canvas.requestPointerLock?.();return}if(e.button===0){State.fireHeld=true;shoot(scene,camera)}if(e.button===2)State.ads=true});document.addEventListener('mouseup',e=>{if(e.button===0)State.fireHeld=false;if(e.button===2)State.ads=false});document.addEventListener('mousemove',e=>{if(TOUCH||document.pointerLockElement!==canvas)return;State.autoLookPauseUntil=performance.now()+2600;const m=State.ads?.52:1;camera.rotation.y+=e.movementX*State.mouseSens*m;camera.rotation.x=Math.max(-1.3,Math.min(1.3,camera.rotation.x+e.movementY*State.mouseSens*.76*m))});
+await Promise.all([world(scene),loadV28MapData(scene)]);createSolaCollectibles(scene);start(scene,camera);State.lastPos=camera.position.clone();State.lastLandPos=camera.position.clone();State.safePos=camera.position.clone();camera.onCollide=mesh=>collisionFeedback(camera,mesh);initMusic();document.addEventListener('pointerdown',()=>{ensureAudio();unlockMusic()},{once:true,capture:true});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('pointerdown',e=>{ensureAudio();unlockMusic();if(TOUCH)return;if(document.pointerLockElement!==canvas){canvas.requestPointerLock?.();return}if(e.button===0){State.fireHeld=true;shoot(scene,camera)}if(e.button===2)State.ads=true});document.addEventListener('mouseup',e=>{if(e.button===0)State.fireHeld=false;if(e.button===2)State.ads=false});document.addEventListener('mousemove',e=>{if(TOUCH||document.pointerLockElement!==canvas)return;State.autoLookPauseUntil=performance.now()+2600;const m=State.ads?.52:1;camera.rotation.y+=e.movementX*State.mouseSens*m;camera.rotation.x=Math.max(-1.3,Math.min(1.3,camera.rotation.x+e.movementY*State.mouseSens*.76*m))});
 document.addEventListener('pointerlockchange',()=>{const h=document.getElementById('v25hint');if(h)h.style.display=document.pointerLockElement===canvas?'none':'block'});
-document.addEventListener('keydown',e=>{ensureAudio();if(e.code==='KeyR')reload();if(e.code==='KeyE')interact(scene,camera);if(e.code==='KeyZ')setMode(scene,State.mode==='city'?'zombie':'city');if(e.code==='ShiftLeft'||e.code==='ShiftRight')State.sprintHeld=true;if(e.code==='Space')camera.cameraDirection.y=.22});document.addEventListener('keyup',e=>{if(e.code==='ShiftLeft'||e.code==='ShiftRight')State.sprintHeld=false});
+document.addEventListener('keydown',e=>{ensureAudio();unlockMusic();if(e.code==='KeyR')reload();if(e.code==='KeyE')interact(scene,camera);if(e.code==='KeyZ')setMode(scene,State.mode==='city'?'zombie':'city');if(e.code==='ShiftLeft'||e.code==='ShiftRight')State.sprintHeld=true;if(e.code==='Space')camera.cameraDirection.y=.22});document.addEventListener('keyup',e=>{if(e.code==='ShiftLeft'||e.code==='ShiftRight')State.sprintHeld=false});
 const look=document.getElementById('v25look');let lx=0,ly=0,lid=null;look.addEventListener('pointerdown',e=>{lid=e.pointerId;lx=e.clientX;ly=e.clientY;look.setPointerCapture(e.pointerId)});look.addEventListener('pointermove',e=>{if(e.pointerId!==lid)return;State.autoLookPauseUntil=performance.now()+2600;const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;const m=State.ads?.62:1;camera.rotation.y+=dx*State.touchSens*m;camera.rotation.x=Math.max(-1.32,Math.min(1.32,camera.rotation.x+dy*State.touchSens*.78*m))});look.addEventListener('pointerup',e=>{if(e.pointerId===lid)lid=null});look.addEventListener('pointercancel',()=>lid=null);
 const hold=(id,on,off)=>{const e=document.getElementById(id);e.addEventListener('pointerdown',x=>{x.preventDefault();on()});e.addEventListener('pointerup',x=>{x.preventDefault();off?.()});e.addEventListener('pointercancel',()=>off?.())};hold('v25fire',()=>{State.fireHeld=true;shoot(scene,camera)},()=>State.fireHeld=false);hold('v25aim',()=>State.ads=true,()=>State.ads=false);hold('v25jump',()=>camera.cameraDirection.y=.22);hold('v25use',()=>interact(scene,camera));hold('v25reload',reload);hold('v27mode',()=>setMode(scene,State.mode==='city'?'zombie':'city'));hold('v30run',()=>State.sprintHeld=true,()=>State.sprintHeld=false);
 document.getElementById('v31guide')?.addEventListener('pointerdown',e=>{e.preventDefault();toggleGuide(scene,camera)});
