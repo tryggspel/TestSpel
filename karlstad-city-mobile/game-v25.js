@@ -11,7 +11,7 @@ const ASSETS={
  civilian:'https://cdn.3dassets.dev/assets/36337/v1/model.glb',
  infected:'https://cdn.3dassets.dev/assets/11976/v1/model.glb'
 };
-const State={started:false,health:100,ammo:24,reserve:120,score:0,kills:0,phase:-1,mode:'city',mouseSens:.00285,touchSens:.0053,ads:false,fireHeld:false,lastShot:0,weapon:null,coffee:null,pivot:null,muzzle:null,npcs:[],zombies:[],containers:{},traffic:[],core:null,extract:null,nearNpc:null,quality:1,waveSpawned:false,mapRoads:[],mapBuildings:[],waterZones:[],lastLandPos:null,waterEnteredAt:0,lastWaterCheck:0,lastCollisionAt:0,lastPos:null,lastDelta:null,audioCtx:null,audioReady:false,vehicleAudio:[],lastChatter:0,lastMapDraw:0,currentStreet:'STORA TORGET',stamina:100,sprintHeld:false,bobPhase:0,footDistance:0,lastStepAt:0,hasRadio:false,lastSave:0,missionDone:false,impactCooldown:0,guideOn:false,routePoints:[],routeGraph:null,guideMeshes:[],safePos:null,collisionBurst:0,lastCollisionMesh:null,quickTarget:null,lastCompassAt:0,offRouteSince:0,solas:[],solasFound:0,autoTour:false,autoRoute:[],autoIndex:0,autoLastPhase:null,autoLookPauseUntil:0,autoSpeed:.082,autoScene:null,lastAudioUpdate:0,lastPerfCheck:0,perfScale:1.18};
+const State={started:false,health:100,ammo:24,reserve:120,score:0,kills:0,phase:-1,mode:'city',mouseSens:.00285,touchSens:.0053,ads:false,fireHeld:false,lastShot:0,weapon:null,coffee:null,pivot:null,muzzle:null,npcs:[],zombies:[],containers:{},traffic:[],core:null,extract:null,nearNpc:null,quality:1,waveSpawned:false,mapRoads:[],mapBuildings:[],waterZones:[],lastLandPos:null,waterEnteredAt:0,lastWaterCheck:0,lastCollisionAt:0,lastPos:null,lastDelta:null,audioCtx:null,audioReady:false,vehicleAudio:[],lastChatter:0,lastMapDraw:0,currentStreet:'STORA TORGET',stamina:100,sprintHeld:false,bobPhase:0,footDistance:0,lastStepAt:0,hasRadio:false,lastSave:0,missionDone:false,impactCooldown:0,guideOn:false,routePoints:[],routeGraph:null,guideMeshes:[],safePos:null,collisionBurst:0,lastCollisionMesh:null,quickTarget:null,lastCompassAt:0,offRouteSince:0,solas:[],solasFound:0,autoTour:false,autoRoute:[],autoIndex:0,autoLastPhase:null,autoLookPauseUntil:0,autoSpeed:.082,autoScene:null,lastAudioUpdate:0,lastPerfCheck:0,perfScale:1.28};
 function split(u){const i=u.lastIndexOf('/');return{root:u.slice(0,i+1),file:u.slice(i+1)}}
 function addContactShadow(scene,root,rx=.45,rz=.45){
  const disc=B.MeshBuilder.CreateDisc('V29 contact shadow',{radius:1,tessellation:28},scene);disc.parent=root;disc.rotation.x=Math.PI/2;disc.position.y=.018;disc.scaling.set(rx,rz,1);
@@ -574,10 +574,10 @@ async function world(scene){
  makeNpc(scene,'Alex',"O'Learys blir säker zon om zombie mode aktiveras.",new B.Vector3(op.x+4,0,op.z+6),-1.4);
  makeNpc(scene,'Museivärd','Museet håller öppet i city mode.',new B.Vector3(museum.x+5,0,museum.z+7),2.3);
  makeNpc(scene,'Centervärd','Välkommen in. Plan 0 har mat, caféer och eventyta; butiker finns på flera plan.',new B.Vector3(mall.x,mall.y,mall.z),Math.PI);
- const crowdAll=[[-8,-5],[-4,8],[8,8],[15,-4],[mall.x+5,mall.z+3],[mall.x-5,mall.z+2],[mall.x+4,mall.z-5],[mall.x-4,mall.z-7],[mall.x+7,mall.z-9],[mall.x-7,mall.z-10]],crowd=TOUCH?crowdAll.slice(0,5):crowdAll;
+ const crowdAll=[[-8,-5],[-4,8],[8,8],[15,-4],[mall.x+5,mall.z+3],[mall.x-5,mall.z+2],[mall.x+4,mall.z-5],[mall.x-4,mall.z-7],[mall.x+7,mall.z-9],[mall.x-7,mall.z-10]],crowd=TOUCH?crowdAll.slice(0,2):crowdAll;
  crowd.forEach((p,i)=>makeNpc(scene,'Stadsgäst '+(i+1),i%3===0?'Jag är på väg mot Mitt i City.':i%3===1?'Det är mer folk ute på stan nu.':'Bussen går snart från torget.',new B.Vector3(p[0],0,p[1]),(i*.7)%6.2));
  const car=State.containers.car;if(car){
-  [[34,-15,.05],[-20,14,1.7],[56,9,1.58],[mall.x+12,mall.z+12,1.55],[mall.x-14,mall.z+8,-1.55]].forEach((v,i)=>{const c=spawn(scene,'car','city car '+i,new B.Vector3(v[0],0,v[1]),v[2],1);if(c)addCollider(scene,c,'car')});
+  const parkedCars=[[34,-15,.05],[-20,14,1.7],[56,9,1.58],[mall.x+12,mall.z+12,1.55],[mall.x-14,mall.z+8,-1.55]],visibleParked=TOUCH?parkedCars.slice(0,2):parkedCars;visibleParked.forEach((v,i)=>{const c=spawn(scene,'car','city car '+i,new B.Vector3(v[0],0,v[1]),v[2],1);if(c)addCollider(scene,c,'car')});
   const m=spawn(scene,'car','moving car',new B.Vector3(-55,0,-41),Math.PI/2,1);if(m){addCollider(scene,m,'car');State.traffic.push({r:m,a:new B.Vector3(-55,0,-41),b:new B.Vector3(55,0,-41),t:.1,d:1,s:.0017,kind:'car'})}
  }
  const bus=spawn(scene,'bus','Värmland city bus',new B.Vector3(64,0,-48),0,1);if(bus){addCollider(scene,bus,'bus');State.traffic.push({r:bus,a:new B.Vector3(64,0,-48),b:new B.Vector3(64,0,48),t:.1,d:1,s:.001,kind:'bus'})}
@@ -585,20 +585,20 @@ async function world(scene){
 function start(scene,camera){if(State.started)return;State.started=true;State.phase=-1;coffee(scene,camera);weapon(scene,camera);setTimeout(()=>setMode(scene,'city'),80);update();objective('PRATA MED MIRA · STORA TORGET')}
 function quality(engine,v){
  State.quality=Number(v);
- const scale=State.quality===0?(TOUCH?1.48:1.32):State.quality===2?1:(TOUCH?1.18:1);
+ const scale=State.quality===0?(TOUCH?1.55:1.32):State.quality===2?1:(TOUCH?1.28:1);
  State.perfScale=scale;engine.setHardwareScalingLevel(scale);
  text('v33quality',State.quality===0?'FPS':State.quality===2?'SHARP':TOUCH?'AUTO':'NATIVE')
 }
 function adaptivePerformance(engine){
  if(!TOUCH||State.quality!==1)return;const now=performance.now();if(now-State.lastPerfCheck<3500)return;State.lastPerfCheck=now;
  const fps=engine.getFps?.()||60;let next=State.perfScale;
- if(fps<42)next=Math.min(1.48,next+.08);else if(fps>56)next=Math.max(1.08,next-.04);
+ if(fps<50)next=Math.min(1.55,next+.08);else if(fps>58)next=Math.max(1.18,next-.04);
  if(Math.abs(next-State.perfScale)>.01){State.perfScale=next;engine.setHardwareScalingLevel(next)}
  text('v33quality','AUTO '+Math.round(fps)+' FPS')
 }
 async function init(){ui();let tries=0;while((!B.Engine.LastCreatedScene||!B.Engine.LastCreatedScene.activeCamera)&&tries++<200)await new Promise(r=>setTimeout(r,50));const scene=B.Engine.LastCreatedScene,camera=scene?.activeCamera,engine=scene?.getEngine();if(!scene||!camera||!engine)return;
 try{camera.inputs.removeByType('FreeCameraMouseInput')}catch(e){}camera.fov=1.035;camera.speed=.88;camera.checkCollisions=true;camera.applyGravity=true;camera.ellipsoid=new B.Vector3(.38,.88,.38);scene.imageProcessingConfiguration.exposure=1.02;scene.imageProcessingConfiguration.contrast=1.20;scene.imageProcessingConfiguration.vignetteWeight=.18;scene.fogDensity=.00034;
-for(const l of scene.lights||[])if(l instanceof B.DirectionalLight)l.intensity=Math.min(Math.max(l.intensity,2.25),2.5);if(TOUCH)engine.setHardwareScalingLevel(1);
+for(const l of scene.lights||[])if(l instanceof B.DirectionalLight)l.intensity=Math.min(Math.max(l.intensity,2.25),2.5);if(TOUCH)engine.setHardwareScalingLevel(1.28);
 const baseLook=document.getElementById('look');if(baseLook)baseLook.style.pointerEvents='none';const baseBrand=document.querySelector('.brand span');if(baseBrand)baseBrand.textContent='REAL CITY V34.1 · PLAYABLE CORE FIX';
 await Promise.all([world(scene),loadV28MapData(scene)]);createSolaCollectibles(scene);start(scene,camera);State.lastPos=camera.position.clone();State.lastLandPos=camera.position.clone();State.safePos=camera.position.clone();camera.onCollide=mesh=>collisionFeedback(camera,mesh);document.addEventListener('pointerdown',ensureAudio,{once:true,capture:true});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('pointerdown',e=>{ensureAudio();if(TOUCH)return;if(document.pointerLockElement!==canvas){canvas.requestPointerLock?.();return}if(e.button===0){State.fireHeld=true;shoot(scene,camera)}if(e.button===2)State.ads=true});document.addEventListener('mouseup',e=>{if(e.button===0)State.fireHeld=false;if(e.button===2)State.ads=false});document.addEventListener('mousemove',e=>{if(TOUCH||document.pointerLockElement!==canvas)return;State.autoLookPauseUntil=performance.now()+2600;const m=State.ads?.52:1;camera.rotation.y+=e.movementX*State.mouseSens*m;camera.rotation.x=Math.max(-1.3,Math.min(1.3,camera.rotation.x+e.movementY*State.mouseSens*.76*m))});
