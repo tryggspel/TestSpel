@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 SR=44100
-OUT=Path("karlstad-city-mobile/audio")
+OUT=Path("playcanvas-karlstad-next/audio")
 OUT.mkdir(parents=True,exist_ok=True)
 rng=np.random.default_rng(240928)
 
