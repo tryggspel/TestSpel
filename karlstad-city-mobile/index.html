@@ -13,14 +13,14 @@
 <canvas id="renderCanvas" aria-label="Verkliga centrala Karlstad i 3D"></canvas>
 <div id="loading" class="loading"><div><b>KARLSTAD · REAL CITY</b><p id="loadText">Hämtar öppna geodata…</p><div class="progress"><i id="loadProgress"></i></div></div></div>
 <div class="hud">
-  <div class="panel brand"><span>REAL CITY V34.1 · PLAYABLE CORE FIX</span><strong>KARLSTAD CITY · PLAYABLE CORE FIX</strong><small>V34.1 är en akut gameplay-fix: gångytor triggar inte längre 'STÄNGT', anti-stuck återställer inte spelaren från golvkontakt och små gatuprops blockerar inte touch-spelaren.</small></div>
+  <div class="panel brand"><span>REAL CITY V35 · LIVING CITY</span><strong>KARLSTAD CITY · LIVING CITY</strong><small>V35 bygger vidare på den stabila spelkärnan med levande stadsliv, rörliga fotgängare, fler bilar, väderkoppling och ett tydligare realtidslager.</small></div>
   <div id="status" class="panel status">STARTAR…</div>
   <div class="reticle"></div>
   <div id="error" class="error"></div>
   <div id="look" class="look"></div>
   <div id="joy" class="joy"><div id="knob" class="knob"></div></div>
   <div class="mobile-hint">VÄNSTER: GÅ · HÖGER: SE DIG OM</div>
-  <div class="panel source"><b>V34.1:</b> floor-collision fix · fri rörelse på torget · små props non-blocking · Playable Core.</div>
+  <div class="panel source"><b>V35:</b> Living City · väder · trafikmodell · fotgängare · bilar · skarpare atmosfär.</div>
   <div class="actions"><button id="sandgrund">SANDGRUND</button><button id="collision">COLL OFF</button><button id="reset">RESET</button><a href="index.html">← KARLSTAD CITY NEXT</a></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/earcut@2.2.4/dist/earcut.min.js"></script>
@@ -34,6 +34,7 @@
 <script src="v32-hero-loop.js"></script>
 <script src="v33-readability.js"></script>
 <script src="game-v25.js"></script>
+<script src="living-city-v35.js"></script>
 <script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}</script>
 </body>
 </html>
