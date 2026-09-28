@@ -676,13 +676,23 @@
     });
   })();
 
+  function kcQuery() {
+    try { return new URLSearchParams(location.search); } catch (e) { return { get:function(){return null;} }; }
+  }
+  function kcKarlstadMode() { return kcQuery().get('karlstad') === '1'; }
+  function kcSafeMode() { return kcQuery().get('safe') === '1'; }
+
   function loadKarlstadMap() {
+    if (!kcKarlstadMode()) return;
     if (!Module.addRunDependency || !Module.FS) return;
     Module.addRunDependency('karlstad-map');
     fetch('KARLSTAD.MAP?v=' + (window.__BUILD__ || 'dev'), {cache:'no-cache'})
       .then(function(r){ if(!r.ok) throw new Error('KARLSTAD.MAP '+r.status); return r.arrayBuffer(); })
       .then(function(buf){ Module.FS.writeFile('/KARLSTAD.MAP', new Uint8Array(buf)); })
-      .catch(function(e){ console.error('[Karlstad] map load failed', e); })
+      .catch(function(e){
+        console.error('[Karlstad] map load failed', e);
+        var er=document.getElementById('err'); if(er) er.textContent='KARLSTAD.MAP failed: '+e;
+      })
       .finally(function(){ try{Module.removeRunDependency('karlstad-map')}catch(e){} });
   }
 
@@ -693,7 +703,7 @@
       c.addEventListener('webglcontextlost', function(e){ alert('WebGL context lost.'); e.preventDefault(); }, false);
       return c; })(),
     arguments: (function () {
-      var a = ['-nosetup','-nologo','-map','KARLSTAD.MAP'];
+      var a = ['-nosetup']; if (kcKarlstadMode()) a.push('-nologo','-map','KARLSTAD.MAP');
       // ?join= / ?bot= flows go straight to work: skip the logo/title crawl.
       var q = new URLSearchParams(location.search);
       if (q.get('join') || q.get('bot') === '1') a.push('-nologo');
@@ -720,7 +730,7 @@
       console.error(t);
       if (!window.__e32ver) { var m = /EDuke32\s+\S+/.exec(t); if (m) { window.__e32ver = m[0]; var v = document.getElementById('ver'); if (v) v.textContent = m[0]; } }
     },
-    preRun: [loadKarlstadMap, function () {
+    preRun: [loadKarlstadMap, function () { if (kcSafeMode()) { try { localStorage.removeItem('eduke32/cfg/eduke32.cfg'); localStorage.removeItem('eduke32/cfg/settings.cfg'); localStorage.removeItem('eduke32/cfg/m32_settings.cfg'); } catch(e) {} }
       // Restore persisted settings into MEMFS, then windowed at the 4:3 render box
       // (the screen override above makes the engine render at this resolution;
       // fitCanvas() centers it with side margins), then start mirroring the engine's
