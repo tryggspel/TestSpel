@@ -6,6 +6,7 @@ on:
     paths:
       - 'karlstad-city-mobile/**'
       - 'eduke32-karlstad/**'
+      - 'eduke32-vanilla/**'
       - '.github/workflows/deploy-karlstad-mobile.yml'
   workflow_dispatch:
 
@@ -38,6 +39,10 @@ jobs:
           if [ -d eduke32-karlstad ]; then
             mkdir -p _site/eduke32-karlstad
             cp -R eduke32-karlstad/. _site/eduke32-karlstad/
+          fi
+          if [ -d eduke32-vanilla ]; then
+            mkdir -p _site/eduke32-vanilla
+            cp -R eduke32-vanilla/. _site/eduke32-vanilla/
           fi
           touch _site/.nojekyll
       - name: Upload Karlstad City
