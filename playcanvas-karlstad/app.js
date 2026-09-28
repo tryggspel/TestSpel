@@ -23,12 +23,17 @@ let objectiveMarker=null,objectiveLight=null;
 let pickups=[];
 let pickupCount=0;
 let lowFpsSeconds=0;
+let bootStage='module';
 
 function fail(e){
-  console.error(e);
-  errorEl.textContent=String(e&&e.stack?e.stack:e);
+  console.error('[Karlstad boot]',bootStage,e);
+  const raw=String(e&&e.stack?e.stack:e);
+  const msg=raw.split('\n')[0].slice(0,180);
+  errorEl.textContent='STEG: '+bootStage+'\n'+raw;
   errorEl.classList.add('show');
-  loadText.textContent='Fel vid start';
+  loadText.textContent='Startfel · '+bootStage+' · '+msg;
+  loadBar.style.width='100%';
+  loading.classList.add('failed');
 }
 window.addEventListener('error',e=>fail(e.error||e.message));
 window.addEventListener('unhandledrejection',e=>fail(e.reason||e));
@@ -244,7 +249,8 @@ function initScene(){
   }
 
   addStreetProps();
-  addGraphicsPass12();
+  // 1.2 decoration is enhancement-only: never let one prop kill the playable base scene on Safari.
+  try { addGraphicsPass12(); } catch(e) { console.error('[Graphics 1.2 decorations skipped]',e); }
 
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
   objectiveMarker=addCylinder('mitt-i-city-marker',mx,5,mz,.72,10,M.marker);
@@ -296,7 +302,7 @@ function addBuildings(osm){
     if(hero){
       addBox((b.name||'building')+'-roof',b.cx,b.h+.18,b.cz,b.sx*1.03,.32,b.sz*1.03,M.heroDark);
     }
-    addFacadePass12(b,hero,seed);
+    try { addFacadePass12(b,hero,seed); } catch(e) { console.warn('[Facade detail skipped]',b.name||b.cx,e); }
 
     colliders.push({minx:b.cx-b.sx/2-.15,maxx:b.cx+b.sx/2+.15,minz:b.cz-b.sz/2-.15,maxz:b.cz+b.sz/2+.15});
     count++;
@@ -393,24 +399,44 @@ function update(dt){
 
 async function boot(){
   try{
-    loadText.textContent='Initierar PlayCanvas…'; loadBar.style.width='25%';
+    bootStage='PlayCanvas Application';
+    loadText.textContent='Initierar PlayCanvas…'; loadBar.style.width='18%';
     app=new pc.Application(canvas,{graphicsDeviceOptions:{alpha:false,antialias:true,powerPreference:'high-performance'}});
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-    // Correct PlayCanvas DPR handling: maxPixelRatio controls sharpness; resolution AUTO receives no fake width.
-    const coarse=matchMedia('(pointer:coarse)').matches;
-    app.graphicsDevice.maxPixelRatio=Math.min(window.devicePixelRatio||1,coarse?1.5:1.7);
-    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+    bootStage='iPhone renderbuffer';
+    loadText.textContent='Förbereder grafik…'; loadBar.style.width='28%';
+    // Keep the iPhone 11 path conservative. DPR is an optional quality boost, not a boot requirement.
+    try{
+      const coarse=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
+      app.graphicsDevice.maxPixelRatio=Math.min(window.devicePixelRatio||1,coarse?1.25:1.6);
+      app.setCanvasResolution(pc.RESOLUTION_AUTO);
+    }catch(e){
+      console.warn('[DPR fallback]',e);
+      app.setCanvasResolution(pc.RESOLUTION_AUTO);
+    }
+
+    bootStage='Grundscen';
+    loadText.textContent='Bygger Stora Torget…'; loadBar.style.width='40%';
     initScene();
+
+    bootStage='Karlstad geodata';
     loadText.textContent='Läser Karlstads geodata…'; loadBar.style.width='55%';
     const r=await fetch('../karlstad-city-mobile/data/osm-buildings.json',{cache:'force-cache'});
     if(!r.ok) throw new Error('OSM '+r.status);
     const osm=await r.json();
+    bootStage='Byggnader';
     const n=addBuildings(osm);
     loadText.textContent='Lägger Graphics Pass 1.2… '+n+' byggnader'; loadBar.style.width='82%';
+
+    bootStage='Kontroller';
     setupDesktop();setupTouch();
     app.on('update',update);
+
+    bootStage='Startar spel';
     app.start();
     addEventListener('resize',()=>app.resizeCanvas());
+    bootStage='Klar';
     setTimeout(()=>{loadBar.style.width='100%';loading.classList.add('hide');},350);
   }catch(e){fail(e);}
 }
