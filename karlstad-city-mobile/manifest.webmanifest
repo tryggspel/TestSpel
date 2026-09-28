@@ -1,11 +1,11 @@
 {
-  "name":"Karlstad City V35.1",
+  "name":"Karlstad City V35.2",
   "short_name":"Karlstad City",
   "start_url":"./",
   "display":"standalone",
   "orientation":"landscape",
   "background_color":"#071015",
   "theme_color":"#0b1115",
-  "description":"Karlstad City V35.1 with Living City systems and a new realism pass for central Karlstad landmarks.",
+  "description":"Karlstad City V35.2 Performance Rebuild with responsive mobile gameplay, optimized Living City systems and central Karlstad landmark graphics.",
   "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
 }
