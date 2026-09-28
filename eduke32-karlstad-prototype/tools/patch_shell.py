@@ -77,13 +77,23 @@ TOUCH_JS = r'''
 '''
 
 LOADER_JS = r'''
+  function kcQuery() {
+    try { return new URLSearchParams(location.search); } catch (e) { return { get:function(){return null;} }; }
+  }
+  function kcKarlstadMode() { return kcQuery().get('karlstad') === '1'; }
+  function kcSafeMode() { return kcQuery().get('safe') === '1'; }
+
   function loadKarlstadMap() {
+    if (!kcKarlstadMode()) return;
     if (!Module.addRunDependency || !Module.FS) return;
     Module.addRunDependency('karlstad-map');
     fetch('KARLSTAD.MAP?v=' + (window.__BUILD__ || 'dev'), {cache:'no-cache'})
       .then(function(r){ if(!r.ok) throw new Error('KARLSTAD.MAP '+r.status); return r.arrayBuffer(); })
       .then(function(buf){ Module.FS.writeFile('/KARLSTAD.MAP', new Uint8Array(buf)); })
-      .catch(function(e){ console.error('[Karlstad] map load failed', e); })
+      .catch(function(e){
+        console.error('[Karlstad] map load failed', e);
+        var er=document.getElementById('err'); if(er) er.textContent='KARLSTAD.MAP failed: '+e;
+      })
       .finally(function(){ try{Module.removeRunDependency('karlstad-map')}catch(e){} });
   }
 '''
@@ -108,12 +118,20 @@ def patch(src: str) -> str:
     old = "var a = ['-nosetup'];"
     if old not in src:
         raise RuntimeError('Could not find EDuke32 argument list')
-    src = src.replace(old, "var a = ['-nosetup','-nologo','-map','KARLSTAD.MAP'];", 1)
+    src = src.replace(
+        old,
+        "var a = ['-nosetup']; if (kcKarlstadMode()) a.push('-nologo','-map','KARLSTAD.MAP');",
+        1
+    )
 
     old_pre = '    preRun: [function () {'
     if old_pre not in src:
         raise RuntimeError('Could not find preRun')
-    src = src.replace(old_pre, '    preRun: [loadKarlstadMap, function () {', 1)
+    src = src.replace(
+        old_pre,
+        "    preRun: [loadKarlstadMap, function () { if (kcSafeMode()) { try { localStorage.removeItem('eduke32/cfg/eduke32.cfg'); localStorage.removeItem('eduke32/cfg/settings.cfg'); localStorage.removeItem('eduke32/cfg/m32_settings.cfg'); } catch(e) {} }",
+        1
+    )
 
     # Keep classic pixels sharp but not forced blocky scaling on modern screens.
     src = src.replace('image-rendering:pixelated;', 'image-rendering:auto;')
