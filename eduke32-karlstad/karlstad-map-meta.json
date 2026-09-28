@@ -10,8 +10,8 @@
     "lat": 59.37988
   },
   "units_per_m": 512.0,
-  "building_loops": 109,
-  "walls": 612,
+  "building_loops": 57,
+  "walls": 342,
   "sprites": 5,
-  "size_bytes": 19870
+  "size_bytes": 11230
 }
