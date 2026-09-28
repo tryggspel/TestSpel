@@ -46,3 +46,11 @@ V34 intentionally stays on Babylon.js. The immediate problem was not the lack of
 
 Public URL:
 https://tryggspel.github.io/TestSpel/karlstad-city-mobile/
+
+
+## V34.1 emergency gameplay fix
+- Ground/road/sidewalk/paving/floor collisions no longer trigger `STÄNGT · GÅ RUNT`.
+- Floor contact no longer increments anti-stuck or teleports the player, which caused the apparent freeze on Stora torget.
+- Small street props and street-sign poles are non-blocking on touch devices.
+- Building feedback is reserved for real building-like obstacles.
+- Collision pushback is reduced to remove rubber-band movement.
