@@ -12,12 +12,14 @@ const bark=document.getElementById('bark');
 const ORIGIN={lat:59.380767,lon:13.50295};
 const MALL={lat:59.37988,lon:13.50055};
 const OLEARYS={lat:59.380512,lon:13.503791};
+const MARIEBERG={lat:59.36883,lon:13.48725};
 const RADIUS=260;
+const REMOTE_HERO_RADIUS=500;
 const PLAYER_RADIUS=0.42;
 const EYE=1.68;
 const CORE_LOCK=Object.freeze({version:'1.3.0',baseline:'1.2.2',lookSensitivity:.12,walkSpeed:7.2,sprintMultiplier:1.55,jumpVelocity:6.2,gravity:16,playerRadius:.42,mobileMaxPixelRatio:1.25,desktopMaxPixelRatio:1.6,maxBuildings:95,detailRadius:92});
 window.KarlstadCoreLock=CORE_LOCK;
-const GRAPHICS_PASS=Object.freeze({version:'1.5.0',core:'1.3.0',mode:'stylized-content',heroBudget:6,rule:'no-core-feel-changes'});
+const GRAPHICS_PASS=Object.freeze({version:'1.6.0',core:'1.3.0',mode:'landmark-identity',heroBudget:8,rule:'no-core-feel-changes'});
 window.KarlstadGraphicsPass=GRAPHICS_PASS;
 const TOUCH_TUNE=Object.freeze({deadzone:.13,expo:.42,maxStick:.34,lookScale:.9});
 let app,player,camera,yaw=54,pitch=-5;
@@ -286,6 +288,54 @@ function addContentGraphicsPass15(){
   addPickup(mx+7,mz+4,'xp',30);
 }
 
+function addLandmarkIdentityPass16(){
+  // 1.6 remains deliberately cheap: static primitives only, no textures,
+  // no new per-frame systems and no changes to Core Lock movement/camera.
+  const [ox,oz]=localXY(OLEARYS.lon,OLEARYS.lat);
+  // O'Learys: stronger sports-bar silhouette and a visible street-side badge.
+  addBox('g16-olearys-sign-back',ox-.43,4.62,oz,.10,.82,9.25,M.olearysDark);
+  addBox('g16-olearys-sign-face',ox-.49,4.62,oz,.08,.48,8.45,M.marking);
+  addCylinder('g16-olearys-badge',ox-.62,4.05,oz-5.55,.43,.18,M.olearysGreen);
+  addCylinder('g16-olearys-badge-ring',ox-.68,4.05,oz-5.55,.28,.20,M.marking);
+
+  // Mitt i City: make the entrance read as the shopping-hub objective at a glance.
+  const [mx,mz]=localXY(MALL.lon,MALL.lat);
+  addBox('g16-mitt-entry-glass',mx,2.35,mz-.72,7.8,4.25,.16,M.glass);
+  addBox('g16-mitt-entry-header',mx,4.85,mz-.86,9.4,.72,.18,M.light);
+  addBox('g16-mitt-entry-accent',mx,5.43,mz-.92,6.1,.18,.20,M.accent);
+  addPlanter(mx-6.2,mz-2.2); addPlanter(mx+6.2,mz-2.2);
+
+  // Sandgrund approach: a light promenade extension toward the real museum.
+  // The actual OSM building is selectively admitted by addBuildings().
+  addBox('g16-sandgrund-promenade',-8,.008,-338,8,.035,250,M.sidewalk);
+  for(let z=-235;z>=-430;z-=38) addLamp(-12,z);
+
+  // Mariebergsskogen is a destination marker in 1.6, not a full zone yet.
+  // Use the real bearing, clamped to the edge of the current playable district.
+  const [rx,rz]=localXY(MARIEBERG.lon,MARIEBERG.lat);
+  const len=Math.hypot(rx,rz)||1, edge=RADIUS-24;
+  const px=rx/len*edge, pz=rz/len*edge;
+  addBox('g16-marieberg-gate-l',px-3.2,2.0,pz,.55,4.0,.55,M.trunk);
+  addBox('g16-marieberg-gate-r',px+3.2,2.0,pz,.55,4.0,.55,M.trunk);
+  addBox('g16-marieberg-gate-top',px,3.85,pz,7.0,.5,.65,M.park||M.tree);
+  addSphere('g16-marieberg-marker',px,5.25,pz,.72,M.marker);
+  addTree(px-5.6,pz+2.4,.8); addTree(px+5.4,pz+2.8,.9); addTree(px,pz+5.8,.82);
+  addPickup(px,pz-3.2,'energy',40);
+}
+
+function addHeroLandmarkPass16(b){
+  const n=b.name||'';
+  if(/Sandgrund|Lars Lerin/i.test(n)){
+    const frontZ=b.cz-b.sz/2-.16;
+    const w=Math.max(7,Math.min(16,b.sx*.86));
+    addBox('g16-sandgrund-glass-ribbon',b.cx,2.15,frontZ-.06,w,2.75,.14,M.windowCool);
+    addBox('g16-sandgrund-white-band',b.cx,3.9,frontZ-.11,w*.96,.36,.17,M.light);
+    addBox('g16-sandgrund-lerin-sign',b.cx,5.15,frontZ-.19,Math.min(10,w*.68),.72,.18,M.marker);
+    addBox('g16-sandgrund-entry',b.cx,1.35,frontZ-.21,2.15,2.6,.18,M.door);
+    addPlanter(b.cx-4.8,frontZ-1.9); addPlanter(b.cx+4.8,frontZ-1.9);
+  }
+}
+
 function addStreetProps(){
   const trees=[
     [-22,-25],[-13,-27],[14,-26],[24,-22],[-35,5],[-36,18],[34,4],[36,18],
@@ -325,7 +375,7 @@ function initScene(){
   M.energy=mat(0xf4c542,.02,.68);
 
   // Big, cheap surfaces first: readable city structure without texture downloads.
-  addBox('ground',0,-.35,0,620,.6,620,M.ground);
+  addBox('ground',0,-.35,-95,760,.6,950,M.ground);
   addBox('road-v',-26,-.03,0,10,.12,520,M.road);
   addBox('road-h',0,-.025,20,520,.11,9,M.road);
   addBox('sidewalk-v-l',-32,.015,0,2.6,.06,520,M.sidewalk);
@@ -367,6 +417,7 @@ function initScene(){
   // Enhancement passes are fail-soft: never let content detail kill the playable base scene.
   try { addGraphicsPass12(); } catch(e) { console.error('[Graphics 1.2 decorations skipped]',e); }
   try { addContentGraphicsPass15(); } catch(e) { console.error('[Content/Graphics 1.5 skipped]',e); }
+  try { addLandmarkIdentityPass16(); } catch(e) { console.error('[Landmark Identity 1.6 skipped]',e); }
 
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
   objectiveMarker=addCylinder('mitt-i-city-marker',mx,5,mz,.72,10,M.marker);
@@ -391,7 +442,9 @@ function addBuildings(osm){
     const t=e.tags||{}; if(!t.building) continue;
     const pts=e.geometry.map(p=>localXY(+p.lon,+p.lat));
     const cx=pts.reduce((s,p)=>s+p[0],0)/pts.length, cz=pts.reduce((s,p)=>s+p[1],0)/pts.length;
-    const dist=Math.hypot(cx,cz); if(dist>RADIUS) continue;
+    const dist=Math.hypot(cx,cz);
+    const remoteHero=/Sandgrund|Lars Lerin/i.test(t.name||t['building:name']||'');
+    if(dist>RADIUS && !(remoteHero && dist<=REMOTE_HERO_RADIUS)) continue;
     const area=polygonArea(pts); if(area<18) continue;
     let minx=Infinity,maxx=-Infinity,minz=Infinity,maxz=-Infinity;
     pts.forEach(p=>{minx=Math.min(minx,p[0]);maxx=Math.max(maxx,p[0]);minz=Math.min(minz,p[1]);maxz=Math.max(maxz,p[1]);});
@@ -420,6 +473,7 @@ function addBuildings(osm){
     }
     try { addFacadePass12(b,hero,seed); } catch(e) { console.warn('[Facade detail skipped]',b.name||b.cx,e); }
     if(hero){ try { addHeroLandmarkPass14(b); } catch(e) { console.warn('[Graphics 1.4 hero detail skipped]',b.name||b.cx,e); } }
+    if(hero){ try { addHeroLandmarkPass16(b); } catch(e) { console.warn('[Landmark Identity 1.6 hero detail skipped]',b.name||b.cx,e); } }
 
     colliders.push({minx:b.cx-b.sx/2-.15,maxx:b.cx+b.sx/2+.15,minz:b.cz-b.sz/2-.15,maxz:b.cz+b.sz/2+.15});
     count++;
@@ -556,7 +610,7 @@ async function boot(){
     const osm=await r.json();
     bootStage='Byggnader';
     const n=addBuildings(osm);
-    loadText.textContent='Lägger Core Lock 1.3 + Content/Graphics 1.5… '+n+' byggnader'; loadBar.style.width='82%';
+    loadText.textContent='Lägger Core Lock 1.3 + Landmark Identity 1.6… '+n+' byggnader'; loadBar.style.width='82%';
 
     bootStage='Kontroller';
     setupDesktop();setupTouch();
