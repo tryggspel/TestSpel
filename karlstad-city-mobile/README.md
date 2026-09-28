@@ -1,50 +1,48 @@
-# Karlstad City V33 — Sharp City
+# Karlstad City V34 — Playable Core
 
-V33 focuses on the two issues that were hurting the build most: the expanded map blocking play, and the 3D world looking grainy/low-resolution.
+V34 is a gameplay-first rebuild for iPhone and desktop.
 
-## Automap fix
-- Expanded KARTA is now a **non-blocking translucent automap overlay**.
-- The player can keep walking, looking around and using mobile controls while the large map is visible.
-- The map button remains above the overlay and switches back to MINIKARTA.
-- Expanded map zooms farther out than the minimap so it actually helps orientation instead of just enlarging the same view.
-- Mission route, landmarks, blocked buildings and water remain visible.
+## What was wrong
+The V33 scene became too expensive on iPhone and the HUD had too many overlapping controls. The joystick movement also injected large per-frame camera movement, which made collisions feel jerky.
 
-## Sharp rendering
-- Balanced mode now renders at **native hardware scaling (1.0)** on iPhone/mobile.
-- Sharp mode uses modest supersampling; FPS mode remains available.
-- Reduced excessive sharpen and contrast that were amplifying noise.
-- Fog is reduced substantially.
-- Bloom is reduced so edges stay clean.
-- Mobile shadow map increased and PCF quality unified.
+## V34 movement
+- New joystick dead-zone and acceleration/deceleration smoothing.
+- Movement speed is substantially reduced from the old raw camera-direction injection.
+- Full joystick throw automatically enables sprint on touch.
+- The separate RUN button is hidden on touch so the left thumb area stays clear.
+- Starting manual joystick movement cancels Auto Tour immediately.
 
-## Materials
-- The old 128px procedural surfaces were replaced with cleaner **512px deterministic textures**.
-- Asphalt no longer uses the high-frequency micro-grain bump that made the image crawl/shimmer.
-- Sidewalks and square paving use larger, cleaner slab patterns.
-- Texture anisotropic filtering is increased.
-- Glass/metal/water keep PBR reflection but with cleaner material response.
-- More central facades get readable ground-floor storefront glass/awnings.
+## V34 mobile HUD
+- Joystick gets a dedicated bottom-left zone above every other layer.
+- Quick-travel buttons are hidden during normal touch play.
+- The top navigation is reduced to the important controls.
+- Zombie-only FIRE/AIM/RELOAD buttons are completely hidden in city mode.
+- Expanded map stays on the right side instead of covering the centre of play.
 
-## Duke-inspired readability
-The reference is level-design clarity, not copied art/assets:
-- clear street edges,
-- readable building masses,
-- obvious entrances,
-- strong signs and wayfinding,
-- a central enterable destination,
-- an automap that can stay visible while playing.
+## V34 performance
+- iPhone/iPad uses the stable WebGL path instead of attempting WebGPU.
+- Mobile shadow map reduced from 1536 to 512.
+- Bloom disabled on touch; FXAA and a light sharpen remain.
+- Generic building detail budgets are reduced on mobile while hero landmarks remain.
+- Mobile tree count is reduced.
+- Imported NPC/car/bus meshes use cheap contact shadows on touch instead of dynamic shadow casting.
+- Balanced quality is adaptive: it starts around 1.18 hardware scaling and moves toward smoother or sharper rendering based on measured FPS.
+- Map redraw and spatial-audio updates are throttled.
 
-V33 adds crisp curb strips on the main central streets, pavement arrows between Stora torget and Mitt i City, a stronger Mitt i City entrance portal, and a few high-contrast city signs/billboards.
+## Navigation / map
+- The minimap now falls back to the already-built real-city road/building geometry if the raw OSM snapshot is unavailable.
+- Expanded map remains non-blocking.
 
-## Existing V32 gameplay retained
-- Hero District
-- Stora torget → Mitt i City mission loop
-- Domkyrkan, Rådhuset, Sandgrund, Museum
-- VISA VÄGEN
-- quick travel
-- Sola collectibles
-- city/zombie modes
-- collisions / anti-stuck / water / traffic audio
+## LED MIG / Auto Tour
+- LED MIG now plays the city mission automatically.
+- Auto Tour temporarily disables world collisions so the tour cannot get trapped on bollards, pedestrians or facade edges.
+- It walks to Mira, follows the route to Mitt i City, enters to the Centervärd, collects the emergency radio and returns to Stora torget.
+- Manual camera look still works during the tour.
+- Touching the joystick stops the tour and returns control to the player.
+- Normal collisions and gravity are restored when the tour stops.
+
+## Engine direction
+V34 intentionally stays on Babylon.js. The immediate problem was not the lack of a game engine; Babylon is already the web 3D engine driving the project. The next decision about Unity/Unreal should be made after this browser build has a stable, enjoyable core loop.
 
 Public URL:
 https://tryggspel.github.io/TestSpel/karlstad-city-mobile/
