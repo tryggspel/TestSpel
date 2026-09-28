@@ -22,7 +22,9 @@ h1 span{color:#e2bb52}p{color:#bbb;line-height:1.45}
 button{border:0;border-radius:12px;padding:18px 14px;font-weight:850;font-size:16px;cursor:pointer}
 #play{background:#e0ba52;color:#0d0d0d}
 #zombie{background:#8f1717;color:white}
+#city{margin-top:12px;width:100%;background:#314527;color:#f2f3e8}
 #stop{margin-top:12px;width:100%;background:#202226;color:#eee}
+.version{display:inline-block;margin-top:10px;padding:4px 8px;border:1px solid #3a3a3a;border-radius:999px;color:#9f9f9f;font-size:10px;letter-spacing:.12em}
 #zombie.active{animation:pulse .65s infinite alternate}
 @keyframes pulse{to{background:#d32020;box-shadow:0 0 28px #b00}}
 .note{font-size:12px;color:#777;margin-top:18px}
@@ -32,22 +34,57 @@ button{border:0;border-radius:12px;padding:18px 14px;font-weight:850;font-size:1
 <main class="card">
 <div class="kicker">Karlstad City · Soundtrack prototype</div>
 <h1>Karlstad <span>After Dark</span></h1>
-<p>Ett originaltema med svensk/värmländsk tonkänsla, en liten Karlstad/FBK-läktarblinkning och 90-tals-FPS-attityd. När Zombie Mode aktiveras bryts samma musikaliska identitet sönder till ett mörkare, snabbare industrisound.</p>
+<p>Ett originalt Karlstad-tema med värmländsk tonkänsla, arenaenergi, filmiska stråk, tung rock/FPS-attityd och ett eget lokalt läktarmotiv. När Zombie Mode aktiveras bryts samma musikaliska identitet sönder till ett mörkare, snabbare industrisound.</p>
 <div class="mode"><strong id="mode">Klar att spela</strong><small id="status">Tryck på en knapp – iPhone kräver en aktiv touch för ljud.</small></div>
 <div class="row">
 <button id="play">▶ KARLSTAD → ZOMBIE</button>
 <button id="zombie">☣ ZOMBIE MODE NU</button>
 </div>
+<button id="city">🎸 BARA KARLSTAD CITY</button>
 <button id="stop">■ STOPP</button>
-<div class="note">Syntbaserad prototyp direkt i webbläsaren. Normalmusiken öppnar nu med en kort FBK-matchkväll-känsla, original stråk + läktarkör/handklapp. I Zombie Mode hörs samma lokala identitet långt bort och förvrängd. Ingen ljudfil behöver laddas ner.</div>
+<div class="version">WORLD-CLASS AUDIO PROTOTYPE V6</div>
+<div class="note">V6 bygger hela soundtracket direkt i Web Audio: filmiska stråk, stereogitarrer, growl-bas, live-liknande trummor, hero lead, arena-kör och mastering. Zombie Mode vrider samma Karlstad-identitet till tung industrial horror.</div>
 </main>
 <script>
-let ctx=null, master=null, timers=[];
+let ctx=null, master=null, timers=[],roomVerb=null,roomGain=null;
 const A=440, midi=n=>A*Math.pow(2,(n-69)/12);
+function softCurve(amount=2.2){
+  const n=1024,curve=new Float32Array(n);
+  for(let i=0;i<n;i++){const x=i*2/(n-1)-1;curve[i]=Math.tanh(amount*x)/Math.tanh(amount)}
+  return curve;
+}
+function makeImpulse(seconds=2.1,decay=3.1){
+  const len=Math.floor(ctx.sampleRate*seconds),b=ctx.createBuffer(2,len,ctx.sampleRate);
+  for(let ch=0;ch<2;ch++){
+    const a=b.getChannelData(ch);
+    for(let i=0;i<len;i++){
+      const x=i/len;
+      a[i]=(Math.random()*2-1)*Math.pow(1-x,decay)*(ch?0.92:1);
+    }
+  }
+  return b;
+}
 function boot(){
   if(ctx) try{ctx.close()}catch(e){}
   ctx=new (window.AudioContext||window.webkitAudioContext)();
-  master=ctx.createGain(); master.gain.value=.62; master.connect(ctx.destination);
+
+  master=ctx.createGain(); master.gain.value=.78;
+
+  const comp=ctx.createDynamicsCompressor();
+  comp.threshold.value=-18;comp.knee.value=18;comp.ratio.value=3.4;comp.attack.value=.012;comp.release.value=.22;
+
+  const clip=ctx.createWaveShaper();clip.curve=softCurve(1.65);clip.oversample="2x";
+  const final=ctx.createGain();final.gain.value=.86;
+
+  roomVerb=ctx.createConvolver();roomVerb.buffer=makeImpulse(2.2,3.2);
+  roomGain=ctx.createGain();roomGain.gain.value=.18;
+
+  master.connect(comp);roomVerb.connect(roomGain);roomGain.connect(comp);
+  comp.connect(clip);clip.connect(final);final.connect(ctx.destination);
+}
+function sendRoom(node,amount=.16){
+  if(!roomVerb)return;
+  const g=ctx.createGain();g.gain.value=amount;node.connect(g);g.connect(roomVerb);
 }
 function envGain(t,d,v,a=.008,r=.08){
   const g=ctx.createGain(); g.gain.setValueAtTime(0,t);
@@ -91,7 +128,7 @@ function stringNote(n,t,d,v=.055){
   g.gain.linearRampToValueAtTime(v,t+.09);
   g.gain.setValueAtTime(v,Math.max(t+.1,t+d-.18));
   g.gain.exponentialRampToValueAtTime(.0001,t+d);
-  o1.connect(f);o2.connect(f);f.connect(g);g.connect(master);
+  o1.connect(f);o2.connect(f);f.connect(g);g.connect(master);sendRoom(g,.24);
   o1.start(t);o2.start(t);vib.start(t);
   o1.stop(t+d+.03);o2.stop(t+d+.03);vib.stop(t+d+.03);
 }
@@ -248,25 +285,166 @@ function hauntedArenaChant(start,bars,b){
     });
   }
 }
-function mainSection(start,bars=8){
-  const bpm=105,b=60/bpm,roots=[38,41,36,43];
-  const chords=[[50,57,62],[53,60,65],[48,55,60],[55,62,67]];
-  const mel=[62,65,67,69,67,65,64,62,60,62,65,67,65,64,62,57];
+
+function snare(t,v=.18){
+  const len=Math.ceil(ctx.sampleRate*.19),b=ctx.createBuffer(1,len,ctx.sampleRate),a=b.getChannelData(0);
+  for(let i=0;i<len;i++)a[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.3);
+  const s=ctx.createBufferSource(),hp=ctx.createBiquadFilter(),g=ctx.createGain();
+  hp.type="highpass";hp.frequency.value=950;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.19);
+  s.buffer=b;s.connect(hp);hp.connect(g);g.connect(master);sendRoom(g,.13);s.start(t);s.stop(t+.2);
+  tone(50,t,.10,v*.32,"triangle");
+}
+function cymbal(t,v=.055,d=.38){
+  const len=Math.ceil(ctx.sampleRate*d),b=ctx.createBuffer(1,len,ctx.sampleRate),a=b.getChannelData(0);
+  for(let i=0;i<len;i++)a[i]=(Math.random()*2-1)*Math.pow(1-i/len,1.45);
+  const s=ctx.createBufferSource(),hp=ctx.createBiquadFilter(),g=ctx.createGain();
+  hp.type="highpass";hp.frequency.value=4200;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  s.buffer=b;s.connect(hp);hp.connect(g);g.connect(master);sendRoom(g,.18);s.start(t);s.stop(t+d);
+}
+function tom(t,n=43,v=.15){
+  const o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.setValueAtTime(midi(n)*1.5,t);o.frequency.exponentialRampToValueAtTime(midi(n),t+.18);
+  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+.3);o.connect(g);g.connect(master);sendRoom(g,.12);o.start(t);o.stop(t+.31);
+}
+function subDrop(t,d=.8,v=.22){
+  const o=ctx.createOscillator(),g=ctx.createGain();o.type="sine";o.frequency.setValueAtTime(80,t);o.frequency.exponentialRampToValueAtTime(28,t+d);
+  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(master);o.start(t);o.stop(t+d+.02);
+}
+function bassGrowl(n,t,d,v=.09){
+  const mix=ctx.createGain(),lp=ctx.createBiquadFilter(),sh=ctx.createWaveShaper(),g=ctx.createGain();
+  const o1=ctx.createOscillator(),o2=ctx.createOscillator();
+  o1.type="sawtooth";o2.type="square";o1.frequency.value=midi(n);o2.frequency.value=midi(n)*.5;
+  lp.type="lowpass";lp.frequency.value=520;lp.Q.value=1.1;sh.curve=softCurve(2.8);sh.oversample="2x";
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+.012);g.gain.setValueAtTime(v*.78,t+d*.68);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o1.connect(mix);o2.connect(mix);mix.connect(lp);lp.connect(sh);sh.connect(g);g.connect(master);
+  o1.start(t);o2.start(t);o1.stop(t+d+.02);o2.stop(t+d+.02);
+}
+function guitarNote(n,t,d,v=.055,pan=0,muted=false){
+  const pre=ctx.createGain(),bp=ctx.createBiquadFilter(),lp=ctx.createBiquadFilter(),sh=ctx.createWaveShaper(),amp=ctx.createGain();
+  const p=ctx.createStereoPanner?ctx.createStereoPanner():null;
+  const os=[ctx.createOscillator(),ctx.createOscillator(),ctx.createOscillator()];
+  os[0].type="sawtooth";os[1].type="square";os[2].type="triangle";
+  os[0].frequency.value=midi(n);os[1].frequency.value=midi(n)*Math.pow(2,5/1200);os[2].frequency.value=midi(n+12);
+  pre.gain.value=.32;bp.type="bandpass";bp.frequency.value=1450;bp.Q.value=.72;lp.type="lowpass";lp.frequency.value=muted?2100:3300;
+  sh.curve=softCurve(muted?4.6:3.6);sh.oversample="4x";
+  amp.gain.setValueAtTime(.0001,t);amp.gain.linearRampToValueAtTime(v,t+.006);
+  amp.gain.setValueAtTime(v*(muted?.52:.82),t+d*(muted?.38:.72));amp.gain.exponentialRampToValueAtTime(.0001,t+d);
+  os.forEach(o=>o.connect(pre));pre.connect(bp);bp.connect(lp);lp.connect(sh);sh.connect(amp);
+  if(p){amp.connect(p);p.pan.value=pan;p.connect(master);sendRoom(p,muted?.045:.09)}else{amp.connect(master);sendRoom(amp,.07)}
+  os.forEach(o=>{o.start(t);o.stop(t+d+.025)});
+}
+function powerChord(root,t,d,v=.05,muted=false){
+  guitarNote(root,t,d,v,-.62,muted);guitarNote(root+7,t,d,v*.83,.62,muted);guitarNote(root+12,t,d,v*.48,-.18,muted);
+}
+function heroLead(n,t,d,v=.045){
+  const bus=ctx.createGain(),f=ctx.createBiquadFilter(),g=ctx.createGain(),p=ctx.createStereoPanner?ctx.createStereoPanner():null;
+  const o1=ctx.createOscillator(),o2=ctx.createOscillator(),lfo=ctx.createOscillator(),lg=ctx.createGain();
+  o1.type="sawtooth";o2.type="triangle";o1.frequency.value=midi(n);o2.frequency.value=midi(n)*Math.pow(2,8/1200);
+  lfo.frequency.value=5.4;lg.gain.value=2.8;lfo.connect(lg);lg.connect(o1.frequency);lg.connect(o2.frequency);
+  f.type="lowpass";f.frequency.setValueAtTime(1500,t);f.frequency.linearRampToValueAtTime(2700,t+.08);f.Q.value=1.25;
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+.018);g.gain.setValueAtTime(v*.82,t+d*.72);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o1.connect(bus);o2.connect(bus);bus.connect(f);f.connect(g);
+  if(p){g.connect(p);p.pan.value=.08;p.connect(master);sendRoom(p,.22)}else{g.connect(master);sendRoom(g,.2)}
+  o1.start(t);o2.start(t);lfo.start(t);o1.stop(t+d+.03);o2.stop(t+d+.03);lfo.stop(t+d+.03);
+}
+function cinematicStrings(start,bars,b){
+  const prog=[[50,57,62,65],[53,60,65,69],[48,55,60,64],[55,62,67,71]];
   for(let bar=0;bar<bars;bar++){
-    const st=start+bar*4*b; pad(chords[bar%4],st,4*b,.12);
-    for(let q=0;q<4;q++){
-      tone(roots[bar%4],st+q*b,b*.85,.11,"square");
-      kick(st+q*b,q%2===0?.28:.17);noise(st+(q+.5)*b,.045,.025);
+    const st=start+bar*4*b,notes=prog[bar%4];
+    notes.forEach((n,i)=>{
+      stringNote(n+(i>1?12:0),st,3.85*b,.018+(i*.003));
+    });
+    if(bar>=4){
+      [0,1.5,2.5,3.25].forEach((o,i)=>stringNote(notes[(i+1)%notes.length]+12,st+o*b,.42*b,.024));
     }
-    noise(st+b,.12,.07);noise(st+3*b,.12,.08);
   }
+}
+function cityRockLayer(start,bars,b){
+  const roots=[38,41,36,43];
+  for(let bar=0;bar<bars;bar++){
+    const st=start+bar*4*b,r=roots[bar%4];
+    if(bar<4){
+      [0,1.5,2.75].forEach((o,i)=>guitarNote(r+12+(i%2?7:0),st+o*b,.36*b,.026,i%2?.45:-.45,true));
+    }else{
+      [0,.75,1.5,2.5,3.25].forEach((o,i)=>powerChord(r,st+o*b,(i===2?.44:.26)*b,.026+(bar>=8?.008:0),i!==2));
+      if(bar>=8){powerChord(r+7,st+3.62*b,.30*b,.030,true)}
+    }
+  }
+}
+function cityDrums(start,bars,b){
+  for(let bar=0;bar<bars;bar++){
+    const st=start+bar*4*b;
+    if(bar<2){
+      kick(st,.23);kick(st+2*b,.19);noise(st+.5*b,.04,.018);noise(st+2.5*b,.04,.018);
+    }else{
+      [0,1.5,2,3.5].forEach((o,i)=>kick(st+o*b,.23+(i===0?.07:0)));
+      snare(st+b,.13);snare(st+3*b,.15);
+      for(let e=0;e<8;e++)noise(st+e*.5*b,.035,e%2?.023:.032);
+      if(bar===3||bar===7||bar===11){tom(st+3.18*b,45,.11);tom(st+3.48*b,43,.12);tom(st+3.72*b,40,.14);cymbal(st+3.92*b,.05,.5)}
+    }
+  }
+}
+function cityBass(start,bars,b){
+  const roots=[38,41,36,43];
+  for(let bar=0;bar<bars;bar++){
+    const st=start+bar*4*b,r=roots[bar%4];
+    const seq=bar<4?[0,2]:[0,.75,1.5,2,2.75,3.5];
+    seq.forEach((o,i)=>bassGrowl(r+(i===seq.length-1&&bar%2?7:0),st+o*b,(bar<4?.72:.42)*b,.07+(bar>=8?.012:0)));
+  }
+}
+function zombieMetalLayer(start,bars,b){
+  const roots=[38,39,44,37],pattern=[0,.5,1,1.5,2.25,2.5,3.25,3.5];
+  for(let bar=0;bar<bars;bar++){
+    const st=start+bar*4*b,r=roots[bar%4];
+    pattern.forEach((o,i)=>powerChord(r,st+o*b,(i===4?.34:.20)*b,.034+(bar>=4?.008:0),i!==4));
+    if(bar%4===3) powerChord(r+6,st+3.72*b,.20*b,.043,false);
+  }
+}
+function zombieDrums(start,bars,b){
+  for(let bar=0;bar<bars;bar++){
+    const st=start+bar*4*b;
+    for(let e=0;e<8;e++){kick(st+e*.5*b,e%4===0?.36:.22);noise(st+e*.5*b,.028,.035)}
+    snare(st+b,.20);snare(st+3*b,.22);
+    if(bar%2===1){kick(st+3.25*b,.25);kick(st+3.5*b,.28);kick(st+3.75*b,.31)}
+    if(bar%4===3){tom(st+3.05*b,43,.15);tom(st+3.3*b,40,.17);tom(st+3.55*b,38,.19);cymbal(st+3.82*b,.075,.65)}
+  }
+}
+function zombieAtmosphere(start,bars,b){
+  for(let bar=0;bar<bars;bar+=2){
+    const st=start+bar*4*b;
+    subDrop(st,.9,.18);
+    const n=[26,27,32,25][(bar/2)%4];
+    tone(n,st,6.8*b,.045,"sawtooth");
+    tone(n+6,st+.12,6.6*b,.018,"sawtooth");
+  }
+}
+
+function mainSection(start,bars=12){
+  const bpm=108,b=60/bpm;
+  const mel=[62,65,67,69,67,65,64,62,60,62,65,67,65,64,62,57];
+
+  cinematicStrings(start,bars,b);
+  cityBass(start,bars,b);
+  cityDrums(start,bars,b);
+  cityRockLayer(start,bars,b);
+
+  // Original Karlstad hero motif, now carried by a richer lead.
   for(let cyc=0;cyc<bars;cyc+=4){
     const st=start+cyc*4*b;
-    mel.forEach((n,i)=>{tone(n+12,st+i*.5*b,.42*b,.065,"square");if(i%4===0)tone(n,st+i*.5*b+.07,.34*b,.025,"triangle")});
+    mel.forEach((n,i)=>{
+      const boost=cyc>=8?1.18:(cyc>=4?1.06:.88);
+      heroLead(n+12,st+i*.5*b,.40*b,.038*boost);
+      if(i%4===0) stringNote(n,st+i*.5*b+.06,.34*b,.018*boost);
+    });
   }
-  // Warm Karlstad/arena signature only in normal mode.
+
   karlstadTerraceStrings(start,bars,b);
   karlstadTerraceCrowd(start,bars,b);
+
+  // Final-bar lift before the world collapses.
+  const end=start+(bars-1)*4*b;
+  [62,65,69,74].forEach((n,i)=>heroLead(n+12,end+(2.05+i*.42)*b,.34*b,.048+i*.004));
+  cymbal(end+3.82*b,.075,.65);
+
   return bars*4*b;
 }
 function siren(start,d=2.6){
@@ -277,24 +455,31 @@ function siren(start,d=2.6){
   for(let x=0;x<9;x++)noise(start+x*d/9,.08,.025+x*.009);
   kick(start+d-.28,.65);tone(26,start+d-.27,.26,.28,"sine");
 }
-function zombieSection(start,bars=10){
-  const bpm=140,b=60/bpm,roots=[38,39,44,37];
+function zombieSection(start,bars=12){
+  const bpm=144,b=60/bpm;
   const mel=[62,63,68,67,63,62,56,57,62,61,56,63,62,57,56,51];
-  const sh=ctx.createWaveShaper(),drive=ctx.createGain();drive.gain.value=.8;
-  const curve=new Float32Array(512);for(let i=0;i<curve.length;i++){let x=i*2/(curve.length-1)-1;curve[i]=Math.tanh(3*x)}
-  sh.curve=curve;drive.connect(sh);sh.connect(master);
-  for(let bar=0;bar<bars;bar++){
-    const st=start+bar*4*b,r=roots[bar%4];
-    tone(r-12,st,4*b,.08,"sawtooth",0,drive);tone(r+6,st,4*b,.035,"sawtooth",0,drive);
-    for(let s=0;s<8;s++)tone(r,st+s*.5*b,.43*b,.105,"square",0,drive);
-    for(let q=0;q<4;q++){kick(st+q*b,q%2===0?.43:.26);noise(st+(q+.5)*b,.045,.05)}
-    noise(st+b,.11,.13);noise(st+3*b,.11,.14);
-  }
+
+  zombieAtmosphere(start,bars,b);
+  zombieDrums(start,bars,b);
+  zombieMetalLayer(start,bars,b);
+
+  // The same Karlstad identity survives, but corrupted by semitones and tritones.
   for(let cyc=0;cyc<bars;cyc+=4){
     const st=start+cyc*4*b;
-    mel.forEach((n,i)=>tone(n+12,st+i*.5*b,.38*b,.085,"square",0,drive));
+    mel.forEach((n,i)=>{
+      guitarNote(n+12,st+i*.5*b,.32*b,.038,i%2?.36:-.36,false);
+      if(i===2||i===6||i===10||i===14) tone(n-12,st+i*.5*b,.56*b,.035,"sawtooth");
+    });
   }
+
   hauntedArenaChant(start,bars,b);
+
+  // Apocalyptic end punctuation.
+  for(let bar=3;bar<bars;bar+=4){
+    const st=start+bar*4*b;
+    subDrop(st+3.48*b,.72,.25);
+  }
+
   return bars*4*b;
 }
 function setMode(title,sub,z=false){
@@ -307,16 +492,23 @@ function clearAll(){timers.forEach(clearTimeout);timers=[]}
 document.getElementById("play").onclick=async()=>{
   clearAll();boot();await ctx.resume();
   const t=ctx.currentTime+.08,intro=matchNightIntro(t);
-  const mainStart=t+intro,d=mainSection(mainStart,8);
-  siren(mainStart+d,2.6);zombieSection(mainStart+d+2.6,10);
+  const mainStart=t+intro,d=mainSection(mainStart,12);
+  siren(mainStart+d,2.9);subDrop(mainStart+d+2.62,.75,.30);zombieSection(mainStart+d+2.9,12);
   setMode("FBK-MATCHKVÄLL","Läktaren vaknar till liv innan Karlstad City-temat tar över.",false);
   later((intro-.15)*1000,()=>setMode("KARLSTAD CITY","Stadspuls, stråk och läktarkör går över i gameplay.",false));
   later((intro+d-1.0)*1000,()=>setMode("NÅGOT ÄR FEL…","Siren. Strömmen dör. Läktaren försvinner.",true));
-  later((intro+d+2.55)*1000,()=>setMode("☣ ZOMBIE APOCALYPSE","Den gamla läktarkören hörs nu långt bort, långsam och förvrängd.",true));
+  later((intro+d+2.82)*1000,()=>setMode("☣ ZOMBIE APOCALYPSE","Tungt gitarrlager, dubbla trummor och den övergivna läktarkören tar över.",true));
 };
 document.getElementById("zombie").onclick=async()=>{
   clearAll();boot();await ctx.resume();const t=ctx.currentTime+.06;
-  siren(t,.95);zombieSection(t+.95,12);setMode("☣ ZOMBIE APOCALYPSE","Direktläge – övergiven arena, förvrängd läktarkör och industripuls.",true);
+  siren(t,.95);subDrop(t+.72,.65,.28);zombieSection(t+.95,12);setMode("☣ ZOMBIE APOCALYPSE","Direktläge – tungt riff, dubbla trummor, subbas och förvrängd arena.",true);
+};
+document.getElementById("city").onclick=async()=>{
+  clearAll();boot();await ctx.resume();
+  const t=ctx.currentTime+.08,intro=matchNightIntro(t),mainStart=t+intro;
+  mainSection(mainStart,12);
+  setMode("FBK-MATCHKVÄLL","Publiken bygger upp ett eget Karlstad-intro innan huvudtemat tar över.",false);
+  later((intro-.15)*1000,()=>setMode("KARLSTAD CITY","Full version: stråk, gitarr, bas, live-känsla, hero lead och läktarkör.",false));
 };
 document.getElementById("stop").onclick=()=>{
   clearAll();if(ctx){ctx.close();ctx=null}setMode("Stoppad","Välj Karlstad → Zombie eller starta Zombie Mode direkt.",false);
