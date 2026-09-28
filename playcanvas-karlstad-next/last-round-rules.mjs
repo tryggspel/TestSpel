@@ -1,5 +1,5 @@
 // Engine-independent rules for the existing Karlstad City scene.
-export const RULES = Object.freeze({version: '1.0', duration: 90, chargeCost: 40, chargeSeconds: .38, cooldown: .38});
+export const RULES = Object.freeze({version: '1.1', duration: 90, chargeCost: 40, cooldown: .38});
 export function normalizeSeed(value) {
   const n = Number(value);
   return Number.isSafeInteger(n) && n > 0 && n <= 999999 ? n : 280926;
@@ -32,7 +32,7 @@ export class LastRound {
     this.reset();
   }
   reset() {
-    this.phase = 'ready'; this.remaining = RULES.duration; this.elapsed = 0;
+    this.phase = 'ready'; this.remaining = RULES.duration; this.elapsed = 0; this.practice = false;
     this.score = 0; this.energy = 60; this.shots = 0; this.hitShots = 0;
     this.captured = 0; this.bestChain = 0; this.cooldown = 0; this.events = [];
     this.chains = new Map(); this.chargerTimes = [0, 0]; this.contactCooldown = 0;
@@ -40,7 +40,7 @@ export class LastRound {
       mass: a.kind === 'boss' ? 1.6 : a.kind === 'bin' ? .85 : 1,
       active: a.kind !== 'boss', captured: false, vx: 0, vz: 0, shot: 0, touchTime: -100}));
   }
-  start() {this.reset(); this.phase = 'playing';}
+  start({practice = false} = {}) {this.reset(); this.practice = practice; this.phase = 'playing';}
   pause() {if (this.phase === 'playing') this.phase = 'paused';}
   resume() {if (this.phase === 'paused') this.phase = 'playing';}
   drainEvents() {const events = this.events; this.events = []; return events;}
@@ -49,12 +49,13 @@ export class LastRound {
     for (let i = 1; i < n; i++) if (this.blocked(x + (tx - x) * i / n, z + (tz - z) * i / n)) return false;
     return true;
   }
-  shoot({x, z, y = 1.68, dx, dz, dy = 0, held = 0, assist = false}) {
+  shoot({x, z, y = 1.68, dx, dz, dy = 0, power = false, assist = false}) {
     if (this.phase !== 'playing' || this.cooldown > 0) return null;
+    if (power && this.energy < RULES.chargeCost) return null;
     const horizontal = Math.hypot(dx, dz);
     if (horizontal < .05) return null;
     const nx = dx / horizontal, nz = dz / horizontal;
-    const charged = held >= RULES.chargeSeconds && this.energy >= RULES.chargeCost;
+    const charged = power;
     if (charged) this.energy -= RULES.chargeCost;
     this.cooldown = RULES.cooldown; this.shots++;
     const shot = this.shots;
@@ -91,11 +92,11 @@ export class LastRound {
   }
   step(dt, player) {
     if (this.phase !== 'playing' || !Number.isFinite(dt) || dt <= 0) return;
-    const total = Math.min(dt, this.remaining);
+    const total = this.practice ? dt : Math.min(dt, this.remaining);
     let left = total;
     while (left > .00001 && this.phase === 'playing') {
       const h = Math.min(left, 1 / 60); left -= h;
-      this.elapsed += h; this.remaining = Math.max(0, RULES.duration - this.elapsed);
+      this.elapsed += h; this.remaining = this.practice ? RULES.duration : Math.max(0, RULES.duration - this.elapsed);
       this.cooldown = Math.max(0, this.cooldown - h);
       this.contactCooldown = Math.max(0, this.contactCooldown - h);
       this.chargerTimes = this.chargerTimes.map(t => Math.max(0, t - h));
@@ -151,7 +152,7 @@ export class LastRound {
   finish(won) {
     if (this.phase !== 'playing') return;
     this.phase = won ? 'won' : 'lost';
-    this.timeBonus = won ? Math.ceil(this.remaining) * 12 : 0;
+    this.timeBonus = won && !this.practice ? Math.ceil(this.remaining) * 12 : 0;
     this.accuracy = this.shots ? Math.round(this.hitShots / this.shots * 100) : 0;
     this.score += this.timeBonus + (won ? this.accuracy * 2 : 0);
     this.events.push({type: 'finish', won});

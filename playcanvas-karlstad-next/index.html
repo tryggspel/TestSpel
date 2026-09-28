@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#071015">
 <title>Karlstad City · Sista rundan på O’Learys</title>
-<meta name="description" content="Zombiefansen vägrar gå hem. Ladda solstöten, rädda O’Learys och utmana en vän i Karlstad City.">
+<meta name="description" content="Zombiefansen vägrar gå hem. Använd solstötar, rädda O’Learys och utmana en vän i Karlstad City.">
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071015;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
 #game{width:100%;height:100%;display:block;touch-action:none}
@@ -30,8 +30,10 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:9px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=1.8.0">
-<link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">\n<link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">\n</head>
+<link rel="stylesheet" href="./last-round.css?v=1.9.0">
+<link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
+<link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
+</head>
 <body>
 <canvas id="game"></canvas>
 <div id="loading"><div class="loadbox"><strong>KARLSTAD CITY</strong><p id="loadText">Startar PlayCanvas…</p><div class="bar"><i id="loadBar"></i></div></div></div>
@@ -44,21 +46,29 @@
   <div id="error"></div>
   <div id="joy"><i></i></div>
   <div id="look"></div>
-  <div id="buttons"><button id="mapBtn">KARTA</button><button id="useBtn">USE</button><button id="jumpBtn">JUMP</button><button id="fireBtn" class="fire">FIRE</button></div>
+  <div id="buttons">
+    <button id="superBtn" aria-label="Superstöt, kostar 40 solenergi">SUPER<span>40 ENERGI</span></button>
+    <button id="jumpBtn">HOPPA</button>
+    <button id="fireBtn" class="fire" aria-label="Solstöt, tryck för att skjuta">SOLSTÖT<span>TRYCK</span></button>
+  </div>
+  <div id="roundUtilities"><button id="aimAssistBtn" aria-pressed="false">AUTOSIKTE AV</button><button id="mapBtn">KARTA</button><button id="useBtn">PRATA</button></div>
+  <div id="lookHint" aria-hidden="true">DRA HÄR FÖR ATT SIKTA</div>
 </div>
 <div id="roundOverlay">
   <button id="roundPause" class="small-control" aria-label="Pausa spelet">Ⅱ <span>PAUS</span></button>
   <div id="roundHud" hidden>
-    <div class="round-stat clock"><span>SEKUNDER</span><strong id="roundTime">90</strong></div>
+    <div class="round-stat clock"><span id="roundClockLabel">SEKUNDER</span><strong id="roundTime">90</strong></div>
     <div class="round-stat score"><span>POÄNG</span><strong id="roundScore">0</strong></div>
     <div class="round-stat"><span>HEMMA</span><strong id="roundProgress">0/4</strong></div>
     <div class="energy-row"><span>SOLENERGI</span><div class="energy-track"><i id="roundEnergy"></i></div><b id="roundEnergyText">60%</b></div>
     <div id="roundPhase">KNUFFA 3 FANS TILL HEMGÅNG</div>
   </div>
+  <button id="roundRadarButton" aria-label="Öppna kartan. Radarn visar norr uppåt."><canvas id="roundRadar" width="256" height="256"></canvas><span>RADAR · KARTA ↗</span></button>
+  <div id="roundTactic" hidden></div>
   <div id="roundCompass"><span id="roundCompassArrow">↑</span><span id="roundCompassText">O’LEARYS</span></div>
   <button id="roundLaunch" hidden>SISTA RUNDAN <span>90 SEK →</span></button>
   <div id="roundToast" role="status" aria-live="polite"><strong id="roundToastTitle"></strong><span id="roundToastText"></span></div>
-  <div id="solarFlash"></div><div id="chargeArc"></div>
+  <div id="solarFlash"></div>
   <div id="solarWeapon" aria-hidden="true" hidden><div class="weapon-top">SOL / 01</div><div class="weapon-barrel"><i>✳</i></div><div class="weapon-grip"></div></div>
 </div>
 <div id="roundPanel" role="dialog" aria-modal="true" aria-label="Sista rundan">
@@ -67,17 +77,19 @@
     <div class="intro-icon" aria-hidden="true">✳</div>
     <h1>SISTA<br><em>RUNDAN.</em></h1>
     <p class="round-lead">Matchen är slut.<br>Zombiefansen håller inte med.</p>
-    <p class="round-instructions">Knuffa tre fans till den gula <b>HEMGÅNG-zonen</b>. Sedan kommer Kapten Övertid. Använd soptunnan för kedjeträffar!</p>
+    <p class="round-instructions">Knuffa tre fans till den gula <b>HEMGÅNG-zonen</b>. Sedan kommer Kapten Övertid. Gå runt dem tills knuffpilen är grön. Använd soptunnan för kedjeträffar!</p>
     <div class="instruction-chips"><span>☀ SOLSTÖT</span><span>↗ KEDJETRÄFFAR</span><span>★ SLÅ DITT REKORD</span></div>
     <button id="roundStart" class="round-primary">NU STÄNGER VI <span>→</span></button>
-    <button id="roundExplore" class="round-secondary">Utforska Karlstad först</button>
+    <button id="roundPractice" class="round-secondary">ÖVA FÖRST · UTAN TIDSPRESS</button>
+    <button id="roundExplore" class="round-tertiary">Utforska Karlstad först</button>
     <p id="roundIntroControls" class="control-hint"></p>
     <p id="roundSeed" class="round-fine"></p>
   </section>
   <section id="round-pause" class="round-card compact" hidden>
     <div class="episode-label">TIMEOUT / KLOCKAN STÅR STILL</div>
     <h2>TA EN<br><em>FIKAPAUS.</em></h2>
-    <p>Tryck och släpp för en solstöt. Håll lite längre för en superstöt — den kostar 40 solenergi. De gula laddarna fylls på igen.</p>
+    <p><b>SOLSTÖT:</b> ett tryck, direkt knuff. <b>SUPER:</b> egen knapp, 40 energi. Gå runt figuren till ”STÅ HÄR” tills pilen blir grön. Autosikte hjälper dig hålla figuren i bild.</p>
+    <p id="roundPauseControls" class="control-hint"></p>
     <button id="roundResume" class="round-primary">TILLBAKA TILL MATCHEN →</button>
     <button id="roundRestart" class="round-secondary">Börja om samma runda</button>
     <div class="pause-footer"><button id="roundQuit">Utforska staden</button><button id="roundMute">LJUD PÅ</button></div>
@@ -99,6 +111,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=1.8.3-audio"></script>
+<script type="module" src="./app.js?v=1.9.0"></script>
 </body>
 </html>

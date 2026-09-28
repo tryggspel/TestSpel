@@ -25,14 +25,12 @@
 #roundToast.visible{opacity:1;transform:translate(-50%,0) rotate(-2deg)}
 #roundToast strong{display:block;color:var(--ink);background:var(--sun);padding:10px 18px;font:1000 24px/1.1 system-ui;letter-spacing:-.03em}
 #roundToast span{display:block;color:var(--paper);background:var(--ink);padding:8px 12px;font:600 11px/1.4 system-ui;letter-spacing:0}
-#chargeArc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;background:conic-gradient(var(--sun) var(--charge,0%),transparent 0);mask:radial-gradient(transparent 11px,#000 12px);-webkit-mask:radial-gradient(transparent 11px,#000 12px)}
 #solarFlash{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,#ffe99266,transparent 40%);opacity:0}
 #solarWeapon{position:absolute;bottom:-22px;left:calc(50% + 110px);transform:rotate(-11deg);width:145px;height:176px;filter:drop-shadow(5px 5px 0 #132e28)}
 .weapon-top{position:absolute;top:2px;left:5px;background:#fff0cb;border:4px solid var(--ink);color:var(--ink);font:900 12px system-ui;padding:6px 12px;transform:rotate(-7deg)}
 .weapon-barrel{position:absolute;top:25px;width:115px;height:105px;border:8px solid #14382f;border-radius:20px 25px 25px 20px;background:repeating-linear-gradient(90deg,#bd7b2f 0 9px,#efb44b 9px 19px);transform:skewY(6deg)}
 .weapon-barrel i{position:absolute;left:23px;top:15px;width:51px;height:51px;border:5px solid #34584c;border-radius:50%;background:#fff0bc;color:#be7330;font:900 46px/40px system-ui;text-align:center;box-shadow:0 0 0 6px #102f25}
 .weapon-grip{position:absolute;top:115px;left:53px;width:63px;height:75px;background:#356553;border:7px solid var(--ink);border-radius:4px 4px 10px 10px;transform:rotate(-13deg)}
-.solar-charged .weapon-barrel{filter:brightness(1.5)}.solar-charged #fireBtn{background:#ffcd59;color:var(--ink)}
 .recoil{animation:recoil .19s ease-out}
 #roundPanel{position:fixed;inset:0;z-index:90;display:flex;align-items:center;padding:24px 6vw;background:linear-gradient(90deg,#092921e6,#09292170 65%,#09292133);overflow:auto;overscroll-behavior:contain;touch-action:pan-y}
 .round-card{position:relative;width:450px;max-width:100%;padding:28px 32px;background:var(--ink);border:1px solid #accaa945;border-top:5px solid var(--sun);box-shadow:8px 8px 0 #061e1880;color:var(--paper);flex-shrink:0}
@@ -79,3 +77,52 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
  .round-card h2{font-size:31px}.result-score{font-size:48px}.round-card #roundResultTitle{font-size:28px}#solarWeapon{bottom:0}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Independent movement, look and immediate actions. */
+#roundUtilities{position:absolute;z-index:8;left:max(14px,env(safe-area-inset-left));top:103px;display:flex;gap:6px;pointer-events:auto}
+#roundUtilities button{min-height:42px;padding:9px 12px;border:1px solid #9bbba36b;border-radius:5px;background:#143a30f0;color:var(--paper);font:900 9px system-ui;letter-spacing:.04em;touch-action:manipulation;cursor:pointer}
+#aimAssistBtn[aria-pressed="true"]{background:#a3efc9;color:var(--ink);border-color:#dbffe7}
+#roundRadarButton{position:absolute;right:max(15px,env(safe-area-inset-right));top:66px;width:148px;padding:0;pointer-events:auto;touch-action:manipulation;border:2px solid #78947a;border-radius:7px;overflow:hidden;background:var(--ink);color:var(--paper);cursor:pointer}
+#roundRadar{display:block;width:100%;height:auto}
+#roundRadarButton span{display:block;font:800 8px system-ui;letter-spacing:.12em;padding:6px}
+#roundTactic{position:absolute;top:57%;left:50%;transform:translateX(-50%);max-width:80vw;width:max-content;padding:7px 11px;border-radius:4px;background:#173a2deb;border-left:3px solid #f5ad62;color:#fff0cd;font:800 9px/1.4 system-ui;text-align:center;letter-spacing:.04em}
+#roundTactic.good{border-color:#84e9bb;color:#b9ffda}
+#reticle.locked{border-color:#9bffdb;box-shadow:0 0 0 4px #80eaba33}
+#lookHint{position:absolute;right:30px;bottom:226px;color:#fff3d4b0;font:800 8px system-ui;letter-spacing:.07em;text-shadow:0 1px 4px #10271c;pointer-events:none}
+#buttons{grid-template-columns:64px 94px;grid-template-rows:57px 84px;gap:10px}
+#buttons button{letter-spacing:.02em;cursor:pointer}
+#buttons button span{display:block;font:800 8px system-ui;margin-top:5px;letter-spacing:.08em}
+#buttons #superBtn{grid-column:2;grid-row:1;height:57px;background:#e9edc8;color:var(--ink);border:2px solid #fff9d8;border-radius:12px}
+#buttons #superBtn:disabled{background:#263f32;color:#aec3a5;border-color:#7f94726b;opacity:.7}
+#buttons #jumpBtn{grid-column:1;grid-row:2;height:48px;align-self:end;font-size:9px}
+#buttons #fireBtn{grid-column:2;grid-row:2;height:84px;border-radius:50%;font-size:12px;background:var(--sun);color:var(--ink);border:3px solid #ffe4a6;box-shadow:0 4px 0 #84632e}
+@media(pointer:fine){#lookHint{display:none}#roundUtilities{top:104px}}
+@media(max-width:850px){
+ #roundHud{left:max(12px,env(safe-area-inset-left));right:132px;top:max(52px,calc(env(safe-area-inset-top) + 44px));transform:none;grid-template-columns:1fr 1.25fr 1fr;padding:8px 10px 0}
+ #roundPhase{margin:0 -10px;font-size:6px;letter-spacing:.06em;min-height:25px;display:grid;place-items:center}
+ .round-stat strong{font-size:23px}.round-stat span{font-size:7px;letter-spacing:.06em}.energy-row{font-size:7px;gap:5px}
+ #roundRadarButton{width:106px;right:max(12px,env(safe-area-inset-right));top:max(52px,calc(env(safe-area-inset-top) + 44px))}
+ #roundRadarButton span{font-size:6px;padding:4px}
+ #roundUtilities{top:max(180px,calc(env(safe-area-inset-top) + 172px));left:max(12px,env(safe-area-inset-left));gap:5px}
+ #roundUtilities button{font-size:8px;padding:8px 10px;min-height:38px}
+ #roundTactic{top:58%;max-width:88vw;font-size:8px}
+ #roundToast{top:34%}#roundToast strong{font-size:17px}#roundToast span{max-width:280px;font-size:9px}
+ #roundCompass{bottom:max(186px,calc(env(safe-area-inset-bottom) + 178px));white-space:nowrap;font-size:7px}
+ #solarWeapon{left:calc(50% - 45px);bottom:8px;opacity:.85}
+ #lookHint{right:18px;bottom:max(220px,calc(env(safe-area-inset-bottom) + 212px));font-size:7px}
+}
+@media(max-width:370px) and (min-height:601px){
+ #joy{left:12px;width:120px;height:120px}#joy i{left:37px;top:37px}
+ #buttons{right:12px;grid-template-columns:48px 86px;gap:7px}#buttons #fireBtn{width:86px}
+ #roundHud{right:124px}.round-stat strong{font-size:20px}#roundRadarButton{width:98px}
+}
+@media(max-height:600px){
+ #roundHud{left:50%;right:auto;top:10px;transform:translateX(-50%);grid-template-columns:62px 82px 62px;padding-top:6px}
+ #roundPhase{font-size:6px;min-height:19px;padding:4px}.round-stat strong{font-size:22px}
+ #roundRadarButton{top:53px;width:90px}#roundRadarButton span{font-size:6px;padding:3px}
+ #roundUtilities{left:max(12px,env(safe-area-inset-left));top:61px;gap:4px}#roundUtilities button{padding:7px;min-height:36px;font-size:7px}
+ #roundTactic{top:60%;max-width:48vw;font-size:7px}#roundToast{top:31%}#roundToast strong{font-size:16px}#roundToast span{font-size:9px;max-width:300px}
+ #lookHint{bottom:196px;right:18px}#roundCompass{bottom:14px;font-size:7px}
+ #buttons{grid-template-rows:47px 70px;gap:8px}#buttons #superBtn{height:47px}#buttons #fireBtn{height:70px;border-radius:35px}
+ #solarWeapon{bottom:-28px;left:calc(50% + 20px)}
+}

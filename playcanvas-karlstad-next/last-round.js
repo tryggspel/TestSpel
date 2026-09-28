@@ -1,4 +1,5 @@
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=1.8.0';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=1.9.0';
+import {chooseAimTarget, steerAim, pushGuide} from './last-round-controls.mjs?v=1.9.0';
 
 export function createLastRound(pc, host) {
   const $ = id => document.getElementById(id);
@@ -11,7 +12,9 @@ export function createLastRound(pc, host) {
   const root = new pc.Entity('Sista rundan at OLearys'); host.app.root.addChild(root);
   const actorViews = new Map(); const chargers = [];
   let panel = 'intro', previousTime = performance.now(), uiTime = 0;
-  let pressAt = null, pressPointer = null, shotFlash = 0, toastUntil = 0, soundEnabled = true, audio;
+  let shotFlash = 0, toastUntil = 0, soundEnabled = true, audio;
+  let autoAim = coarse, lockedId = null, manualUntil = 0, currentTarget = null, currentGuide = null;
+  try {const saved = localStorage.getItem('karlstad:auto-aim'); if (saved !== null) autoAim = saved === 'on';} catch {}
   let hadPointerLock = false;
   const recordKey = 'karlstad:last-round:' + RULES.version + ':' + seed;
   let best = 0;
@@ -28,18 +31,27 @@ export function createLastRound(pc, host) {
   function texture(draw, w = 512, h = 512) {
     const c = document.createElement('canvas'); c.width = w; c.height = h;
     draw(c.getContext('2d'), w, h);
-    const t = new pc.Texture(host.app.graphicsDevice, {width: w, height: h, mipmaps: true, minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR, magFilter: pc.FILTER_LINEAR});
+    const t = new pc.Texture(host.app.graphicsDevice, {width: w, height: h, flipY: true, mipmaps: true, minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR, magFilter: pc.FILTER_LINEAR});
     t.setSource(c); return t;
   }
-  function card(name, tex, w, h, x, y, z) {
+  function card(name, tex, w, h, x, y, z, twoSided = false) {
     const mesh = new pc.Mesh(host.app.graphicsDevice);
     mesh.setPositions([-w / 2, 0, 0, w / 2, 0, 0, w / 2, h, 0, -w / 2, h, 0]);
     mesh.setNormals([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]);
     mesh.setUvs(0, [0, 0, 1, 0, 1, 1, 0, 1]); mesh.setIndices([0, 1, 2, 0, 2, 3]); mesh.update(pc.PRIMITIVE_TRIANGLES);
     const m = new pc.StandardMaterial(); m.useLighting = false; m.diffuse.set(0, 0, 0);
     m.emissive.set(1, 1, 1); m.emissiveMap = tex; m.opacityMap = tex; m.opacityMapChannel = 'a';
-    m.blendType = pc.BLEND_NORMAL; m.alphaTest = .12; m.cull = pc.CULLFACE_NONE; m.update();
-    const e = new pc.Entity(name); e.addComponent('render', {meshInstances: [new pc.MeshInstance(mesh, m)]});
+    m.blendType = pc.BLEND_NORMAL; m.alphaTest = .12; m.cull = pc.CULLFACE_BACK; m.update();
+    const instances = [new pc.MeshInstance(mesh, m)];
+    if (twoSided) {
+      // A separately UV-mapped back keeps lettering readable from either side.
+      const back = new pc.Mesh(host.app.graphicsDevice);
+      back.setPositions([-w / 2, 0, 0, w / 2, 0, 0, w / 2, h, 0, -w / 2, h, 0]);
+      back.setNormals([0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1]);
+      back.setUvs(0, [1, 0, 0, 0, 0, 1, 1, 1]); back.setIndices([0, 2, 1, 0, 3, 2]); back.update(pc.PRIMITIVE_TRIANGLES);
+      instances.push(new pc.MeshInstance(back, m));
+    }
+    const e = new pc.Entity(name); e.addComponent('render', {meshInstances: instances});
     e.setPosition(x, y, z); root.addChild(e); return e;
   }
   function labelTex(lines, bg = '#163b32', fg = '#ffe7a0') {
@@ -99,7 +111,7 @@ export function createLastRound(pc, host) {
   });
   const guard = card('Vakten', fanTex('guard'), 1.65, 2.6, layout.guard.x, .02, layout.guard.z);
   const guardSign = card('Starta hos vakten', labelTex(['SISTA RUNDAN', '90 SEK • PRATA MED VAKTEN']), 4.7, 1.4, layout.guard.x, 3.0, layout.guard.z);
-  const oSign = card('OLearys readable sign', labelTex(["O’LEARYS"], '#f3eccf', '#145c38'), 9.9, .69, host.origin.x - 1.37, 4.3, host.origin.z);
+  const oSign = card('OLearys readable sign', labelTex(["O’LEARYS"], '#f3eccf', '#145c38'), 9.9, .69, host.origin.x - 1.37, 4.3, host.origin.z, true);
   oSign.setEulerAngles(0, -90, 0);
   const goalTexture = texture((c, w, h) => {
     c.fillStyle = '#184b42bb'; c.beginPath(); c.arc(w / 2, h / 2, 234, 0, Math.PI * 2); c.fill();
@@ -109,7 +121,7 @@ export function createLastRound(pc, host) {
   });
   const goal = card('Hemgång zone', goalTexture, layout.goal.radius * 2, layout.goal.radius * 2, layout.goal.x, .1, layout.goal.z + layout.goal.radius);
   goal.setEulerAngles(-90, 0, 0);
-  const goalSign = card('Hemgång sign', labelTex(['HEMGÅNG', '↓ FANSEN HIT ↓']), 5.4, 1.6, layout.goal.x, 2.5, layout.goal.z - 4);
+  const goalSign = card('Hemgång sign', labelTex(['HEMGÅNG', '↓ FANSEN HIT ↓']), 5.4, 1.6, layout.goal.x, 2.5, layout.goal.z - 4, true);
   primitive('sign-post', 'box', layout.goal.x, 1.35, layout.goal.z - 4, .15, 2.7, .15);
   const b = layout.bounds;
   primitive('court-line-a', 'box', b.minX, .07, (b.minZ + b.maxZ) / 2, .12, .025, b.maxZ - b.minZ, gold);
@@ -120,29 +132,47 @@ export function createLastRound(pc, host) {
     chargers.push(primitive('solar-charge', 'sphere', c.x, .85, c.z, .65, .65, .65, gold));
   }
 
+  const mint = material('#84e9bb'), orange = material('#f5ad62');
+  const stance = primitive('Stand here', 'cylinder', 0, .09, 0, 1.3, .025, 1.3, mint);
+  const stanceSign = card('Stand here label', labelTex(['STÅ HÄR'], '#173c32', '#a7f4ce'), 1.6, .5, 0, .6, 0);
+  const pushLine = primitive('Actual push direction', 'box', 0, .13, 0, .12, .035, 2.4, mint);
+  const pushHead = [0, 1].map(i => primitive('Push arrow ' + i, 'box', 0, .13, 0, .12, .035, .7, mint));
+  const guideViews = [stance, stanceSign, pushLine, ...pushHead];
+  guideViews.forEach(e => e.enabled = false);
+
   $('roundSeed').textContent = `RUNDA ${seed} · ${target ? 'SLÅ ' + target.toLocaleString('sv-SE') + ' POÄNG' : 'DITT REKORD: ' + best.toLocaleString('sv-SE')}`;
-  $('roundIntroControls').textContent = coarse ? 'Dra för att sikta · tryck SOLSTÖT · håll för superstöten' : 'WASD: gå · mus: sikta · klick: solstöt · håll + släpp: superstöt';
+  const controlText = coarse ? 'Vänster spak: gå · dra till höger: sikta · tryck SOLSTÖT eller SUPER. Autosikte hjälper dig att gå runt en figur.' : 'WASD: gå · mus: sikta · klick: solstöt · Q / högerklick: super · F: autosikte · M: karta';
+  $('roundIntroControls').textContent = controlText;
+  $('roundPauseControls').textContent = controlText;
+  function updateAimButton() {
+    $('aimAssistBtn').textContent = 'AUTOSIKTE ' + (autoAim ? 'PÅ' : 'AV');
+    $('aimAssistBtn').setAttribute('aria-pressed', String(autoAim));
+    document.body.classList.toggle('auto-aim-on', autoAim);
+  }
+  updateAimButton();
   function setPanel(name) {
     panel = name; document.body.classList.toggle('round-panel-open', !!name);
     $('roundPanel').hidden = !name;
     for (const id of ['intro', 'pause', 'result', 'map']) $('round-' + id).hidden = name !== id;
-    host.resetInput(); pressAt = null; pressPointer = null;
+    host.resetInput(); lockedId = null;
     if (name) {document.exitPointerLock?.(); queueMicrotask(() => $('round-' + name).querySelector('button')?.focus({preventScroll: true}));}
   }
   function lockPointer() {
     if (coarse) return;
     try {const p = host.canvas.requestPointerLock?.(); p?.catch?.(() => {});} catch {}
   }
-  function start() {
+  function start(practice = false) {
     host.music?.unlock?.(); host.music?.roundStart?.();
-    game.start(); host.resetPickups();
+    game.start({practice}); host.resetPickups(); manualUntil = 0;
     const firstFan=game.actors[1];
     const heading=Math.atan2(layout.spawn.x-firstFan.x,layout.spawn.z-firstFan.z)*180/Math.PI;
     host.teleport(layout.spawn.x, layout.spawn.z, heading, -2);
     document.body.classList.add('round-playing');
     setPanel(null); previousTime = performance.now();
     $('roundHud').hidden = false; $('roundLaunch').hidden = true;
-    toast('SISTA RUNDAN!', 'Knuffa fansen till den gula HEMGÅNG-zonen.', 4.5);
+    $('roundShareLink').hidden = true;
+    $('roundClockLabel').textContent = practice ? 'ÖVNING' : 'SEKUNDER';
+    toast(practice ? 'INGEN STRESS. BARA STÖT.' : 'SISTA RUNDAN!', 'Gå runt fansen. Grön pil = rätt knuffriktning.', 3);
     sound('start'); lockPointer();
   }
   function explore() {
@@ -174,23 +204,30 @@ export function createLastRound(pc, host) {
       o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + .24);
     } catch {}
   }
-  function beginShot(e) {
-    if (panel || game.phase !== 'playing' || (e.button !== undefined && e.button !== 0)) return;
-    if (!coarse && e.currentTarget === host.canvas && document.pointerLockElement !== host.canvas) {lockPointer(); return;}
-    if (pressAt !== null) return;
-    pressAt = performance.now(); pressPointer = e.pointerId;
-    if (e.currentTarget === $('fireBtn')) {e.currentTarget.setPointerCapture(e.pointerId); e.preventDefault();}
-  }
-  function endShot(e) {
-    if (pressAt === null || (e.pointerId !== undefined && e.pointerId !== pressPointer)) return;
-    const held = (performance.now() - pressAt) / 1000; pressAt = null; pressPointer = null;
+  function fire(power = false) {
+    if (panel || game.phase !== 'playing') return;
+    if (power && game.energy < RULES.chargeCost) {toast('MER SOL, TACK.', 'SUPER kostar 40 energi. SOLSTÖT är alltid gratis.'); return;}
     const p = host.player.getPosition(), f = host.camera.forward;
-    const shot = game.shoot({x: p.x, z: p.z, y: p.y, dx: f.x, dz: f.z, dy: f.y, held, assist: coarse});
+    const shot = game.shoot({x: p.x, z: p.z, y: p.y, dx: f.x, dz: f.z, dy: f.y, power, assist: coarse});
     if (shot) {shotFlash = .19; $('solarWeapon').classList.remove('recoil'); void $('solarWeapon').offsetWidth; $('solarWeapon').classList.add('recoil');}
+  }
+  function toggleAim() {
+    autoAim = !autoAim; lockedId = null; manualUntil = 0; updateAimButton();
+    try {localStorage.setItem('karlstad:auto-aim', autoAim ? 'on' : 'off');} catch {}
+    toast(autoAim ? 'AUTOSIKTE PÅ' : 'FRITT SIKTE', autoAim ? 'Håller figuren i sikte. Gå i sidled för att runda den. Dra för att byta mål.' : 'Du styr siktet helt själv.', 2.5);
+  }
+  function assistLook(dt, look) {
+    if (panel || game.phase !== 'playing' || !autoAim) return null;
+    if (look.manual) {lockedId = null; manualUntil = performance.now() + 550; return null;}
+    if (performance.now() < manualUntil) return null;
+    const p = host.player.getPosition();
+    const a = chooseAimTarget(p, host.camera.forward, game.actors, game.visible.bind(game), lockedId);
+    lockedId = a?.id || null;
+    return steerAim(look, p, a, dt);
   }
   function use() {
     if (panel) return;
-    if (game.phase === 'playing') {toast('VAKTEN: ”INGEN FÖRLÄNGNING.”', 'Sikta på fansen. Håll solstöten för mer kraft.'); return;}
+    if (game.phase === 'playing') {toast('VAKTEN: ”INGEN FÖRLÄNGNING.”', 'Ställ dig bakom ett fan. SOLSTÖT knuffar framåt. SUPER ger extra kraft.'); return;}
     const p = host.player.getPosition();
     if (Math.hypot(p.x - layout.guard.x, p.z - layout.guard.z) < 7) setPanel('intro');
     else toast('VAKTEN VÄNTAR', 'Följ kompassen till O’Learys.');
@@ -218,20 +255,76 @@ export function createLastRound(pc, host) {
     const f = host.camera.forward, [px, py] = point(p.x, p.z);
     c.strokeStyle = '#73ded0'; c.lineWidth = 3; c.beginPath(); c.moveTo(px, py); c.lineTo(px + f.x * 17, py + f.z * 17); c.stroke();
   }
+  function drawRadar(p) {
+    const c = $('roundRadar').getContext('2d'), size = 256;
+    const playing = game.phase !== 'ready';
+    const center = playing ? {x: layout.goal.x, z: (b.minZ + b.maxZ) / 2} : p;
+    const scale = playing ? Math.min(6.2, 110 / Math.max(16, Math.abs(p.x - center.x), Math.abs(p.z - center.z))) : 1.3;
+    const point = (x, z) => [128 + (x - center.x) * scale, 128 + (z - center.z) * scale];
+    c.fillStyle = '#142f29'; c.fillRect(0, 0, size, size);
+    c.strokeStyle = '#39594a'; c.lineWidth = 1;
+    for (let i = 16; i < size; i += 32) {c.beginPath(); c.moveTo(i, 0); c.lineTo(i, size); c.moveTo(0, i); c.lineTo(size, i); c.stroke();}
+    c.fillStyle = '#506151';
+    for (const block of host.colliders) {const [x, y] = point(block.minx, block.minz); c.fillRect(x, y, (block.maxx - block.minx) * scale, (block.maxz - block.minz) * scale);}
+    const circle = (x, z, radius, fill, stroke) => {c.beginPath(); c.arc(...point(x, z), radius, 0, Math.PI * 2); if (fill) {c.fillStyle = fill; c.fill();} if (stroke) {c.strokeStyle = stroke; c.lineWidth = 3; c.stroke();}};
+    circle(layout.goal.x, layout.goal.z, layout.goal.radius * scale, '#e4bc4938', '#ffcd60');
+    if (playing) {
+      for (const a of game.actors) if (a.active) circle(a.x, a.z, a.kind === 'boss' ? 9 : 6, a.kind === 'bin' ? '#96ac91' : '#f69d80', a.id === currentTarget?.id ? '#fff6d6' : null);
+      if (currentGuide?.stance && !currentGuide.good) circle(currentGuide.stance.x, currentGuide.stance.z, 7, null, '#84e9bb');
+      layout.chargers.forEach((pad, i) => {if (game.chargerTimes[i] === 0) circle(pad.x, pad.z, 4, '#ffe593');});
+    }
+    const [px, py] = point(p.x, p.z), f = host.camera.forward, angle = Math.atan2(f.x, -f.z);
+    c.save(); c.translate(px, py); c.rotate(angle);
+    c.beginPath(); c.moveTo(0, -15); c.lineTo(9, 9); c.lineTo(0, 5); c.lineTo(-9, 9); c.closePath();
+    c.fillStyle = '#9bffdb'; c.fill(); c.strokeStyle = '#142f29'; c.lineWidth = 2; c.stroke(); c.restore();
+    c.fillStyle = '#fff0cd'; c.font = '900 18px sans-serif'; c.textAlign = 'center'; c.fillText('N', 128, 20);
+  }
+  function updateGuide(p) {
+    const live = game.phase === 'playing' && !panel;
+    currentTarget = live ? chooseAimTarget(p, host.camera.forward, game.actors, game.visible.bind(game), autoAim ? lockedId : null) : null;
+    currentGuide = currentTarget ? pushGuide(p, currentTarget, layout.goal, host.blocked) : null;
+    guideViews.forEach(e => e.enabled = live && !!currentGuide);
+    $('roundTactic').hidden = !live;
+    $('roundTactic').classList.toggle('good', !!currentGuide?.good);
+    $('reticle').classList.toggle('locked', live && autoAim && !!lockedId);
+    if (!currentGuide) {$('roundTactic').textContent = 'HITTA ETT FAN · GULA CIRKELN PÅ RADARN = HEMGÅNG'; return;}
+    const a = currentTarget, g = currentGuide;
+    const stanceVisible = !!g.stance && !g.good;
+    stance.enabled = stanceSign.enabled = stanceVisible;
+    if (stanceVisible) {
+      stance.setPosition(g.stance.x, .09, g.stance.z); stanceSign.setPosition(g.stance.x, .5, g.stance.z);
+      stanceSign.setEulerAngles(0, Math.atan2(p.x - g.stance.x, p.z - g.stance.z) * 180 / Math.PI, 0);
+    }
+    const length = 2.4, offset = a.radius + .4, angle = Math.atan2(g.pushX, g.pushZ) * 180 / Math.PI;
+    const tip = {x: a.x + g.pushX * (offset + length), z: a.z + g.pushZ * (offset + length)};
+    pushLine.setPosition(a.x + g.pushX * (offset + length / 2), .14, a.z + g.pushZ * (offset + length / 2));
+    pushLine.setEulerAngles(0, angle, 0);
+    pushHead.forEach((e, i) => {
+      const direction = (angle + (i ? 145 : -145)) * Math.PI / 180;
+      e.setPosition(tip.x + Math.sin(direction) * .3, .14, tip.z + Math.cos(direction) * .3);
+      e.setEulerAngles(0, direction * 180 / Math.PI, 0);
+    });
+    [pushLine, ...pushHead].forEach(e => e.render.material = g.good ? mint : orange);
+    $('roundTactic').textContent = g.good ? `${a.name.toUpperCase()} · BRA VINKEL! SOLSTÖT →` : g.playerDistance >= 15 ? 'GÅ NÄRMARE · SOLSTÖT NÅR 15 M' : 'RUNDA FIGUREN TILL ”STÅ HÄR” · GRÖN PIL = RÄTT RIKTNING';
+  }
   function finish(won) {
     const previousBest = best;
-    if (won && game.score > best) {best = game.score; try {localStorage.setItem(recordKey, String(best));} catch {}}
+    if (won && !game.practice && game.score > best) {best = game.score; try {localStorage.setItem(recordKey, String(best));} catch {}}
     $('roundResultEyebrow').textContent = won ? 'O’LEARYS ÄR RÄDDAT' : 'VAKTEN BEGÄR FÖRSTÄRKNING';
     $('roundResultTitle').textContent = won ? 'STÄNGT & KLART.' : 'DE VILL HA FÖRLÄNGNING.';
     $('roundResultScore').textContent = game.score.toLocaleString('sv-SE');
     $('roundResultDetail').textContent = `${game.captured}/4 fans hemma · ${game.accuracy}% träffsäkerhet · bästa kedja ${game.bestChain}×`;
-    $('roundResultRecord').textContent = won && best > previousBest ? 'NYTT PERSONBÄSTA!' : `DITT REKORD: ${best.toLocaleString('sv-SE')}`;
-    $('roundResultTarget').textContent = target ? (won && game.score > target ? `Du slog utmaningen på ${target} poäng!` : `Kompisens resultat: ${target} poäng`) : `Runda ${seed} · samma placeringar varje försök`;
-    $('roundShare').textContent = 'UTMANA EN VÄN'; $('roundShare').disabled = !won;
+    const medal = game.bestChain >= 3 ? 'PANTPROFFSET · 3× KEDJA' : game.accuracy === 100 ? 'SOLKLAR PRECISION · 100%' : game.remaining >= 45 ? 'VAKTENS FAVORIT · UNDER 45 SEK' : 'STÄNGNINGSEXPERT';
+    $('roundResultRecord').textContent = game.practice ? 'ÖVNING KLAR · NU SITTER VINKLARNA' : won && best > previousBest ? 'NYTT PERSONBÄSTA! · ' + medal : won ? medal : `DITT REKORD: ${best.toLocaleString('sv-SE')}`;
+    $('roundResultTarget').textContent = game.practice ? 'Redo för 90 sekunder? Övningen påverkar inte ditt rekord.' : target ? (won && game.score > target ? `Du slog utmaningen på ${target} poäng!` : `Kompisens resultat: ${target} poäng`) : `Runda ${seed} · samma placeringar varje försök`;
+    $('roundRetry').textContent = game.practice ? 'SPELA PÅ TID · 90 SEK →' : 'EN GÅNG TILL ↻';
+    $('roundShare').textContent = 'UTMANA EN VÄN'; $('roundShare').disabled = !won || game.practice;
+    $('roundShare').hidden = game.practice;
     host.music?.roundEnd?.();
     setPanel('result'); sound(won ? 'win' : 'boss');
   }
   async function share() {
+    if (game.practice || game.phase !== 'won') return;
     const url = new URL(location.href); url.search = ''; url.hash = '';
     url.searchParams.set('challenge', 'sista-rundan'); url.searchParams.set('seed', String(seed)); url.searchParams.set('target', String(game.score));
     const data = {title: 'Sista rundan i Karlstad', text: `Jag skickade hem zombiefansen på O’Learys med ${game.score} poäng. Slå min runda!`, url: url.href};
@@ -241,16 +334,28 @@ export function createLastRound(pc, host) {
       else { $('roundShareLink').hidden = false; $('roundShareLink').value = url.href; $('roundShareLink').select(); }
     } catch (e) {if (e.name !== 'AbortError') { $('roundShareLink').hidden = false; $('roundShareLink').value = url.href; $('roundShareLink').select(); }}
   }
-  $('roundStart').addEventListener('click', start); $('roundRetry').addEventListener('click', start);
+  $('roundStart').addEventListener('click', () => start()); $('roundRetry').addEventListener('click', () => start());
+  $('roundPractice').addEventListener('click', () => start(true));
   $('roundExplore').addEventListener('click', explore); $('roundLeave').addEventListener('click', explore);
-  $('roundResume').addEventListener('click', resume); $('roundRestart').addEventListener('click', start);
+  $('roundResume').addEventListener('click', resume); $('roundRestart').addEventListener('click', () => start(game.practice));
   $('roundQuit').addEventListener('click', explore); $('roundShare').addEventListener('click', share);
   $('roundLaunch').addEventListener('click', () => setPanel('intro'));
   $('roundPause').addEventListener('click', () => game.phase === 'playing' ? pause() : setPanel('intro'));
   $('roundMapClose').addEventListener('click', () => {game.phase === 'paused' ? resume() : setPanel(null);});
   $('roundMute').addEventListener('click', () => {soundEnabled = !soundEnabled; host.music?.setMuted?.(!soundEnabled); $('roundMute').textContent = soundEnabled ? 'LJUD PÅ' : 'LJUD AV';});
-  $('fireBtn').addEventListener('pointerdown', beginShot); host.canvas.addEventListener('pointerdown', beginShot);
-  window.addEventListener('pointerup', endShot); window.addEventListener('pointercancel', () => {pressAt = null; pressPointer = null;});
+  for (const [id, power] of [['fireBtn', false], ['superBtn', true]]) {
+    $(id).addEventListener('pointerdown', e => {if (e.button !== undefined && e.button !== 0) return; e.preventDefault(); fire(power);});
+    $(id).addEventListener('click', e => {if (e.detail === 0) fire(power);});
+  }
+  host.canvas.addEventListener('pointerdown', e => {
+    if (coarse || panel || ![0, 2].includes(e.button)) return;
+    e.preventDefault();
+    if (document.pointerLockElement !== host.canvas) {lockPointer(); return;}
+    fire(e.button === 2);
+  });
+  host.canvas.addEventListener('contextmenu', e => e.preventDefault());
+  $('aimAssistBtn').addEventListener('click', toggleAim);
+  $('roundRadarButton').addEventListener('click', showMap);
   document.addEventListener('pointerlockchange', () => {
     const locked = document.pointerLockElement === host.canvas;
     if (hadPointerLock && !locked && game.phase === 'playing') pause(); hadPointerLock = locked;
@@ -261,12 +366,15 @@ export function createLastRound(pc, host) {
     if (panel) return;
     if (e.code === 'KeyE') use();
     if (e.code === 'KeyM') showMap();
+    if (e.code === 'KeyQ') {e.preventDefault(); fire(true);}
+    if (e.code === 'KeyF') {e.preventDefault(); toggleAim();}
     if (e.code === 'KeyR' && game.phase === 'playing') pause();
   });
-  window.addEventListener('blur', () => {host.resetInput(); pressAt = null; if (game.phase === 'playing') pause();});
+  window.addEventListener('blur', () => {host.resetInput(); if (game.phase === 'playing') pause();});
   document.addEventListener('visibilitychange', () => {if (document.hidden && game.phase === 'playing') pause();});
-  $('fireBtn').textContent = 'SOLSTÖT'; $('useBtn').textContent = 'PRATA'; $('jumpBtn').textContent = 'HOPPA';
-  window.KarlstadRound = Object.freeze({version: '1.8.2', snapshot: () => ({phase: game.phase, score: game.score, energy: game.energy,
+  $('useBtn').textContent = 'PRATA'; $('jumpBtn').textContent = 'HOPPA';
+  window.KarlstadRound = Object.freeze({version: '1.9.0', snapshot: () => ({phase: game.phase, score: game.score, energy: game.energy,
+    practice: game.practice, autoAim, lockedId, guide: currentGuide ? {good: currentGuide.good, stance: currentGuide.stance} : null,
     remaining: game.remaining, seed, captured: game.captured, shots: game.shots, bestChain: game.bestChain,
     player: {x: host.player.getPosition().x, z: host.player.getPosition().z}, forward: {x: host.camera.forward.x, y: host.camera.forward.y, z: host.camera.forward.z},
     actors: game.actors.map(a => ({id: a.id, x: a.x, z: a.z, active: a.active})), goal: {...layout.goal}})});
@@ -280,8 +388,8 @@ export function createLastRound(pc, host) {
       if (event.type === 'shot') {sound(event.charged ? 'charge' : 'shot'); $('reticle').classList.toggle('hit', event.hit); if (!event.hit && game.shots < 3) toast('SIKTA PÅ FANSEN', 'Knuffa dem från din sida mot HEMGÅNG.');}
       if (event.type === 'chain') {sound('chain'); toast(`${event.count}× KEDJETRÄFF!`, 'Det där räknas som lagarbete.');}
       if (event.type === 'capture') {sound('capture'); toast(event.boss ? 'INGEN MER ÖVERTID.' : 'HEM MED DIG!', event.boss ? 'Vakten kan äntligen gå på rast.' : event.name + ' har lämnat matchen.');}
-      if (event.type === 'boss') {sound('boss'); toast('KAPTEN ÖVERTID!', 'Stor skumhand. Liten verklighetsförankring. Håll för superstöt.', 4);}
-      if (event.type === 'energy') {sound('energy'); toast('SOLENERGI +35', 'Håll solstöten och släpp för extra kraft.');}
+      if (event.type === 'boss') {sound('boss'); toast('KAPTEN ÖVERTID!', 'Stor skumhand. Liten verklighetsförankring. Tryck SUPER!', 3);}
+      if (event.type === 'energy') {sound('energy'); toast('SOLENERGI +35', 'Tryck SUPER för extra kraft.');}
       if (event.type === 'bump') {sound('bump'); toast('”JAG STOD FAKTISKT HÄR.”', 'Håll lite avstånd. −15 poäng.');}
       if (event.type === 'finish') finish(event.won);
     }
@@ -299,15 +407,15 @@ export function createLastRound(pc, host) {
     shotFlash = Math.max(0, shotFlash - dt);
     $('solarFlash').style.opacity = shotFlash > 0 ? String(shotFlash * 3) : '0';
     if (!shotFlash) $('reticle').classList.remove('hit');
-    const charging = pressAt === null ? 0 : Math.min(1, (now - pressAt) / (RULES.chargeSeconds * 1000));
-    document.body.classList.toggle('solar-charged', charging === 1 && game.energy >= RULES.chargeCost);
-    $('chargeArc').style.setProperty('--charge', (charging * 100) + '%');
     $('solarWeapon').hidden = game.phase === 'ready' || !!panel;
     uiTime += dt;
     if (uiTime > .08) {
       uiTime = 0;
-      $('roundScore').textContent = game.score.toLocaleString('sv-SE'); $('roundTime').textContent = String(Math.ceil(game.remaining)).padStart(2, '0');
-      $('roundTime').classList.toggle('urgent', game.remaining <= 15); $('roundProgress').textContent = `${game.captured}/4`;
+      updateGuide(p); drawRadar(p);
+      $('roundScore').textContent = game.score.toLocaleString('sv-SE'); $('roundTime').textContent = game.practice ? '∞' : String(Math.ceil(game.remaining)).padStart(2, '0');
+      $('roundTime').classList.toggle('urgent', !game.practice && game.remaining <= 15); $('roundProgress').textContent = `${game.captured}/4`;
+      $('superBtn').disabled = game.energy < RULES.chargeCost || game.phase !== 'playing';
+      $('superBtn').setAttribute('aria-label', game.energy >= RULES.chargeCost ? 'Superstöt, kostar 40 solenergi' : 'Superstöt behöver 40 solenergi');
       $('roundEnergy').style.width = game.energy + '%'; $('roundEnergyText').textContent = Math.round(game.energy) + '%';
       $('roundPhase').textContent = game.captured < 3 ? 'KNUFFA 3 FANS TILL HEMGÅNG' : 'SKICKA HEM KAPTEN ÖVERTID';
       const dist = Math.hypot(p.x - layout.guard.x, p.z - layout.guard.z);
@@ -315,12 +423,13 @@ export function createLastRound(pc, host) {
         $('mission').textContent = dist < 7 ? (coarse ? 'PRATA MED VAKTEN · STARTA SISTA RUNDAN' : 'E · PRATA MED VAKTEN · STARTA SISTA RUNDAN') : `O’LEARYS · SISTA RUNDAN · ${Math.round(dist)} m`;
       } else $('mission').textContent = 'SISTA RUNDAN · O’LEARYS';
       $('status').textContent = `FPS ${Math.round(host.app.stats.frame.fps)} · ${host.pickupCount()}/8 fynd`;
-      const direction = Math.atan2(layout.guard.x - p.x, layout.guard.z - p.z) - Math.atan2(host.camera.forward.x, host.camera.forward.z);
+      const destination = game.phase === 'playing' ? layout.goal : layout.guard;
+      const direction = Math.atan2(destination.x - p.x, destination.z - p.z) - Math.atan2(host.camera.forward.x, host.camera.forward.z);
       $('roundCompassArrow').style.transform = `rotate(${-direction * 180 / Math.PI}deg)`;
       $('roundCompassText').textContent = game.phase === 'playing' ? 'HEMGÅNG: GUL ZON' : `O’LEARYS ${Math.round(dist)} m`;
-      if (game.phase === 'playing' && (p.x < b.minX - 5 || p.x > b.maxX + 5 || p.z < b.minZ - 5 || p.z > b.maxZ + 5)) $('roundPhase').textContent = 'TILLBAKA TILL O’LEARYS · TIDEN GÅR';
+      if (game.phase === 'playing' && (p.x < b.minX - 5 || p.x > b.maxX + 5 || p.z < b.minZ - 5 || p.z > b.maxZ + 5)) $('roundPhase').textContent = game.practice ? 'FÖLJ RADARN TILL O’LEARYS' : 'TILLBAKA TILL O’LEARYS · TIDEN GÅR';
     }
   }
-  return {update, use, showMap, blocksInput: () => !!panel, playing: () => game.phase === 'playing',
+  return {update, use, showMap, assistLook, blocksInput: () => !!panel, playing: () => game.phase === 'playing',
     onPickup: (type, value) => {if (game.phase === 'playing') {if(type === 'energy') game.energy = Math.min(100, game.energy + value); else game.score += value;}}};
 }

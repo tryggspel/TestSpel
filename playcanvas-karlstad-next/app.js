@@ -1,5 +1,5 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=1.8.3-audio';
+import {createLastRound} from './last-round.js?v=1.9.0';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -665,7 +665,10 @@ function update(dt){
   if(lastRound?.blocksInput()){lastRound.update();return;}
   const sens=CORE_LOCK.lookSensitivity;
   const now=performance.now()*.001;
+  const manualLook=lookDX!==0||lookDY!==0;
   yaw-=lookDX*sens; pitch=Math.max(-78,Math.min(78,pitch-lookDY*sens)); lookDX=lookDY=0;
+  const assisted=lastRound?.assistLook(dt,{yaw,pitch,manual:manualLook});
+  if(assisted){yaw=assisted.yaw;pitch=assisted.pitch;}
   player.setEulerAngles(0,yaw,0); camera.setLocalEulerAngles(pitch,0,0);
 
   let ix=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0)+moveX;
