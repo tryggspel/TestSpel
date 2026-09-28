@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#0a1118">
+  <title>Karlstad City Next — PlayCanvas Prototype</title>
+  <style>
+    :root{--yellow:#ffd400;--ink:#05090d;--panel:#071219dc;--line:#ffffff30;--red:#a9342d;--green:#55d68b}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05080b;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    #application-canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;background:#0a1118}
+    #boot{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:linear-gradient(#09131c,#030507);transition:opacity .3s ease;pointer-events:none}
+    #boot.hide{opacity:0}
+    #bootCard{width:min(420px,84vw);padding:22px;border:1px solid #ffffff22;border-radius:18px;background:#081017e8;box-shadow:0 24px 90px #000b;text-align:center}
+    #bootCard b{display:block;color:var(--yellow);letter-spacing:.08em;font-size:18px}#bootCard span{display:block;margin-top:8px;color:#cdd5df;font-size:13px}
+    #bootBar{height:6px;margin-top:18px;background:#ffffff14;border-radius:20px;overflow:hidden}#bootFill{height:100%;width:8%;background:var(--yellow);transition:width .2s}
+    #brand{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));transform:translateX(-50%);z-index:30;min-width:260px;padding:7px 13px;border:1px solid #ffd40075;border-radius:11px;background:#05090dde;text-align:center;pointer-events:none;box-shadow:0 8px 30px #0007}
+    #brand b{display:block;color:var(--yellow);font-size:12px;line-height:1.1;letter-spacing:.1em}#brand span{display:block;margin-top:4px;font-size:8px;letter-spacing:.14em;color:#dce1e7b8}
+    #hud{position:fixed;left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));z-index:30;display:flex;gap:8px;align-items:center;pointer-events:none}
+    .chip{padding:7px 9px;border:1px solid #ffffff25;border-radius:10px;background:#061018c9;font-size:11px;font-weight:800;letter-spacing:.04em;box-shadow:0 5px 20px #0005}
+    #health.ok{color:#bbffd4}#health.danger{color:#ff8c86}
+    #crosshair{position:fixed;left:50%;top:50%;z-index:20;width:18px;height:18px;transform:translate(-50%,-50%);pointer-events:none}
+    #crosshair:before,#crosshair:after{content:"";position:absolute;background:#fff;box-shadow:0 0 5px #000}
+    #crosshair:before{left:8px;top:2px;width:2px;height:14px}#crosshair:after{left:2px;top:8px;width:14px;height:2px}
+    #mission{position:fixed;left:50%;bottom:max(14px,calc(env(safe-area-inset-bottom) + 14px));transform:translateX(-50%);z-index:29;padding:8px 12px;border-radius:12px;background:#05090dd6;border:1px solid #ffffff20;font-size:11px;font-weight:800;letter-spacing:.04em;pointer-events:none;max-width:min(520px,78vw);text-align:center}
+    #mission strong{color:var(--yellow)}
+    #miniWrap{position:fixed;right:max(14px,env(safe-area-inset-right));top:max(76px,calc(env(safe-area-inset-top) + 76px));z-index:28;width:160px;height:160px;border:1px solid #ffffff28;border-radius:14px;background:#061018d8;overflow:hidden;box-shadow:0 10px 30px #0008;transition:.2s}
+    #miniWrap.expanded{left:50%;right:auto;top:50%;width:min(72vw,720px);height:min(72vh,720px);transform:translate(-50%,-50%);border-color:#ffd40077;z-index:70}
+    #mini{width:100%;height:100%;display:block}
+    #mapLabel{position:absolute;left:8px;top:7px;font-size:9px;font-weight:900;letter-spacing:.12em;color:#ffffffa5;pointer-events:none}
+    #topBtns{position:fixed;right:max(12px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));z-index:31;display:flex;gap:8px}
+    .iconBtn,.actionBtn{border:1px solid #ffffff30;background:#071119d9;color:#fff;font-weight:900;letter-spacing:.07em;box-shadow:0 6px 20px #0006}
+    .iconBtn{width:44px;height:44px;border-radius:12px;font-size:17px}.iconBtn.active{border-color:#ffd400aa;color:var(--yellow)}
+    #touchUI{display:none}
+    #toast{position:fixed;left:50%;top:22%;transform:translate(-50%,-50%) scale(.96);z-index:80;padding:11px 15px;border-radius:12px;background:#09131be9;border:1px solid #ffd40088;color:#fff;font-size:12px;font-weight:800;opacity:0;transition:.18s;pointer-events:none;text-align:center;max-width:80vw}
+    #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+    #fatal{display:none;position:fixed;inset:12px;z-index:200;padding:16px;background:#210b0bf2;border:1px solid #ff6f65;border-radius:14px;color:#fff;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow:auto}
+    @media(pointer:coarse){
+      #hud{top:max(62px,calc(env(safe-area-inset-top) + 62px))}
+      #brand{top:max(8px,env(safe-area-inset-top));min-width:220px;padding:6px 10px}
+      #miniWrap{width:116px;height:116px;right:max(8px,env(safe-area-inset-right));top:max(64px,calc(env(safe-area-inset-top) + 64px))}
+      #mission{bottom:max(5px,env(safe-area-inset-bottom));font-size:9px;padding:6px 9px}
+      #touchUI{display:block;position:fixed;inset:0;z-index:40;pointer-events:none}
+      #stick{position:absolute;left:max(18px,env(safe-area-inset-left));bottom:max(28px,calc(env(safe-area-inset-bottom) + 28px));width:148px;height:148px;border-radius:50%;border:2px solid #ffffff38;background:#06111988;pointer-events:auto;touch-action:none}
+      #stickKnob{position:absolute;left:46px;top:46px;width:54px;height:54px;border-radius:50%;background:#ffffff55;border:1px solid #ffffffaa;box-shadow:0 8px 30px #0008;transform:translate(0,0)}
+      #actions{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(24px,calc(env(safe-area-inset-bottom) + 24px));display:grid;grid-template-columns:repeat(2,74px);gap:10px;pointer-events:auto}
+      .actionBtn{height:62px;border-radius:17px;font-size:11px;touch-action:none}.actionBtn.fire{background:#792b27df;border-color:#e36c62aa}.actionBtn.active{color:var(--yellow);border-color:#ffd400aa}
+      #lookHint{position:absolute;right:28%;bottom:46%;font-size:9px;color:#ffffff52;letter-spacing:.08em;pointer-events:none}
+      #topBtns{top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right))}.iconBtn{width:42px;height:42px}
+    }
+    @media(max-width:520px) and (orientation:portrait){#brand{left:42%;min-width:205px}#miniWrap{top:120px}#hud{top:64px;max-width:52vw;flex-wrap:wrap}.chip{padding:5px 7px;font-size:9px}#stick{width:132px;height:132px}#stickKnob{left:41px;top:41px;width:48px;height:48px}#actions{grid-template-columns:repeat(2,68px)}.actionBtn{height:58px}}
+  </style>
+  <script type="importmap">{"imports":{"playcanvas":"https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs"}}</script>
+</head>
+<body>
+  <canvas id="application-canvas"></canvas>
+  <div id="boot"><div id="bootCard"><b>KARLSTAD CITY NEXT</b><span id="bootText">Startar PlayCanvas…</span><div id="bootBar"><div id="bootFill"></div></div></div></div>
+  <div id="brand"><b>KARLSTAD CITY · PLAYCANVAS</b><span>STORA TORGET → MITT I CITY</span></div>
+  <div id="hud"><div class="chip" id="health">HP 100</div><div class="chip" id="fps">-- FPS</div><div class="chip" id="coords">0 · 0</div></div>
+  <div id="topBtns"><button class="iconBtn" id="autoBtn" aria-label="Autopilot">➤</button><button class="iconBtn" id="zombieBtn" aria-label="Zombie mode">☣</button><button class="iconBtn" id="resetBtn" aria-label="Reset">↻</button></div>
+  <div id="crosshair"></div>
+  <div id="miniWrap"><canvas id="mini"></canvas><div id="mapLabel">KARLSTAD</div></div>
+  <div id="mission"><strong>UPPDRAG:</strong> Ta dig från Stora Torget till Mitt i City · <span id="distance">— m</span></div>
+  <div id="touchUI"><div id="stick"><i id="stickKnob"></i></div><div id="lookHint">DRA FÖR ATT TITTA</div><div id="actions"><button class="actionBtn" id="mapBtn">KARTA</button><button class="actionBtn" id="useBtn">USE</button><button class="actionBtn" id="jumpBtn">JUMP</button><button class="actionBtn fire" id="fireBtn">FIRE</button></div></div>
+  <div id="toast"></div><div id="fatal"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
