@@ -115,7 +115,7 @@ function v29RoadMarkings(){
 }
 function v29BusShelter(x,z,rot=0){
  const root=new B.TransformNode('V29 bus shelter',scene);root.position.set(x,0,z);root.rotation.y=rot;
- for(const sx of [-1.55,1.55]){const p=B.MeshBuilder.CreateBox('bus shelter post',{width:.08,height:2.45,depth:.08},scene);p.parent=root;p.position.set(sx,1.225,0);p.material=V29.shelter;p.checkCollisions=true}
+ for(const sx of [-1.55,1.55]){const p=B.MeshBuilder.CreateBox('bus shelter post',{width:.08,height:2.45,depth:.08},scene);p.parent=root;p.position.set(sx,1.225,0);p.material=V29.shelter;p.checkCollisions=!mobileDevice}
  const roof=B.MeshBuilder.CreateBox('bus shelter roof',{width:3.35,height:.12,depth:1.35},scene);roof.parent=root;roof.position.set(0,2.42,0);roof.material=V29.shelter;
  const back=B.MeshBuilder.CreateBox('bus shelter glass',{width:3.15,height:2.05,depth:.055},scene);back.parent=root;back.position.set(0,1.22,-.58);back.material=V29.shelterGlass;
  const side=B.MeshBuilder.CreateBox('bus shelter side',{width:.055,height:2.05,depth:1.12},scene);side.parent=root;side.position.set(-1.56,1.22,0);side.material=V29.shelterGlass;
@@ -127,7 +127,7 @@ function v29BusShelter(x,z,rot=0){
 function v29StreetProps(){
  v29BusShelter(36,-30,Math.PI/2);v29BusShelter(-35,30,-Math.PI/2);
  const positions=[[-44,-24],[-30,-24],[30,-24],[44,-24],[-44,24],[-30,24],[30,24],[44,24]];
- for(const [x,z] of positions){const b=B.MeshBuilder.CreateCylinder('V29 bollard',{height:.72,diameter:.16,tessellation:12},scene);b.position.set(x,.36,z);b.material=V29.shelter;b.checkCollisions=true}
+ for(const [x,z] of positions){const b=B.MeshBuilder.CreateCylinder('V29 bollard',{height:.72,diameter:.16,tessellation:12},scene);b.position.set(x,.36,z);b.material=V29.shelter;b.checkCollisions=!mobileDevice}
 }
 
 function v31SignMaterial(name,text,bg='#13222a',fg='#ffffff',w=768,h=180){
