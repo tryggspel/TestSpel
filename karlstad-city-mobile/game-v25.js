@@ -219,7 +219,7 @@ function createStreetSigns(scene,roads){
  named.sort((a,b)=>(priority.indexOf(a.name)<0?99:priority.indexOf(a.name))-(priority.indexOf(b.name)<0?99:priority.indexOf(b.name)));
  let count=0;
  for(const r of named){if(seen.has(r.name)||count>=24)continue;seen.add(r.name);const mid=r.pts[Math.floor(r.pts.length/2)],next=r.pts[Math.min(r.pts.length-1,Math.floor(r.pts.length/2)+1)];if(!mid||!next)continue;
-  const pole=B.MeshBuilder.CreateCylinder('street pole '+r.name,{height:2.65,diameter:.075,tessellation:10},scene);pole.position.set(mid.x,1.325,mid.z);const pm=new B.PBRMaterial('street pole mat '+count,scene);pm.albedoColor=B.Color3.FromHexString('#5f6668');pm.metallic=.72;pm.roughness=.34;pole.material=pm;pole.checkCollisions=true;pole.isPickable=false;
+  const pole=B.MeshBuilder.CreateCylinder('street pole '+r.name,{height:2.65,diameter:.075,tessellation:10},scene);pole.position.set(mid.x,1.325,mid.z);const pm=new B.PBRMaterial('street pole mat '+count,scene);pm.albedoColor=B.Color3.FromHexString('#5f6668');pm.metallic=.72;pm.roughness=.34;pole.material=pm;pole.checkCollisions=!TOUCH;pole.isPickable=false;
   const pl=B.MeshBuilder.CreatePlane('street '+r.name,{width:Math.min(4.5,1.6+r.name.length*.13),height:.52,sideOrientation:B.Mesh.DOUBLESIDE},scene);pl.position.set(mid.x,2.62,mid.z);pl.material=signMat(scene,r.name);pl.billboardMode=B.Mesh.BILLBOARDMODE_Y;pl.isPickable=false;count++;
  }
 }
