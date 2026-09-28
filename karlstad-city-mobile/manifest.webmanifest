@@ -1,11 +1,11 @@
 {
-  "name":"Karlstad City V33",
+  "name":"Karlstad City V34",
   "short_name":"Karlstad City",
   "start_url":"./",
   "display":"standalone",
   "orientation":"landscape",
   "background_color":"#071015",
   "theme_color":"#0b1115",
-  "description":"Mobile-first Karlstad Sharp City build with non-blocking automap, cleaner high-resolution materials, readable streets, Mitt i City and zombie mode.",
+  "description":"Mobile-first Karlstad Playable Core with responsive joystick movement, adaptive rendering, reliable navigation, automatic city mission tour and zombie mode.",
   "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
 }
