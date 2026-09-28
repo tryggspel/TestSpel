@@ -1,17 +1,3 @@
-export const wrapAngle = a => ((a + 180) % 360 + 360) % 360 - 180;
-
-// Auto aim changes the camera only. Push direction remains the actual shot ray.
-export function steerAim(look, player, target, dt, manual = false) {
-  if (manual || !target || !(dt > 0)) return null;
-  const d = Math.hypot(target.x - player.x, target.z - player.z);
-  if (d < .6 || d > 24) return null;
-  const yaw = Math.atan2(player.x - target.x, player.z - target.z) * 180 / Math.PI;
-  const pitch = Math.atan2((target.kind === 'boss' ? 1.8 : 1.3) - (player.y ?? 1.68), d) * 180 / Math.PI;
-  const smooth = 1 - Math.exp(-dt * 10), limit = dt * 150;
-  const turn = Math.max(-limit, Math.min(limit, wrapAngle(yaw - look.yaw) * smooth));
-  return {yaw: look.yaw + turn, pitch: look.pitch + (pitch - look.pitch) * smooth};
-}
-
 export function chooseAimTarget(player, forward, actors, visible = () => true, lockedId = null) {
   const candidates = actors.filter(a => a.active && a.kind !== 'bin').map(a => {
     const dx = a.x - player.x, dz = a.z - player.z, distance = Math.hypot(dx, dz);

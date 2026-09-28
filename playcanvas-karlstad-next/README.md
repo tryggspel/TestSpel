@@ -1,23 +1,31 @@
-# Karlstad City — Sista rundan (Gameplay 1.8)
+# Karlstad City — Efter stängning (Gameplay 2.0)
 
-This is an additive gameplay pass for the active `playcanvas-karlstad-next/` game. Root navigation, PlayCanvas 2.22.4, the city data, Landmark Storefront 1.7 and Core Lock 1.3 movement constants are retained.
+The active game remains `playcanvas-karlstad-next/`, using PlayCanvas 2.22.4 and the existing city, collisions, music and movement speeds.
 
-## Play
+## Controls
 
-Choose **Nu stänger vi** to start the 90-second O’Learys challenge, or explore the existing city and speak to the guard with **E / PRATA**.
+- Left stick / WASD moves and strafes. Right-side swipes / mouse turn freely through 360°. Camera steering toward targets has been removed.
+- Mobile touch sensitivity is independent of the desktop mouse. PAUS offers sensitivity and a choice of relative swipes or a continuous right stick. The 180° button turns on the spot. Desktop left/right arrows also rotate without moving.
+- SOLSTÖT fires immediately; holding repeats ordinary shots. Left and right fire buttons allow different thumb layouts. SUPER / Q / right click fires a stronger shot costing 40 energy. Holding never selects super.
+- SIKTHJÄLP adjusts the hit margin only. It cannot rotate the camera.
+- M / KARTA pauses and opens the map. Blur, visibility loss and menus clear movement, look and firing state.
 
-- WASD + mouse; Shift to sprint and Space to jump. Mobile retains the existing joystick and look area.
-- Click/tap and release **SOLSTÖT** for a free shot. Hold at least 0.38 seconds and release for a stronger shot costing 40 solar energy.
-- Push three fans into the yellow **HEMGÅNG** circle, then send Captain Overtime home. The bin transfers impulses and earns chain bonuses.
-- Solar pads restore 35 energy and recharge after 12 seconds. Basic shots never need energy.
-- Escape / PAUS pauses the round. M / KARTA opens a real local map and pauses active play. Losing focus also pauses and clears touch/keyboard input.
-- Results show accuracy, best chain and score; retry resets the same round. A winning result can share `?challenge=sista-rundan&seed=280926&target=SCORE`.
-- Records are local to the browser and seed. This is not an online leaderboard or a server-verified competition.
+## Missions
 
-## Files and checks
+All three missions can be selected immediately; a successful result also offers the next mission.
 
-`last-round-rules.mjs` owns deterministic spawns, impulses, line-of-sight, chain scoring, progress and the round clock. `last-round.js` adds the illustrated characters, signs, UI and audio to the existing PlayCanvas scene. `last-round.css` styles the overlay without changing core control dimensions.
+1. **Sista rundan — O’Learys:** existing 90-second knockback challenge, three fans and Captain Overtime. Green direction arrow and stand marker help with flanking.
+2. **Fikapanik — Stora Torget:** 6 + 8 + 10 zombies in three waves, 150 seconds. Walkers, runners and tanks pursue the player. Solar shots damage and knock them back; chained hits and fast consecutive eliminations score bonuses. Between waves: three-second break, health and energy.
+3. **Rädda fikat — Torget to Mitt i City:** collect three thermoses and deliver outside the existing mall within 180 seconds. Twelve zombies guard the pickups and route. Gold ground markers and the radar show a walkable route.
 
-Run `node --test playcanvas-karlstad-next/tests/last-round.test.mjs` from the repository root. Tests cover complete victory, timeout, replay, pause, charge use, blocked shots, chains and frame-rate behavior.
+Action missions have 100 health, damage cooldowns and loss/retry. Practice removes the clock and cannot set records or create score challenges. Each mission has its own local record and completion badge. Sharing preserves the mission, seed and target score; there is no online leaderboard.
 
-Read-only diagnostics: `window.KarlstadRound.snapshot()` and `window.KarlstadCoreLock`. No engine switch, old prototype edits, backend or additional build tool is required. GitHub Pages uses the existing deploy workflow.
+## Performance and verification
+
+City action reuses a 12-zombie render pool, cached illustrated textures, six pooled hit labels and a fixed grid derived from the existing collision boxes. Inactive actors do not render. The route and HUD update at a reduced rate.
+
+`node --test playcanvas-karlstad-next/tests/*.test.mjs` covers rotation, pointer ownership, pause/cancel, navigation, wave victory, pursuit/damage, delivery, clocks and original knockback rules. Read-only diagnostics: `window.KarlstadRound.snapshot()` and `window.KarlstadCoreLock`.
+
+Control reference: [Activision’s official COD Mobile control guide](https://blog.activision.com/call-of-duty/2019-10/Getting-a-Grip-on-the-Call-of-Duty-Mobile-Controls): left movement stick, right-side relative look, separate weapon buttons and sensitivity settings.
+
+Deployment uses the existing GitHub Pages workflow. Physical iPhone and GPU rendering checks remain necessary; Node engine tests do not replace those checks.

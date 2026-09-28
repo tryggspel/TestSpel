@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#071015">
-<title>Karlstad City · Sista rundan på O’Learys</title>
-<meta name="description" content="Zombiefansen vägrar gå hem. Använd solstötar, rädda O’Learys och utmana en vän i Karlstad City.">
+<title>Karlstad City · Efter stängning</title>
+<meta name="description" content="Tre uppdrag i Karlstad. Rädda O’Learys, möt zombievågorna på Torget och leverera fikat till Mitt i City.">
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071015;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
 #game{width:100%;height:100%;display:block;touch-action:none}
@@ -30,7 +30,7 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:9px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=1.9.0">
+<link rel="stylesheet" href="./last-round.css?v=2.0.0">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
@@ -45,13 +45,14 @@
   <div id="reticle"></div>
   <div id="error"></div>
   <div id="joy"><i></i></div>
-  <div id="look"></div>
+  <div id="look"><div id="lookPad" hidden><i></i></div></div>
   <div id="buttons">
     <button id="superBtn" aria-label="Superstöt, kostar 40 solenergi">SUPER<span>40 ENERGI</span></button>
-    <button id="jumpBtn">HOPPA</button>
-    <button id="fireBtn" class="fire" aria-label="Solstöt, tryck för att skjuta">SOLSTÖT<span>TRYCK</span></button>
+    <button id="turnBtn" aria-label="Vänd 180 grader på stället">↶ 180°</button><button id="jumpBtn">HOPPA</button>
+    <button id="fireBtn" class="fire" aria-label="Solstöt, tryck för att skjuta">SOLSTÖT<span>TRYCK / HÅLL</span></button>
   </div>
-  <div id="roundUtilities"><button id="aimAssistBtn" aria-pressed="false">AUTOSIKTE AV</button><button id="mapBtn">KARTA</button><button id="useBtn">PRATA</button></div>
+  <button id="fireLeftBtn" aria-label="Solstöt med vänster tumme">☀<span>SKJUT</span></button>
+  <div id="roundUtilities"><button id="aimAssistBtn" aria-pressed="false">SIKTHJÄLP PÅ</button><button id="mapBtn">KARTA</button><button id="useBtn">UPPDRAG</button></div>
   <div id="lookHint" aria-hidden="true">DRA HÄR FÖR ATT SIKTA</div>
 </div>
 <div id="roundOverlay">
@@ -59,27 +60,34 @@
   <div id="roundHud" hidden>
     <div class="round-stat clock"><span id="roundClockLabel">SEKUNDER</span><strong id="roundTime">90</strong></div>
     <div class="round-stat score"><span>POÄNG</span><strong id="roundScore">0</strong></div>
-    <div class="round-stat"><span>HEMMA</span><strong id="roundProgress">0/4</strong></div>
+    <div class="round-stat"><span id="roundProgressLabel">HEMMA</span><strong id="roundProgress">0/4</strong></div>
     <div class="energy-row"><span>SOLENERGI</span><div class="energy-track"><i id="roundEnergy"></i></div><b id="roundEnergyText">60%</b></div>
+    <div id="roundHealthRow" class="energy-row" hidden><span>LIV</span><div class="energy-track"><i id="roundHealth"></i></div><b id="roundHealthText">100</b></div>
     <div id="roundPhase">KNUFFA 3 FANS TILL HEMGÅNG</div>
   </div>
   <button id="roundRadarButton" aria-label="Öppna kartan. Radarn visar norr uppåt."><canvas id="roundRadar" width="256" height="256"></canvas><span>RADAR · KARTA ↗</span></button>
   <div id="roundTactic" hidden></div>
-  <div id="roundCompass"><span id="roundCompassArrow">↑</span><span id="roundCompassText">O’LEARYS</span></div>
-  <button id="roundLaunch" hidden>SISTA RUNDAN <span>90 SEK →</span></button>
+  <div id="roundCompass"><b id="roundBearing">N · 0°</b><span id="roundCompassArrow">↑</span><span id="roundCompassText">O’LEARYS</span></div>
+  <button id="roundLaunch" hidden>VÄLJ UPPDRAG <span>3 UPPDRAG I KARLSTAD →</span></button>
   <div id="roundToast" role="status" aria-live="polite"><strong id="roundToastTitle"></strong><span id="roundToastText"></span></div>
-  <div id="solarFlash"></div>
+  <div id="solarFlash"></div><div id="damageFlash"></div>
   <div id="solarWeapon" aria-hidden="true" hidden><div class="weapon-top">SOL / 01</div><div class="weapon-barrel"><i>✳</i></div><div class="weapon-grip"></div></div>
 </div>
-<div id="roundPanel" role="dialog" aria-modal="true" aria-label="Sista rundan">
+<div id="roundPanel" role="dialog" aria-modal="true" aria-label="Karlstad efter stängning">
   <section id="round-intro" class="round-card">
-    <div class="episode-label"><span>01 / O’LEARYS</span><span>90 SEKUNDER</span></div>
+    <div class="episode-label"><span>KARLSTAD / EFTER STÄNGNING</span><span>2.0</span></div>
+    <nav id="missionPicker" aria-label="Välj uppdrag">
+      <button id="select-sista-rundan" aria-pressed="true"><b>01</b><span>SISTA RUNDAN<small>O’Learys · knuffa</small></span></button>
+      <button id="select-fikapanik" aria-pressed="false"><b>02</b><span>FIKAPANIK<small>Torget · 24 zombies</small></span></button>
+      <button id="select-radda-fikat" aria-pressed="false"><b>03</b><span>RÄDDA FIKAT<small>Mitt i City · leverera</small></span></button>
+    </nav>
+    <div class="episode-label"><span id="roundEpisode">O’LEARYS</span><span id="roundEpisodeTag">90 SEKUNDER</span></div>
     <div class="intro-icon" aria-hidden="true">✳</div>
-    <h1>SISTA<br><em>RUNDAN.</em></h1>
-    <p class="round-lead">Matchen är slut.<br>Zombiefansen håller inte med.</p>
-    <p class="round-instructions">Knuffa tre fans till den gula <b>HEMGÅNG-zonen</b>. Sedan kommer Kapten Övertid. Gå runt dem tills knuffpilen är grön. Använd soptunnan för kedjeträffar!</p>
-    <div class="instruction-chips"><span>☀ SOLSTÖT</span><span>↗ KEDJETRÄFFAR</span><span>★ SLÅ DITT REKORD</span></div>
-    <button id="roundStart" class="round-primary">NU STÄNGER VI <span>→</span></button>
+    <h1 id="roundIntroTitle">SISTA<br><em>RUNDAN.</em></h1>
+    <p id="roundIntroLead" class="round-lead">Matchen är slut. Zombiefansen håller inte med.</p>
+    <p id="roundIntroDescription" class="round-instructions">Knuffa tre fans till den gula <b>HEMGÅNG-zonen</b>. Sedan kommer Kapten Övertid. Gå runt dem tills knuffpilen är grön. Använd soptunnan för kedjeträffar!</p>
+    <div class="instruction-chips"><span>↻ FRI BLICK 360°</span><span>☀ SOLSTÖTAR</span><span>★ UTMANA EN VÄN</span></div>
+    <button id="roundStart" class="round-primary">STARTA UPPDRAG <span>→</span></button>
     <button id="roundPractice" class="round-secondary">ÖVA FÖRST · UTAN TIDSPRESS</button>
     <button id="roundExplore" class="round-tertiary">Utforska Karlstad först</button>
     <p id="roundIntroControls" class="control-hint"></p>
@@ -88,7 +96,8 @@
   <section id="round-pause" class="round-card compact" hidden>
     <div class="episode-label">TIMEOUT / KLOCKAN STÅR STILL</div>
     <h2>TA EN<br><em>FIKAPAUS.</em></h2>
-    <p><b>SOLSTÖT:</b> ett tryck, direkt knuff. <b>SUPER:</b> egen knapp, 40 energi. Gå runt figuren till ”STÅ HÄR” tills pilen blir grön. Autosikte hjälper dig hålla figuren i bild.</p>
+    <p><b>VÄNSTER:</b> gå och sidstega. <b>HÖGER:</b> vrid dig fritt. <b>SOLSTÖT:</b> tryck eller håll för salvor. <b>SUPER:</b> egen knapp, 40 energi. Sikthjälp styr aldrig kameran.</p>
+    <div class="fps-settings"><button id="lookModeBtn" class="round-secondary">SIKTA: SVEPA</button><label for="lookSensitivity">KÄNSLIGHET <output id="lookSensitivityValue">100%</output></label><input id="lookSensitivity" type="range" min="0.45" max="1.8" step="0.05" value="1"><small>Välj högerstyrspak för att fortsätta rotera medan du håller åt sidan.</small></div>
     <p id="roundPauseControls" class="control-hint"></p>
     <button id="roundResume" class="round-primary">TILLBAKA TILL MATCHEN →</button>
     <button id="roundRestart" class="round-secondary">Börja om samma runda</button>
@@ -99,7 +108,8 @@
     <h2 id="roundResultTitle"></h2>
     <div id="roundResultScore" class="result-score">0</div><div class="result-score-label">POÄNG</div>
     <p id="roundResultDetail"></p><p id="roundResultRecord" class="record"></p><p id="roundResultTarget" class="round-fine"></p>
-    <button id="roundRetry" class="round-primary">EN GÅNG TILL <span>↻</span></button>
+    <button id="roundNext" class="round-primary" hidden>NÄSTA UPPDRAG →</button>
+    <button id="roundRetry" class="round-secondary">EN GÅNG TILL <span>↻</span></button>
     <button id="roundShare" class="round-secondary">UTMANA EN VÄN</button>
     <input id="roundShareLink" aria-label="Länk till din utmaning" readonly hidden>
     <button id="roundLeave" class="round-tertiary">Tillbaka till Karlstad</button>
@@ -107,10 +117,10 @@
   <section id="round-map" class="round-card map-card" hidden>
     <div class="episode-label">KARLSTAD / CENTRUM</div><h2>HIT SKA DU.</h2>
     <canvas id="roundMap" width="500" height="500" aria-label="Karta över Torget, O’Learys och Mitt i City"></canvas>
-    <p class="round-fine">GULT: UTMANINGEN · TURKOS: DU · NORR UPPÅT</p>
+    <p class="round-fine">GULT: MÅL · TURKOS: DU · NORR UPPÅT</p>
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=1.9.0"></script>
+<script type="module" src="./app.js?v=2.0.0"></script>
 </body>
 </html>

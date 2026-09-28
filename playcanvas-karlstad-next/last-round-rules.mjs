@@ -32,7 +32,7 @@ export class LastRound {
     this.reset();
   }
   reset() {
-    this.phase = 'ready'; this.remaining = RULES.duration; this.elapsed = 0; this.practice = false;
+    this.phase = 'ready'; this.duration = this.layout.duration || RULES.duration; this.remaining = this.duration; this.elapsed = 0; this.practice = false;
     this.score = 0; this.energy = 60; this.shots = 0; this.hitShots = 0;
     this.captured = 0; this.bestChain = 0; this.cooldown = 0; this.events = [];
     this.chains = new Map(); this.chargerTimes = [0, 0]; this.contactCooldown = 0;
@@ -96,7 +96,7 @@ export class LastRound {
     let left = total;
     while (left > .00001 && this.phase === 'playing') {
       const h = Math.min(left, 1 / 60); left -= h;
-      this.elapsed += h; this.remaining = this.practice ? RULES.duration : Math.max(0, RULES.duration - this.elapsed);
+      this.elapsed += h; this.remaining = this.practice ? this.duration : Math.max(0, this.duration - this.elapsed);
       this.cooldown = Math.max(0, this.cooldown - h);
       this.contactCooldown = Math.max(0, this.contactCooldown - h);
       this.chargerTimes = this.chargerTimes.map(t => Math.max(0, t - h));

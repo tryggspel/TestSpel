@@ -1,5 +1,6 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=1.9.0';
+import {createLastRound} from './last-round.js?v=2.0.0';
+import {FpsLook, wrapYaw} from './fps-controls.mjs?v=2.0.0';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -23,6 +24,8 @@ window.KarlstadCoreLock=CORE_LOCK;
 const GRAPHICS_PASS=Object.freeze({version:'1.7.0',core:'1.3.0',mode:'landmark-storefront',heroBudget:8,rule:'no-core-feel-changes'});
 window.KarlstadGraphicsPass=GRAPHICS_PASS;
 const TOUCH_TUNE=Object.freeze({deadzone:.13,expo:.42,maxStick:.34,lookScale:.9});
+const fpsLook=new FpsLook({span:Math.min(window.innerWidth,window.innerHeight)});
+try{const saved=JSON.parse(localStorage.getItem('karlstad:fps-controls:v2')||'null');if(saved){fpsLook.sensitivity=Math.max(.45,Math.min(1.8,Number(saved.sensitivity)||1));fpsLook.mode=saved.mode==='stick'?'stick':'drag';}}catch{}
 let app,player,camera,yaw=54,pitch=-5;
 let vy=0,onGround=true;
 let colliders=[];
@@ -621,7 +624,7 @@ function tryMove(dx,dz){
 }
 
 function setupDesktop(){
-  window.addEventListener('keydown',e=>{if(lastRound?.blocksInput())return; keys.add(e.code); if(e.code==='Space')e.preventDefault();});
+  window.addEventListener('keydown',e=>{if(lastRound?.blocksInput())return; keys.add(e.code); if(e.code==='Space'||e.code==='ArrowLeft'||e.code==='ArrowRight')e.preventDefault();});
   window.addEventListener('keyup',e=>keys.delete(e.code));
   canvas.addEventListener('click',()=>{if(!lastRound?.blocksInput()){try{canvas.requestPointerLock?.()?.catch?.(()=>{});}catch{}}});
   window.addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas){lookDX+=e.movementX;lookDY+=e.movementY;}});
@@ -644,14 +647,17 @@ function setupTouch(){
   const je=e=>{if(jp!==null&&e.pointerId!==jp)return;jp=null;moveX=moveY=0;knob.style.transform='';};
   joy.addEventListener('pointerup',je);joy.addEventListener('pointercancel',je);
 
-  const look=document.getElementById('look'); let lp=null,lx=0,ly=0;
-  look.addEventListener('pointerdown',e=>{lp=e.pointerId;lx=e.clientX;ly=e.clientY;look.setPointerCapture(lp);e.preventDefault();});
-  look.addEventListener('pointermove',e=>{if(e.pointerId!==lp)return;lookDX+=(e.clientX-lx)*TOUCH_TUNE.lookScale;lookDY+=(e.clientY-ly)*TOUCH_TUNE.lookScale;lx=e.clientX;ly=e.clientY;e.preventDefault();});
-  const le=e=>{if(lp!==null&&e.pointerId!==lp)return;lp=null;};
+  const look=document.getElementById('look'),pad=document.getElementById('lookPad'); let lp=null;
+  look.addEventListener('pointerdown',e=>{
+    if(lastRound?.blocksInput()||!fpsLook.begin(e.pointerId,e.clientX,e.clientY))return;
+    lp=e.pointerId;look.setPointerCapture(lp);pad.hidden=fpsLook.mode!=='stick';pad.style.left=e.clientX+'px';pad.style.top=e.clientY+'px';e.preventDefault();
+  });
+  look.addEventListener('pointermove',e=>{if(e.pointerId!==lp)return;fpsLook.move(lp,e.clientX,e.clientY);e.preventDefault();});
+  const le=e=>{if(lp!==null&&e.pointerId!==lp)return;fpsLook.end(lp);lp=null;pad.hidden=true;};
   look.addEventListener('pointerup',le);look.addEventListener('pointercancel',le);
   joy.addEventListener('lostpointercapture',je);look.addEventListener('lostpointercapture',le);
   resetTouch=()=>{
-    const oldJp=jp,oldLp=lp;jp=lp=null;
+    const oldJp=jp,oldLp=lp;jp=lp=null;fpsLook.reset();pad.hidden=true;
     if(oldJp!==null&&joy.hasPointerCapture(oldJp))joy.releasePointerCapture(oldJp);
     if(oldLp!==null&&look.hasPointerCapture(oldLp))look.releasePointerCapture(oldLp);
   };
@@ -659,16 +665,27 @@ function setupTouch(){
   document.getElementById('jumpBtn').addEventListener('pointerdown',e=>{keys.add('Space');setTimeout(()=>keys.delete('Space'),100);e.preventDefault();});
   document.getElementById('useBtn').addEventListener('pointerdown',e=>{lastRound?.use();e.preventDefault();});
   document.getElementById('mapBtn').addEventListener('pointerdown',e=>{lastRound?.showMap();e.preventDefault();});
+  document.getElementById('turnBtn').addEventListener('pointerdown',e=>{if(!lastRound?.blocksInput()){yaw=wrapYaw(yaw+180);player.setEulerAngles(0,yaw,0);}e.preventDefault();});
+  const mode=document.getElementById('lookModeBtn'),sensitivity=document.getElementById('lookSensitivity');
+  const settings=()=>{
+    mode.textContent=fpsLook.mode==='drag'?'SIKTA: SVEPA':'SIKTA: HÖGERSPAK';
+    document.getElementById('lookHint').textContent=fpsLook.mode==='drag'?'SVEPA HÄR · VÄND 360°':'DRA OCH HÅLL · VÄND 360°';
+    document.getElementById('lookSensitivityValue').textContent=Math.round(fpsLook.sensitivity*100)+'%';
+    try{localStorage.setItem('karlstad:fps-controls:v2',JSON.stringify({mode:fpsLook.mode,sensitivity:fpsLook.sensitivity}));}catch{}
+  };
+  sensitivity.value=String(fpsLook.sensitivity);
+  sensitivity.addEventListener('input',()=>{fpsLook.sensitivity=Number(sensitivity.value);settings();});
+  mode.addEventListener('click',()=>{fpsLook.reset();fpsLook.mode=fpsLook.mode==='drag'?'stick':'drag';settings();});settings();
 }
 
 function update(dt){
   if(lastRound?.blocksInput()){lastRound.update();return;}
   const sens=CORE_LOCK.lookSensitivity;
   const now=performance.now()*.001;
-  const manualLook=lookDX!==0||lookDY!==0;
-  yaw-=lookDX*sens; pitch=Math.max(-78,Math.min(78,pitch-lookDY*sens)); lookDX=lookDY=0;
-  const assisted=lastRound?.assistLook(dt,{yaw,pitch,manual:manualLook});
-  if(assisted){yaw=assisted.yaw;pitch=assisted.pitch;}
+  fpsLook.span=Math.min(window.innerWidth,window.innerHeight);
+  const touch=fpsLook.consume(dt),turnKeys=(keys.has('ArrowRight')?1:0)-(keys.has('ArrowLeft')?1:0);
+  yaw=wrapYaw(yaw-lookDX*sens-touch.x-turnKeys*150*dt);
+  pitch=Math.max(-78,Math.min(78,pitch-lookDY*sens-touch.y));lookDX=lookDY=0;
   player.setEulerAngles(0,yaw,0); camera.setLocalEulerAngles(pitch,0,0);
 
   let ix=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0)+moveX;
