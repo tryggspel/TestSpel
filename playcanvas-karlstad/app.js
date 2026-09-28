@@ -241,11 +241,11 @@ function initScene(){
   fill.addComponent('light',{type:'directional',intensity:.42,color:new pc.Color(.58,.72,1)});
   fill.setEulerAngles(-35,210,0); app.root.addChild(fill);
   app.scene.ambientLight=new pc.Color(.34,.38,.40);
-  if(pc.FOG_LINEAR!==undefined){
-    app.scene.fog=pc.FOG_LINEAR;
-    app.scene.fogColor=new pc.Color(.46,.61,.70);
-    app.scene.fogStart=185;
-    app.scene.fogEnd=470;
+  if(pc.FOG_LINEAR!==undefined && app.scene.fog){
+    app.scene.fog.type=pc.FOG_LINEAR;
+    app.scene.fog.color=new pc.Color(.46,.61,.70);
+    app.scene.fog.start=185;
+    app.scene.fog.end=470;
   }
 
   addStreetProps();
