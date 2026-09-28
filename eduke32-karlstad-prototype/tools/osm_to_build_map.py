@@ -40,7 +40,7 @@ PLAYER_Z = -8192
 
 SECTOR_FMT = "<hhiiHHhhbBBBhhbBBBBBhhh"   # 40 bytes
 WALL_FMT = "<iihhhHhhbBBBBBhhh"           # 32 bytes
-SPRITE_FMT = "<iiiHhbBBBBBbbhhhhhhhhh"    # 44 bytes
+SPRITE_FMT = "<iiiHhbBBBBBbbhhhhhhhhhh"   # 44 bytes
 
 assert struct.calcsize(SECTOR_FMT) == 40
 assert struct.calcsize(WALL_FMT) == 32
