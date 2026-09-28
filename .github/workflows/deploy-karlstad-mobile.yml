@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'karlstad-city-mobile/**'
+      - 'eduke32-karlstad/**'
       - '.github/workflows/deploy-karlstad-mobile.yml'
   workflow_dispatch:
 
@@ -34,6 +35,10 @@ jobs:
           mkdir -p _site/karlstad-city-mobile
           cp index.html _site/index.html
           cp -R karlstad-city-mobile/. _site/karlstad-city-mobile/
+          if [ -d eduke32-karlstad ]; then
+            mkdir -p _site/eduke32-karlstad
+            cp -R eduke32-karlstad/. _site/eduke32-karlstad/
+          fi
           touch _site/.nojekyll
       - name: Upload Karlstad City
         uses: actions/upload-pages-artifact@v4
