@@ -44,7 +44,7 @@ function polishRadhus(scene){
   const clockMat=texMat(scene,'V35.1 radhus clock',(g,w,h)=>{g.clearRect(0,0,w,h);g.fillStyle='#f4eed9';g.beginPath();g.arc(w/2,h/2,w*.42,0,Math.PI*2);g.fill();g.strokeStyle='#35312b';g.lineWidth=15;g.stroke();for(let i=0;i<12;i++){const a=i*Math.PI/6;g.beginPath();g.moveTo(w/2+Math.cos(a)*w*.30,h/2+Math.sin(a)*h*.30);g.lineTo(w/2+Math.cos(a)*w*.37,h/2+Math.sin(a)*h*.37);g.lineWidth=8;g.stroke()}g.beginPath();g.moveTo(w/2,h/2);g.lineTo(w/2,h*.26);g.moveTo(w/2,h/2);g.lineTo(w*.66,h*.58);g.lineWidth=12;g.stroke()},512,512);
   plane(scene,'V35.1 Rådhuset clock',2.3,2.3,new B.Vector3(frontX+.03,11.85,cz),Math.PI/2,clockMat,r);
   const bronze=pbr(scene,'V35.1 bronze eagle','#51463a',.48,.52);
-  for(const dz of [-3.0,3.0]){
+  for(const dz of (TOUCH?[]:[-3.0,3.0])){
     const bird=new B.TransformNode('V35.1 Rådhuset eagle',scene);bird.position.set(frontX,13.0,cz+dz);bird.parent=r;
     const bodyE=B.MeshBuilder.CreateSphere('eagle body',{diameter:.55,segments:8},scene);bodyE.scaling.set(1.3,.65,.65);bodyE.material=bronze;bodyE.parent=bird;
     for(const s of [-1,1]){const wing=B.MeshBuilder.CreateBox('eagle wing',{width:.85,height:.12,depth:.42},scene);wing.position.z=s*.48;wing.rotation.x=s*.28;wing.material=bronze;wing.parent=bird}
@@ -72,7 +72,7 @@ function polishSandgrund(scene){
   box(scene,'V35.1 Sandgrund terrace',Math.min(16,b.max.x-b.min.x-2),.16,3.8,new B.Vector3(x,.12,z),0,terrace,r);
   for(const s of [-1,1])box(scene,'V35.1 Sandgrund terrace rail',.09,1.0,3.8,new B.Vector3(x+s*7.4,.58,z),0,rail,r);
   box(scene,'V35.1 Sandgrund front rail',14.9,.09,.09,new B.Vector3(x,.92,z+1.84),0,rail,r);
-  const count=TOUCH?2:4;
+  const count=TOUCH?1:3;
   for(let i=0;i<count;i++){
     const tx=x-5.4+i*3.6;
     const top=B.MeshBuilder.CreateCylinder('V35.1 Sandgrund cafe table',{height:.08,diameter:1.0,tessellation:14},scene);top.position.set(tx,.78,z);top.material=dark;top.parent=r;
@@ -84,7 +84,7 @@ function polishMittICity(scene){
   tune(scene,'Mitt i City charcoal','#505356',.8,.04);tune(scene,'Mitt i City glass','#496b78',.14,.26);tune(scene,'Mitt i City timber','#9a6a43',.75,.03);
   const c=local(13.50055,59.37988),r=root(scene,'Mitt i City V32');
   const orange=pbr(scene,'V35.1 orange pennants','#ef7d32',.7,.02),wire=pbr(scene,'V35.1 pennant wire','#31383a',.55,.4);
-  const rows=TOUCH?2:3;
+  const rows=TOUCH?1:2;
   for(let row=0;row<rows;row++){
     const z=c.z+11+row*5.2;
     box(scene,'V35.1 Mitt i City banner wire',20,.035,.035,new B.Vector3(c.x,5.6,z),0,wire,r);
@@ -108,7 +108,7 @@ function polishMittICity(scene){
 function polishSquare(scene){
   const stone=pbr(scene,'V35.1 square stone','#8f8d88',.95,.01),wood=pbr(scene,'V35.1 square wood','#866748',.82,.01);
   const red=pbr(scene,'V35.1 market red','#a74a3f',.76,.01),cream=pbr(scene,'V35.1 market cream','#e8dbbd',.82,.01),green=pbr(scene,'V35.1 market green','#58775a',.82,.01);
-  const mats=[red,cream,green];const count=TOUCH?2:4;
+  const mats=[red,cream,green];const count=TOUCH?1:3;
   for(let i=0;i<count;i++){
     const x=-13+i*8.5,z=7+(i%2)*5;
     const pole=B.MeshBuilder.CreateCylinder('V35.1 market pole',{height:2.7,diameter:.09,tessellation:8},scene);pole.position.set(x,1.35,z);pole.material=stone;
@@ -123,8 +123,12 @@ async function boot(){
   const scene=await waitScene();if(!scene)return;
   setTimeout(()=>{try{
     polishRadhus(scene);polishDomkyrka(scene);polishSandgrund(scene);polishMittICity(scene);polishSquare(scene);
-    window.KarlstadLandmarkV351={ready:true,version:'35.1'};
-    console.log('[V35.1] Landmark polish ready');
+    for(const m of scene.meshes||[]){if(!String(m.name||'').startsWith('V35.1')&&!String(m.name||'').includes('eagle'))continue;if(TOUCH)m.receiveShadows=false;m.isPickable=false;m.checkCollisions=false;try{m.freezeWorldMatrix?.();m.doNotSyncBoundingInfo=true}catch(e){}}
+    for(const n of scene.transformNodes||[]){if(String(n.name||'').startsWith('V35.1'))try{n.freezeWorldMatrix?.()}catch(e){}}
+    for(const m of scene.materials||[]){if(String(m.name||'').startsWith('V35.1'))try{m.freeze?.()}catch(e){}}
+    if(TOUCH)scene.skipPointerMovePicking=true;
+    window.KarlstadLandmarkV351={ready:true,version:'35.2-performance'};
+    console.log('[V35.2] Landmark polish frozen for performance');
   }catch(e){console.error('[V35.1] landmark polish failed',e)}},900);
 }
 boot();
