@@ -36,7 +36,9 @@ export function createLastRound(pc, host) {
     mesh.setPositions([-w / 2, 0, 0, w / 2, 0, 0, w / 2, h, 0, -w / 2, h, 0]);
     mesh.setNormals([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]);
     mesh.setUvs(0, [0, 0, 1, 0, 1, 1, 0, 1]); mesh.setIndices([0, 1, 2, 0, 2, 3]); mesh.update(pc.PRIMITIVE_TRIANGLES);
-    const m = new pc.BasicMaterial(); m.colorMap = tex; m.blendType = pc.BLEND_NORMAL; m.alphaTest = .12; m.cull = pc.CULLFACE_NONE; m.update();
+    const m = new pc.StandardMaterial(); m.useLighting = false; m.diffuse.set(0, 0, 0);
+    m.emissive.set(1, 1, 1); m.emissiveMap = tex; m.opacityMap = tex; m.opacityMapChannel = 'a';
+    m.blendType = pc.BLEND_NORMAL; m.alphaTest = .12; m.cull = pc.CULLFACE_NONE; m.update();
     const e = new pc.Entity(name); e.addComponent('render', {meshInstances: [new pc.MeshInstance(mesh, m)]});
     e.setPosition(x, y, z); root.addChild(e); return e;
   }
@@ -258,7 +260,7 @@ export function createLastRound(pc, host) {
   window.addEventListener('blur', () => {host.resetInput(); pressAt = null; if (game.phase === 'playing') pause();});
   document.addEventListener('visibilitychange', () => {if (document.hidden && game.phase === 'playing') pause();});
   $('fireBtn').textContent = 'SOLSTÖT'; $('useBtn').textContent = 'PRATA'; $('jumpBtn').textContent = 'HOPPA';
-  window.KarlstadRound = Object.freeze({version: '1.8.0', snapshot: () => ({phase: game.phase, score: game.score, energy: game.energy,
+  window.KarlstadRound = Object.freeze({version: '1.8.1', snapshot: () => ({phase: game.phase, score: game.score, energy: game.energy,
     remaining: game.remaining, seed, captured: game.captured, shots: game.shots, bestChain: game.bestChain,
     player: {x: host.player.getPosition().x, z: host.player.getPosition().z}, forward: {x: host.camera.forward.x, y: host.camera.forward.y, z: host.camera.forward.z},
     actors: game.actors.map(a => ({id: a.id, x: a.x, z: a.z, active: a.active})), goal: {...layout.goal}})});
