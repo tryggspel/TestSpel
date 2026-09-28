@@ -19,7 +19,9 @@ const CITY={
   routes:[],
   mats:{},
   ready:false,
-  lastUi:0
+  lastUi:0,
+  lastAnim:0,
+  perfMode:TOUCH?'MOBILE FAST':'DESKTOP BALANCED'
 };
 
 function waitScene(){
@@ -71,11 +73,11 @@ function injectUi(){
   style.textContent=
   '#v35live{position:fixed;left:max(12px,env(safe-area-inset-left));top:max(92px,calc(env(safe-area-inset-top) + 82px));z-index:70;pointer-events:none;width:min(360px,72vw);padding:9px 11px;border:1px solid #ffffff24;border-radius:11px;background:#061118d9;backdrop-filter:blur(12px);box-shadow:0 12px 35px #0006;color:#fff;font:700 10px/1.45 system-ui;letter-spacing:.055em}'+
   '#v35live b{color:#9fe1ca}#v35live .muted{color:#ffffff8c;font-weight:600}#v35live .row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}#v35live .dot{width:6px;height:6px;border-radius:50%;background:#8fe2be;box-shadow:0 0 10px #8fe2be}'+
-  '@media(max-width:680px){#v35live{top:max(126px,calc(env(safe-area-inset-top) + 116px));width:min(290px,70vw);font-size:9px;padding:7px 9px}}';
+  '@media(max-width:680px){#v35live{top:max(126px,calc(env(safe-area-inset-top) + 116px));width:min(290px,70vw);font-size:9px;padding:7px 9px;backdrop-filter:none;box-shadow:none}.panel{backdrop-filter:none!important}}';
   document.head.appendChild(style);
   const p=document.createElement('div');
   p.id='v35live';
-  p.innerHTML='<div class="row"><i class="dot"></i><b>LIVING CITY V35</b><span class="muted" id="v35clock">LIVE</span></div><div id="v35weather">VÄDER · HÄMTAS…</div><div id="v35traffic">TRAFIK · BERÄKNAS…</div><div id="v35people">STADSLIV · STARTAR…</div><div class="muted">INVÅNARE · 99 007 · 31 DEC 2025</div>';
+  p.innerHTML='<div class="row"><i class="dot"></i><b>LIVING CITY V35.2</b><span class="muted" id="v35clock">FAST</span></div><div id="v35weather">VÄDER · HÄMTAS…</div><div id="v35traffic">TRAFIK · BERÄKNAS…</div><div id="v35people">STADSLIV · STARTAR…</div><div class="muted">INVÅNARE · 99 007 · 31 DEC 2025 · '+CITY.perfMode+'</div>';
   document.body.appendChild(p);
 }
 function updateUi(){
@@ -92,10 +94,9 @@ function updateUi(){
   if(ck)ck.textContent=new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'});
 }
 function material(scene,name,hex,metal=.05,rough=.72){
-  const m=new B.PBRMaterial('V35 '+name,scene);
-  m.albedoColor=B.Color3.FromHexString(hex);
-  m.metallic=metal;m.roughness=rough;
-  return m;
+  const color=B.Color3.FromHexString(hex);
+  if(TOUCH){const m=new B.StandardMaterial('V35 '+name,scene);m.diffuseColor=color;m.specularColor=new B.Color3(.08,.08,.08);return m}
+  const m=new B.PBRMaterial('V35 '+name,scene);m.albedoColor=color;m.metallic=metal;m.roughness=rough;return m;
 }
 function buildMaterials(scene){
   CITY.mats.skin=material(scene,'skin','#c99579',0,.82);
@@ -103,7 +104,7 @@ function buildMaterials(scene){
   CITY.mats.dark=material(scene,'dark','#232a2d',.05,.82);
   CITY.mats.coats=['#315a68','#8b5a48','#4f6649','#625078','#6b5d38','#39445e'].map((c,i)=>material(scene,'coat '+i,c,0,.82));
   CITY.mats.car=['#1f4e68','#6c2527','#d6d4cf','#25282d','#6b7354','#9c7a33'].map((c,i)=>material(scene,'car '+i,c,.55,.33));
-  CITY.mats.glass=material(scene,'glass','#80a7b5',.2,.16);CITY.mats.glass.alpha=.72;
+  CITY.mats.glass=material(scene,'glass','#80a7b5',.2,.16);CITY.mats.glass.alpha=TOUCH?.86:.72;
   CITY.mats.rubber=material(scene,'rubber','#141719',.05,.9);
 }
 function person(scene,i){
@@ -177,8 +178,8 @@ function fallbackTrafficRoutes(){
 function spawnLife(scene){
   const wr=(CITY.walkRoutes?.length?CITY.walkRoutes:fallbackWalkRoutes()).filter(x=>x.route);
   const tr=(CITY.trafficRoutes?.length?CITY.trafficRoutes:fallbackTrafficRoutes()).filter(x=>x.route);
-  const nWalk=TOUCH?5:9;
-  const nCars=Math.max(2,Math.round((TOUCH?3:5)*CITY.traffic.factor));
+  const nWalk=TOUCH?2:6;
+  const nCars=TOUCH?0:Math.max(1,Math.round(3*CITY.traffic.factor));
   for(let i=0;i<nWalk;i++){
     const x=person(scene,i),rr=wr[i%wr.length]?.route;if(!rr)continue;
     x.metadata.route=rr;x.metadata.dist=(rr.total/nWalk)*i;const s=sampleRoute(rr,x.metadata.dist);x.position.copyFrom(s.p);x.rotation.y=Math.atan2(s.dir.x,s.dir.z);CITY.walkers.push(x);
@@ -191,9 +192,10 @@ function spawnLife(scene){
     [13.50326,59.38030,.1],[13.50217,59.38102,1.55],[13.50015,59.38034,1.52],
     [13.50465,59.38108,-1.55],[13.50118,59.37930,.06],[13.50618,59.38102,1.6]
   ];
-  parked.slice(0,TOUCH?3:6).forEach((p,i)=>{const x=car(scene,30+i,true);x.position.copyFrom(local(p[0],p[1]));x.rotation.y=p[2];CITY.parked.push(x)});
+  parked.slice(0,TOUCH?2:4).forEach((p,i)=>{const x=car(scene,30+i,true);x.position.copyFrom(local(p[0],p[1]));x.rotation.y=p[2];for(const m of x.getChildMeshes()){m.freezeWorldMatrix?.();m.doNotSyncBoundingInfo=true}CITY.parked.push(x)});
 }
 function addWetStreet(scene){
+  if(TOUCH)return;
   const w=CITY.weather||{},wet=(w.precipitation||0)>.03||((w.weather_code||0)>=51&&(w.weather_code||0)<=82);
   if(!wet)return;
   const m=new B.PBRMaterial('V35 wet asphalt',scene);m.albedoColor=B.Color3.FromHexString('#172128');m.metallic=.18;m.roughness=.12;m.alpha=.42;m.transparencyMode=B.PBRMaterial.PBRMATERIAL_ALPHABLEND;
@@ -224,12 +226,7 @@ function animate(dt){
   for(const w of CITY.walkers){
     const r=w.metadata.route;if(!r)continue;w.metadata.dist+=w.metadata.speed*dt;
     const s=sampleRoute(r,w.metadata.dist);w.position.copyFrom(s.p);w.rotation.y=Math.atan2(s.dir.x,s.dir.z);
-    const phase=performance.now()*.007+w.metadata.phase;
-    for(const m of w.getChildMeshes()){
-      if(!m.metadata?.limb)continue;
-      const swing=Math.sin(phase)*.34*m.metadata.side;
-      m.rotation.x=m.metadata.arm?-swing:swing;
-    }
+    if(!TOUCH){const phase=performance.now()*.007+w.metadata.phase;for(const m of w.getChildMeshes()){if(!m.metadata?.limb)continue;const swing=Math.sin(phase)*.34*m.metadata.side;m.rotation.x=m.metadata.arm?-swing:swing}}
   }
   for(const c of CITY.cars){
     const r=c.metadata.route;if(!r)continue;c.metadata.dist+=c.metadata.speed*dt*CITY.traffic.factor;
@@ -249,11 +246,12 @@ async function boot(){
   CITY.ready=true;updateUi();
   let last=performance.now();
   scene.onBeforeRenderObservable.add(()=>{
-    const now=performance.now(),dt=Math.min(.05,(now-last)/1000);last=now;animate(dt);
+    const now=performance.now(),stepMs=TOUCH?90:50;
+    if(now-CITY.lastAnim>=stepMs){const dt=Math.min(.12,(now-last)/1000);last=now;CITY.lastAnim=now;animate(dt)}
     if(now-CITY.lastUi>15000){CITY.lastUi=now;trafficModel();updateUi()}
   });
-  console.log('[V35] Living City ready',CITY);
+  console.log('[V35.2] Living City performance mode ready',CITY);
 }
 window.KarlstadLivingCity=CITY;
-boot().catch(e=>console.error('[V35] init failed',e));
+boot().catch(e=>console.error('[V35.2] init failed',e));
 })();
