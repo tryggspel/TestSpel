@@ -51,8 +51,8 @@ jobs:
           test -f "$SRC_DIR/eduke32.js"
           test -f "$SRC_DIR/eduke32.wasm"
           test -f "$SRC_DIR/eduke32.data"
-          rm -rf eduke32-karlstad eduke32-vanilla
-          mkdir -p eduke32-karlstad eduke32-vanilla
+          rm -rf eduke32-karlstad eduke32-vanilla eduke32-diagnostic
+          mkdir -p eduke32-karlstad eduke32-vanilla eduke32-diagnostic
           cp "$SRC_DIR/eduke32.js" eduke32-karlstad/
           cp "$SRC_DIR/eduke32.wasm" eduke32-karlstad/
           cp "$SRC_DIR/eduke32.data" eduke32-karlstad/
@@ -68,6 +68,16 @@ jobs:
           cp "$SRC_DIR/eduke32.data" eduke32-vanilla/
           cp "$SRC_DIR/eduke32-net.js" eduke32-vanilla/ 2>/dev/null || true
           cp "$SRC_DIR/grp-manifest.json" eduke32-vanilla/ 2>/dev/null || true
+
+          # Diagnostic upstream build: pristine engine + on-screen startup logs.
+          cp "$SRC_DIR/eduke32.js" eduke32-diagnostic/
+          cp "$SRC_DIR/eduke32.wasm" eduke32-diagnostic/
+          cp "$SRC_DIR/eduke32.data" eduke32-diagnostic/
+          cp "$SRC_DIR/eduke32-net.js" eduke32-diagnostic/ 2>/dev/null || true
+          cp "$SRC_DIR/grp-manifest.json" eduke32-diagnostic/ 2>/dev/null || true
+          python3 eduke32-karlstad-prototype/tools/patch_diagnostic.py \
+            --infile "$SRC_DIR/index.html" \
+            --outfile eduke32-diagnostic/index.html
           cp /tmp/karlstad-build/KARLSTAD.MAP eduke32-karlstad/
           cp /tmp/karlstad-build/karlstad-map-meta.json eduke32-karlstad/
           curl -L --fail https://raw.githubusercontent.com/DigitalCyberSoft/eduke32-wasm/${EDUKE32_UPSTREAM_SHA}/source/build/buildlic.txt -o eduke32-karlstad/BUILDLIC.TXT
@@ -77,8 +87,10 @@ jobs:
             --outfile eduke32-karlstad/index.html
           BUILD_ID="karlstad-${GITHUB_RUN_NUMBER}-$(git rev-parse --short HEAD)"
           VANILLA_ID="vanilla-${GITHUB_RUN_NUMBER}-$(git rev-parse --short HEAD)"
+          DIAG_ID="diag-${GITHUB_RUN_NUMBER}-$(git rev-parse --short HEAD)"
           sed -i "s/__BUILD_ID__/${BUILD_ID}/g" eduke32-karlstad/index.html
           sed -i "s/__BUILD_ID__/${VANILLA_ID}/g" eduke32-vanilla/index.html
+          sed -i "s/__BUILD_ID__/${DIAG_ID}/g" eduke32-diagnostic/index.html
           printf '%s\n' \
             'Karlstad City BUILD/EDuke32 WASM prototype' \
             "EDuke32-WASM release: ${EDUKE32_RELEASE}" \
@@ -92,14 +104,21 @@ jobs:
             "Upstream source pin: ${EDUKE32_UPSTREAM_SHA}" \
             "Build: ${VANILLA_ID}" \
             > eduke32-vanilla/PROTOTYPE.txt
+          printf '%s\n' \
+            'EDuke32-WASM iOS diagnostic build' \
+            "EDuke32-WASM release: ${EDUKE32_RELEASE}" \
+            "Upstream source pin: ${EDUKE32_UPSTREAM_SHA}" \
+            "Build: ${DIAG_ID}" \
+            > eduke32-diagnostic/PROTOTYPE.txt
           ls -lh eduke32-karlstad
           ls -lh eduke32-vanilla
+          ls -lh eduke32-diagnostic
 
       - name: Commit built prototype
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add eduke32-karlstad eduke32-vanilla
+          git add eduke32-karlstad eduke32-vanilla eduke32-diagnostic
           if git diff --cached --quiet; then
             echo "No prototype output changes."
             exit 0
