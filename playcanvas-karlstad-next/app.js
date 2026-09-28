@@ -7,16 +7,19 @@ const loadBar=document.getElementById('loadBar');
 const status=document.getElementById('status');
 const mission=document.getElementById('mission');
 const errorEl=document.getElementById('error');
+const bark=document.getElementById('bark');
 
 const ORIGIN={lat:59.380767,lon:13.50295};
 const MALL={lat:59.37988,lon:13.50055};
+const OLEARYS={lat:59.380512,lon:13.503791};
 const RADIUS=260;
 const PLAYER_RADIUS=0.42;
 const EYE=1.68;
 const CORE_LOCK=Object.freeze({version:'1.3.0',baseline:'1.2.2',lookSensitivity:.12,walkSpeed:7.2,sprintMultiplier:1.55,jumpVelocity:6.2,gravity:16,playerRadius:.42,mobileMaxPixelRatio:1.25,desktopMaxPixelRatio:1.6,maxBuildings:95,detailRadius:92});
 window.KarlstadCoreLock=CORE_LOCK;
-const GRAPHICS_PASS=Object.freeze({version:'1.4.0',core:'1.3.0',mode:'static-hero-detail',heroBudget:5});
+const GRAPHICS_PASS=Object.freeze({version:'1.5.0',core:'1.3.0',mode:'stylized-content',heroBudget:6,rule:'no-core-feel-changes'});
 window.KarlstadGraphicsPass=GRAPHICS_PASS;
+const TOUCH_TUNE=Object.freeze({deadzone:.13,expo:.42,maxStick:.34,lookScale:.9});
 let app,player,camera,yaw=54,pitch=-5;
 let vy=0,onGround=true;
 let colliders=[];
@@ -26,6 +29,9 @@ const keys=new Set();
 let objectiveMarker=null,objectiveLight=null;
 let pickups=[];
 let pickupCount=0;
+let cityPower=0;
+let barkTimer=0;
+let audioCtx=null;
 let lowFpsSeconds=0;
 let bootStage='module';
 
@@ -56,7 +62,8 @@ function mat(hex,metal=0,gloss=.25){
 const M={
   ground:null,plaza:null,building:null,stone:null,plaster:null,brick:null,light:null,glass:null,
   hero:null,heroDark:null,road:null,sidewalk:null,marking:null,grass:null,tree:null,trunk:null,
-  metal:null,marker:null,windowCool:null,windowWarm:null,door:null,accent:null,concrete:null
+  metal:null,marker:null,windowCool:null,windowWarm:null,door:null,accent:null,concrete:null,
+  olearysGreen:null,olearysDark:null,xp:null,energy:null
 };
 
 function addBox(name,x,y,z,sx,sy,sz,material){
@@ -141,10 +148,46 @@ function addRouteMarkers(){
     e.__routePhase=i*.47;
   }
 }
-function addPickup(x,z){
-  const e=addSphere('city-token',x,1.05,z,.34,M.marker);
+function showBark(text){
+  if(!bark) return;
+  bark.textContent=text;
+  bark.classList.remove('show');
+  void bark.offsetWidth;
+  bark.classList.add('show');
+  clearTimeout(barkTimer);
+  barkTimer=setTimeout(()=>bark.classList.remove('show'),1350);
+}
+function rewardSound(kind){
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC) return;
+    if(!audioCtx) audioCtx=new AC();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    const now=audioCtx.currentTime;
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type='triangle';
+    o.frequency.setValueAtTime(kind==='energy'?420:620,now);
+    o.frequency.exponentialRampToValueAtTime(kind==='energy'?690:940,now+.11);
+    g.gain.setValueAtTime(.0001,now);
+    g.gain.exponentialRampToValueAtTime(.055,now+.012);
+    g.gain.exponentialRampToValueAtTime(.0001,now+.14);
+    o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+.15);
+  }catch(e){}
+}
+const PICKUP_BARKS=[
+  'NU SNACKAR VI.',
+  'KARLSTADKRAFT +',
+  'EXAKT VAD JAG BEHÖVDE.',
+  'GRATIS LOOT. TACKAR.',
+  'FULL FART IGEN.',
+  'DÄR SATT DEN.'
+];
+function addPickup(x,z,type='xp',value=25){
+  const e=addSphere(type==='energy'?'energy-pickup':'xp-pickup',x,1.05,z,type==='energy'?.39:.32,type==='energy'?M.energy:M.xp);
   e.__baseY=1.05;
   e.__phase=pickups.length*.9;
+  e.__type=type;
+  e.__value=value;
   pickups.push(e);
 }
 function addGraphicsPass12(){
@@ -152,7 +195,10 @@ function addGraphicsPass12(){
   addRoadDetails();
   addRouteMarkers();
   // Small rewards make the square worth exploring rather than only crossing.
-  [[-12,-10],[12,-9],[-12,11],[12,10]].forEach(p=>addPickup(p[0],p[1]));
+  addPickup(-12,-10,'xp',20);
+  addPickup(12,-9,'energy',30);
+  addPickup(-12,11,'xp',20);
+  addPickup(12,10,'energy',30);
 }
 function addFacadePass12(b,hero,seed){
   const near=b.dist<CORE_LOCK.detailRadius;
@@ -218,6 +264,28 @@ function addHeroLandmarkPass14(b){
     addBox('g14-sandgrund-terrace',b.cx,.18,frontZ-2.2,Math.min(13,w*.86),.22,3.9,M.light);
   }
 }
+
+function addContentGraphicsPass15(){
+  // Real-world anchor: O'Learys Karlstad, Tingvallagatan 9.
+  // Stylized on purpose: clear silhouette / colour identity over photorealism.
+  const [ox,oz]=localXY(OLEARYS.lon,OLEARYS.lat);
+  addBox('g15-olearys-facade',ox,2.55,oz,.34,5.1,13.8,M.olearysGreen);
+  addBox('g15-olearys-dark-band',ox-.22,4.62,oz,.16,.62,11.8,M.olearysDark);
+  addBox('g15-olearys-awning',ox-.82,2.75,oz,1.45,.18,10.7,M.olearysDark);
+  addBox('g15-olearys-door',ox-.24,1.45,oz-3.65,.18,2.8,2.1,M.door);
+  addBox('g15-olearys-window-a',ox-.25,1.85,oz+.35,.17,2.55,4.35,M.windowWarm);
+  addBox('g15-olearys-window-b',ox-.25,1.85,oz+4.5,.17,2.55,2.65,M.windowCool);
+  addBox('g15-olearys-sign',ox-.27,4.62,oz,.13,.48,8.3,M.marking);
+  addBox('g15-olearys-green-cap',ox-.31,5.22,oz,.12,.16,11.7,M.olearysGreen);
+  addPlanter(ox-1.55,oz-5.35); addPlanter(ox-1.55,oz+5.35);
+
+  // Extra reward breadcrumbs: draw the player toward the landmark and main route.
+  addPickup(ox-4.0,oz-4.8,'xp',25);
+  addPickup(ox-4.0,oz+4.8,'energy',35);
+  const [mx,mz]=localXY(MALL.lon,MALL.lat);
+  addPickup(mx+7,mz+4,'xp',30);
+}
+
 function addStreetProps(){
   const trees=[
     [-22,-25],[-13,-27],[14,-26],[24,-22],[-35,5],[-36,18],[34,4],[36,18],
@@ -251,6 +319,10 @@ function initScene(){
   M.door=mat(0x263036,.12,.68);
   M.accent=mat(0xb33b30,.05,.38);
   M.concrete=mat(0x6c6e6a,0,.15);
+  M.olearysGreen=mat(0x17623b,.02,.42);
+  M.olearysDark=mat(0x12362b,.04,.5);
+  M.xp=mat(0x5bc0eb,.04,.62);
+  M.energy=mat(0xf4c542,.02,.68);
 
   // Big, cheap surfaces first: readable city structure without texture downloads.
   addBox('ground',0,-.35,0,620,.6,620,M.ground);
@@ -292,8 +364,9 @@ function initScene(){
   }
 
   addStreetProps();
-  // 1.2 decoration is enhancement-only: never let one prop kill the playable base scene on Safari.
+  // Enhancement passes are fail-soft: never let content detail kill the playable base scene.
   try { addGraphicsPass12(); } catch(e) { console.error('[Graphics 1.2 decorations skipped]',e); }
+  try { addContentGraphicsPass15(); } catch(e) { console.error('[Content/Graphics 1.5 skipped]',e); }
 
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
   objectiveMarker=addCylinder('mitt-i-city-marker',mx,5,mz,.72,10,M.marker);
@@ -378,8 +451,14 @@ function setupTouch(){
   const joy=document.getElementById('joy'),knob=joy.querySelector('i'); let jp=null;
   function jm(x,y){
     const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
-    let dx=x-cx,dy=y-cy; const max=r.width*.32,l=Math.hypot(dx,dy)||1;
-    if(l>max){dx*=max/l;dy*=max/l;} moveX=dx/max;moveY=dy/max;knob.style.transform='translate('+dx+'px,'+dy+'px)';
+    let dx=x-cx,dy=y-cy; const max=r.width*TOUCH_TUNE.maxStick,l=Math.hypot(dx,dy);
+    if(l>max){dx*=max/l;dy*=max/l;}
+    const mag=Math.min(1,(Math.hypot(dx,dy)/max));
+    const live=Math.max(0,(mag-TOUCH_TUNE.deadzone)/(1-TOUCH_TUNE.deadzone));
+    const curved=(1-TOUCH_TUNE.expo)*live+TOUCH_TUNE.expo*live*live;
+    const dl=Math.hypot(dx,dy)||1;
+    moveX=(dx/dl)*curved; moveY=(dy/dl)*curved;
+    knob.style.transform='translate('+dx+'px,'+dy+'px)';
   }
   joy.addEventListener('pointerdown',e=>{jp=e.pointerId;joy.setPointerCapture(jp);jm(e.clientX,e.clientY);e.preventDefault();});
   joy.addEventListener('pointermove',e=>{if(e.pointerId===jp){jm(e.clientX,e.clientY);e.preventDefault();}});
@@ -388,7 +467,7 @@ function setupTouch(){
 
   const look=document.getElementById('look'); let lp=null,lx=0,ly=0;
   look.addEventListener('pointerdown',e=>{lp=e.pointerId;lx=e.clientX;ly=e.clientY;look.setPointerCapture(lp);e.preventDefault();});
-  look.addEventListener('pointermove',e=>{if(e.pointerId!==lp)return;lookDX+=e.clientX-lx;lookDY+=e.clientY-ly;lx=e.clientX;ly=e.clientY;e.preventDefault();});
+  look.addEventListener('pointermove',e=>{if(e.pointerId!==lp)return;lookDX+=(e.clientX-lx)*TOUCH_TUNE.lookScale;lookDY+=(e.clientY-ly)*TOUCH_TUNE.lookScale;lx=e.clientX;ly=e.clientY;e.preventDefault();});
   const le=e=>{if(lp!==null&&e.pointerId!==lp)return;lp=null;};
   look.addEventListener('pointerup',le);look.addEventListener('pointercancel',le);
 
@@ -431,13 +510,19 @@ function update(dt){
     const ep=e.getPosition();
     e.setPosition(ep.x,e.__baseY+Math.sin(now*2.4+e.__phase)*.16,ep.z);
     if(Math.hypot(p.x-ep.x,p.z-ep.z)<1.35){
-      e.enabled=false; pickupCount++;
-      mission.textContent='CITY TOKEN '+pickupCount+'/'+pickups.length+' · UTFORSKA TORGET';
+      e.enabled=false; pickupCount++; cityPower+=e.__value||0;
+      rewardSound(e.__type);
+      const barkText=PICKUP_BARKS[(pickupCount-1)%PICKUP_BARKS.length]+(e.__type==='energy'?' ENERGI +'+e.__value:' XP +'+e.__value);
+      showBark(barkText);
+      mission.textContent=(e.__type==='energy'?'ENERGI':'XP')+' +'+e.__value+' · POWER '+cityPower;
     }
   });
 
+  const [ox,oz]=localXY(OLEARYS.lon,OLEARYS.lat);
+  const od=Math.hypot(p.x-ox,p.z-oz);
   const fps=Math.round(app.stats.frame.fps);
-  status.textContent='FPS '+fps+'\nMITT I CITY '+Math.round(d)+' m\nTOKENS '+pickupCount+'/'+pickups.length;
+  status.textContent='FPS '+fps+'\nMITT I CITY '+Math.round(d)+' m\nPOWER '+cityPower+' · '+pickupCount+'/'+pickups.length;
+  if(od<9 && d>=8) mission.textContent="O'LEARYS · TINGVALLAGATAN 9 · LANDMARK";
   if(d<8) mission.textContent='MÅL NÅTT · MITT I CITY · CORE LOCK 1.3';
 }
 
@@ -471,7 +556,7 @@ async function boot(){
     const osm=await r.json();
     bootStage='Byggnader';
     const n=addBuildings(osm);
-    loadText.textContent='Lägger Core Lock 1.3 + Graphics 1.4… '+n+' byggnader'; loadBar.style.width='82%';
+    loadText.textContent='Lägger Core Lock 1.3 + Content/Graphics 1.5… '+n+' byggnader'; loadBar.style.width='82%';
 
     bootStage='Kontroller';
     setupDesktop();setupTouch();
