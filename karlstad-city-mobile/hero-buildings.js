@@ -1,6 +1,6 @@
 (function(){
   window.KarlstadHeroBuildings={
-    version:33,
+    version:34,
     targets:[
       {
         key:'sandgrund',
