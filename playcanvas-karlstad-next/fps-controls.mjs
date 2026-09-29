@@ -1,5 +1,7 @@
 export const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 export const wrapYaw = n => ((n + 180) % 360 + 360) % 360 - 180;
+// One thumb: vertical movement and horizontal rotation, with no camera attraction to enemies.
+export const oneThumbIntent=(x,y)=>({turn:clamp(Number(x)||0,-1,1)*150,forward:clamp(Number(y)||0,-1,1),strafe:0});
 
 // Relative touch look, independent of movement, weapons and targets.
 export class FpsLook {

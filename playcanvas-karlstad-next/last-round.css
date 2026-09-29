@@ -181,6 +181,58 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
  #refillBtn{top:max(237px,calc(env(safe-area-inset-top) + 229px));left:max(12px,env(safe-area-inset-left));font-size:8px;min-height:36px;padding:8px 10px}
  #journeyPickupToast{top:282px;font-size:9px;width:max-content;max-width:86vw}
 }
+
+/* Stadsjakten: readable objective, optional single-thumb controls and a light bus cockpit. */
+.city-card{width:460px}.city-card h1{font-size:58px;margin-top:18px}.city-rules{display:grid;gap:10px;margin:20px 0}.city-rules span{display:block;background:#204637;border-left:3px solid #8be2cf;padding:11px 13px;font:400 11px/1.5 system-ui;color:#cfdfc8}.city-rules b{display:block;font:900 11px system-ui;color:#f7d579;margin-bottom:4px}
+#cityEventHud{position:absolute;left:50%;top:167px;transform:translateX(-50%);width:min(365px,70vw);padding:8px 12px;border-left:3px solid #8debe5;border-radius:4px;background:#143943ec;text-align:center}
+#cityEventHud b{display:block;font:900 10px/1.3 system-ui;color:#a7fbef}#cityEventHud span{display:block;margin-top:4px;font:700 8px/1.4 system-ui;color:#e4ead1}
+.journey-playing #journeyPickupToast{top:228px}
+#cityShareLink{width:100%;padding:10px;margin-top:12px;background:#153c31;border:1px solid #a1d0b2;color:#fff0cf}
+#round-album figure{margin:16px 0;padding:10px;background:#214635;border:1px solid #92b29955}#round-album img{display:block;width:100%;height:auto}#round-album figcaption{padding:8px 0;font:800 10px system-ui;color:#cbd8bd}
+#round-album{max-height:92dvh;overflow:auto;overscroll-behavior:contain}
+#handModeHint{margin:10px 0 14px}.one-hand #lookModeBtn{opacity:.5}
+#busLayer{position:fixed;inset:0;z-index:80;pointer-events:auto;color:#fff1cd;overflow:hidden;touch-action:none}
+.bus-riding .hud,.bus-riding #roundOverlay{visibility:hidden}
+.bus-windscreen{position:absolute;inset:-5px;border:16px solid #233b32;border-bottom-width:105px;box-shadow:inset 0 0 0 5px #a1aa7d;pointer-events:none}
+.bus-header{position:absolute;top:max(15px,env(safe-area-inset-top));left:30px;right:30px;display:flex;align-items:center;gap:15px;padding:10px 14px;background:#143e31f5;border:2px solid #dbba66;border-radius:7px;box-shadow:4px 4px 0 #122c26}
+.bus-header>b{font:1000 17px system-ui;color:#ffdc7a;flex:1}.bus-header>b span{display:block;font-size:9px;color:#eef3ca;letter-spacing:.14em;margin-top:4px}.bus-header>strong{font:1000 30px/1 system-ui}.bus-header small{display:block;font:800 7px system-ui;margin-top:5px}.bus-header button{height:42px;min-width:42px;border:1px solid #cce7b6;background:#254e37;color:#f6edb7;font-size:20px;border-radius:5px}
+.bus-progress{position:absolute;left:34px;right:34px;top:93px;height:4px;background:#213e3199}.bus-progress i{display:block;height:100%;width:0;background:#a9edbc}
+.bus-driver{position:absolute;left:6%;bottom:190px;width:160px;filter:drop-shadow(3px 4px 0 #182f29);pointer-events:none}.bus-driver canvas{width:100%;display:block}.bus-driver span{display:block;background:#f4ce71;color:#183c2e;font:900 8px system-ui;text-align:center;padding:5px;border:2px solid #203a2d;transform:rotate(-4deg)}
+#busQuip{position:absolute;left:50%;top:23%;transform:translateX(-50%) rotate(-2deg);background:#f9dda0;color:#1e4030;box-shadow:3px 4px 0 #17372b;padding:12px 16px;border:3px solid #243d31;max-width:85vw;width:max-content;font:1000 13px system-ui;text-align:center}
+.bus-dashboard{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:min(560px,100%);padding:15px 25px max(15px,env(safe-area-inset-bottom));border:5px solid #213c2d;border-bottom:0;border-radius:28px 28px 0 0;background:#eed49f;color:#183b2a;box-shadow:0 -4px 0 #62816a}
+#busInstruction{display:block;font:1000 18px system-ui;text-align:center;letter-spacing:-.03em}
+.bus-balance-meter{position:relative;height:15px;background:#d27963;border:2px solid #234330;border-radius:15px;margin:10px 8px 5px}.bus-balance-meter>span{position:absolute;left:32%;width:36%;inset-block:0;background:#8ac896}.bus-balance-meter>i{position:absolute;top:-5px;height:22px;width:9px;background:#204438;border:2px solid #fff1be;left:50%;transform:translateX(-50%);border-radius:4px}
+.bus-dashboard p{font:700 10px system-ui;text-align:center;margin:7px 0}.bus-dashboard>small{display:block;font:600 8px system-ui;text-align:center;margin-top:7px;color:#3f674e}
+#busBalance{position:relative;display:flex;align-items:center;justify-content:space-between;height:68px;margin:12px 0;border:3px solid #23432f;border-radius:38px;background:#365d42;color:#f7dfa3;touch-action:none;user-select:none;cursor:ew-resize;padding:0 18px;font:900 10px system-ui}
+#busThumb{position:absolute;left:calc(50% - 27px);top:5px;width:54px;height:52px;border:4px solid #123322;border-radius:50%;background:#f0c967;box-shadow:inset 0 -5px 0 #c49b4c;pointer-events:none}
+.bus-condition{display:flex;align-items:center;gap:8px;font:900 8px system-ui}.bus-condition>div{height:5px;background:#adab81;flex:1;border-radius:3px;overflow:hidden}.bus-condition i{display:block;height:100%;width:100%;background:#377955}.bus-danger .bus-windscreen{box-shadow:inset 0 0 30px 12px #e6634577,inset 0 0 0 5px #efb55a}
+#busPaused{position:absolute;inset:0;background:#112b23db;display:grid;place-items:center}#busPaused>div{max-width:85vw;padding:25px;background:#173c2b;border:2px solid #e2be64;border-radius:8px}#busPaused h2{font:1000 25px system-ui}#busPaused p{font:400 12px system-ui;margin-bottom:22px}
+@media(pointer:coarse){
+ .one-hand #look,.one-hand #fireLeftBtn,.one-hand #buttons #fireBtn,.one-hand #buttons #jumpBtn,.one-hand #buttons #turnBtn,.one-hand #aimAssistBtn,.one-hand #mapBtn,.one-hand #refillBtn{display:none}
+ .one-hand #joy{left:50%;transform:translateX(-50%);bottom:max(25px,env(safe-area-inset-bottom));width:148px;height:148px;border-color:#f1d48188}.one-hand #joy i{left:51px;top:51px;background:#f0d58cb3}
+ .one-hand #buttons{display:block;bottom:max(60px,env(safe-area-inset-bottom));right:14px}.one-hand #buttons #superBtn{height:54px;width:66px;font-size:9px}
+ .one-hand #roundUtilities{position:fixed;top:auto;bottom:max(193px,calc(env(safe-area-inset-bottom) + 187px));left:50%;transform:translateX(-50%);max-width:none;white-space:nowrap}.one-hand #roundUtilities #useBtn{min-width:156px;min-height:42px;font-size:9px;background:#eed18b;color:#183d2b;border:2px solid #244e36}
+ .one-hand #lookHint{left:50%;right:auto;transform:translateX(-50%);bottom:max(178px,env(safe-area-inset-bottom));max-width:90vw;width:max-content;font-size:7px}
+ .one-hand #roundCompass{bottom:max(241px,calc(env(safe-area-inset-bottom) + 238px));max-width:85vw}.one-hand #solarWeapon{left:5px;bottom:-10px;opacity:.75}
+}
+@media(max-width:850px){
+ #cityEventHud{top:183px;left:12px;right:12px;transform:none;width:auto;padding:8px 11px;text-align:left}#cityEventHud b{font-size:9px}
+ .journey-playing #roundUtilities{top:249px}.journey-playing #refillBtn{top:290px}.journey-playing #journeyPickupToast{top:336px}
+ .journey-playing.one-hand #roundUtilities{top:auto}.journey-playing.one-hand #journeyPickupToast{top:241px}
+ .bus-driver{left:-16px;bottom:221px;width:120px}.bus-header{left:20px;right:20px;top:17px}.bus-header>b{font-size:15px}.bus-header>strong{font-size:27px}.bus-progress{top:90px}
+ .bus-dashboard{padding:12px 20px max(15px,env(safe-area-inset-bottom))}#busInstruction{font-size:16px}#busQuip{top:24%;font-size:11px;max-width:87vw;padding:9px 12px}
+ .city-card h1{font-size:49px}.city-rules{gap:7px;margin:15px 0}.city-rules span{font-size:10px;padding:9px 11px}
+}
+@media(max-height:600px){
+ #cityEventHud{top:126px;left:50%;right:auto;transform:translateX(-50%);width:285px;text-align:center;padding:5px 10px}#cityEventHud b{font-size:8px}#cityEventHud span{font-size:7px}
+ .journey-playing #roundUtilities{top:59px}.journey-playing #refillBtn{top:104px}.journey-playing #journeyPickupToast,.journey-playing.one-hand #journeyPickupToast{top:184px}
+ .one-hand #joy{left:max(80px,env(safe-area-inset-left));width:120px;height:120px;bottom:20px}.one-hand #joy i{left:37px;top:37px}
+ .one-hand #roundUtilities{top:auto;bottom:32px;left:auto;right:18px;transform:none}.one-hand #roundUtilities #useBtn{min-width:125px;min-height:38px}.one-hand #lookHint{bottom:148px;left:25px;transform:none;max-width:145px;text-align:left}
+ .one-hand #roundCompass{bottom:12px;max-width:43vw}.one-hand #buttons{bottom:90px;right:25px}.one-hand #solarWeapon{left:calc(50% + 70px)}
+ .bus-dashboard{width:400px;padding:8px 20px 10px}.bus-driver{left:3%;bottom:90px;width:115px}.bus-header{top:10px;left:20px;right:20px;padding:6px 12px}.bus-header>strong{font-size:22px}.bus-header>b{font-size:13px}.bus-header button{height:34px;min-width:34px}.bus-progress{top:72px}
+ #busQuip{top:24%;font-size:10px}#busBalance{height:48px;margin:7px 0}#busThumb{width:40px;height:38px;left:calc(50% - 20px);top:2px}.bus-dashboard p{margin:4px 0;font-size:8px}.bus-dashboard>small{font-size:7px;margin-top:4px}#busInstruction{font-size:14px}.bus-balance-meter{height:11px;margin:7px 8px 3px}
+ .city-card h1{font-size:35px}.city-rules{gap:5px;margin:10px 0}.city-rules span{font-size:9px;padding:6px 10px}.city-rules b{font-size:10px}.city-card .round-lead{font-size:14px}
+}
 @media(max-height:600px){
  #refillBtn{top:104px;font-size:8px;min-height:34px;padding:8px 10px}
  #journeyPickupToast{top:145px;font-size:9px}

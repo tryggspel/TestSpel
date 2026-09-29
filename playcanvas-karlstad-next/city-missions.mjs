@@ -1,4 +1,4 @@
-import {LastRound} from './last-round-rules.mjs?v=2.1.0';
+import {LastRound} from './last-round-rules.mjs?v=2.2.0';
 
 export const MISSIONS = Object.freeze([
   {id:'sista-rundan',name:'Sista rundan',place:'O’Learys',tag:'KNUFFA · 90 SEK',title:'SISTA<br><em>RUNDAN.</em>',lead:'Matchen är slut. Zombiefansen håller inte med.',description:'Knuffa tre fans till HEMGÅNG. Sedan kommer Kapten Övertid. Gå bakom figurerna och använd soptunnan för kedjeträffar.',win:'STÄNGT & KLART.'},
@@ -83,7 +83,7 @@ export class CityMission extends LastRound {
     }
   }
   spawn(a,p,kind){
-    const spot=this.nav.point(p),t=types[kind];Object.assign(a,spot,t,{kind,maxHp:t.hp,active:true,vx:0,vz:0,shot:0,touchTime:-100,radius:kind==='tank'?.85:.65,mass:kind==='tank'?1.5:1});
+    const spot=this.nav.point(p),t=types[kind];Object.assign(a,spot,t,{kind,maxHp:t.hp,active:true,vx:0,vz:0,shot:0,touchTime:-100,ambushId:null,patrolId:null,contractId:null,ambushAt:undefined,radius:kind==='tank'?.85:.65,mass:kind==='tank'?1.5:1});
   }
   spawnWave(){
     this.wave++;this.waveDelay=0;const count=4+this.wave*2;

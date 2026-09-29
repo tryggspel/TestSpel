@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#071015">
-<title>Karlstad City · Efter stängning</title>
-<meta name="description" content="Kaffejäkt i Karlstad! Samla termosar, hitta hemligheter och stoppa zombiebakhåll på väg till fyra uppdrag, från O’Learys till Sandgrund.">
+<title>Karlstad City · Staden jagar dig</title>
+<meta name="description" content="Tre minuter, 800 XP och en stad full av zombies. Gör snabba gatuhändelser, balansera zombie-bussen och fly till en tryggzon i Karlstad.">
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071015;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
 #game{width:100%;height:100%;display:block;touch-action:none}
@@ -30,7 +30,7 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:9px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.1.0">
+<link rel="stylesheet" href="./last-round.css?v=2.2.0">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
@@ -67,6 +67,7 @@
   </div>
   <button id="refillBtn" aria-label="Växla 25 kaffepoäng till 40 solenergi">☀ +40 SOL · 25 P</button>
   <div id="journeyPickupToast" role="status" aria-live="polite"></div>
+  <div id="cityEventHud"><b id="cityEventTitle">800 XP → TRYGGZON</b><span id="cityEventDetail">Gatuhändelser · zombie-buss · flykt</span></div>
   <button id="roundRadarButton" aria-label="Öppna kartan. Radarn visar norr uppåt."><canvas id="roundRadar" width="256" height="256"></canvas><span>RADAR · KARTA ↗</span></button>
   <div id="roundTactic" hidden></div>
   <div id="roundCompass"><b id="roundBearing">N · 0°</b><span id="roundCompassArrow">↑</span><span id="roundCompassText">O’LEARYS</span></div>
@@ -75,9 +76,35 @@
   <div id="solarFlash"></div><div id="damageFlash"></div>
   <div id="solarWeapon" aria-hidden="true" hidden><div class="weapon-top">SOL / 01</div><div class="weapon-barrel"><i>✳</i></div><div class="weapon-grip"></div></div>
 </div>
+<div id="busLayer" hidden>
+  <div class="bus-windscreen" aria-hidden="true"></div>
+  <div class="bus-header"><b>LINJE 666 <span id="busDestination">SANDGRUND</span></b><strong><span id="busClock">30</span><small>SEK KVAR</small></strong><button id="busPause" aria-label="Pausa bussresan">Ⅱ</button></div>
+  <div class="bus-progress"><i id="busProgress"></i></div>
+  <div class="bus-driver"><canvas id="busDriver" width="160" height="180"></canvas><span>ZOMBIECHAUFFÖREN</span></div>
+  <div id="busQuip">KÖRKORT? JAG HAR BUSSKORT.</div>
+  <div class="bus-dashboard">
+    <b id="busInstruction">HÅLL DIG I MITTEN</b>
+    <div class="bus-balance-meter"><span></span><i id="busBalanceDot"></i></div>
+    <p>Håll markören i grönt. Flytta vikten åt motsatt håll.</p>
+    <div id="busBalance" aria-label="Dra åt vänster eller höger för att balansera bussen"><span>← VÄNSTER</span><i id="busThumb"></i><span>HÖGER →</span></div>
+    <div class="bus-condition"><span>BUSSENS SKICK</span><div><i id="busHealth"></i></div><b id="busHealthText">100%</b></div>
+    <small>Ett finger: dra i reglaget. Dator: A / D eller ← / →.</small>
+  </div>
+  <div id="busPaused" hidden><div><h2>HÅLLPLATS: PAUS.</h2><p>Bussen och jaktklockan står stilla.</p><button id="busResume" class="round-primary">FORTSÄTT RESAN →</button></div></div>
+</div>
 <div id="roundPanel" role="dialog" aria-modal="true" aria-label="Karlstad efter stängning">
+  <section id="round-city-intro" class="round-card city-card" hidden>
+    <div class="episode-label"><span>KARLSTAD / STADSJAKTEN</span><span>2.2</span></div>
+    <h1>STADEN<br><em>JAGAR DIG.</em></h1>
+    <p class="round-lead">Tre minuter. En stad utan tålamod.</p>
+    <div class="city-rules"><span><b>01 · SAMLA 800 XP</b>Gör gatuhändelser, stoppa zombies och ta fynd.</span><span><b>02 · TA BUSS 666</b>Zombien kör. Du balanserar. Upp till 350 XP.</span><span><b>03 · FLY TILL GRÖNT</b>Nå en tryggzon innan tiden tar slut. Livet får inte ta slut!</span></div>
+    <p id="cityControlCopy" class="control-hint"></p>
+    <button id="cityStart" class="round-primary">STARTA JAKTEN · 3:00 <span>→</span></button>
+    <button id="cityFree" class="round-tertiary">Utforska utan tidspress</button>
+    <p id="cityChallengeTarget" class="round-fine"></p>
+  </section>
   <section id="round-intro" class="round-card">
-    <div class="episode-label"><span>KARLSTAD / KAFFEJAKTEN</span><span>2.1</span></div>
+    <div class="episode-label"><span>KARLSTAD / SPECIALUPPDRAG</span><span>2.2</span></div>
     <nav id="missionPicker" aria-label="Välj uppdrag">
       <button id="select-sista-rundan" aria-pressed="true"><b>01</b><span>SISTA RUNDAN<small>O’Learys · knuffa</small></span></button>
       <button id="select-fikapanik" aria-pressed="false"><b>02</b><span>FIKAPANIK<small>Torget · 24 zombies</small></span></button>
@@ -100,14 +127,32 @@
   <section id="round-pause" class="round-card compact" hidden>
     <div class="episode-label">TIMEOUT / KLOCKAN STÅR STILL</div>
     <h2>TA EN<br><em>FIKAPAUS.</em></h2>
-    <p><b>VÄNSTER:</b> gå och sidstega. <b>HÖGER:</b> vrid dig fritt. <b>SOLSTÖT:</b> tryck eller håll för salvor. <b>SUPER:</b> egen knapp, 40 energi. Sikthjälp styr aldrig kameran.</p>
-    <p>Lila termosar: <b>+25 kaffepoäng, +15 sol.</b> Växla 25 poäng till 40 sol med laddknappen eller C. Fem termosar i följd ger bonus. Fem hemliga guldtermosar väntar i staden. Dina fynd och poäng sparas automatiskt på denna enhet.</p>
-    <div class="fps-settings"><button id="lookModeBtn" class="round-secondary">SIKTA: SVEPA</button><label for="lookSensitivity">KÄNSLIGHET <output id="lookSensitivityValue">100%</output></label><input id="lookSensitivity" type="range" min="0.45" max="1.8" step="0.05" value="1"><small>Välj högerstyrspak för att fortsätta rotera medan du håller åt sidan.</small></div>
+    <p id="pauseControlSummary"></p>
+    <p><b>Stadsjakten:</b> 800 XP, sedan till en grön tryggzon inom tre minuter. Cyan = gatuhändelse. Orange = buss. Specialuppdragen pausar jaktklockan; bussresan räknas in. Nya jakter fyller på termosarna. Kaffepoäng, hemligheter och vykort sparas på denna enhet.</p>
+    <div class="fps-settings"><button id="handModeBtn" class="round-secondary">EN HAND · AUTOELD</button><small id="handModeHint"></small><button id="lookModeBtn" class="round-secondary">SIKTA: SVEPA</button><label for="lookSensitivity">KÄNSLIGHET <output id="lookSensitivityValue">100%</output></label><input id="lookSensitivity" type="range" min="0.45" max="1.8" step="0.05" value="1"><small>Tvåhandsläge: svep eller håll högerstyrspaken åt sidan. Enhandsläge laddar automatiskt med 25 kaffepoäng om solenergin tar slut under eld.</small></div>
     <p id="roundPauseControls" class="control-hint"></p>
     <button id="roundResume" class="round-primary">FORTSÄTT SPELA →</button>
     <button id="roundRestart" class="round-secondary">Börja om samma runda</button>
+    <button id="cityNewRun" class="round-secondary">NY STADSJAKT · 3 MINUTER</button>
+    <button id="openAlbum" class="round-secondary">MINA VYKORT · 3 ATT HITTA</button>
     <div class="pause-footer"><button id="roundQuit">Utforska staden</button><button id="roundMute">LJUD PÅ</button></div>
     <p class="round-fine">Lokala varumärken visas som sponsorkoncept. Inga samarbeten är bekräftade. Zombie-Lerin är en tecknad spelfantasi.</p>
+  </section>
+  <section id="round-city-result" class="round-card compact" hidden>
+    <div class="episode-label">KARLSTAD / JAKTEN ÄR ÖVER</div>
+    <h2 id="cityResultTitle">DU KOM UNDAN!</h2><div id="cityResultScore" class="result-score">0</div><div class="result-score-label">JAKT-XP</div>
+    <p id="cityResultDetail"></p><p id="cityResultBest" class="record"></p>
+    <button id="cityRetry" class="round-primary">EN JAKT TILL →</button><button id="cityShare" class="round-secondary">UTMANA EN VÄN</button>
+    <input id="cityShareLink" aria-label="Länk till stadsjakten" readonly hidden>
+    <button id="cityResultFree" class="round-tertiary">Fortsätt utan tidspress</button>
+  </section>
+  <section id="round-album" class="round-card compact" hidden>
+    <div class="episode-label">KARLSTAD / DINA VYKORT</div><h2>STADEN I<br><em>SERIERUTOR.</em></h2>
+    <p>Tre vykort ute i staden. Varje nytt fynd ger 100 XP och åtta extra sekunder.</p>
+    <figure><img id="postcard-church" alt="Karlstads domkyrka i serietecknad stil" loading="lazy" decoding="async" hidden><figcaption id="card-status-church"></figcaption></figure>
+    <figure><img id="postcard-autumn" alt="En höstgata i Karlstad i serietecknad stil" loading="lazy" decoding="async" hidden><figcaption id="card-status-autumn"></figcaption></figure>
+    <figure><img id="postcard-street" alt="En gata i Karlstad i serietecknad stil" loading="lazy" decoding="async" hidden><figcaption id="card-status-street"></figcaption></figure>
+    <button id="albumClose" class="round-primary">TILLBAKA →</button>
   </section>
   <section id="round-result" class="round-card compact" hidden>
     <div id="roundResultEyebrow" class="episode-label"></div>
@@ -127,6 +172,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.1.0"></script>
+<script type="module" src="./app.js?v=2.2.0"></script>
 </body>
 </html>

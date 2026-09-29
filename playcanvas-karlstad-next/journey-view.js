@@ -31,6 +31,26 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const visitors=Array.from({length:3},(_,i)=>card('Besökare '+i,fanTex('visitor',['#e9b978','#75bbb5','#a990c9'][i]),1.5,2.3,0,0,0));
   const safePad=primitive('Sandgrund safe area','cylinder',sandgrund.safe.x,.1,sandgrund.safe.z,8,.035,8,mint);
   const safeSign=card('Besökarnas samling',labelTex(['SAMLINGSPLATS','BESÖKARE HIT'], '#225345','#b8f4ca'),4.2,1.3,sandgrund.safe.x,2.4,sandgrund.safe.z,true);
+  const busTex=texture((c,w,h)=>{
+    c.scale(w/512,h/256);c.strokeStyle='#17372f';c.lineWidth=10;c.lineJoin='round';
+    c.fillStyle='#e29448';c.beginPath();c.roundRect(20,30,472,180,24);c.fill();c.stroke();
+    c.fillStyle='#203f48';for(let i=0;i<5;i++){c.fillRect(40+i*82,52,68,76);c.strokeRect(40+i*82,52,68,76);}
+    c.fillStyle='#eef3c5';c.fillRect(27,143,457,43);c.fillStyle='#294c38';c.font='900 31px sans-serif';c.textAlign='center';c.fillText('666 · SISTA HÅLLPLATSEN',256,176);
+    for(const x of [115,406]){c.beginPath();c.arc(x,214,29,0,Math.PI*2);c.fillStyle='#17372f';c.fill();c.beginPath();c.arc(x,214,13,0,Math.PI*2);c.fillStyle='#c3c9a4';c.fill();}
+  },512,256);
+  const busViews=journey.busStops.map(s=>{
+    primitive('bus-stop-post','box',s.x,1.7,s.z,.15,3.4,.15,ink);
+    const sign=card('Zombieexpressen '+s.name,labelTex(['BUSS 666','KLIV PÅ · BALANSERA'], '#c94846','#fff2cd'),3.3,1.1,s.x,2.8,s.z,true);
+    const pad=primitive('bus-stop-pad','cylinder',s.x,.1,s.z,5,.06,5,orangeMat());
+    const vehicle=card('Buss 666 vid '+s.name,busTex,5.8,2.9,s.x+4,.05,s.z+1);
+    return {s,sign,pad,vehicle};
+  });
+  function orangeMat(){return material('#f59554');}
+  const escapes=journey.safeZones.map(s=>({s,pad:primitive('Tryggzon','cylinder',s.x,.075,s.z,6.6,.04,6.6,mint),sign:card('Säkra XP',labelTex(['TRYGGZON','800 XP → SÄKRA HÄR'], '#174c36','#acf2bd'),3.3,1,s.x,2.5,s.z,true)}));
+  const postcards=journey.postcards.map(s=>({s,e:card('Vykort '+s.name,labelTex(['VYKORT','+100 XP · '+s.name.toUpperCase()], '#35616f','#fff0cb'),1.7,.85,s.x,.8,s.z)}));
+  const eventCard=card('Gatuuppdrag',labelTex(['!','GATUUPPDRAG'], '#165c70','#9ff5ed'),2.4,1.1,0,1.2,0);
+  const eventPad=primitive('Gatuuppdrag ring','cylinder',0,.1,0,3.8,.03,3.8,material('#78d9d1'));
+  const bag=primitive('Kaffeväska','box',0,.5,0,.85,.8,.55,purple);eventCard.enabled=eventPad.enabled=bag.enabled=false;
   // Original comic facades: cached canvas illustrations, no extra building meshes.
   host.colliders.filter(b=>b.height>=6&&Math.hypot((b.minx+b.maxx)/2,(b.minz+b.maxz)/2)<165&&!/O.Leary|Mitt|Sandgrund/.test(b.name)).slice(0,9).forEach((b,i)=>{
     const tex=texture((c,w,h)=>{
@@ -56,10 +76,18 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     const gallery=game===sandgrund;safePad.enabled=safeSign.enabled=gallery;
     visitors.forEach((e,i)=>{const v=sandgrund.visitors[i];e.enabled=gallery&&!v.rescued;if(e.enabled){e.setPosition(v.x,0,v.z);e.setEulerAngles(0,Math.atan2(p.x-v.x,p.z-v.z)*180/Math.PI,0);}});
     for(const s of stations)s.e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);
+    busViews.forEach(({s,sign,pad,vehicle})=>{sign.enabled=pad.enabled=roaming;vehicle.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<60;sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);vehicle.setEulerAngles(0,Math.atan2(p.x-s.x-4,p.z-s.z-1)*180/Math.PI,0);});
+    escapes.forEach(({s,pad,sign})=>{pad.enabled=sign.enabled=roaming&&journey.rush.mode==='timed';sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
+    postcards.forEach(({s,e})=>{e.enabled=roaming&&!journey.postcardsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<38;if(e.enabled)e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
+    const c=journey.rush.contract,visible=roaming&&!!c&&!journey.rush.exitReady;
+    eventCard.enabled=eventPad.enabled=bag.enabled=visible;
+    if(visible){eventCard.setPosition(c.spot.x,1.7+Math.sin(now/400)*.1,c.spot.z);eventCard.setEulerAngles(0,Math.atan2(p.x-c.spot.x,p.z-c.spot.z)*180/Math.PI,0);eventPad.setPosition(c.spot.x,.1,c.spot.z);bag.setPosition(c.spot.x,.55,c.spot.z);bag.enabled=c.kind==='parcel';}
   }
   function radar(c,point,roaming){if(!roaming)return;
     c.fillStyle='#c994f1';for(const t of journey.items)if(!journey.found.has(t.id)){const [x,y]=point(t.x,t.z);if(x>0&&y>0&&x<256&&y<256)c.fillRect(x-2,y-2,4,4);}
     c.fillStyle='#ffe18c';for(const p of Object.values(portals)){const [x,y]=point(p.x,p.z);c.fillRect(x-5,y-5,10,10);}
+    c.fillStyle='#f79b68';for(const s of journey.busStops){const [x,y]=point(s.x,s.z);c.fillRect(x-4,y-4,8,8);}
+    if(journey.rush.mode==='timed'){c.strokeStyle='#9ef2b2';c.lineWidth=2;for(const s of journey.safeZones){const [x,y]=point(s.x,s.z);c.strokeRect(x-7,y-7,14,14);}}
   }
   return {update,radar,nearbyStation};
 }

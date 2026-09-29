@@ -1,6 +1,6 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.1.0';
-import {FpsLook, wrapYaw} from './fps-controls.mjs?v=2.1.0';
+import {createLastRound} from './last-round.js?v=2.2.0';
+import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.2.0';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -25,7 +25,9 @@ const GRAPHICS_PASS=Object.freeze({version:'1.7.0',core:'1.3.0',mode:'landmark-s
 window.KarlstadGraphicsPass=GRAPHICS_PASS;
 const TOUCH_TUNE=Object.freeze({deadzone:.13,expo:.42,maxStick:.34,lookScale:.9});
 const fpsLook=new FpsLook({span:Math.min(window.innerWidth,window.innerHeight)});
+let oneHand=matchMedia('(pointer:coarse)').matches;
 try{const saved=JSON.parse(localStorage.getItem('karlstad:fps-controls:v2')||'null');if(saved){fpsLook.sensitivity=Math.max(.45,Math.min(1.8,Number(saved.sensitivity)||1));fpsLook.mode=saved.mode==='stick'?'stick':'drag';}}catch{}
+try{const hand=localStorage.getItem('karlstad:one-hand:1');if(hand!==null)oneHand=hand==='on';}catch{}
 let app,player,camera,yaw=54,pitch=-5;
 let vy=0,onGround=true;
 let colliders=[];
@@ -644,7 +646,7 @@ function setupTouch(){
     moveX=(dx/dl)*curved; moveY=(dy/dl)*curved;
     knob.style.transform='translate('+dx+'px,'+dy+'px)';
   }
-  joy.addEventListener('pointerdown',e=>{jp=e.pointerId;joy.setPointerCapture(jp);jm(e.clientX,e.clientY);e.preventDefault();});
+  joy.addEventListener('pointerdown',e=>{if(lastRound?.blocksInput()||jp!==null)return;jp=e.pointerId;joy.setPointerCapture(jp);jm(e.clientX,e.clientY);e.preventDefault();});
   joy.addEventListener('pointermove',e=>{if(e.pointerId===jp){jm(e.clientX,e.clientY);e.preventDefault();}});
   const je=e=>{if(jp!==null&&e.pointerId!==jp)return;jp=null;moveX=moveY=0;knob.style.transform='';};
   joy.addEventListener('pointerup',je);joy.addEventListener('pointercancel',je);
@@ -670,14 +672,20 @@ function setupTouch(){
   document.getElementById('turnBtn').addEventListener('pointerdown',e=>{if(!lastRound?.blocksInput()){yaw=wrapYaw(yaw+180);player.setEulerAngles(0,yaw,0);}e.preventDefault();});
   const mode=document.getElementById('lookModeBtn'),sensitivity=document.getElementById('lookSensitivity');
   const settings=()=>{
+    document.body.classList.toggle('one-hand',oneHand);
+    document.getElementById('handModeBtn').textContent=oneHand?'EN HAND · AUTOELD':'TVÅ HÄNDER · MANUELL ELD';
+    document.getElementById('handModeHint').textContent=oneHand?'En spak: upp/ned går, vänster/höger svänger. Solstötar avfyras när du siktar på en zombie. Ingen automatisk kameravridning.':'Vänster spak går och sidstegar. Svep till höger för blicken. Skjut med solknappen.';
+    document.getElementById('pauseControlSummary').textContent=oneHand?'EN SPAK: upp/ned för att gå, vänster/höger för att svänga. AUTOELD: sikta på en zombie så skjuter du. Vid O’Learys skjuter autoeld först när knuffvinkeln är rätt. SUPER är valfri.':'VÄNSTER: gå och sidstega. HÖGER: vrid dig fritt. SOLSTÖT: tryck eller håll. SUPER: egen knapp, 40 energi. Sikthjälp vrider aldrig kameran.';
     mode.textContent=fpsLook.mode==='drag'?'SIKTA: SVEPA':'SIKTA: HÖGERSPAK';
-    document.getElementById('lookHint').textContent=fpsLook.mode==='drag'?'SVEPA HÄR · VÄND 360°':'DRA OCH HÅLL · VÄND 360°';
+    document.getElementById('lookHint').textContent=oneHand?'EN SPAK · GÅ OCH SVÄNG · AUTOELD':fpsLook.mode==='drag'?'SVEPA HÄR · VÄND 360°':'DRA OCH HÅLL · VÄND 360°';
     document.getElementById('lookSensitivityValue').textContent=Math.round(fpsLook.sensitivity*100)+'%';
     try{localStorage.setItem('karlstad:fps-controls:v2',JSON.stringify({mode:fpsLook.mode,sensitivity:fpsLook.sensitivity}));}catch{}
+    try{localStorage.setItem('karlstad:one-hand:1',oneHand?'on':'off');}catch{}
   };
   sensitivity.value=String(fpsLook.sensitivity);
   sensitivity.addEventListener('input',()=>{fpsLook.sensitivity=Number(sensitivity.value);settings();});
   mode.addEventListener('click',()=>{fpsLook.reset();fpsLook.mode=fpsLook.mode==='drag'?'stick':'drag';settings();});settings();
+  document.getElementById('handModeBtn').addEventListener('click',()=>{resetInput();oneHand=!oneHand;pitch=-2;settings();});
 }
 
 function update(dt){
@@ -685,12 +693,12 @@ function update(dt){
   const sens=CORE_LOCK.lookSensitivity;
   const now=performance.now()*.001;
   fpsLook.span=Math.min(window.innerWidth,window.innerHeight);
-  const touch=fpsLook.consume(dt),turnKeys=(keys.has('ArrowRight')?1:0)-(keys.has('ArrowLeft')?1:0);
-  yaw=wrapYaw(yaw-lookDX*sens-touch.x-turnKeys*150*dt);
+  const touch=fpsLook.consume(dt),turnKeys=(keys.has('ArrowRight')?1:0)-(keys.has('ArrowLeft')?1:0),thumb=oneHand?oneThumbIntent(moveX,moveY):null;
+  yaw=wrapYaw(yaw-lookDX*sens-touch.x-turnKeys*150*dt-(thumb?.turn||0)*fpsLook.sensitivity*dt);
   pitch=Math.max(-78,Math.min(78,pitch-lookDY*sens-touch.y));lookDX=lookDY=0;
   player.setEulerAngles(0,yaw,0); camera.setLocalEulerAngles(pitch,0,0);
 
-  let ix=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0)+moveX;
+  let ix=(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0)+(thumb?0:moveX);
   let iz=(keys.has('KeyS')?1:0)-(keys.has('KeyW')?1:0)+moveY;
   const len=Math.hypot(ix,iz); if(len>1){ix/=len;iz/=len;}
   const sprint=keys.has('ShiftLeft')?CORE_LOCK.sprintMultiplier:1;
@@ -777,6 +785,8 @@ async function boot(){
     lastRound=createLastRound(pc,{
       app,player,camera,canvas,origin:{x:ox,z:oz},mall:{x:mx,z:mz},colliders,blocked,resetInput,music:GAME_MUSIC,
       pickupCount:()=>pickupCount,
+      oneHand:()=>oneHand,
+      ridePose:pose=>{player.setPosition(pose.x,2.4,pose.z);yaw=pose.heading;pitch=-2;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,pose.roll);},
       resetPickups:()=>{pickups.forEach(e=>e.enabled=true);pickupCount=0;cityPower=0;},
       teleport:(x,z,heading,tilt)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=heading;pitch=tilt;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);}
     });

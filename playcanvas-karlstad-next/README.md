@@ -1,4 +1,4 @@
-# Karlstad City — Kaffejakten (Gameplay 2.1)
+# Karlstad City — Staden jagar dig (Gameplay 2.2)
 
 The active game remains `playcanvas-karlstad-next/`, using PlayCanvas 2.22.4 and the existing city, collisions, music and movement speeds.
 
@@ -10,17 +10,39 @@ The active game remains `playcanvas-karlstad-next/`, using PlayCanvas 2.22.4 and
 - SIKTHJÄLP adjusts the hit margin only. It cannot rotate the camera.
 - M / KARTA pauses and opens the map. Blur, visibility loss and menus clear movement, look and firing state.
 
-## Exploration between missions
+## Stadsjakten: the new city loop
 
-The game opens directly into a playable city. Follow purple Löfbergs thermoses through the existing streets: **135 collectibles**, each worth 25 coffee points and 15 solar energy. Collect five within six seconds of each other for a 25-point bonus. Five hidden gold thermoses award 200 points and restore health and energy.
+The opening brief gives one goal: **earn 800 XP, then reach any green safe zone before the three-minute clock or health runs out**. A successful escape adds a remaining-time score bonus, a personal best and a friend-challenge link. Optional free exploration has no timer. Failed hunts can be retried; coffee points, secrets and postcard discoveries remain saved. Starting a new hunt respawns ordinary thermoses.
 
-City basic shots consume 3 energy; SUPER costs 40. At zero energy a weaker emergency shot remains available. The purple recharge button / C converts 25 coffee points into 40 energy, including during timed missions. Defeating an ambush awards 30 points; completing a special mission awards 150, or 250 for Sandgrund. Energy carries into and back out of missions. Practice cannot spend or earn banked resources.
+The city now has **48 spaced-out thermoses**, down from 135, and three rotating short events:
 
-Zombies emerge from marked paper piles outside the player's forward view, after a brief rustle. Encounters are spaced at least 18 seconds apart, use the existing bounded actor pool and can be cleared permanently. Defeat returns the player to Torget, deducting up to 25 points while retaining discoveries.
+- Pick up a coffee bag and carry it to a second nearby marker within 32 seconds: 180 XP.
+- Reach a temporary solar glint within 16 seconds: 100 XP.
+- Stop up to three coffee thieves within 24 seconds: 180 XP.
 
-Mission portals, a gold ground route, compass and radar support walking to the next special game. The menu also keeps instant mission starts. Local progress (points, energy, health, discoveries, cleared hideouts, position, facing and destination) is saved on this browser; no account or cloud sync is involved.
+Completed street events add 25 solar energy and eight seconds. A new opportunity follows after a short break. The first event begins after two seconds; pursuit begins after six seconds. Enemies approach from the rear/side using the existing navigation grid. Pressure increases gradually, with at most six director-controlled enemies and the existing 12-actor render pool. Old hideout ambushes and five secrets remain.
 
-The city adds original illustrated facades, a brighter palette, comic thermoses and concept kiosks for Löfbergs, Karlstads Energi and NWT. These are proposed sponsor placements, with no claimed commercial agreements. Existing signs, music and controls remain in place.
+City basic shots cost 3 energy; SUPER costs 40. At zero energy a weak emergency shot remains available. The recharge button / C converts 25 coffee points into 40 energy. Coffee points are a persistent spendable balance; hunt XP is the score earned this run and is not reduced by spending. Special missions pause the city hunt and award 150 XP, or 250 for Sandgrund. Practice cannot change banked resources.
+
+## One-hand mobile controls
+
+New mobile sessions default to **one thumb**: the main stick's vertical axis walks forward/backward and its horizontal axis turns continuously in place. Walking speed, collision radius, gravity and the existing movement curve remain unchanged. The sensitivity setting also affects thumb turning. Releasing/cancelling the pointer stops the input.
+
+Auto fire triggers only when an enemy is in the reticle and visible. It never rotates the camera. At O’Learys it also waits for a good push angle. If energy is exhausted, auto fire can buy a refill for 25 coffee points; this is explained in the controls. SUPER remains optional. The crowded manual buttons are hidden in this mode, leaving the stick, SUPER and the contextual mission/bus button. The radar still opens the map.
+
+PAUS switches between one-hand and the existing two-hand controls. Desktop WASD/mouse/manual fire remain available. Choices are saved on the browser.
+
+## Zombie-bussen / Linje 666
+
+Board at Torget, Domkyrkan or Sandgrund. The contextual button changes to **KLIV PÅ BUSSEN** within reach. The trip lasts 30 seconds and follows a collision-checked route through the existing 3D city. Move passenger weight with one horizontal finger drag, or A/D / arrow keys, to counter the zombie driver's swerves and keep the balance marker green.
+
+A successful trip awards 200–350 XP and moves the player to the destination. A crash returns to the departure stop with 20 health lost, preserving at least 25 health; the hunt continues. The hunt clock advances during transit. Bus pause, backgrounding and focus loss freeze both clocks. City combat, route markers, collectibles and their view updates are suspended during the ride. There is no second engine or extra 3D city.
+
+## Postcards and performance
+
+The three user-provided comic photographs are collectibles near Domkyrkan, the north promenade and the western street route. A first discovery awards 100 XP and eight seconds. PAUS → MINA VYKORT displays unlocked originals. JPEG requests start only when the paused album is opened, with native lazy loading and asynchronous decoding. They are not WebGL textures, preload requests, or part of the walking frame loop. Original images and their visible watermarks are preserved.
+
+The bright palette, original comic facades, Löfbergs thermoses and concept kiosks for Löfbergs, Karlstads Energi and NWT remain. These are proposed sponsor placements; there are no claimed commercial agreements. The creative roadmap in `/GAMEPLAY_ROADMAP.md` is retained.
 
 ## Missions
 
@@ -37,9 +59,9 @@ Action missions have 100 health, damage cooldowns and loss/retry. Practice remov
 
 City action reuses a 12-zombie render pool, 18 nearby thermos sprites, cached illustrated textures, six pooled hit labels and a fixed grid derived from the existing collision boxes. Inactive actors do not render. The route and HUD update at a reduced rate. Navigation distinguishes grid node IDs from mission object IDs, including moving visitors and the artist.
 
-`node --test playcanvas-karlstad-next/tests/*.test.mjs` runs 30 tests covering rotation, pointer ownership, pause/cancel, navigation, wave victory, pursuit/damage, delivery, clocks, original knockback rules, collection/persistence, point spending, ambushes, recovery, Sandgrund victory and escorting around obstacles. Read-only diagnostics: `window.KarlstadRound.snapshot()` and `window.KarlstadCoreLock`.
+`node --test playcanvas-karlstad-next/tests/*.test.mjs` runs 41 tests covering rotation, pointer ownership, pause/cancel, navigation, wave victory, pursuit/damage, delivery, clocks, original knockback rules, collection/persistence, point spending, ambushes, recovery, Sandgrund victory escorting around obstacles, timed hunt completion/capture, event expiry and rewards, postcard persistence, one-thumb intent, bus success/crash and 30/120 FPS consistency. Read-only diagnostics: `window.KarlstadRound.snapshot()` and `window.KarlstadCoreLock`.
 
-The real PlayCanvas 2.22.4 engine was also exercised headlessly with the city's actual building data: all four selectors, complete Fikapanik waves, delivery, a complete Sandgrund boss/escort victory, city pickups, resource carryover, saved progress, return location and isolated practice. The Sandgrund route spans 166 walkable grid nodes. These API tests use NullGraphicsDevice, not a GPU.
+The real PlayCanvas 2.22.4 engine was also exercised headlessly with the city's actual building data: all four selectors, complete Fikapanik waves, delivery, a complete Sandgrund boss/escort victory, city pickups, resource carryover, saved progress, return location and isolated practice. The integration run also completes the new street delivery, an actual bus route to Sandgrund with pointer balancing, bus pause/resume/crash, one-thumb turning/walking/cancellation, auto fire without camera rotation, an 800-XP escape and the lazy-loaded postcard album. The Sandgrund walking route spans 166 grid nodes. These API tests use NullGraphicsDevice, not a GPU.
 
 Control reference: [Activision’s official COD Mobile control guide](https://blog.activision.com/call-of-duty/2019-10/Getting-a-Grip-on-the-Call-of-Duty-Mobile-Controls): left movement stick, right-side relative look, separate weapon buttons and sensitivity settings.
 
