@@ -633,6 +633,24 @@ function setupDesktop(){
   canvas.addEventListener('click',()=>{if(!lastRound?.blocksInput()){try{canvas.requestPointerLock?.()?.catch?.(()=>{});}catch{}}});
   window.addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas){lookDX+=e.movementX;lookDY+=e.movementY;}});
 }
+function installIosZoomGuard(){
+  if(!(navigator.maxTouchPoints>0)) return;
+  let lastTouchEnd=0,lastX=0,lastY=0;
+  const editable=target=>target?.closest?.('input,textarea,select,[contenteditable="true"]');
+  document.addEventListener('touchend',e=>{
+    if(e.changedTouches.length!==1||editable(e.target)) return;
+    const t=e.changedTouches[0],now=performance.now();
+    const close=Math.hypot(t.clientX-lastX,t.clientY-lastY)<32;
+    if(lastTouchEnd&&now-lastTouchEnd<360&&close) e.preventDefault();
+    lastTouchEnd=now;lastX=t.clientX;lastY=t.clientY;
+  },{passive:false,capture:true});
+  document.addEventListener('dblclick',e=>{if(!editable(e.target))e.preventDefault();},{passive:false,capture:true});
+  document.addEventListener('touchmove',e=>{if(e.touches.length>1)e.preventDefault();},{passive:false,capture:true});
+  for(const type of ['gesturestart','gesturechange','gestureend']){
+    document.addEventListener(type,e=>e.preventDefault(),{passive:false,capture:true});
+  }
+}
+
 function setupTouch(){
   const joy=document.getElementById('joy'),knob=joy.querySelector('i'); let jp=null;
   function jm(x,y){
@@ -777,7 +795,7 @@ async function boot(){
     loadText.textContent='Lägger Core Lock 1.3 + Landmark Storefront 1.7… '+n+' byggnader'; loadBar.style.width='82%';
 
     bootStage='Kontroller';
-    setupDesktop();setupTouch();
+    setupDesktop();installIosZoomGuard();setupTouch();
     bootStage='Sista rundan';
     musicInit();
     const [ox,oz]=localXY(OLEARYS.lon,OLEARYS.lat);
