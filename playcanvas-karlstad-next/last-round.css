@@ -237,3 +237,10 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
  #refillBtn{top:104px;font-size:8px;min-height:34px;padding:8px 10px}
  #journeyPickupToast{top:145px;font-size:9px}
 }
+
+
+#panicHud{position:absolute;left:50%;top:220px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;width:min(330px,66vw);padding:6px 9px;border:1px solid #f0a36a66;border-radius:4px;background:#321d20e8;color:#ffd8a8;font:900 8px system-ui;letter-spacing:.08em}
+#panicHud>span{white-space:nowrap}#panicHud>div{height:6px;flex:1;background:#ffffff18;border-radius:8px;overflow:hidden}#panicFill{display:block;height:100%;width:0;background:linear-gradient(90deg,#e2b85c,#f07a57);transition:width .18s}#panicHud>b{min-width:30px;text-align:right;color:#fff0cf}
+#panicHud.danger{border-color:#ff806f;background:#4a1d21eb;box-shadow:0 0 18px #e65f4638}.city-blackout #game{filter:brightness(.45) saturate(.8)}.city-blackout #roundOverlay{background:#07101522}
+@media(max-width:850px){#panicHud{top:232px;left:12px;right:12px;transform:none;width:auto;font-size:7px}.journey-playing #roundUtilities{top:281px}.journey-playing #refillBtn{top:322px}.journey-playing #journeyPickupToast{top:368px}}
+@media(max-height:600px){#panicHud{top:158px;width:275px;padding:4px 7px}.journey-playing #roundUtilities{top:91px}.journey-playing #refillBtn{top:136px}.journey-playing #journeyPickupToast,.journey-playing.one-hand #journeyPickupToast{top:216px}}
