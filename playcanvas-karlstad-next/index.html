@@ -30,7 +30,7 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:9px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.2.0">
+<link rel="stylesheet" href="./last-round.css?v=2.3.0">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
@@ -68,6 +68,7 @@
   <button id="refillBtn" aria-label="Växla 25 kaffepoäng till 40 solenergi">☀ +40 SOL · 25 P</button>
   <div id="journeyPickupToast" role="status" aria-live="polite"></div>
   <div id="cityEventHud"><b id="cityEventTitle">800 XP → TRYGGZON</b><span id="cityEventDetail">Gatuhändelser · zombie-buss · flykt</span></div>
+  <div id="panicHud" hidden><span>KARLSTAD PANIK</span><div><i id="panicFill"></i></div><b id="panicValue">0%</b></div>
   <button id="roundRadarButton" aria-label="Öppna kartan. Radarn visar norr uppåt."><canvas id="roundRadar" width="256" height="256"></canvas><span>RADAR · KARTA ↗</span></button>
   <div id="roundTactic" hidden></div>
   <div id="roundCompass"><b id="roundBearing">N · 0°</b><span id="roundCompassArrow">↑</span><span id="roundCompassText">O’LEARYS</span></div>
@@ -172,6 +173,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.2.1"></script>
+<script type="module" src="./app.js?v=2.3.0"></script>
 </body>
 </html>
