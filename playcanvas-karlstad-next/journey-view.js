@@ -1,13 +1,14 @@
+import {SUN} from './city-ecology.mjs?v=2.4.0';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
   const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');
-  function thermosTex(secret=false){return texture((c,w,h)=>{
+  function thermosTex(secret=false,points=200){return texture((c,w,h)=>{
     c.scale(w/256,h/384);c.lineWidth=9;c.strokeStyle='#193a35';c.lineJoin='round';
     c.fillStyle=secret?'#f8c650':'#673293';c.beginPath();c.roundRect(52,76,151,264,26);c.fill();c.stroke();
     c.fillStyle=secret?'#ffe9a1':'#9b6cc6';c.fillRect(68,101,21,215);c.strokeRect(203,136,25,90);
     c.fillStyle='#e0e7d0';c.beginPath();c.roundRect(67,38,125,44,10);c.fill();c.stroke();
     c.fillStyle='#fff1ca';c.beginPath();c.roundRect(63,166,129,99,10);c.fill();c.stroke();
-    c.fillStyle='#5e2788';c.textAlign='center';c.font='900 22px sans-serif';c.fillText(secret?'HEMLIG':'LÖFBERGS',128,206,118);c.font='900 16px sans-serif';c.fillText(secret?'+200 POÄNG':'KAFFEKRAFT',128,237,116);
+    c.fillStyle='#5e2788';c.textAlign='center';c.font='900 22px sans-serif';c.fillText(secret?(points===160?'GULD':'HEMLIG'):'LÖFBERGS',128,206,118);c.font='900 16px sans-serif';c.fillText(secret?'+'+points+' POÄNG':'KAFFEKRAFT',128,237,116);
     c.strokeStyle='#fff3ce';c.lineWidth=6;for(let i=0;i<3;i++){c.beginPath();c.moveTo(92+i*30,22);c.quadraticCurveTo(80+i*30,10,96+i*30,0);c.stroke();}
   },256,384);}
   const flask=thermosTex(),secretFlask=thermosTex(true);
@@ -51,6 +52,11 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const eventCard=card('Gatuuppdrag',labelTex(['!','GATUUPPDRAG'], '#165c70','#9ff5ed'),2.4,1.1,0,1.2,0);
   const eventPad=primitive('Gatuuppdrag ring','cylinder',0,.1,0,3.8,.03,3.8,material('#78d9d1'));
   const bag=primitive('Kaffeväska','box',0,.5,0,.85,.8,.55,purple);eventCard.enabled=eventPad.enabled=bag.enabled=false;
+  const chaosFlask=card('Dagens guldtermos',thermosTex(true,160),1.25,1.85,0,.3,0);
+  const sunMaterial=material('#f8d970');sunMaterial.opacity=.38;sunMaterial.blendType=pc.BLEND_NORMAL;sunMaterial.depthWrite=false;sunMaterial.emissive=new pc.Color(0.5,0.35,0.04);sunMaterial.update();
+  const sunPad=primitive('Sola över Karlstad','cylinder',0,.08,0,SUN.radius*2,.025,SUN.radius*2,sunMaterial);
+  const sunSign=card('Följ solen',labelTex(['SOLA!','FÖLJ MIG · 2× XP'], '#f4d176','#224838'),2.7,.85,0,2.5,0);
+  chaosFlask.enabled=sunPad.enabled=sunSign.enabled=false;
   // Original comic facades: cached canvas illustrations, no extra building meshes.
   host.colliders.filter(b=>b.height>=6&&Math.hypot((b.minx+b.maxx)/2,(b.minz+b.maxz)/2)<165&&!/O.Leary|Mitt|Sandgrund/.test(b.name)).slice(0,9).forEach((b,i)=>{
     const tex=texture((c,w,h)=>{
@@ -79,6 +85,10 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     busViews.forEach(({s,sign,pad,vehicle})=>{sign.enabled=pad.enabled=roaming;vehicle.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<60;sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);vehicle.setEulerAngles(0,Math.atan2(p.x-s.x-4,p.z-s.z-1)*180/Math.PI,0);});
     escapes.forEach(({s,pad,sign})=>{pad.enabled=sign.enabled=roaming&&journey.rush.mode==='timed';sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
     postcards.forEach(({s,e})=>{e.enabled=roaming&&!journey.postcardsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<38;if(e.enabled)e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
+    const sun=journey.rush.ecology.sun;sunPad.enabled=sunSign.enabled=roaming&&!!sun;
+    if(roaming&&sun){sunPad.setPosition(sun.x,.08,sun.z);sunSign.setPosition(sun.x,2.4+Math.sin(now/750)*.08,sun.z);sunSign.setEulerAngles(0,Math.atan2(p.x-sun.x,p.z-sun.z)*180/Math.PI,0);}
+    const chaos=journey.rush.chaosTarget;chaosFlask.enabled=roaming&&!!chaos&&!journey.rush.exitReady;
+    if(chaosFlask.enabled){chaosFlask.setPosition(chaos.spot.x,.35+Math.sin(now/300)*.15,chaos.spot.z);chaosFlask.setEulerAngles(0,Math.atan2(p.x-chaos.spot.x,p.z-chaos.spot.z)*180/Math.PI,0);}
     const c=journey.rush.contract,visible=roaming&&!!c&&!journey.rush.exitReady;
     eventCard.enabled=eventPad.enabled=bag.enabled=visible;
     if(visible){eventCard.setPosition(c.spot.x,1.7+Math.sin(now/400)*.1,c.spot.z);eventCard.setEulerAngles(0,Math.atan2(p.x-c.spot.x,p.z-c.spot.z)*180/Math.PI,0);eventPad.setPosition(c.spot.x,.1,c.spot.z);bag.setPosition(c.spot.x,.55,c.spot.z);bag.enabled=c.kind==='parcel';}
@@ -87,6 +97,8 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     c.fillStyle='#c994f1';for(const t of journey.items)if(!journey.found.has(t.id)){const [x,y]=point(t.x,t.z);if(x>0&&y>0&&x<256&&y<256)c.fillRect(x-2,y-2,4,4);}
     c.fillStyle='#ffe18c';for(const p of Object.values(portals)){const [x,y]=point(p.x,p.z);c.fillRect(x-5,y-5,10,10);}
     c.fillStyle='#f79b68';for(const s of journey.busStops){const [x,y]=point(s.x,s.z);c.fillRect(x-4,y-4,8,8);}
+    const sun=journey.rush.ecology.sun;if(sun){const [x,y]=point(sun.x,sun.z);c.beginPath();c.arc(x,y,13,0,Math.PI*2);c.fillStyle='#ffdd6680';c.fill();c.strokeStyle='#ffdf71';c.lineWidth=2;c.stroke();}
+    const chaos=journey.rush.chaosTarget;if(chaos){const [x,y]=point(chaos.spot.x,chaos.spot.z);c.fillStyle='#ffdf71';c.fillRect(x-4,y-4,8,8);}
     if(journey.rush.mode==='timed'){c.strokeStyle='#9ef2b2';c.lineWidth=2;for(const s of journey.safeZones){const [x,y]=point(s.x,s.z);c.strokeRect(x-7,y-7,14,14);}}
   }
   return {update,radar,nearbyStation};

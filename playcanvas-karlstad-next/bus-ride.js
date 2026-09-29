@@ -36,7 +36,7 @@ export function createBusRide(host,{driverTexture,onArrive,onCrash,onTick}){
     if(bus.state!=='playing'){
       const result=bus.snapshot(),to=bus.state==='arrived'?destination:origin;stop();
       host.teleport(to.x,to.z,heading,-2);
-      result.state==='arrived'?onArrive(result,to):onCrash(result,to);
+      result.state==='arrived'?onArrive(result,to,origin):onCrash(result,to,origin);
     }
   }
   return {start,update,stop,pause:()=>setPaused(true),resume:()=>setPaused(false),active:()=>!!bus,snapshot:()=>bus?{...bus.snapshot(),input,paused,destination:destination.name}:null};

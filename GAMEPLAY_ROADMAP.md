@@ -2,7 +2,19 @@
 
 **Status:** Creative north star / gameplay roadmap  
 **Created:** 2026-09-29  
-**Current reference build:** `playcanvas-karlstad-next v2.1.0`
+**Current reference build:** `playcanvas-karlstad-next v2.4.0`
+
+## Implementation checkpoint — 2026-09-29 / Gameplay 2.4
+
+Implemented on the existing PlayCanvas game:
+
+- A1/A2: Chaos Director and panic meter (2.3), with a tested survival breather and pause-aware blackout (2.4).
+- B1: Zombie bus, balance controls, arrival/crash and XP (2.2), now with direct friend-challenge replay and automatic result postcard (2.4).
+- A3: Coffee scent thresholds, stronger pursuit, horde risk and scent recovery (2.4).
+- B2: Moving sunlight, recovery, slower zombies, double zombie XP and a follow-the-sun bonus (2.4).
+- D1/D2: Four daily modifiers, Stockholm date/seed, equal isolated starting resources, local records and PNG challenge postcards with replay links (2.4).
+
+The walking/camera core and six-active-city-zombie budget are retained. No online leaderboard or real-time multiplayer is claimed. Next unbuilt gameplay pillars remain interactive street objects, zombie-after-death, extended survival and Hell Rounds; Halloween systems follow the roadmap below.
 
 ## 1. Creative North Star
 

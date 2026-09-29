@@ -1,5 +1,5 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.3.0';
+import {createLastRound} from './last-round.js?v=2.4.0';
 import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.2.0';
 
 const canvas=document.getElementById('game');

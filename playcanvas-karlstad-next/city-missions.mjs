@@ -123,12 +123,13 @@ export class CityMission extends LastRound {
         if(!a.active||this.elapsed-a.touchTime<.65)continue;
         const distance=Math.hypot(player.x-a.x,player.z-a.z);
         if(this.id==='radda-fikat'&&distance>22)continue;
+        if(distance>(this.pursuitRange??Infinity)){a.vx=a.vz=0;continue;}
         const victim=this.id==='sandgrund'&&a.kind==='artist'?this.visitors.filter(v=>!v.rescued).sort((v,w)=>Math.hypot(v.x-a.x,v.z-a.z)-Math.hypot(w.x-a.x,w.z-a.z))[0]:null;
         const target=victim&&distance>6?victim:player;
         const aim=this.nav.waypoint(a,target),length=Math.hypot(aim.x-a.x,aim.z-a.z)||1;
         let dx=(aim.x-a.x)/length,dz=(aim.z-a.z)/length;
         for(const other of this.actors){if(other===a||!other.active)continue;const ox=a.x-other.x,oz=a.z-other.z,d=Math.hypot(ox,oz);if(d>.001&&d<1.35){dx+=ox/d*.7;dz+=oz/d*.7;}}
-        const l=Math.max(1,Math.hypot(dx,dz));a.vx=dx/l*a.speed;a.vz=dz/l*a.speed;
+        const l=Math.max(1,Math.hypot(dx,dz));const pace=a.speed*(this.movementScale?.(a)??1);a.vx=dx/l*pace;a.vz=dz/l*pace;
       }
       const previousEvents=this.events.length;super.step(h,player);
       for(const e of this.events.slice(previousEvents))if(e.type==='bump'){

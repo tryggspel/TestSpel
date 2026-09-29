@@ -1,14 +1,18 @@
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.2.0';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.2.0';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.2.0';
-import {CityJourney} from './journey-rules.mjs?v=2.3.0';
-import {createJourneyView} from './journey-view.js?v=2.2.0';
-import {createBusRide} from './bus-ride.js?v=2.2.0';
-import {RUSH} from './city-rush.mjs?v=2.3.0';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.4.0';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.4.0';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.4.0';
+import {CityJourney} from './journey-rules.mjs?v=2.4.0';
+import {createJourneyView} from './journey-view.js?v=2.4.0';
+import {createBusRide} from './bus-ride.js?v=2.4.0';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.4.0';
+import {createPostcard} from './challenge-postcard.js?v=2.4.0';
+import {RUSH} from './city-rush.mjs?v=2.4.0';
 
 export function createLastRound(pc, host) {
   const $ = id => document.getElementById(id);
   const params = new URLSearchParams(location.search);
+  const request=challengeRequest(location.search);
+  let displayedDaily=request.kind==='daily'?request.challenge:dailyFor();
   const seed = normalizeSeed(params.get('seed'));
   const target = Math.max(0, Math.min(999999, Number(params.get('target')) || 0));
   const olearyLayout = layoutFor(seed, host.origin);
@@ -42,6 +46,11 @@ export function createLastRound(pc, host) {
   try {completed=JSON.parse(localStorage.getItem(completedKey)||'{}')||{};} catch {}
   let best = 0;
   let roundInProgress=false, rewardPaid=false, pickupToastUntil=0;
+  let retryCityOptions={},lastMoment=null,momentReturn='pause',busChallenge=false;
+  const cityPostcard=createPostcard($('cityResultPostcard'),$('cityShareLink'),$('citySaveCard'));
+  const missionPostcard=createPostcard($('missionResultPostcard'),$('roundShareLink'),$('roundSaveCard'));
+  const momentPostcard=createPostcard($('momentPostcard'),$('momentShareLink'),$('momentSaveCard'));
+  function rememberMoment(record){lastMoment={...record};$('openMoment').hidden=false;}
 
 
   function material(hex) {
@@ -198,8 +207,8 @@ export function createLastRound(pc, host) {
   const journeyView=createJourneyView(pc,host,{card,texture,labelTex,primitive,material,fanTex,root},journey,portals,rounds.sandgrund);
   const busRide=createBusRide(host,{driverTexture:fanTex('walker','#e79355'),
     onTick:dt=>{journey.rush.clock(dt);if(journey.rush.state==='caught')busRide.stop();},
-    onArrive:(result,to)=>{journey.position={x:to.x,z:to.z};journey.heading=0;journey.reward(result.points);journey.contactCooldown=4;journey.save();host.music?.city?.();toast('”NÄSTA: '+to.name.toUpperCase()+'!”','Bussresan klar! +'+result.points+' XP. Inga återbetalningar.',3);},
-    onCrash:(result,to)=>{journey.position={x:to.x,z:to.z};journey.heading=0;journey.health=Math.max(25,journey.health-20);journey.contactCooldown=5;journey.save();host.music?.city?.();toast('AVSTIGNING. OPLANERAD.','Tillbaka vid hållplatsen. −20 liv. Bättre balans nästa tur!',3);}
+    onArrive:(result,to,from)=>{journey.rush.buses++;recordBusMoment(result,to,from);journey.position={x:to.x,z:to.z};journey.heading=0;journey.reward(result.points);journey.contactCooldown=4;journey.save();host.music?.city?.();toast('”NÄSTA: '+to.name.toUpperCase()+'!”','Bussresan klar! +'+result.points+' XP. Inga återbetalningar.',3);if(busChallenge)openMoment('bus-intro');},
+    onCrash:(result,to,from)=>{recordBusMoment(result,to,from);journey.position={x:to.x,z:to.z};journey.heading=0;journey.health=Math.max(25,journey.health-20);journey.contactCooldown=5;journey.save();host.music?.city?.();toast('AVSTIGNING. OPLANERAD.','Tillbaka vid hållplatsen. −20 liv. Bättre balans nästa tur!',3);if(busChallenge)openMoment('bus-intro');}
   });
   function updateMissionViews(p,dt,now){
     const deliveryActive=game===rounds['radda-fikat']&&game.phase!=='ready';
@@ -240,7 +249,8 @@ export function createLastRound(pc, host) {
   function setPanel(name) {
     panel = name; document.body.classList.toggle('round-panel-open', !!name);
     $('roundPanel').hidden = !name;
-    for (const id of ['intro', 'pause', 'result', 'map','city-intro','city-result','album']) $('round-' + id).hidden = name !== id;
+    for (const id of ['intro', 'pause', 'result', 'map','city-intro','city-result','album','daily-intro','moment','bus-intro']) $('round-' + id).hidden = name !== id;
+    if(name==='city-intro'||name==='daily-intro')refreshDaily();
     if(name==='city-intro')$('cityControlCopy').textContent=host.oneHand?.()?'EN HAND: spaken går och svänger. Sikta mot zombien så skjuter du automatiskt. Byt till två händer i PAUS.':'WASD: gå · mus: sikta · klick: solstöt · E: uppdrag / buss · M: karta. Samma snabba gång som tidigare.';
     if(name==='intro'||name==='pause')for(const id of ['roundIntroControls','roundPauseControls'])$(id).textContent=host.oneHand?.()?'EN HAND: en spak för gång och sväng. Autoeld när du siktar på en zombie. Byt läge i PAUS.':controlText;
     host.resetInput(); triggerPointer = null;
@@ -252,6 +262,7 @@ export function createLastRound(pc, host) {
   }
   function start(practice = false) {
     if(busRide.active())return;
+    if(journey.rush.challenge&&journey.rush.state==='playing'){toast('KLARA STADSJAKTEN FÖRST','Specialuppdragen väntar. Den delade utmaningen spelas helt i staden.',3);return;}
     if(isJourney()){const p=host.player.getPosition();journey.position={x:p.x,z:p.z};journey.pause();journey.save();}
     storeRoundEnergy();roundInProgress=true;rewardPaid=false;
     host.music?.unlock?.(); host.music?.roundStart?.();
@@ -286,14 +297,44 @@ export function createLastRound(pc, host) {
     if(!boot){host.music?.unlock?.();host.music?.city?.(true);lockPointer();}
     if(!boot)toast(journey.rush.mode==='timed'?'JAKTEN FORTSÄTTER!':'KARLSTAD ÄR DITT',journey.rush.mode==='timed'?'800 XP. Sedan till en grön tryggzon innan tiden tar slut.':'Gatuhändelser, bussresor och fyra specialuppdrag väntar.',3);
   }
-  function startCity(mode='timed'){
-    if(busRide.active())busRide.stop();storeRoundEnergy();journey.rush.start(mode);explore();sound('start');
-    toast(mode==='timed'?'3 MINUTER. STADEN JAGAR DIG.':'FRI STADSVANDRING',mode==='timed'?'Samla 800 XP. Nå en grön tryggzon. Bonus för tiden du har kvar.':'Samla, gör gatuhändelser eller ta bussen. Ingen tidspress.',4);
+  function refreshDaily(){
+    if(request.kind!=='daily')displayedDaily=dailyFor();
+    const d=displayedDaily,record=dailyRecord(storage,d.day),time=Math.floor(d.seconds/60)+':'+String(d.seconds%60).padStart(2,'0');
+    $('dailyDate').textContent=d.day===stockholmDay()?'IDAG · '+d.day:'UTMANING FRÅN '+d.day;
+    $('dailyTitle').textContent=d.title;$('dailyTeaser').textContent=time+' · 800 XP · samma start för alla';
+    $('dailyBriefTitle').textContent=d.title;$('dailyBriefDate').textContent=d.day+' · SEED '+d.seed;
+    $('dailyDescription').textContent=d.description;$('dailyStart').textContent='SPELA UTMANINGEN · '+time+' →';
+    $('dailyBest').textContent='REKORD PÅ DENNA ENHET: '+record.best+' XP · '+record.attempts+' FÖRSÖK';
+    $('dailyTarget').textContent=request.kind==='daily'&&request.target?'KOMPISENS RESULTAT: '+request.target+' XP':'En ny utmaning varje dag vid midnatt i Karlstad.';
+  }
+  function startCity(mode='timed',options={}){
+    if(busRide.active())busRide.stop();busChallenge=false;storeRoundEnergy();retryCityOptions={...options};
+    journey.rush.start(mode,{seed,...options});explore();sound('start');
+    $('cityShareLink').hidden=true;
+    toast(options.challenge?.title||(mode==='timed'?'STADEN JAGAR DIG.':'FRI STADSVANDRING'),options.challenge?'800 XP → grön tryggzon. Kaffe lockar. Solen hjälper.':mode==='timed'?'Samla 800 XP. Nå en grön tryggzon. Följ solen för extra kraft.':'Samla, gör gatuhändelser eller ta bussen. Ingen tidspress.',4);
   }
   function cityResult(event){
+    const r=journey.rush,daily=r.challenge?.kind==='daily';
     $('cityResultTitle').textContent=event.escaped?'DU KOM UNDAN!':'TILLFÅNGATAGEN!';$('cityResultScore').textContent=String(event.score);
-    $('cityResultDetail').textContent=event.escaped?`${journey.rush.xp} XP + ${journey.rush.bonus} tidsbonus. +150 kaffepoäng sparade.`:event.reason+' Dina sparade kaffepoäng och vykort finns kvar.';
-    $('cityResultBest').textContent='BÄSTA FLYKT: '+journey.rush.best+' XP';$('cityShare').hidden=!event.escaped;host.music?.roundEnd?.();setPanel('city-result');sound(event.escaped?'win':'boss');
+    $('cityResultDetail').textContent=event.escaped?`${r.xp} XP + ${r.bonus} tidsbonus. ${r.challenge?'Dina vanliga resurser är återställda.':'+150 kaffepoäng sparade.'}`:event.reason+' Dina sparade kaffepoäng och vykort finns kvar.';
+    $('cityResultBest').textContent=(daily?'DAGENS REKORD PÅ DENNA ENHET: ':'BÄSTA FLYKT: ')+(daily?r.dailyBest:r.best)+' XP';
+    $('cityResultTarget').textContent=request.target?event.escaped&&event.score>request.target?'DU SLOG KOMPISENS '+request.target+' XP!':'ATT SLÅ: '+request.target+' XP · en fullbordad flykt räknas.':'';
+    $('cityRetry').textContent=daily?'SAMMA DAG EN GÅNG TILL →':'EN JAKT TILL →';$('cityShare').hidden=false;$('cityShare').textContent='UTMANA EN VÄN';
+    const record={kind:daily?'daily':'hunt',day:r.challenge?.day,seed:r.seed,score:event.score,won:event.escaped,health:r.resultHealth,kills:r.resultCaptured,seconds:r.spent,title:r.challenge?.title||'STADEN JAGAR DIG',kit:{...r.replayKit}};
+    rememberMoment(record);host.music?.roundEnd?.();setPanel('city-result');cityPostcard.show(record);sound(event.escaped?'win':'boss');
+  }
+  function recordBusMoment(result,to,from){
+    rememberMoment({kind:'bus',from:from.id,seed,score:result.points,health:result.health,seconds:30-result.remaining,won:result.state==='arrived',title:result.state==='arrived'?'BILJETTKONTROLLEN KAN VÄNTA.':'CHAUFFÖREN SKYLLER PÅ VÄGEN.',place:from.name+' → '+to.name});
+  }
+  function openMoment(back='pause'){
+    if(!lastMoment||busRide.active())return;
+    momentReturn=back;if(game.phase==='playing')game.pause();host.music?.pause?.();
+    $('momentRetry').hidden=!busChallenge;
+    $('momentTarget').textContent=busChallenge&&request.target?(lastMoment.won&&lastMoment.score>request.target?'DU SLOG KOMPISENS '+request.target+' XP!':'ATT SLÅ: '+request.target+' XP · nå hållplatsen först.'):'Bilden och länken följer med när din delningsapp stöder det.';$('momentShare').textContent='UTMANA EN VÄN';setPanel('moment');momentPostcard.show(lastMoment);
+  }
+  function startBusChallenge(fromId=request.from||'torget'){
+    startCity('free');busChallenge=true;
+    const from=journey.busStops.find(s=>s.id===fromId)||journey.busStops[0];host.teleport(from.x,from.z,0,-2);journey.position={x:from.x,z:from.z};boardBus();
   }
   function boardBus(){
     if(panel||!isJourney()||game.phase!=='playing'||busRide.active())return;
@@ -308,6 +349,7 @@ export function createLastRound(pc, host) {
     setPanel('album');
   }
   function openMissions(){
+    if(journey.rush.challenge&&journey.rush.state==='playing'){toast('800 XP → GRÖN TRYGGZON','Specialuppdragen väntar tills du avslutar utmaningen.',3);return;}
     if(game.phase==='playing')game.pause();host.music?.pause?.();selectMission(selectedMission);setPanel('intro');
   }
   function buyEnergy(){
@@ -340,6 +382,7 @@ export function createLastRound(pc, host) {
   }
   function fire(power = false) {
     if (panel || busRide.active() || game.phase !== 'playing') return;
+    if(power&&isJourney()&&journey.rush.challenge?.noSuper){toast('DAGENS REGEL: UTAN SUPER','Vanliga solstötar fungerar.');return;}
     if (power && game.energy < RULES.chargeCost) {toast('MER SOL, TACK.', 'SUPER kostar 40 sol. Samla termosar eller växla 25 kaffepoäng.'); return;}
     const p = host.player.getPosition(), f = host.camera.forward;
     const shot = game.shoot({x: p.x, z: p.z, y: p.y, dx: f.x, dz: f.z, dy: f.y, power, assist: aimHelp});
@@ -465,39 +508,33 @@ export function createLastRound(pc, host) {
     $('roundResultRecord').textContent = game.practice ? 'ÖVNING KLAR · NU SITTER VINKLARNA' : won && best > previousBest ? 'NYTT PERSONBÄSTA! · ' + medal : won ? medal : `DITT REKORD: ${best.toLocaleString('sv-SE')}`;
     $('roundResultTarget').textContent = game.practice ? `Redo för ${game.duration} sekunder? Övningen påverkar inte ditt rekord.` : target ? (won && game.score > target ? `Du slog utmaningen på ${target} poäng!` : `Kompisens resultat: ${target} poäng`) : `Runda ${seed} · samma placeringar varje försök`;
     $('roundRetry').textContent = game.practice ? `SPELA PÅ TID · ${game.duration} SEK →` : 'EN GÅNG TILL ↻';
-    $('roundShare').textContent = 'UTMANA EN VÄN'; $('roundShare').disabled = !won || game.practice;
+    $('roundShare').textContent = 'UTMANA EN VÄN'; $('roundShare').disabled = game.practice;
     $('roundShare').hidden = game.practice;
     $('roundNext').hidden=!won||game.practice;$('roundNext').textContent='NÄSTA: '+MISSIONS[(MISSIONS.findIndex(m=>m.id===selectedMission)+1)%MISSIONS.length].name.toUpperCase()+' →';
     host.music?.roundEnd?.();
-    setPanel('result'); sound(won ? 'win' : 'boss');
+    setPanel('result');$('missionResultPostcard').hidden=$('roundSaveCard').hidden=game.practice;
+    if(!game.practice){const record={kind:'mission',mission:selectedMission,seed,score:game.score,won,health:game.health??100,kills:game.captured,seconds:game.elapsed,title:missionInfo().name,place:missionInfo().place};rememberMoment(record);missionPostcard.show(record);}
+    sound(won ? 'win' : 'boss');
   }
-  async function share() {
-    if (game.practice || game.phase !== 'won') return;
-    const url = new URL(location.href); url.search = ''; url.hash = '';
-    url.searchParams.set('challenge', selectedMission); url.searchParams.set('seed', String(seed)); url.searchParams.set('target', String(game.score));
-    const data = {title: missionInfo().name+' i Karlstad', text: `Jag klarade ${missionInfo().name} med ${game.score} poäng. Slå min runda!`, url: url.href};
-    try {
-      if (navigator.share) await navigator.share(data);
-      else if (navigator.clipboard?.writeText) {await navigator.clipboard.writeText(url.href); $('roundShare').textContent = 'LÄNK KOPIERAD!';}
-      else { $('roundShareLink').hidden = false; $('roundShareLink').value = url.href; $('roundShareLink').select(); }
-    } catch (e) {if (e.name !== 'AbortError') { $('roundShareLink').hidden = false; $('roundShareLink').value = url.href; $('roundShareLink').select(); }}
-  }
+  function share(){if(!game.practice)missionPostcard.share($('roundShare'));}
   $('roundStart').addEventListener('click', () => start()); $('roundRetry').addEventListener('click', () => start());
   $('roundNext').addEventListener('click',()=>{selectMission(MISSIONS[(MISSIONS.findIndex(m=>m.id===selectedMission)+1)%MISSIONS.length].id);setPanel('intro');});
   $('roundPractice').addEventListener('click', () => start(true));
   $('roundExplore').addEventListener('click',()=>explore()); $('roundLeave').addEventListener('click',()=>explore());
   $('roundNavigate').addEventListener('click',()=>{journey.destination=selectedMission;journey.routeMode='mission';journey.save();explore();});
-  $('cityStart').addEventListener('click',()=>startCity());$('cityRetry').addEventListener('click',()=>startCity());
+  $('cityStart').addEventListener('click',()=>startCity('timed',request.kind==='hunt'?{seed:request.seed,kit:request.kit,challenge:request.kit?{kind:'friend',seed:request.seed,title:'KOMPISJAKTEN',seconds:180}:null}:{}));$('cityRetry').addEventListener('click',()=>startCity('timed',retryCityOptions));
+  $('dailyOpen').addEventListener('click',()=>setPanel('daily-intro'));$('dailyBack').addEventListener('click',()=>setPanel('city-intro'));
+  $('dailyStart').addEventListener('click',()=>{refreshDaily();startCity('timed',{challenge:displayedDaily});});
+  $('openMoment').addEventListener('click',()=>openMoment());$('momentClose').addEventListener('click',()=>setPanel(momentReturn));
+  $('momentShare').addEventListener('click',()=>momentPostcard.share($('momentShare')));
+  $('momentRetry').addEventListener('click',()=>startBusChallenge(lastMoment?.from));
+  $('busChallengeStart').addEventListener('click',()=>startBusChallenge());$('busChallengeBack').addEventListener('click',()=>startCity('free'));
   for(const id of ['cityFree','cityResultFree'])$(id).addEventListener('click',()=>startCity('free'));
   $('cityNewRun').addEventListener('click',()=>{if(game.phase==='playing')game.pause();setPanel('city-intro');});
   $('openAlbum').addEventListener('click',openAlbum);$('albumClose').addEventListener('click',()=>{if(game.phase==='paused')resume();else setPanel('city-result');});
-  $('cityShare').addEventListener('click',async()=>{
-    const url=new URL(location.href);url.search='?v=2.2.0&hunt=1&target='+journey.rush.finalScore;
-    const data={title:'Karlstad jagar dig!',text:`Jag kom undan med ${journey.rush.finalScore} XP i Karlstad. Klarar du zombie-bussen?`,url:url.href};
-    try{if(navigator.share)await navigator.share(data);else if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url.href);$('cityShare').textContent='LÄNK KOPIERAD';}else{$('cityShareLink').hidden=false;$('cityShareLink').value=url.href;$('cityShareLink').select();}}catch{}
-  });
+  $('cityShare').addEventListener('click',()=>cityPostcard.share($('cityShare')));
   $('roundResume').addEventListener('click', resume); $('roundRestart').addEventListener('click', () => isJourney()?resume():start(game.practice));
-  $('roundQuit').addEventListener('click',()=>explore()); $('roundShare').addEventListener('click', share);
+  $('roundQuit').addEventListener('click',()=>journey.rush.challenge?startCity('free'):explore()); $('roundShare').addEventListener('click', share);
   $('roundLaunch').addEventListener('click',openMissions);$('refillBtn').addEventListener('click',buyEnergy);
   $('roundPause').addEventListener('click', () => game.phase === 'playing' ? pause() : setPanel('intro'));
   $('roundMapClose').addEventListener('click', () => {game.phase === 'paused' ? resume() : setPanel(null);});
@@ -537,14 +574,21 @@ export function createLastRound(pc, host) {
   window.addEventListener('pointerdown',()=>{host.music?.unlock?.();if(isJourney()&&!panel)host.music?.city?.(true);},{once:true});
   document.addEventListener('visibilitychange', () => {if (document.hidden && game.phase === 'playing') pause();});
   $('useBtn').textContent = 'UPPDRAG'; $('jumpBtn').textContent = 'HOPPA';
-  window.KarlstadRound = Object.freeze({version: '2.3.0', snapshot: () => ({phase: game.phase, mode:busRide.active()?'bus':isJourney()?'journey':'mission',score: game.score, energy: game.energy,oneHand:!!host.oneHand?.(),bus:busRide.snapshot(),rush:journey.rush.snapshot(),
+  window.KarlstadRound = Object.freeze({version: '2.4.0', snapshot: () => ({phase: game.phase, mode:busRide.active()?'bus':isJourney()?'journey':'mission',score: game.score, energy: game.energy,oneHand:!!host.oneHand?.(),bus:busRide.snapshot(),rush:journey.rush.snapshot(),postcard:lastMoment?{...lastMoment}:null,challengeRequest:request,
     journey:{balance:journey.balance,lifetime:journey.lifetime,found:journey.found.size,secrets:journey.secretsFound.size,postcards:[...journey.postcardsFound],safeZones:journey.safeZones.map(s=>({...s})),busStops:journey.busStops.map(s=>({...s})),destination:journey.destination,items:journey.items.filter(t=>!journey.found.has(t.id)).map(t=>({...t})),portals:structuredClone(portals)},
     rescued:game.rescued||0,visitors:game.visitors?.map(v=>({...v})),
     practice: game.practice, aimHelp, mission:selectedMission, wave:game.wave||0, health:game.health??100, collected:game.collected||0, guide: currentGuide ? {good: currentGuide.good, stance: currentGuide.stance} : null,
     remaining: game.remaining, seed, captured: game.captured, shots: game.shots, bestChain: game.bestChain,
     player: {x: host.player.getPosition().x, z: host.player.getPosition().z}, forward: {x: host.camera.forward.x, y: host.camera.forward.y, z: host.camera.forward.z},
     actors: game.actors.map(a => ({id: a.id, x: a.x, z: a.z, active: a.active, hp:a.hp, kind:a.kind})), goal: {...layout.goal}, objective:isPush()?layout.goal:game.objective(host.player.getPosition())})});
-  explore(true);if(params.has('challenge'))openMissions();else{journey.pause();$('cityChallengeTarget').textContent=params.has('hunt')&&target?'UTMANING: SLÅ '+target+' XP':'DITT REKORD: '+journey.rush.best+' XP';setPanel('city-intro');}
+  explore(true);
+  if(request.kind==='bus'){
+    journey.pause();$('busChallengeFrom').textContent='Från '+journey.busStops.find(s=>s.id===request.from).name+'. Samma 30 sekunders resa. Samma svängar.';
+    $('busChallengeTarget').textContent=request.target?'ATT SLÅ: '+request.target+' XP':'Håll balansen. En hel buss ger upp till 350 XP.';setPanel('bus-intro');
+  }else if(request.kind==='daily'){journey.pause();setPanel('daily-intro');}
+  else if(params.has('challenge')&&!request.error)openMissions();
+  else {journey.pause();$('cityChallengeTarget').textContent=request.error||(params.has('hunt')&&target?'UTMANING: SLÅ '+target+' XP':'DITT REKORD: '+journey.rush.best+' XP');setPanel('city-intro');}
+
 
   function update() {
     const now = performance.now(), dt = Math.min(1, Math.max(0, (now - previousTime) / 1000)); previousTime = now;
@@ -590,11 +634,16 @@ export function createLastRound(pc, host) {
       if(event.type==='panic-fall'){damageFlash=.18;toast('KARLSTAD HAR FALLIT','Överlev '+event.seconds+' sekunder. Ingen står still nu.',3.5);}
       if(event.type==='panic-reset'){sound('win');toast('SOLEN KOMMER TILLBAKA','Paniken sjunker till '+Math.round(event.panic)+'%. Karlstad andas igen.',2.6);}
       if(event.type==='chaos-bells'){sound('boss');toast('DOMKYRKAN RINGER','Klockorna drar till sig '+Math.max(1,event.count)+' zombies. Dålig tajming.',2.7);}
-      if(event.type==='chaos-blackout'){damageFlash=.12;toast('BLACKOUT','Gatljuset dör i '+event.seconds+' sekunder. Något rör sig i mörkret.',2.7);document.body.classList.add('city-blackout');setTimeout(()=>document.body.classList.remove('city-blackout'),event.seconds*1000);}
+      if(event.type==='chaos-blackout'){damageFlash=.12;toast('BLACKOUT','Gatljuset dör i '+event.seconds+' sekunder. Något rör sig i mörkret.',2.7);}
       if(event.type==='chaos-gold'){sound('energy');toast('GULDTERMOS!','Nå den inom '+event.seconds+' sekunder · +'+event.points+' XP.',2.4);}
       if(event.type==='chaos-gold-complete'){sound('win');toast('GULDTERMOS SÄKRAD','+'+event.points+' XP · +30 sol · paniken steg. Självklart.',2.5);}
       if(event.type==='chaos-gold-missed')toast('GULDTERMOSEN FÖRSVANN','Karlstad ger inga andra chanser. Nästan inga.',1.8);
       if(event.type==='chaos-horde'){$('journeyPickupToast').textContent='PANIKHORD · '+event.count+' NYA ZOMBIES';$('journeyPickupToast').classList.add('visible');pickupToastUntil=now+1400;}
+      if(event.type==='scent-tier')toast('KAFFEDOFT '+event.tier+'%',event.tier===40?'Zombierna känner dig längre bort.':event.tier===60?'Doften lockar snabbare zombies.':'Bakgränderna har fått upp spåret. Följ solen!',2);
+      if(event.type==='coffee-catastrophe'){sound('boss');toast('KAFFEKATASTROF!','Håll dig i rörelse i '+event.seconds+' sekunder. Solen vädrar bort doften.',3);}
+      if(event.type==='coffee-calm')toast('DOFTEN LÄGGER SIG','Horden lugnar sig. Välj nästa termos med omsorg.',2);
+      if(event.type==='sun-start'){sound('energy');toast('SOLA ÄR FRAMME!','Följ den gula solringen: +energi, mindre doft, dubbla zombiepoäng. 6 sekunder i solen ger +100 XP.',3);}
+      if(event.type==='sun-bonus'){sound('win');toast('SOLBAD KLART · +100 XP','Karlstads friskvårdsbidrag. Fortsätt följa solen!',2);}
       if(event.type==='pursuit'){sound('boss');$('journeyPickupToast').textContent='DU ÄR FÖRFÖLJD · '+event.count+' ZOMBIES';$('journeyPickupToast').classList.add('visible');pickupToastUntil=now+1600;}
       if(event.type==='postcard'){sound('capture');toast('VYKORT HITTAT · +100 XP',event.name+' · Se bilden i PAUS → VYKORT.',2);}
       if(event.type==='exit-open'){sound('win');toast('800 XP! NU HEM MED DIG.','Ta dig till en grön tryggzon. Tiden som är kvar ger bonus.',3);}
@@ -605,6 +654,8 @@ export function createLastRound(pc, host) {
       if (event.type === 'bump' && isPush()) {sound('bump'); toast('”JAG STOD FAKTISKT HÄR.”', 'Håll lite avstånd. −15 poäng.');}
       if (event.type === 'finish') finish(event.won);
     }
+    document.body.classList.toggle('city-blackout',isJourney()&&!busRide.active()&&journey.rush.blackoutUntil>journey.rush.spent);
+    document.body.classList.toggle('city-in-sun',isJourney()&&!busRide.active()&&journey.rush.ecology.inSun);
     if(busRide.active())return;
     // Do not remove and re-add live render components on every frame.
     for(const [id,v] of actorViews)if(id.startsWith('city-')===isPush()){v.e.enabled=false;v.shadow.enabled=false;}
@@ -636,11 +687,17 @@ export function createLastRound(pc, host) {
       $('roundScore').textContent = (isJourney()?(timed?journey.rush.xp:journey.balance):game.score).toLocaleString('sv-SE'); $('roundTime').textContent = timed?Math.floor(time/60)+':'+String(time%60).padStart(2,'0'):isJourney()?String(journey.found.size):game.practice ? '∞' : String(Math.ceil(game.remaining)).padStart(2, '0');
       $('roundTime').classList.toggle('urgent',timed?time<=30:!isJourney()&&!game.practice && game.remaining <= 15); $('roundProgress').textContent = timed?'800':isJourney()?`${journey.secretsFound.size}/5`:isPush()?`${game.captured}/4`:selectedMission==='fikapanik'?`${game.captured}/24`:`${selectedMission==='sandgrund'?game.rescued:game.collected}/3`;
       const contract=journey.rush.contract,chaos=journey.rush.chaosTarget;$('cityEventHud').hidden=!isJourney();
-      $('cityEventTitle').textContent=journey.rush.exitReady?'FLY TILL GRÖN TRYGGZON':chaos?chaos.title:contract?contract.title:'800 XP → TRYGGZON';
+      $('cityEventTitle').textContent=journey.rush.exitReady?'FLY TILL GRÖN TRYGGZON':chaos?chaos.title:contract?contract.title:timed?'800 XP → TRYGGZON':'UTFORSKA KARLSTAD';
       $('cityEventDetail').textContent=chaos&&!journey.rush.exitReady?Math.round(Math.hypot(p.x-chaos.spot.x,p.z-chaos.spot.z))+' M · '+Math.ceil(chaos.until-journey.rush.spent)+' S · +'+chaos.points+' XP':contract&&!journey.rush.exitReady?(contract.kind==='hunt'?contract.left+' TJUVAR KVAR':Math.round(Math.hypot(p.x-contract.spot.x,p.z-contract.spot.z))+' M')+' · '+Math.ceil(contract.until-journey.rush.spent)+' S · +'+contract.points+' XP':timed?'Kaffepoäng: '+journey.balance+' · Bussen ger upp till 350 XP':'Bussar · gatuhändelser · vykort';
-      $('roundHealth').style.width=(game.health??100)+'%';$('roundHealthText').textContent=String(game.health??100);if($('panicFill')){$('panicFill').style.width=Math.round(journey.rush.panic)+'%';$('panicValue').textContent=Math.round(journey.rush.panic)+'%';$('panicHud').hidden=!isJourney();$('panicHud').classList.toggle('danger',journey.rush.panic>=75);}
-      $('superBtn').disabled = game.energy < RULES.chargeCost || game.phase !== 'playing';
-      $('superBtn').setAttribute('aria-label', game.energy >= RULES.chargeCost ? 'Superstöt, kostar 40 solenergi' : 'Superstöt behöver 40 solenergi');
+      $('roundHealth').style.width=(game.health??100)+'%';$('roundHealthText').textContent=String(Math.ceil(game.health??100));if($('panicFill')){$('panicFill').style.width=Math.round(journey.rush.panic)+'%';$('panicValue').textContent=Math.round(journey.rush.panic)+'%';$('panicHud').hidden=!isJourney();$('panicHud').classList.toggle('danger',journey.rush.panic>=75);}
+      const ecology=journey.rush.ecology,sun=ecology.sun;
+      const sunAngle=sun?Math.atan2(sun.x-p.x,sun.z-p.z)-Math.atan2(host.camera.forward.x,host.camera.forward.z):0;
+      const sunArrow=['↑','↖','←','↙','↓','↘','→','↗'][(Math.round(sunAngle/(Math.PI/4))+16)%8];
+      $('cityJourneyHud').hidden=!isJourney();$('scentFill').style.width=Math.round(ecology.scent)+'%';$('scentValue').textContent=Math.round(ecology.scent)+'%';$('scentRow').classList.toggle('danger',ecology.scent>=80);
+      $('sunHud').hidden=!isJourney()||!sun;$('sunHud').textContent=sun?(ecology.inSun?'I SOLEN · 2× ZOMBIE-XP · ':sunArrow+' SOLA · '+Math.round(Math.hypot(p.x-sun.x,p.z-sun.z))+' M · ')+Math.ceil(sun.until-journey.rush.spent)+' S'+(sun.rewarded?' · +100 XP KLART':' · SOLBAD '+Math.min(6,Math.floor(sun.held))+'/6 S'):'';
+      $('superBtn').disabled = game.energy < RULES.chargeCost || game.phase !== 'playing' || (isJourney()&&!!journey.rush.challenge?.noSuper);
+      $('superBtn').querySelector('span').textContent=isJourney()&&journey.rush.challenge?.noSuper?'AV IDAG':'40 ENERGI';
+      $('superBtn').setAttribute('aria-label', isJourney()&&journey.rush.challenge?.noSuper?'Super är av i dagens utmaning':game.energy >= RULES.chargeCost ? 'Superstöt, kostar 40 solenergi' : 'Superstöt behöver 40 solenergi');
       $('roundEnergy').style.width = game.energy + '%'; $('roundEnergyText').textContent = Math.round(game.energy) + '%';
       $('refillBtn').disabled=game.phase!=='playing'||game.energy>60||journey.balance<25;$('refillBtn').textContent='☀ +40 SOL · 25 P'+(!isJourney()?' ('+journey.balance+')':'');
       $('roundPhase').textContent = isJourney()?(game.energy<3?'NÖDSOL · HITTA TERMOSAR ELLER LADDA MED POÄNG':'TERMOS = +25 POÄNG / +15 SOL · SOLSTÖT −3'):isPush()?(game.captured<3?'KNUFFA 3 FANS TILL HEMGÅNG':'SKICKA HEM KAPTEN ÖVERTID'):selectedMission==='sandgrund'?`BESÖKARE ${game.rescued}/3 · ZOMBIE-LERIN ${Math.max(0,game.actors[0].hp)}/12`:selectedMission==='fikapanik'?`VÅG ${game.wave}/3 · ${game.actors.filter(a=>a.active).length} ZOMBIES KVAR`:game.collected<3?'HÄMTA 3 TERMOSAR PÅ TORGET':'LEVERERA TILL MITT I CITY';
@@ -649,7 +706,7 @@ export function createLastRound(pc, host) {
       if (game.phase === 'ready') {
         $('mission').textContent='KARLSTAD EFTER STÄNGNING · 3 UPPDRAG';
       } else $('mission').textContent = missionInfo().name.toUpperCase();
-      $('status').textContent = `FPS ${Math.round(host.app.stats.frame.fps)} · ${isJourney()?'STADSJAKTEN 2.2':missionInfo().place.toUpperCase()}`;
+      $('status').textContent = `FPS ${Math.round(host.app.stats.frame.fps)} · ${isJourney()?journey.rush.challenge?.kind==='daily'?'DAGENS KARLSTAD 2.4':'STADSJAKTEN 2.4':missionInfo().place.toUpperCase()}`;
       const destination = game.phase === 'playing' ? (isPush()?layout.goal:game.objective(p)) : olearyLayout.guard;
       const direction = Math.atan2(destination.x - p.x, destination.z - p.z) - Math.atan2(host.camera.forward.x, host.camera.forward.z);
       $('roundCompassArrow').style.transform = `rotate(${-direction * 180 / Math.PI}deg)`;
