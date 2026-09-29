@@ -1,5 +1,5 @@
 import {CityMission} from './city-missions.mjs?v=2.2.0';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.2.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.3.0';
 
 export const JOURNEY_KEY='karlstad:journey:1';
 const bounded=(v,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max,Number(v))):fallback;
@@ -47,7 +47,7 @@ export class CityJourney extends CityMission {
   shoot(args){
     this.weakShot=!args.power&&this.energy<3;
     const before=this.energy,kills=this.captured;
-    const result=super.shoot(args);if(result){if(!args.power)this.energy=Math.min(100,Math.max(0,before-3)+8*(this.captured-kills));this.dirty=true;}return result;
+    const result=super.shoot(args);if(result){if(!args.power)this.energy=Math.min(100,Math.max(0,before-3)+8*(this.captured-kills));this.rush?.raisePanic(args.power?3.5:1.2);this.dirty=true;}return result;
   }
   impulse(actor,dx,dz,strength,shot){
     const wasActive=actor.active;super.impulse(actor,dx,dz,this.weakShot?Math.min(9,strength):strength,shot);
@@ -70,7 +70,7 @@ export class CityJourney extends CityMission {
     this.rush.step(Math.min(dt,1),player,forward);if(this.phase!=='playing')return;
     for(const item of this.items)if(!this.found.has(item.id)&&Math.hypot(player.x-item.x,player.z-item.z)<1.65){
       this.found.add(item.id);this.collectChain=this.elapsed-this.lastCollect<6?this.collectChain+1:1;this.lastCollect=this.elapsed;
-      const bonus=this.collectChain%5===0?25:0;this.reward(25+bonus);this.energy=Math.min(100,this.energy+15);
+      const bonus=this.collectChain%5===0?25:0;this.reward(25+bonus);this.energy=Math.min(100,this.energy+15);this.rush?.raisePanic(5);
       this.events.push({type:'thermos',points:25+bonus,chain:this.collectChain,x:item.x,z:item.z});
     }
     for(const s of this.secrets)if(!this.secretsFound.has(s.id)&&Math.hypot(player.x-s.x,player.z-s.z)<1.8){
