@@ -2,12 +2,12 @@
 <html lang="sv">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#071015">
 <title>Karlstad City · Staden jagar dig</title>
 <meta name="description" content="Tre minuter, 800 XP och en stad full av zombies. Gör snabba gatuhändelser, balansera zombie-bussen och fly till en tryggzon i Karlstad.">
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071015;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071015;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%}button,[role="button"]{touch-action:manipulation}
 #game{width:100%;height:100%;display:block;touch-action:none}
 #loading{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#173442,#071015 60%);z-index:100;transition:opacity .25s}
 #loading.hide{opacity:0;pointer-events:none}.loadbox{width:min(430px,84vw);text-align:center}.loadbox strong{font-size:22px;letter-spacing:.13em}.loadbox p{opacity:.72;font-size:13px}.bar{height:3px;background:#ffffff20;margin-top:14px}.bar i{display:block;height:100%;width:12%;background:#e7c149;transition:width .2s}
@@ -172,6 +172,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.2.0"></script>
+<script type="module" src="./app.js?v=2.2.1"></script>
 </body>
 </html>
