@@ -1,4 +1,4 @@
-# Karlstad City — Staden jagar dig (Gameplay 2.2)
+# Karlstad City — Staden jagar dig (Gameplay 2.3)
 
 The active game remains `playcanvas-karlstad-next/`, using PlayCanvas 2.22.4 and the existing city, collisions, music and movement speeds.
 
@@ -66,3 +66,17 @@ The real PlayCanvas 2.22.4 engine was also exercised headlessly with the city's 
 Control reference: [Activision’s official COD Mobile control guide](https://blog.activision.com/call-of-duty/2019-10/Getting-a-Grip-on-the-Call-of-Duty-Mobile-Controls): left movement stick, right-side relative look, separate weapon buttons and sensitivity settings.
 
 Deployment uses the existing GitHub Pages workflow. Physical iPhone and GPU rendering checks remain necessary; Node engine tests do not replace those checks.
+
+
+## Gameplay 2.3 — Chaos Director + Karlstad Panik
+
+The city layer now follows the creative roadmap instead of adding more collectibles. A lightweight Chaos Director can interrupt travel roughly every 20–45 seconds with small reusable events while preserving the existing movement/FPS core and actor pool.
+
+Current chaos set:
+- **Domkyrkan ringer:** bells pull extra zombies into the active route.
+- **Blackout:** a short visual blackout plus extra pressure, implemented as a lightweight screen treatment rather than new heavy assets.
+- **Guldtermos:** a short optional detour worth 160 XP, solar energy and extra hunt time.
+
+The new **KARLSTAD PANIK 0–100%** meter rises from time, thermos pickups, shooting and completed events. Thresholds at 25/50/75% warn the player and increase city pressure. At 100%, **KARLSTAD HAR FALLIT** starts a short survival spike with repeated horde pressure. Surviving the spike partially resets panic instead of ending the run.
+
+The director stays inside the existing six-active-enemy budget, reuses the navigation/actor pool, and does not alter the locked walking speed, collision radius, camera feel or render DPR policy.
