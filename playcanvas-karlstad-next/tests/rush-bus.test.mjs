@@ -61,3 +61,23 @@ test('bus simulation stays consistent across 30 and 120 FPS and the route never 
   const a=ride(30,true),b=ride(120,true);assert.equal(a.state,b.state);assert.ok(Math.abs(a.points-b.points)<=2);assert.ok(Math.abs(a.health-b.health)<2);
   const bus=new ZombieBus(route);for(let i=0;i<=100;i++){const p=bus.sample(i/100);assert.ok((p.x===0&&p.z>=-50)||(p.z===-50&&p.x>=-30)||(p.x===-30&&p.z<=-50));}
 });
+
+
+test('panic meter rises from thermoses and shooting while chaos stays within the actor budget',()=>{
+  const g=make();g.rush.start('free');const item=g.items[0];
+  g.step(.1,item,{x:0,z:-1});assert.ok(g.rush.panic>=5);
+  const before=g.rush.panic;g.cooldown=0;g.shoot({x:0,z:14,y:1.68,dx:0,dz:-1,assist:true});assert.ok(g.rush.panic>before);
+  const p={x:0,z:14},f={x:0,z:-1};for(let i=0;i<60;i++)g.rush.step(1,p,f);
+  assert.ok(g.rush.chaosCount>=1);assert.ok(g.actors.filter(a=>a.active).length<=RUSH.maxEnemies);
+});
+test('100 panic starts Karlstad has fallen and later partially resets',()=>{
+  const g=make();g.rush.start('free');g.rush.raisePanic(100);assert.ok(g.rush.fallUntil>0);
+  const events=g.drainEvents();assert.ok(events.some(e=>e.type==='panic-fall'));assert.ok(events.some(e=>e.type==='panic-tier'&&e.level===4));
+  const p={x:0,z:14},f={x:0,z:-1};g.rush.step(25,p,f);assert.ok(g.rush.panic>=55&&g.rush.panic<60);assert.equal(g.rush.panicTier,2);
+});
+test('the chaos director can create a gold thermos objective that pays once',()=>{
+  const g=make();g.rush.start('free');const p={x:0,z:14},f={x:0,z:-1};
+  g.rush.chaosCount=2;g.rush.triggerChaos(p,f);assert.equal(g.rush.chaosTarget.kind,'gold');
+  const target={...g.rush.chaosTarget.spot},before=g.balance;g.rush.step(.01,target,f);assert.equal(g.rush.chaosTarget,null);assert.ok(g.balance>=before+160);
+  const after=g.balance;g.rush.step(.01,target,f);assert.equal(g.balance,after);
+});
