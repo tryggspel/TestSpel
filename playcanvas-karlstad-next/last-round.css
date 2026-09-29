@@ -166,3 +166,22 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
  #fireLeftBtn{left:max(20px,env(safe-area-inset-left));width:54px;height:54px}
  #roundCompass{max-width:calc(100vw - 170px)}#roundCompassText{white-space:normal;line-height:1.35}
 }
+
+/* The city is now a playable coffee hunt between the four missions. */
+#missionPicker{grid-template-columns:repeat(2,1fr)}
+.journey-playing #roundHud{border-bottom-color:#c38ce9}
+.journey-playing .round-stat.score strong{color:#e3b9ff}
+.journey-playing #roundPhase{background:#49315e}
+#refillBtn{position:absolute;z-index:8;pointer-events:auto;top:156px;left:max(14px,env(safe-area-inset-left));min-height:40px;padding:10px 13px;border:1px solid #d8b3ed;border-radius:5px;background:#67378fe8;color:#fff2d3;font:900 9px system-ui;cursor:pointer;touch-action:manipulation}
+#refillBtn:disabled{background:#243c35;color:#afc3aa;border-color:#76997c70;opacity:.8;cursor:default}
+#journeyPickupToast{position:absolute;top:190px;left:50%;transform:translate(-50%,8px);opacity:0;padding:8px 12px;border:2px solid #d8b3ed;border-radius:4px;background:#4b2b62ed;color:#fff0ce;font:900 11px system-ui;text-align:center;transition:opacity .12s,transform .12s;max-width:80vw}
+#journeyPickupToast.visible{opacity:1;transform:translate(-50%,0)}
+#roundPanel{align-items:safe center}
+@media(max-width:850px){
+ #refillBtn{top:max(237px,calc(env(safe-area-inset-top) + 229px));left:max(12px,env(safe-area-inset-left));font-size:8px;min-height:36px;padding:8px 10px}
+ #journeyPickupToast{top:282px;font-size:9px;width:max-content;max-width:86vw}
+}
+@media(max-height:600px){
+ #refillBtn{top:104px;font-size:8px;min-height:34px;padding:8px 10px}
+ #journeyPickupToast{top:145px;font-size:9px}
+}

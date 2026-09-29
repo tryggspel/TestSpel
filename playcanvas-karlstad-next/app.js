@@ -1,6 +1,6 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.0.0';
-import {FpsLook, wrapYaw} from './fps-controls.mjs?v=2.0.0';
+import {createLastRound} from './last-round.js?v=2.1.0';
+import {FpsLook, wrapYaw} from './fps-controls.mjs?v=2.1.0';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -474,26 +474,26 @@ function addStreetProps(){
 }
 
 function initScene(){
-  M.ground=mat(0x52665b,0,.08);
-  M.grass=mat(0x445b45,0,.05);
-  M.plaza=mat(0x817b70,0,.12);
-  M.building=mat(0x83796f,0,.2);
-  M.stone=mat(0x8b8177,0,.18);
-  M.plaster=mat(0xc4b9a7,0,.16);
-  M.brick=mat(0x8f5545,0,.12);
-  M.light=mat(0xd8d0c1,0,.2);
-  M.glass=mat(0x536873,.15,.62);
-  M.hero=mat(0xc29a61,0,.3);
+  M.ground=mat(0x779a7e,0,.08);
+  M.grass=mat(0x609b70,0,.05);
+  M.plaza=mat(0xc1ad87,0,.12);
+  M.building=mat(0xe2a17b,0,.2);
+  M.stone=mat(0xcbbd97,0,.18);
+  M.plaster=mat(0xf2d6a0,0,.16);
+  M.brick=mat(0xd87960,0,.12);
+  M.light=mat(0xf6e6bb,0,.2);
+  M.glass=mat(0x517f8b,.15,.62);
+  M.hero=mat(0xe6b467,0,.3);
   M.heroDark=mat(0x2d363b,.08,.5);
-  M.road=mat(0x303438,0,.08);
-  M.sidewalk=mat(0x77766f,0,.1);
+  M.road=mat(0x475763,0,.08);
+  M.sidewalk=mat(0xa79b80,0,.1);
   M.marking=mat(0xe8e3d6,0,.18);
-  M.tree=mat(0x365843,0,.05);
+  M.tree=mat(0x388466,0,.05);
   M.trunk=mat(0x654a37,0,.08);
   M.metal=mat(0x3a4145,.2,.5);
   M.marker=mat(0xe7c149,0,.62);
-  M.windowCool=mat(0x435f70,.16,.78);
-  M.windowWarm=mat(0x8a704f,.08,.72);
+  M.windowCool=mat(0x487e8a,.16,.78);
+  M.windowWarm=mat(0xe5bb68,.08,.72);
   M.door=mat(0x263036,.12,.68);
   M.accent=mat(0xb33b30,.05,.38);
   M.concrete=mat(0x6c6e6a,0,.15);
@@ -522,7 +522,7 @@ function initScene(){
   app.root.addChild(player);
 
   camera=new pc.Entity('camera');
-  camera.addComponent('camera',{clearColor:new pc.Color(.46,.61,.70),nearClip:.05,farClip:620,fov:74});
+  camera.addComponent('camera',{clearColor:new pc.Color(.53,.77,.86),nearClip:.05,farClip:620,fov:74});
   player.addChild(camera);
   camera.setLocalPosition(0,0,0);
 
@@ -536,7 +536,7 @@ function initScene(){
   app.scene.ambientLight=new pc.Color(.34,.38,.40);
   if(pc.FOG_LINEAR!==undefined && app.scene.fog){
     app.scene.fog.type=pc.FOG_LINEAR;
-    app.scene.fog.color=new pc.Color(.46,.61,.70);
+    app.scene.fog.color=new pc.Color(.53,.77,.86);
     app.scene.fog.start=185;
     app.scene.fog.end=470;
   }
@@ -584,7 +584,9 @@ function addBuildings(osm){
   items.sort((a,b)=>a.dist-b.dist);
   let count=0;
   const cityMats=[M.stone,M.plaster,M.brick,M.light,M.building,M.glass];
-  for(const b of items.slice(0,CORE_LOCK.maxBuildings)){
+  const remote=items.filter(b=>b.dist>RADIUS&&/Sandgrund|Lars Lerin/i.test(b.name));
+  const admitted=[...items.filter(b=>b.dist<=RADIUS).slice(0,CORE_LOCK.maxBuildings-remote.length),...remote];
+  for(const b of admitted){
     if(Math.hypot(b.cx,b.cz)<9) continue;
     const hero=/Mitt i City|Domkyrka|Rådhus|Radhus|Residenset|Sandgrund|bibliotek|Wermland/i.test(b.name);
     const seed=hashStr((b.name||'byggnad')+'|'+Math.round(b.cx)+'|'+Math.round(b.cz));
@@ -603,7 +605,7 @@ function addBuildings(osm){
     if(hero){ try { addHeroLandmarkPass14(b); } catch(e) { console.warn('[Graphics 1.4 hero detail skipped]',b.name||b.cx,e); } }
     if(hero){ try { addHeroLandmarkPass16(b); } catch(e) { console.warn('[Landmark Identity 1.6 hero detail skipped]',b.name||b.cx,e); } }
 
-    colliders.push({minx:b.cx-b.sx/2-.15,maxx:b.cx+b.sx/2+.15,minz:b.cz-b.sz/2-.15,maxz:b.cz+b.sz/2+.15});
+    colliders.push({name:b.name,height:b.h,minx:b.cx-b.sx/2-.15,maxx:b.cx+b.sx/2+.15,minz:b.cz-b.sz/2-.15,maxz:b.cz+b.sz/2+.15});
     count++;
   }
   return count;
@@ -710,6 +712,7 @@ function update(dt){
   if(objectiveMarker) objectiveMarker.setEulerAngles(0,(now*34)%360,0);
   if(objectiveLight&&objectiveLight.light) objectiveLight.light.intensity=1.45+Math.sin(now*2.2)*.28;
   pickups.forEach((e,i)=>{
+    if(lastRound?.isJourney?.()){e.enabled=false;return;}
     if(!e.enabled) return;
     e.setLocalEulerAngles(0,(now*80+i*33)%360,0);
     const ep=e.getPosition();

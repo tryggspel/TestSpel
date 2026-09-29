@@ -1,0 +1,65 @@
+export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
+  const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
+  const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');
+  function thermosTex(secret=false){return texture((c,w,h)=>{
+    c.scale(w/256,h/384);c.lineWidth=9;c.strokeStyle='#193a35';c.lineJoin='round';
+    c.fillStyle=secret?'#f8c650':'#673293';c.beginPath();c.roundRect(52,76,151,264,26);c.fill();c.stroke();
+    c.fillStyle=secret?'#ffe9a1':'#9b6cc6';c.fillRect(68,101,21,215);c.strokeRect(203,136,25,90);
+    c.fillStyle='#e0e7d0';c.beginPath();c.roundRect(67,38,125,44,10);c.fill();c.stroke();
+    c.fillStyle='#fff1ca';c.beginPath();c.roundRect(63,166,129,99,10);c.fill();c.stroke();
+    c.fillStyle='#5e2788';c.textAlign='center';c.font='900 22px sans-serif';c.fillText(secret?'HEMLIG':'LÖFBERGS',128,206,118);c.font='900 16px sans-serif';c.fillText(secret?'+200 POÄNG':'KAFFEKRAFT',128,237,116);
+    c.strokeStyle='#fff3ce';c.lineWidth=6;for(let i=0;i<3;i++){c.beginPath();c.moveTo(92+i*30,22);c.quadraticCurveTo(80+i*30,10,96+i*30,0);c.stroke();}
+  },256,384);}
+  const flask=thermosTex(),secretFlask=thermosTex(true);
+  const pickupPool=Array.from({length:18},()=>card('Löfbergs termos',flask,.9,1.4,0,0,0));
+  const secretPool=journey.secrets.map(s=>({s,e:card('Guldtermos '+s.name,secretFlask,1.1,1.7,s.x,.2,s.z)}));
+  const portalViews=Object.entries(portals).map(([id,p],i)=>{
+    const e=card('Uppdrag '+id,labelTex([p.name.toUpperCase(),'UPPDRAG '+(i+1)+' • GÅ HIT']),5,1.45,p.x,2.2,p.z,true);
+    const ring=primitive('mission-circle','cylinder',p.x,.09,p.z,5,.035,5,id==='sandgrund'?purple:gold);return{id,p,e,ring};
+  });
+  const stations=[
+    {...journey.nav.point({x:-9,z:20}),brand:'LÖFBERGS',name:'KAFFEKRAFT',type:'coffee',color:'#653291'},
+    {...journey.nav.point({x:-25,z:-125}),brand:'KARLSTADS ENERGI',name:'SOLSERVICE',type:'solar',color:'#177d82'},
+    {...journey.nav.point({x:-43,z:6}),brand:'NWT',name:'STADENS HEMLIGHETER',type:'clue',color:'#d26147'}
+  ].map(s=>{
+    const mat=material(s.color);primitive('concept-kiosk','box',s.x,.9,s.z,2.3,1.8,1.2,ink);
+    primitive('comic-kiosk-roof','box',s.x,2.7,s.z,3.4,.25,2.3,mat);
+    const e=card('Konceptplats '+s.brand,labelTex([s.brand,s.name],s.color,'#fff0cb'),3.2,1,s.x,1.6,s.z+.65,true);
+    return {...s,e};
+  });
+  const ambushProps=journey.ambushes.map(a=>({a,e:card('Fikagömma',labelTex(['PAPPERSHÖG','INGET ATT SE HÄR'], '#d9c59e','#28463d'),1.4,.9,a.spawn.x,.01,a.spawn.z,true)}));
+  const visitors=Array.from({length:3},(_,i)=>card('Besökare '+i,fanTex('visitor',['#e9b978','#75bbb5','#a990c9'][i]),1.5,2.3,0,0,0));
+  const safePad=primitive('Sandgrund safe area','cylinder',sandgrund.safe.x,.1,sandgrund.safe.z,8,.035,8,mint);
+  const safeSign=card('Besökarnas samling',labelTex(['SAMLINGSPLATS','BESÖKARE HIT'], '#225345','#b8f4ca'),4.2,1.3,sandgrund.safe.x,2.4,sandgrund.safe.z,true);
+  // Original comic facades: cached canvas illustrations, no extra building meshes.
+  host.colliders.filter(b=>b.height>=6&&Math.hypot((b.minx+b.maxx)/2,(b.minz+b.maxz)/2)<165&&!/O.Leary|Mitt|Sandgrund/.test(b.name)).slice(0,9).forEach((b,i)=>{
+    const tex=texture((c,w,h)=>{
+      const colors=['#edbe92','#afd0b2','#efd499','#c7b8da'];c.fillStyle=colors[i%4];c.fillRect(0,0,w,h);c.strokeStyle='#294840';c.lineWidth=10;c.strokeRect(5,5,w-10,h-10);
+      c.fillStyle='#ffffff25';c.beginPath();c.moveTo(0,0);c.lineTo(w*.3,0);c.lineTo(w*.15,h);c.lineTo(0,h);c.fill();
+      for(let row=0;row<2;row++)for(let col=0;col<4;col++){
+        const x=28+col*123,y=30+row*145;c.fillStyle='#395f67';c.fillRect(x,y,87,99);c.strokeRect(x,y,87,99);c.strokeStyle='#f7e6ba';c.lineWidth=5;c.beginPath();c.moveTo(x+43,y);c.lineTo(x+43,y+99);c.moveTo(x,y+48);c.lineTo(x+87,y+48);c.stroke();c.strokeStyle='#294840';c.lineWidth=10;
+        c.fillStyle='#213f35';c.fillRect(x-5,y+99,97,10);
+      }
+      c.fillStyle='#244f42';c.fillRect(14,335,w-28,163);for(let j=0;j<8;j++){c.fillStyle=j%2?'#fff0ca':'#dc7665';c.fillRect(17+j*60,327,59,40);}
+      c.fillStyle='#fff0ce';c.font='900 31px sans-serif';c.textAlign='center';c.fillText(['EN HELT VANLIG DAG','FIKA & FYND','KARLSTAD LEVER'][i%3],w/2,418,w-40);
+    });
+    const e=card('Tecknad fasad',tex,Math.min(20,b.maxx-b.minx-.8),Math.min(8,b.height-.2),(b.minx+b.maxx)/2,.13,b.minz-.18);e.setEulerAngles(0,180,0);
+  });
+  function nearbyStation(p){return stations.find(s=>Math.hypot(p.x-s.x,p.z-s.z)<4);}
+  function update(p,now,game){
+    const roaming=game===journey;
+    const nearby=roaming?journey.items.filter(t=>!journey.found.has(t.id)&&Math.hypot(t.x-p.x,t.z-p.z)<44).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z)).slice(0,pickupPool.length):[];
+    pickupPool.forEach((e,i)=>{e.enabled=i<nearby.length;if(!e.enabled)return;const t=nearby[i];e.setPosition(t.x,.28+Math.sin(now/350+i)*.12,t.z);e.setEulerAngles(0,Math.atan2(p.x-t.x,p.z-t.z)*180/Math.PI,Math.sin(now/650+i)*4);});
+    secretPool.forEach(({s,e})=>{e.enabled=roaming&&!journey.secretsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<30;if(e.enabled){e.setPosition(s.x,.3+Math.sin(now/400)*.15,s.z);e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);}});
+    portalViews.forEach(v=>{v.e.enabled=v.ring.enabled=roaming;v.e.setEulerAngles(0,Math.atan2(p.x-v.p.x,p.z-v.p.z)*180/Math.PI,0);});
+    ambushProps.forEach(({a,e})=>{e.enabled=roaming&&!journey.cleared.has(a.id)&&Math.hypot(p.x-a.spawn.x,p.z-a.spawn.z)<40;});
+    const gallery=game===sandgrund;safePad.enabled=safeSign.enabled=gallery;
+    visitors.forEach((e,i)=>{const v=sandgrund.visitors[i];e.enabled=gallery&&!v.rescued;if(e.enabled){e.setPosition(v.x,0,v.z);e.setEulerAngles(0,Math.atan2(p.x-v.x,p.z-v.z)*180/Math.PI,0);}});
+    for(const s of stations)s.e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);
+  }
+  function radar(c,point,roaming){if(!roaming)return;
+    c.fillStyle='#c994f1';for(const t of journey.items)if(!journey.found.has(t.id)){const [x,y]=point(t.x,t.z);if(x>0&&y>0&&x<256&&y<256)c.fillRect(x-2,y-2,4,4);}
+    c.fillStyle='#ffe18c';for(const p of Object.values(portals)){const [x,y]=point(p.x,p.z);c.fillRect(x-5,y-5,10,10);}
+  }
+  return {update,radar,nearbyStation};
+}
