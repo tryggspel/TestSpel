@@ -9,14 +9,24 @@ export default async function handler(req,res){
   if(req.method==='OPTIONS')return res.status(204).end();
   if(req.method!=='GET')return res.status(405).json({error:'method_not_allowed'});
 
-  const key=process.env.TRAFIKLAB_API_KEY;
+  const key=String(process.env.TRAFIKLAB_API_KEY||'').trim();
   if(!key)return res.status(503).json({error:'trafiklab_key_missing'});
 
   try{
     const upstream=await fetch(URL+'?key='+encodeURIComponent(key),{
       headers:{'user-agent':'Karlstad-City-Live/2.1'}
     });
-    if(!upstream.ok)throw new Error('Trafiklab '+upstream.status);
+    if(!upstream.ok){
+      const detail=(await upstream.text()).replace(/\s+/g,' ').trim().slice(0,240);
+      console.error('[transit] Trafiklab HTTP',{status:upstream.status,statusText:upstream.statusText,detail});
+      return res.status(502).json({
+        error:'transit_upstream_failed',
+        reason:'trafiklab_http_error',
+        upstreamStatus:upstream.status,
+        upstreamStatusText:upstream.statusText||null,
+        upstreamDetail:detail||null
+      });
+    }
 
     const bytes=new Uint8Array(await upstream.arrayBuffer());
     const feed=GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(bytes);
@@ -58,7 +68,11 @@ export default async function handler(req,res){
       vehicles:vehicles.slice(0,24)
     });
   }catch(e){
-    console.error('[transit]',e);
-    return res.status(502).json({error:'transit_upstream_failed'});
+    const message=String(e?.message||e);
+    console.error('[transit]',{message});
+    return res.status(502).json({
+      error:'transit_upstream_failed',
+      reason:/decode|protobuf|wire|illegal tag/i.test(message)?'gtfs_decode_failed':'proxy_exception'
+    });
   }
 }
