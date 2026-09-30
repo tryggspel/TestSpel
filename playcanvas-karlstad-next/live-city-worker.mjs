@@ -19,8 +19,7 @@ function emit(reason){
 }
 function weatherUrl(origin){
   const lat=Number(origin?.lat||59.380767).toFixed(4),lon=Number(origin?.lon||13.50295).toFixed(4);
-  const p='air_temperature,wind_speed,cloud_area_fraction,precipitation_amount_mean';
-  return 'https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/'+lon+'/lat/'+lat+'/data.json?timeseries=4&parameters='+p;
+  return 'https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/'+lon+'/lat/'+lat+'/data.json';
 }
 async function weatherTick(){
   if(stopped)return;
