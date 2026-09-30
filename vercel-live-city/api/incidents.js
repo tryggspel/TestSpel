@@ -43,7 +43,7 @@ export default async function handler(req,res){
   if(req.method==='OPTIONS')return res.status(204).end();
   if(req.method!=='GET')return res.status(405).json({error:'method_not_allowed'});
 
-  const key=process.env.TRAFIKVERKET_API_KEY;
+  const key=String(process.env.TRAFIKVERKET_API_KEY||'').trim();
   if(!key)return res.status(503).json({error:'trafikverket_key_missing'});
 
   const body='<REQUEST><LOGIN authenticationkey="'+xmlEscape(key)+'" /><QUERY objecttype="Situation" schemaversion="1.5" orderby="ModifiedTime desc" limit="100"><FILTER><ELEMENTMATCH><AND><EQ name="Deviation.CountyNo" value="17" /><OR><EXISTS name="Deviation.EndTime" value="false" /><GT name="Deviation.EndTime" value="$now" /></OR></AND></ELEMENTMATCH></FILTER><INCLUDE>Id</INCLUDE><INCLUDE>ModifiedTime</INCLUDE><INCLUDE>Deviation.Id</INCLUDE><INCLUDE>Deviation.Header</INCLUDE><INCLUDE>Deviation.Message</INCLUDE><INCLUDE>Deviation.MessageType</INCLUDE><INCLUDE>Deviation.SeverityCode</INCLUDE><INCLUDE>Deviation.SeverityText</INCLUDE><INCLUDE>Deviation.RoadNumber</INCLUDE><INCLUDE>Deviation.LocationDescriptor</INCLUDE><INCLUDE>Deviation.StartTime</INCLUDE><INCLUDE>Deviation.EndTime</INCLUDE><INCLUDE>Deviation.Geometry.WGS84</INCLUDE></QUERY></REQUEST>';
