@@ -282,3 +282,15 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
 .bus-condition{font-size:8px}#busPaused{z-index:5}.bus-danger .bus-windscreen{box-shadow:inset 0 0 25px 8px #e6634588,inset 0 0 0 5px #cf8c4c}
 @media(max-height:650px) and (orientation:landscape){.bus-dashboard{left:auto;right:18px;transform:none;width:236px;padding:8px 12px}#busBalance{width:117px;height:117px}#busInstruction{font-size:12px}.bus-dashboard p{font-size:8px}.bus-header{right:270px;top:10px;left:15px}.bus-progress{right:274px;left:20px;top:74px}#busQuip{left:calc(50% - 112px);top:24%;font-size:10px;max-width:50vw}.bus-dashboard>small{font-size:6px}}
 @media(max-height:740px) and (orientation:portrait){#busBalance{width:126px;height:126px}.bus-dashboard{padding-top:7px}#busQuip{top:17%;font-size:10px}}
+
+/* Live City 2.0: compact, touch-friendly city data card. No canvas/render cost. */
+#liveCityWidget{width:100%;min-height:34px;padding:7px 10px;border:1px solid #8fd8c888;border-radius:4px;background:#153d3aed;color:#eaf8e9;display:grid;grid-template-columns:10px 1fr 14px;align-items:center;gap:7px;text-align:left;font:900 8px system-ui;letter-spacing:.05em;pointer-events:auto;touch-action:manipulation}
+#liveCityWidget .live-city-dot{width:8px;height:8px;border-radius:50%;background:#7de3a8;box-shadow:0 0 0 3px #7de3a81f}
+#liveCityWidget .live-city-chevron{justify-self:end;font-size:13px;line-height:1;transition:transform .15s}
+#liveCityWidget[aria-expanded="true"] .live-city-chevron{transform:rotate(180deg)}
+#liveCityDetails{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:7px 9px;border:1px solid #8fd8c844;border-radius:4px;background:#102c2aef;color:#eaf8e9;pointer-events:none}
+#liveCityDetails[hidden]{display:none}
+#liveCityDetails>div{display:flex;justify-content:space-between;gap:8px;padding:5px 6px;background:#ffffff08;border-radius:3px}
+#liveCityDetails span{font:800 6px system-ui;letter-spacing:.08em;color:#b9cfc5}
+#liveCityDetails b{font:900 8px system-ui;color:#fff4c7}
+#liveCityDetails small{grid-column:1/-1;font:700 6px system-ui;letter-spacing:.06em;color:#a9c0b5;text-align:center;padding-top:2px}
