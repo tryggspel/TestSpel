@@ -32,6 +32,7 @@ export function createLastRound(pc, host) {
   let storage=null;try{storage=localStorage;}catch{}
   const journey=new CityJourney(navigation,host.mall,portals,storage);
   journey.liveModifiers=host.liveModifiers||null;
+  journey.liveSnapshot=host.liveSnapshot||null;
   let selectedMission = MISSIONS.some(m=>m.id===params.get('challenge')) ? params.get('challenge') : 'sista-rundan';
   let game = rounds['sista-rundan'], layout = olearyLayout;
   const missionInfo = () => MISSIONS.find(m=>m.id===selectedMission);
