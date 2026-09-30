@@ -862,6 +862,7 @@ async function boot(){
     // the untouched baseline FPS, then starts a background worker. No provider fetch
     // is part of boot or the render loop.
     const liveConfig=window.KarlstadLiveCityConfig||{};
+    const liveProxyBase=String(new URLSearchParams(location.search).get('liveProxy')||liveConfig.proxyBase||'').replace(/\/$/,'');
     liveCity=createLiveCity({
       app,origin:ORIGIN,
       coarse:!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches),
@@ -869,9 +870,9 @@ async function boot(){
         weatherMs:30*60*1000,
         transportMs:30*1000,
         transportRadiusKm:8,
-        transportProxy:liveConfig.transportProxy||'',
+        transportProxy:liveConfig.transportProxy||(liveProxyBase?liveProxyBase+'/api/transit':''),
         incidentMs:2*60*1000,
-        incidentProxy:liveConfig.incidentProxy||''
+        incidentProxy:liveConfig.incidentProxy||(liveProxyBase?liveProxyBase+'/api/incidents':'')
       },
       onSnapshot:snapshot=>{formatLiveCity(snapshot);window.dispatchEvent(new CustomEvent('karlstad:live-city',{detail:snapshot}));}
     });
