@@ -862,7 +862,7 @@ async function boot(){
     // the untouched baseline FPS, then starts a background worker. No provider fetch
     // is part of boot or the render loop.
     const liveConfig=window.KarlstadLiveCityConfig||{};
-    const liveProxyBase=String(new URLSearchParams(location.search).get('liveProxy')||liveConfig.proxyBase||'https://karlstad-live-city-proxy-6degrfkud-kmauritz-7561.vercel.app').replace(/\/$/,'');
+    const liveProxyBase=String(new URLSearchParams(location.search).get('liveProxy')||liveConfig.proxyBase||'https://karlstad-live-city-proxy.vercel.app').replace(/\/$/,'');
     liveCity=createLiveCity({
       app,origin:ORIGIN,
       coarse:!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches),
