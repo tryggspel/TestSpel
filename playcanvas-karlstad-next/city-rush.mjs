@@ -16,7 +16,7 @@ export class CityRush {
   constructor(city){
     this.city=city;this.spent=0;this.mode='free';this.state='idle';this.best=0;this.xp=0;this.time=RUSH.seconds;this.contract=null;this.contractSerial=0;this.patrolSerial=0;this.storySerial=0;this.escapeGoal=null;this.busGoal=null;
     this.panic=0;this.panicTier=0;this.chaosCount=0;this.nextChaos=CHAOS.firstDelay;this.chaosTarget=null;this.fallUntil=0;this.nextFallSpawn=0;this.nextRealityCheck=0;this.nextLiveBusCue=0;this.lastLiveBusId=null;this.lastIncidentChaosId=null;
-    this.ecology=new CityEcology(this);this.seed=280926;this.random=seededRandom(this.seed);this.challenge=null;this.blackoutUntil=0;this.nextRealityCheck=0;this.nextLiveBusCue=0;this.lastLiveBusId=null;this.lastIncidentChaosId=null;
+    this.ecology=new CityEcology(this);this.seed=280926;this.random=seededRandom(this.seed);this.challenge=null;this.blackoutUntil=0;
     try{this.best=Math.max(0,Math.min(999999,Number(city.storage?.getItem('karlstad:rush:best:1'))||0));}catch{}
   }
   start(mode='timed',options={}){
@@ -26,7 +26,7 @@ export class CityRush {
     this.replayKit=this.city.runKit();this.ecology.reset();this.blackoutUntil=0;this.peakPanic=0;this.buses=0;this.streetWins=0;this.dailyBest=this.challenge?.kind==='daily'?dailyRecord(this.city.storage,this.challenge.day).best:0;
     this.mode=mode;this.state='playing';this.xp=0;this.time=this.challenge?.seconds||RUSH.seconds;this.spent=0;this.contract=null;this.contractSerial=0;this.patrolSerial=0;this.storySerial=0;this.escapeGoal=null;this.busGoal=null;
     this.nextContract=2;this.nextPatrol=6;this.alerted=false;this.exitReady=false;this.bonus=0;
-    this.panic=0;this.panicTier=0;this.chaosCount=0;this.nextChaos=CHAOS.firstDelay;this.chaosTarget=null;this.fallUntil=0;this.nextFallSpawn=0;
+    this.panic=0;this.panicTier=0;this.chaosCount=0;this.nextChaos=CHAOS.firstDelay;this.chaosTarget=null;this.fallUntil=0;this.nextFallSpawn=0;this.nextRealityCheck=0;this.nextLiveBusCue=0;this.lastLiveBusId=null;this.lastIncidentChaosId=null;
     const g=this.city;g.phase='playing';g.health=100;g.energy=Math.round(Math.max(45,g.energy));g.actors.forEach(a=>a.active=false);g.found.clear();g.pendingAmbush=null;g.contactCooldown=3;g.cooldown=0;g.chains.clear();g.events=[];g.elapsed=0;g.bestChain=g.chainRun=0;g.lastZap=-100;g.score=g.captured=g.shots=g.hitShots=0;g.lastAmbush=-100;g.lastSave=0;g.collectChain=0;g.lastCollect=-100;g.position={...g.layout.spawn};g.heading=0;g.routeMode='hunt';
     this.chaosOrder=this.challenge?.firstChaos==='blackout'?[1,2,0]:[0,1,2];
     if(!this.challenge?.firstChaos){const offset=this.seed===280926?0:Math.floor(this.random()*3);this.chaosOrder=[offset,(offset+1)%3,(offset+2)%3];}
