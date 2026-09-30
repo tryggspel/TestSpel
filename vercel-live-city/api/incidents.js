@@ -55,7 +55,17 @@ export default async function handler(req,res){
       body
     });
 
-    if(!upstream.ok)throw new Error('Trafikverket '+upstream.status);
+    if(!upstream.ok){
+      const detail=(await upstream.text()).replace(/\s+/g,' ').trim().slice(0,240);
+      console.error('[incidents] Trafikverket HTTP',{status:upstream.status,statusText:upstream.statusText,detail});
+      return res.status(502).json({
+        error:'incidents_upstream_failed',
+        reason:'trafikverket_http_error',
+        upstreamStatus:upstream.status,
+        upstreamStatusText:upstream.statusText||null,
+        upstreamDetail:detail||null
+      });
+    }
 
     const payload=await upstream.json();
     const apiError=payload?.RESPONSE?.RESULT?.find?.(r=>r.ERROR)?.ERROR;
