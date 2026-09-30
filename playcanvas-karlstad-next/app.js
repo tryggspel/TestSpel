@@ -11,6 +11,14 @@ const status=document.getElementById('status');
 const mission=document.getElementById('mission');
 const errorEl=document.getElementById('error');
 const bark=document.getElementById('bark');
+const liveCityWidget=document.getElementById('liveCityWidget');
+const liveCityDetails=document.getElementById('liveCityDetails');
+const liveCityCompact=document.getElementById('liveCityCompact');
+const liveWeather=document.getElementById('liveWeather');
+const livePulse=document.getElementById('livePulse');
+const liveWind=document.getElementById('liveWind');
+const liveRain=document.getElementById('liveRain');
+const liveSource=document.getElementById('liveSource');
 
 const ORIGIN={lat:59.380767,lon:13.50295};
 const MALL={lat:59.37988,lon:13.50055};
@@ -765,6 +773,35 @@ function update(dt){
   lastRound?.update();
 }
 
+
+function formatLiveCity(snapshot){
+  if(!liveCityCompact)return;
+  if(!snapshot){
+    liveCityCompact.textContent='LIVE KARLSTAD · STARTAR';
+    return;
+  }
+  const w=snapshot.weather||null,p=snapshot.pulse||null,t=snapshot.transport||null;
+  const temp=Number.isFinite(w?.temperature)?Math.round(w.temperature)+'°C':'—';
+  const pulse=Number.isFinite(p?.value)?Math.round(p.value):'—';
+  liveCityCompact.textContent='LIVE KARLSTAD · '+temp+' · PULS '+pulse;
+  if(liveWeather) liveWeather.textContent=Number.isFinite(w?.temperature)?temp:'INGEN DATA';
+  if(livePulse) livePulse.textContent=Number.isFinite(p?.value)?pulse+' / 100':'—';
+  if(liveWind) liveWind.textContent=Number.isFinite(w?.wind)?Math.round(w.wind)+' m/s':'—';
+  if(liveRain) liveRain.textContent=Number.isFinite(w?.rain)?w.rain.toFixed(w.rain<1?1:0)+' mm':'—';
+  if(liveSource){
+    const buses=t?.vehicles?.length;
+    liveSource.textContent='SMHI · LIVE CITY 2.0'+(Number.isFinite(buses)?' · '+buses+' BUSSAR':' · BUSSAR EJ AKTIVA ÄN');
+  }
+}
+if(liveCityWidget&&liveCityDetails){
+  liveCityWidget.addEventListener('click',e=>{
+    e.preventDefault();e.stopPropagation();
+    const open=liveCityWidget.getAttribute('aria-expanded')==='true';
+    liveCityWidget.setAttribute('aria-expanded',String(!open));
+    liveCityDetails.hidden=open;
+  });
+}
+
 async function boot(){
   try{
     bootStage='PlayCanvas Application';
@@ -830,9 +867,10 @@ async function boot(){
         transportRadiusKm:8,
         transportProxy:liveConfig.transportProxy||''
       },
-      onSnapshot:snapshot=>{window.dispatchEvent(new CustomEvent('karlstad:live-city',{detail:snapshot}));}
+      onSnapshot:snapshot=>{formatLiveCity(snapshot);window.dispatchEvent(new CustomEvent('karlstad:live-city',{detail:snapshot}));}
     });
     window.KarlstadLiveCity=liveCity;
+    formatLiveCity(liveCity.snapshot?.());
     liveCity.start();
     addEventListener('resize',()=>app.resizeCanvas());
     bootStage='Klar';
