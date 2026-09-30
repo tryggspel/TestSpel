@@ -1,0 +1,19 @@
+name: Live City 2 CI
+on:
+  push:
+    branches: [ "feature/live-city-2" ]
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "playcanvas-karlstad-next/**"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Karlstad PlayCanvas rule tests
+        run: node --test playcanvas-karlstad-next/tests/*.test.mjs
