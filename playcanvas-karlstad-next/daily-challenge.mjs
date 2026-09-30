@@ -1,5 +1,7 @@
 // Versioned, local challenge rules. Dates always follow Karlstad's calendar.
-export const CHALLENGE_RULES=2;
+// The corrected city geometry changes walkable routes and pickup paths.
+// Keep scores/replays from the previous map out of the new challenge comparison.
+export const CHALLENGE_RULES=3;
 export const DAILY_VARIANTS=Object.freeze([
   {id:'no-super',title:'SOL UTAN SUPER',description:'800 XP och hem. Vanliga solstötar får göra hela jobbet.',seconds:180,noSuper:true},
   {id:'espresso',title:'DUBBEL ESPRESSO',description:'800 XP och hem. Kaffet doftar starkare. Följ solen för att skaka av dig doften.',seconds:180,scentScale:1.6},
@@ -43,7 +45,7 @@ export function challengeRequest(search,now=new Date()){
   return {kind:null,target,seed};
 }
 export function challengeLink(base,record){
-  const url=new URL(base);url.search='';url.hash='';url.searchParams.set('v','2.5.0');url.searchParams.set('rules',String(CHALLENGE_RULES));
+  const url=new URL(base);url.search='';url.hash='';url.searchParams.set('v','2.6.0');url.searchParams.set('rules',String(CHALLENGE_RULES));
   if(record.kind==='daily')url.searchParams.set('daily',record.day);
   else if(record.kind==='bus'){url.searchParams.set('challenge','bus');url.searchParams.set('from',record.from);}
   else if(record.kind==='mission')url.searchParams.set('challenge',record.mission);

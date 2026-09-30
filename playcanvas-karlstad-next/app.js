@@ -1,6 +1,8 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.5.0';
-import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.5.0';
+import {createLastRound} from './last-round.js?v=2.6.0';
+import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.6.0';
+import {cityBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.6.0';
+import {createCityArchitecture} from './city-architecture.js?v=2.6.0';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -21,7 +23,7 @@ const PLAYER_RADIUS=0.42;
 const EYE=1.68;
 const CORE_LOCK=Object.freeze({version:'1.3.0',baseline:'1.2.2',lookSensitivity:.12,walkSpeed:7.2,sprintMultiplier:1.55,jumpVelocity:6.2,gravity:16,playerRadius:.42,mobileMaxPixelRatio:1.25,desktopMaxPixelRatio:1.6,maxBuildings:95,detailRadius:92});
 window.KarlstadCoreLock=CORE_LOCK;
-const GRAPHICS_PASS=Object.freeze({version:'1.7.0',core:'1.3.0',mode:'landmark-storefront',heroBudget:8,rule:'no-core-feel-changes'});
+const GRAPHICS_PASS=Object.freeze({version:'2.6.0',core:'1.3.0',mode:'geographic-comic-city',heroBudget:4,rule:'no-core-feel-changes'});
 window.KarlstadGraphicsPass=GRAPHICS_PASS;
 const TOUCH_TUNE=Object.freeze({deadzone:.13,expo:.42,maxStick:.34,lookScale:.9});
 const fpsLook=new FpsLook({span:Math.min(window.innerWidth,window.innerHeight)});
@@ -247,21 +249,6 @@ function addPlazaPattern(){
   [[-25,-20],[25,-20],[-25,20],[25,20]].forEach(p=>addPlanter(p[0],p[1]));
   for(let z=-18;z<=18;z+=6){ addBollard(-31,z); addBollard(31,z); }
 }
-function addRoadDetails(){
-  for(let z=-240;z<=240;z+=14) addBox('lane-dash-v',-26,.045,z,.16,.018,5.7,M.marking);
-  for(let x=-240;x<=240;x+=14) addBox('lane-dash-h',x,.046,20,5.7,.018,.16,M.marking);
-  [[-34,-7],[-18,-7],[-34,47],[-18,47]].forEach(p=>addBollard(p[0],p[1]));
-}
-function addRouteMarkers(){
-  const [mx,mz]=localXY(MALL.lon,MALL.lat);
-  const d=Math.hypot(mx,mz),steps=Math.max(3,Math.floor(d/17));
-  for(let i=1;i<steps;i++){
-    const t=i/steps;
-    const x=mx*t,z=mz*t;
-    const e=addCylinder('route-pip',x,.065,z,.18,.035,M.marker);
-    e.__routePhase=i*.47;
-  }
-}
 function showBark(text){
   if(!bark) return;
   bark.textContent=text;
@@ -306,7 +293,6 @@ function addPickup(x,z,type='xp',value=25){
 }
 function addGraphicsPass12(){
   addPlazaPattern();
-  addRoadDetails();
   // Route guidance is owned by the active mission; no competing legacy trail.
   // Small rewards make the square worth exploring rather than only crossing.
   addPickup(-12,-10,'xp',20);
@@ -389,44 +375,8 @@ function addContentGraphicsPass15(){
   addPickup(mx+7,mz+4,'xp',30);
 }
 
-function addOLearysStorefront17(){
-  const [ox,oz]=localXY(OLEARYS.lon,OLEARYS.lat);
-  const fx=ox-1.15;
-
-  // A real storefront mass instead of the old thin green placeholder.
-  addBox('o17-body',ox+1.45,2.65,oz,3.6,5.3,13.2,M.olearysDark);
-  addBox('o17-facade',fx,2.65,oz,.28,5.3,12.8,M.olearysGreen);
-
-  // Strong sign band and canopy.
-  addBox('o17-sign-band',fx-.08,4.65,oz,.14,.78,10.8,M.marking);
-  addBox('o17-sign-cap',fx-.12,5.22,oz,.12,.18,11.4,M.olearysGreen);
-  addBox('o17-awning',fx-.72,2.95,oz,1.28,.18,9.8,M.olearysDark);
-
-  // Door + three separate window bays to create a readable restaurant frontage.
-  addBox('o17-door-frame',fx-.06,1.5,oz-3.65,.14,3.0,2.35,M.olearysDark);
-  addBox('o17-door',fx-.11,1.5,oz-3.65,.08,2.7,1.75,M.door);
-  addBox('o17-window-a',fx-.07,1.88,oz+.15,.10,2.55,3.25,M.windowWarm);
-  addBox('o17-window-b',fx-.07,1.88,oz+3.75,.10,2.55,2.75,M.windowCool);
-  addBox('o17-window-c',fx-.07,1.88,oz-6.1,.10,2.55,2.65,M.windowCool);
-  addBox('o17-pilaster-a',fx-.02,2.7,oz-6.25,.22,5.0,.42,M.olearysDark);
-  addBox('o17-pilaster-b',fx-.02,2.7,oz+6.25,.22,5.0,.42,M.olearysDark);
-
-  // Projecting circular street sign.
-  const badgeBack=addCylinder('o17-badge-back',fx-.95,4.05,oz-5.4,.72,.12,M.olearysDark);
-  badgeBack.setEulerAngles(0,0,90);
-  const badgeFace=addCylinder('o17-badge-face',fx-1.01,4.05,oz-5.4,.58,.08,M.marking);
-  badgeFace.setEulerAngles(0,0,90);
-  const badgeCore=addCylinder('o17-badge-core',fx-1.07,4.05,oz-5.4,.33,.06,M.olearysGreen);
-  badgeCore.setEulerAngles(0,0,90);
-
-  addBox('o17-threshold',fx-.88,.05,oz-3.65,1.35,.04,2.75,M.sidewalk);
-  addPlanter(ox-.95,oz-6.5);
-  addPlanter(ox-.95,oz+6.0);
-}
-
 function addLandmarkIdentityPass16(){
-  // 1.7 keeps the locked gameplay core and upgrades landmark identity only.
-  addOLearysStorefront17();
+  // Real storefronts are attached to their address's OSM facade by the 2.6 pass.
 
   // Mitt i City: make the entrance read as the shopping-hub objective at a glance.
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
@@ -437,8 +387,7 @@ function addLandmarkIdentityPass16(){
 
   // Sandgrund approach: a light promenade extension toward the real museum.
   // The actual OSM building is selectively admitted by addBuildings().
-  addBox('g16-sandgrund-promenade',-8,.008,-338,8,.035,250,M.sidewalk);
-  for(let z=-235;z>=-430;z-=38) addLamp(-12,z);
+  for(let z=-240;z>=-430;z-=38) addLamp(-63+(Math.abs(z)-240)*.035,z);
 
   // Mariebergsskogen is a destination marker in 1.6, not a full zone yet.
   // Use the real bearing, clamped to the edge of the current playable district.
@@ -451,19 +400,6 @@ function addLandmarkIdentityPass16(){
   addSphere('g16-marieberg-marker',px,5.25,pz,.72,M.marker);
   addTree(px-5.6,pz+2.4,.8); addTree(px+5.4,pz+2.8,.9); addTree(px,pz+5.8,.82);
   addPickup(px,pz-3.2,'energy',40);
-}
-
-function addHeroLandmarkPass16(b){
-  const n=b.name||'';
-  if(/Sandgrund|Lars Lerin/i.test(n)){
-    const frontZ=b.cz-b.sz/2-.16;
-    const w=Math.max(7,Math.min(16,b.sx*.86));
-    addBox('g16-sandgrund-glass-ribbon',b.cx,2.15,frontZ-.06,w,2.75,.14,M.windowCool);
-    addBox('g16-sandgrund-white-band',b.cx,3.9,frontZ-.11,w*.96,.36,.17,M.light);
-    addBox('g16-sandgrund-lerin-sign',b.cx,5.15,frontZ-.19,Math.min(10,w*.68),.72,.18,M.marker);
-    addBox('g16-sandgrund-entry',b.cx,1.35,frontZ-.21,2.15,2.6,.18,M.door);
-    addPlanter(b.cx-4.8,frontZ-1.9); addPlanter(b.cx+4.8,frontZ-1.9);
-  }
 }
 
 function addStreetProps(){
@@ -506,18 +442,7 @@ function initScene(){
 
   // Big, cheap surfaces first: readable city structure without texture downloads.
   addBox('ground',0,-.35,-95,760,.6,950,M.ground);
-  addBox('road-v',-26,-.03,0,10,.12,520,M.road);
-  addBox('road-h',0,-.025,20,520,.11,9,M.road);
-  addBox('sidewalk-v-l',-32,.015,0,2.6,.06,520,M.sidewalk);
-  addBox('sidewalk-v-r',-20,.015,0,2.6,.06,520,M.sidewalk);
-  addBox('sidewalk-h-a',0,.018,14,520,.06,2.3,M.sidewalk);
-  addBox('sidewalk-h-b',0,.018,26,520,.06,2.3,M.sidewalk);
-  addBox('torget',0,-.005,0,65,.08,58,M.plaza);
-  // A subtle darker edge makes the square read as a designed space.
-  addBox('torget-edge-n',0,.025,-28,65,.04,.7,M.sidewalk);
-  addBox('torget-edge-s',0,.025,28,65,.04,.7,M.sidewalk);
-  addCrosswalk(-26,-7,'x');
-  addCrosswalk(-26,47,'x');
+  // Roads and square paving are built together from actual street lines after OSM loads.
 
   player=new pc.Entity('player');
   player.setPosition(0,EYE,0);
@@ -562,55 +487,25 @@ function initScene(){
   addBox('mitt-i-city-gate-top',mx,5.35,mz,11.2,.9,1.0,M.accent);
 }
 
-function polygonArea(pts){
-  let a=0; for(let i=0;i<pts.length;i++){const p=pts[i],q=pts[(i+1)%pts.length];a+=p[0]*q[1]-q[0]*p[1];} return Math.abs(a/2);
-}
 function addBuildings(osm){
-  const items=[];
-  for(const e of osm.elements||[]){
-    if(e.type!=='way'||!e.geometry||e.geometry.length<3) continue;
-    const t=e.tags||{}; if(!t.building) continue;
-    const pts=e.geometry.map(p=>localXY(+p.lon,+p.lat));
-    const cx=pts.reduce((s,p)=>s+p[0],0)/pts.length, cz=pts.reduce((s,p)=>s+p[1],0)/pts.length;
-    const dist=Math.hypot(cx,cz);
-    const remoteHero=/Sandgrund|Lars Lerin/i.test(t.name||t['building:name']||'');
-    if(dist>RADIUS && !(remoteHero && dist<=REMOTE_HERO_RADIUS)) continue;
-    const area=polygonArea(pts); if(area<18) continue;
-    let minx=Infinity,maxx=-Infinity,minz=Infinity,maxz=-Infinity;
-    pts.forEach(p=>{minx=Math.min(minx,p[0]);maxx=Math.max(maxx,p[0]);minz=Math.min(minz,p[1]);maxz=Math.max(maxz,p[1]);});
-    const sx=Math.max(2,maxx-minx), sz=Math.max(2,maxz-minz);
-    const levels=Math.max(1,Math.min(8,parseFloat(t['building:levels'])||3));
-    const h=levels*3.2;
-    items.push({dist,area,cx,cz,sx,sz,h,name:t.name||t['building:name']||'',tags:t});
-  }
-  items.sort((a,b)=>a.dist-b.dist);
-  let count=0;
-  const cityMats=[M.stone,M.plaster,M.brick,M.light,M.building,M.glass];
-  const remote=items.filter(b=>b.dist>RADIUS&&/Sandgrund|Lars Lerin/i.test(b.name));
-  const admitted=[...items.filter(b=>b.dist<=RADIUS).slice(0,CORE_LOCK.maxBuildings-remote.length),...remote];
+  const admitted=cityBuildings(osm,CORE_LOCK.maxBuildings);
+  const cityMats=[M.stone,M.plaster,M.brick,M.light,M.building];
   for(const b of admitted){
-    if(Math.hypot(b.cx,b.cz)<9) continue;
-    const hero=/Mitt i City|Domkyrka|Rådhus|Radhus|Residenset|Sandgrund|bibliotek|Wermland/i.test(b.name);
+    const identity=IDENTITY_IDS.has(b.osm);
+    const hero=/Mitt i City|Residenset|Wermland/i.test(b.name);
     const seed=hashStr((b.name||'byggnad')+'|'+Math.round(b.cx)+'|'+Math.round(b.cz));
-    const facade=hero?M.hero:cityMats[seed%cityMats.length];
-    addBox(b.name||'building',b.cx,b.h/2,b.cz,b.sx,b.h,b.sz,facade);
-
-    // Only nearby/important buildings get extra geometry, keeping mobile draw calls sane.
-    if(hero||b.dist<92){
-      const baseMat=hero?M.heroDark:M.glass;
-      addBox((b.name||'building')+'-shopfront',b.cx,1.25,b.cz,b.sx*1.012,2.35,b.sz*1.012,baseMat);
+    if(!identity){
+      addBox(b.name||'building',b.cx,b.h/2,b.cz,b.sx,b.h,b.sz,hero?M.hero:cityMats[seed%cityMats.length]);
+      if(hero||b.dist<92)addBox((b.name||'building')+'-shopfront',b.cx,1.25,b.cz,b.sx*1.002,2.35,b.sz*1.002,hero?M.heroDark:M.glass);
+      if(hero)addBox((b.name||'building')+'-roof',b.cx,b.h+.18,b.cz,b.sx*1.03,.32,b.sz*1.03,M.heroDark);
+      addFacadePass12(b,hero,seed);
+      if(hero)addHeroLandmarkPass14(b);
     }
-    if(hero){
-      addBox((b.name||'building')+'-roof',b.cx,b.h+.18,b.cz,b.sx*1.03,.32,b.sz*1.03,M.heroDark);
-    }
-    try { addFacadePass12(b,hero,seed); } catch(e) { console.warn('[Facade detail skipped]',b.name||b.cx,e); }
-    if(hero){ try { addHeroLandmarkPass14(b); } catch(e) { console.warn('[Graphics 1.4 hero detail skipped]',b.name||b.cx,e); } }
-    if(hero){ try { addHeroLandmarkPass16(b); } catch(e) { console.warn('[Landmark Identity 1.6 hero detail skipped]',b.name||b.cx,e); } }
-
-    colliders.push({name:b.name,height:b.h,minx:b.cx-b.sx/2-.15,maxx:b.cx+b.sx/2+.15,minz:b.cz-b.sz/2-.15,maxz:b.cz+b.sz/2+.15});
-    count++;
+    colliders.push({osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
   }
-  return count;
+  const geometry=createCityArchitecture(pc,app,admitted);
+  window.KarlstadArchitecture=Object.freeze({...geometry,buildings:admitted.length});
+  return admitted.length;
 }
 
 function blocked(x,z){

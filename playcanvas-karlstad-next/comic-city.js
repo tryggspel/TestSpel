@@ -1,7 +1,8 @@
+import {IDENTITY_IDS,SHOP_IDS} from './city-geography.mjs?v=2.6.0';
 const ink='#253d40',cream='#fff0c8';
 const palettes=[['#eeb985','#d88c67','#ae4e45'],['#a7c7b4','#789e91','#367c75'],['#dec5a0','#b29a7e','#70568a'],['#c4b6d7','#9886b7','#a85159']];
 const shops=[['PÅTÅR & PANIK','ÖPPET TILLS VIDARE'],['KARLSTAD LEVER','KAFFE • KULTUR • KAOS'],['HERR GÅRMAN','GÅ. GÄRNA FORT.'],['DEN SISTA BULLEN','EN PER ÖVERLEVANDE']];
-export function drawComicFacade(c,w,h,variant=0){
+export function drawComicFacade(c,w,h,variant=0,upperOnly=false){
   c.save();c.scale(w/640,h/768);c.lineJoin='round';const [wall,shade,accent]=palettes[variant%4];
   const box=(x,y,w,h,fill,line=3)=>{c.fillStyle=fill;c.fillRect(x,y,w,h);if(line){c.strokeStyle=ink;c.lineWidth=line;c.strokeRect(x,y,w,h);}};
   box(0,0,640,768,wall,0);box(0,0,640,20,ink,0);box(0,23,640,14,cream,0);box(0,40,640,19,shade,0);
@@ -22,15 +23,26 @@ export function drawComicFacade(c,w,h,variant=0){
   box(12,548,616,52,accent,4);c.fillStyle=cream;c.font='900 29px sans-serif';c.textAlign='center';c.fillText(shops[variant%4][0],320,585,570);
   for(let i=0;i<14;i++){box(12+i*44,601,44,25,i%2?cream:accent,1);c.fillStyle=i%2?cream:accent;c.beginPath();c.arc(34+i*44,626,22,0,Math.PI);c.fill();c.strokeStyle=ink;c.lineWidth=2;c.stroke();}
   box(29,743,248,18,cream,1);c.fillStyle=ink;c.font='900 10px sans-serif';c.fillText(shops[variant%4][1],153,756,237);
-  box(0,758,640,10,ink,0);c.restore();
+  box(0,758,640,10,ink,0);
+  if(upperOnly)c.clearRect(0,548,640,220); // Real businesses supply their own ground-floor artwork and logo.
+  c.restore();
 }
 export function createComicCity(host,{texture,card}){
   const textures=Array.from({length:4},(_,i)=>texture((c,w,h)=>drawComicFacade(c,w,h,i),512,768)),views=[];
-  const buildings=host.colliders.filter(b=>b.height>=6&&!/O.Leary|Mitt|Sandgrund/i.test(b.name)).sort((a,b)=>Math.hypot((a.minx+a.maxx)/2,(a.minz+a.maxz)/2)-Math.hypot((b.minx+b.maxx)/2,(b.minz+b.maxz)/2)).slice(0,16);
+  const buildings=host.colliders.filter(b=>b.height>=6&&!IDENTITY_IDS.has(b.osm)&&!SHOP_IDS.has(b.osm)&&!/O.Leary|Mitt|Sandgrund|Residens/i.test(b.name)).sort((a,b)=>Math.hypot((a.minx+a.maxx)/2,(a.minz+a.maxz)/2)-Math.hypot((b.minx+b.maxx)/2,(b.minz+b.maxz)/2)).slice(0,16);
   for(const [i,b] of buildings.entries()){
     const cx=(b.minx+b.maxx)/2,cz=(b.minz+b.maxz)/2;
     const faces=[{x:cx,z:b.minz-.23,yaw:180,width:b.maxx-b.minx,test:{x:cx,z:b.minz-3}},{x:cx,z:b.maxz+.23,yaw:0,width:b.maxx-b.minx,test:{x:cx,z:b.maxz+3}},{x:b.minx-.23,z:cz,yaw:-90,width:b.maxz-b.minz,test:{x:b.minx-3,z:cz}},{x:b.maxx+.23,z:cz,yaw:90,width:b.maxz-b.minz,test:{x:b.maxx+3,z:cz}}].filter(f=>f.width>7&&!host.blocked(f.test.x,f.test.z)).slice(0,2);
     for(const face of faces){const e=card('Serietecknad gatufasad',textures[i%4],Math.min(24,face.width-.5),Math.min(14,b.height-.2),face.x,.13,face.z);e.setEulerAngles(0,face.yaw,0);views.push({e,x:face.x,z:face.z});}
+  }
+  // One extra shared upper-floor texture gives real shops finished facades without fictional signs.
+  const shopUpper=texture((c,w,h)=>drawComicFacade(c,w,h*768/388,0,true),512,384);
+  for(const b of host.colliders.filter(b=>SHOP_IDS.has(b.osm))){
+    const x=(b.minx+b.maxx)/2;
+    for(const [z,yaw] of [[b.minz-.19,180],[b.maxz+.19,0]]){
+      if(host.blocked(x,z+(yaw===180?-3:3)))continue;
+      const e=card('Karlstad · butiksövervåning',shopUpper,Math.min(28,b.maxx-b.minx-.3),Math.max(1,b.height-5.4),x,5.4,z);e.setEulerAngles(0,yaw,0);views.push({e,x,z});
+    }
   }
   return {update(p){for(const v of views)v.e.enabled=Math.hypot(p.x-v.x,p.z-v.z)<100;},count:views.length};
 }

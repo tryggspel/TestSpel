@@ -282,3 +282,8 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
 .bus-condition{font-size:8px}#busPaused{z-index:5}.bus-danger .bus-windscreen{box-shadow:inset 0 0 25px 8px #e6634588,inset 0 0 0 5px #cf8c4c}
 @media(max-height:650px) and (orientation:landscape){.bus-dashboard{left:auto;right:18px;transform:none;width:236px;padding:8px 12px}#busBalance{width:117px;height:117px}#busInstruction{font-size:12px}.bus-dashboard p{font-size:8px}.bus-header{right:270px;top:10px;left:15px}.bus-progress{right:274px;left:20px;top:74px}#busQuip{left:calc(50% - 112px);top:24%;font-size:10px;max-width:50vw}.bus-dashboard>small{font-size:6px}}
 @media(max-height:740px) and (orientation:portrait){#busBalance{width:126px;height:126px}.bus-dashboard{padding-top:7px}#busQuip{top:17%;font-size:10px}}
+
+/* A street name uses the existing objective panel, never a new control surface. */
+#cityStreet{display:block;color:#b9d3c9;font:700 8px/1.4 system-ui;letter-spacing:.09em;margin-bottom:3px}
+.map-card canvas{max-height:none;aspect-ratio:1}.map-attribution a{color:#c7e4d0;text-underline-offset:2px}
+@media(max-height:650px){#cityStreet{font-size:7px;margin-bottom:1px}}
