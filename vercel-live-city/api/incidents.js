@@ -24,7 +24,7 @@ function normalize(payload){
         header:safeText(d.Header,160),
         message:safeText(d.Message,260),
         road:safeText(d.RoadNumber,40),
-        position:safeText(d.PositionalDescription,160),
+        position:safeText(d.LocationDescriptor||d.PositionalDescription,160),
         startTime:d.StartTime||null,
         endTime:d.EndTime||null,
         lat:geo.lat,
@@ -46,7 +46,7 @@ export default async function handler(req,res){
   const key=process.env.TRAFIKVERKET_API_KEY;
   if(!key)return res.status(503).json({error:'trafikverket_key_missing'});
 
-  const body='<REQUEST><LOGIN authenticationkey="'+xmlEscape(key)+'" /><QUERY objecttype="Situation" schemaversion="1.5" orderby="ModifiedTime desc" limit="100"><FILTER><ELEMENTMATCH><EQ name="Deviation.CountyNo" value="17" /></ELEMENTMATCH></FILTER><INCLUDE>Id</INCLUDE><INCLUDE>ModifiedTime</INCLUDE><INCLUDE>Deviation.Id</INCLUDE><INCLUDE>Deviation.Header</INCLUDE><INCLUDE>Deviation.Message</INCLUDE><INCLUDE>Deviation.MessageType</INCLUDE><INCLUDE>Deviation.SeverityCode</INCLUDE><INCLUDE>Deviation.SeverityText</INCLUDE><INCLUDE>Deviation.RoadNumber</INCLUDE><INCLUDE>Deviation.PositionalDescription</INCLUDE><INCLUDE>Deviation.StartTime</INCLUDE><INCLUDE>Deviation.EndTime</INCLUDE><INCLUDE>Deviation.CountyNo</INCLUDE><INCLUDE>Deviation.Geometry.WGS84</INCLUDE></QUERY></REQUEST>';
+  const body='<REQUEST><LOGIN authenticationkey="'+xmlEscape(key)+'" /><QUERY objecttype="Situation" schemaversion="1.5" orderby="ModifiedTime desc" limit="100"><FILTER><ELEMENTMATCH><AND><EQ name="Deviation.CountyNo" value="17" /><OR><EXISTS name="Deviation.EndTime" value="false" /><GT name="Deviation.EndTime" value="$now" /></OR></AND></ELEMENTMATCH></FILTER><INCLUDE>Id</INCLUDE><INCLUDE>ModifiedTime</INCLUDE><INCLUDE>Deviation.Id</INCLUDE><INCLUDE>Deviation.Header</INCLUDE><INCLUDE>Deviation.Message</INCLUDE><INCLUDE>Deviation.MessageType</INCLUDE><INCLUDE>Deviation.SeverityCode</INCLUDE><INCLUDE>Deviation.SeverityText</INCLUDE><INCLUDE>Deviation.RoadNumber</INCLUDE><INCLUDE>Deviation.LocationDescriptor</INCLUDE><INCLUDE>Deviation.StartTime</INCLUDE><INCLUDE>Deviation.EndTime</INCLUDE><INCLUDE>Deviation.Geometry.WGS84</INCLUDE></QUERY></REQUEST>';
 
   try{
     const upstream=await fetch(URL,{
@@ -75,7 +75,11 @@ export default async function handler(req,res){
       items
     });
   }catch(e){
-    console.error('[incidents]',e);
-    return res.status(502).json({error:'incidents_upstream_failed'});
+    const message=String(e?.message||e);
+    console.error('[incidents]',{message});
+    return res.status(502).json({
+      error:'incidents_upstream_failed',
+      reason:/Trafikverket \d+/.test(message)?'trafikverket_http_error':/JSON|Unexpected token/i.test(message)?'trafikverket_invalid_json':'proxy_exception'
+    });
   }
 }
