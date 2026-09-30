@@ -46,7 +46,7 @@ export default async function handler(req,res){
   const key=process.env.TRAFIKVERKET_API_KEY;
   if(!key)return res.status(503).json({error:'trafikverket_key_missing'});
 
-  const body='<REQUEST><LOGIN authenticationkey="'+xmlEscape(key)+'" /><QUERY objecttype="Situation" schemaversion="1.5" limit="100"><FILTER><EQ name="Deviation.CountyNo" value="17" /></FILTER><INCLUDE>Id</INCLUDE><INCLUDE>Deviation.Id</INCLUDE><INCLUDE>Deviation.Header</INCLUDE><INCLUDE>Deviation.Message</INCLUDE><INCLUDE>Deviation.MessageType</INCLUDE><INCLUDE>Deviation.MessageCode</INCLUDE><INCLUDE>Deviation.SeverityCode</INCLUDE><INCLUDE>Deviation.SeverityText</INCLUDE><INCLUDE>Deviation.RoadNumber</INCLUDE><INCLUDE>Deviation.PositionalDescription</INCLUDE><INCLUDE>Deviation.StartTime</INCLUDE><INCLUDE>Deviation.EndTime</INCLUDE><INCLUDE>Deviation.Geometry.WGS84</INCLUDE></QUERY></REQUEST>';
+  const body='<REQUEST><LOGIN authenticationkey="'+xmlEscape(key)+'" /><QUERY objecttype="Situation" schemaversion="1.5" orderby="ModifiedTime desc" limit="100"><FILTER><ELEMENTMATCH><EQ name="Deviation.CountyNo" value="17" /></ELEMENTMATCH></FILTER><INCLUDE>Id</INCLUDE><INCLUDE>ModifiedTime</INCLUDE><INCLUDE>Deviation.Id</INCLUDE><INCLUDE>Deviation.Header</INCLUDE><INCLUDE>Deviation.Message</INCLUDE><INCLUDE>Deviation.MessageType</INCLUDE><INCLUDE>Deviation.SeverityCode</INCLUDE><INCLUDE>Deviation.SeverityText</INCLUDE><INCLUDE>Deviation.RoadNumber</INCLUDE><INCLUDE>Deviation.PositionalDescription</INCLUDE><INCLUDE>Deviation.StartTime</INCLUDE><INCLUDE>Deviation.EndTime</INCLUDE><INCLUDE>Deviation.CountyNo</INCLUDE><INCLUDE>Deviation.Geometry.WGS84</INCLUDE></QUERY></REQUEST>';
 
   try{
     const upstream=await fetch(URL,{
@@ -59,7 +59,10 @@ export default async function handler(req,res){
 
     const payload=await upstream.json();
     const apiError=payload?.RESPONSE?.RESULT?.find?.(r=>r.ERROR)?.ERROR;
-    if(apiError)throw new Error('Trafikverket API error');
+    if(apiError){
+      console.error('[incidents] Trafikverket rejected query',{code:apiError.CODE||apiError.Code||null,message:apiError.MESSAGE||apiError.Message||null});
+      return res.status(502).json({error:'incidents_upstream_failed',reason:'trafikverket_query_rejected'});
+    }
 
     const items=normalize(payload);
     res.setHeader('Cache-Control','public, s-maxage='+CACHE_SECONDS+', stale-while-revalidate=60');
