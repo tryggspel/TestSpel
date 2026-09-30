@@ -6,10 +6,11 @@ on:
     branches: [ "main" ]
     paths:
       - "playcanvas-karlstad-next/**"
+      - "vercel-live-city/**"
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 7
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,3 +18,18 @@ jobs:
           node-version: "22"
       - name: Karlstad PlayCanvas rule tests
         run: node --test playcanvas-karlstad-next/tests/*.test.mjs
+      - name: Browser module syntax
+        run: |
+          node --check playcanvas-karlstad-next/app.js
+          node --check playcanvas-karlstad-next/last-round.js
+          node --check playcanvas-karlstad-next/journey-view.js
+          node --check playcanvas-karlstad-next/live-city-worker.js
+      - name: Install proxy dependencies
+        working-directory: vercel-live-city
+        run: npm install --ignore-scripts
+      - name: Proxy syntax and GTFS binding
+        working-directory: vercel-live-city
+        run: |
+          node --check api/transit.js
+          node --check api/incidents.js
+          node -e "import('gtfs-realtime-bindings').then(m=>{if(!m.default?.transit_realtime?.FeedMessage)process.exit(1)})"
