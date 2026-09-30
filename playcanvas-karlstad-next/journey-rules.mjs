@@ -22,7 +22,7 @@ export class CityJourney extends CityMission {
       const spawn=nav.point({x:trigger.x-dz*1.5,z:trigger.z+dx*1.5});this.ambushes.push({id:`ambush-${ri}-${i}`,trigger,spawn});}});
     this.busStops=[{id:'torget',name:'Torget',...nav.point({x:-19,z:35})},{id:'domkyrkan',name:'Domkyrkan',...nav.point({x:47,z:-110})},{id:'sandgrund',name:'Sandgrund',...nav.point({x:sg.x+9,z:sg.z+12})}];
     this.safeZones=[{...nav.point({x:5,z:24}),name:'Torget'}, {...nav.point(this.delivery),name:'Mitt i City'},...this.busStops.slice(1)];
-    this.postcards=POSTCARDS.map(p=>({...p,...nav.point(p)}));this.postcardsFound=new Set();this.routeMode='hunt';
+    this.postcards=POSTCARDS.map(p=>({...p,...nav.point(p)}));this.postcardsFound=new Set();this.routeMode='hunt';this.liveSnapshot=null;
     this.position={...this.layout.spawn};this.heading=0;this.load();this.rush=new CityRush(this);
   }
   progress(){return {version:1,balance:this.balance,lifetime:this.lifetime,energy:this.energy,health:this.health,found:[...this.found],secrets:[...this.secretsFound],cleared:[...this.cleared],postcards:[...this.postcardsFound],position:{...this.position},heading:this.heading,destination:this.destination};}
@@ -71,7 +71,32 @@ export class CityJourney extends CityMission {
     this.events.push({type:'recover'});this.dirty=true;
   }
   objective(player=this.position){const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
-  nearestBus(p){return this.busStops.map(s=>({...s,distance:Math.hypot(p.x-s.x,p.z-s.z)})).sort((a,b)=>a.distance-b.distance)[0];}
+  liveVehicles(){
+    const list=this.liveSnapshot?.()?.transport?.vehicles;
+    return Array.isArray(list)?list.filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.z)):[];
+  }
+  nearestLiveBusToStop(stop,maxDistance=600){
+    let best=null;
+    for(const vehicle of this.liveVehicles()){
+      const distance=Math.hypot(vehicle.x-stop.x,vehicle.z-stop.z);
+      if(distance<=maxDistance&&(!best||distance<best.distance))best={vehicle,distance,stop};
+    }
+    return best;
+  }
+  nearestLiveBusToAnyStop(maxDistance=600){
+    let best=null;
+    for(const stop of this.busStops){
+      const hit=this.nearestLiveBusToStop(stop,maxDistance);
+      if(hit&&(!best||hit.distance<best.distance))best=hit;
+    }
+    return best;
+  }
+  nearestBus(p){
+    return this.busStops.map(s=>{
+      const live=this.nearestLiveBusToStop(s,600);
+      return {...s,distance:Math.hypot(p.x-s.x,p.z-s.z),live:!!live&&live.distance<450,liveDistance:live?.distance??Infinity,liveVehicle:live?.vehicle||null};
+    }).sort((a,b)=>a.distance-b.distance)[0];
+  }}
   nearestPortal(p){return Object.entries(this.portals).map(([id,q])=>({id,...q,distance:Math.hypot(p.x-q.x,p.z-q.z)})).sort((a,b)=>a.distance-b.distance)[0];}
   step(dt,player,forward={x:0,z:-1}){
     if(this.phase!=='playing'||!player||!Number.isFinite(dt)||dt<=0)return;
