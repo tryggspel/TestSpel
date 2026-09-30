@@ -795,7 +795,6 @@ function formatLiveCity(snapshot){
   if(liveBuses) liveBuses.textContent=Number.isFinite(buses)?String(buses):'EJ ANSLUTET';
   if(liveTraffic) liveTraffic.textContent=Number.isFinite(traffic)?(traffic?traffic+' HÄNDELSER':'LUGNT'):'EJ ANSLUTET';
   if(liveSource) liveSource.textContent='SMHI · LIVE CITY 2.1 · '+(Number.isFinite(buses)?'VÄRMLANDSTRAFIK LIVE':'BUSSAR EJ AKTIVA')+' · '+(Number.isFinite(traffic)?'TRAFIKVERKET LIVE':'TRAFIK EJ AKTIV');
-  }
 }
 if(liveCityWidget&&liveCityDetails){
   liveCityWidget.addEventListener('click',e=>{
