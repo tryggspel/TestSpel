@@ -37,7 +37,7 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     c.scale(w/512,h/256);c.strokeStyle='#17372f';c.lineWidth=10;c.lineJoin='round';
     c.fillStyle='#e29448';c.beginPath();c.roundRect(20,30,472,180,24);c.fill();c.stroke();
     c.fillStyle='#203f48';for(let i=0;i<5;i++){c.fillRect(40+i*82,52,68,76);c.strokeRect(40+i*82,52,68,76);}
-    c.fillStyle='#eef3c5';c.fillRect(27,143,457,43);c.fillStyle='#294c38';c.font='900 31px sans-serif';c.textAlign='center';c.fillText('666 · SISTA HÅLLPLATSEN',256,176);
+    c.fillStyle='#eef3c5';c.fillRect(27,143,457,43);c.fillStyle='#294c38';c.font='900 31px sans-serif';c.textAlign='center';c.fillText('VÄRMLAND LIVE · 666',256,176);
     for(const x of [115,406]){c.beginPath();c.arc(x,214,29,0,Math.PI*2);c.fillStyle='#17372f';c.fill();c.beginPath();c.arc(x,214,13,0,Math.PI*2);c.fillStyle='#c3c9a4';c.fill();}
   },512,256);
   const busViews=journey.busStops.map(s=>{
@@ -48,6 +48,27 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     return {s,sign,pad,vehicle};
   });
   function orangeMat(){return material('#f59554');}
+  let liveBusCache={at:0,px:Infinity,pz:Infinity,list:[]};
+  function projectedLiveBuses(p){
+    const now=performance.now();
+    if(now-liveBusCache.at<650&&Math.hypot(p.x-liveBusCache.px,p.z-liveBusCache.pz)<8)return liveBusCache.list;
+    const list=host.liveSnapshot?.()?.transport?.vehicles||[],epoch=Date.now();
+    const projected=[];
+    for(const v of list){
+      if(!Number.isFinite(v.x)||!Number.isFinite(v.z))continue;
+      let x=v.x,z=v.z;
+      const stamp=Number(v.timestamp)*1000,speed=Number(v.speed),bearing=Number(v.bearing);
+      if(Number.isFinite(stamp)&&Number.isFinite(speed)&&speed>=0&&speed<45&&Number.isFinite(bearing)){
+        const age=Math.max(0,Math.min(15,(epoch-stamp)/1000)),a=bearing*Math.PI/180;
+        x+=Math.sin(a)*speed*age;z-=Math.cos(a)*speed*age;
+      }
+      const playerDistance=Math.hypot(p.x-x,p.z-z);
+      if(playerDistance<=85&&Math.hypot(x,z)<560)projected.push({...v,x,z,playerDistance});
+    }
+    projected.sort((a,b)=>a.playerDistance-b.playerDistance);
+    liveBusCache={at:now,px:p.x,pz:p.z,list:projected.slice(0,busViews.length)};
+    return liveBusCache.list;
+  }
   const escapes=journey.safeZones.map(s=>({s,pad:primitive('Tryggzon','cylinder',s.x,.075,s.z,6.6,.04,6.6,mint),sign:card('Säkra XP',labelTex(['TRYGGZON','800 XP → SÄKRA HÄR'], '#174c36','#acf2bd'),3.3,1,s.x,2.5,s.z,true)}));
   const postcards=journey.postcards.map(s=>({s,e:card('Vykort '+s.name,labelTex(['VYKORT','+100 XP · '+s.name.toUpperCase()], '#35616f','#fff0cb'),1.7,.85,s.x,.8,s.z)}));
   const eventCard=card('Gatuuppdrag',labelTex(['!','GATUUPPDRAG'], '#165c70','#9ff5ed'),2.4,1.1,0,1.2,0);
@@ -81,7 +102,20 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     const gallery=game===sandgrund;safePad.enabled=safeSign.enabled=gallery;
     visitors.forEach((e,i)=>{const v=sandgrund.visitors[i];e.enabled=gallery&&!v.rescued;if(e.enabled){e.setPosition(v.x,0,v.z);e.setEulerAngles(0,Math.atan2(p.x-v.x,p.z-v.z)*180/Math.PI,0);}});
     for(const s of stations)s.e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);
-    busViews.forEach(({s,sign,pad,vehicle})=>{sign.enabled=pad.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<45;vehicle.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<60;sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);vehicle.setEulerAngles(0,Math.atan2(p.x-s.x-4,p.z-s.z-1)*180/Math.PI,0);});
+    const liveBuses=roaming?projectedLiveBuses(p):[];
+    busViews.forEach(({s,sign,pad,vehicle},i)=>{
+      sign.enabled=pad.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<45;
+      sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);
+      const live=liveBuses[i];
+      if(live){
+        vehicle.enabled=true;vehicle.setPosition(live.x,.05,live.z);
+        vehicle.setEulerAngles(0,Math.atan2(p.x-live.x,p.z-live.z)*180/Math.PI,0);
+      }else{
+        vehicle.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<60;
+        vehicle.setPosition(s.x+4,.05,s.z+1);
+        vehicle.setEulerAngles(0,Math.atan2(p.x-s.x-4,p.z-s.z-1)*180/Math.PI,0);
+      }
+    });
     escapes.forEach(({s,pad,sign})=>{pad.enabled=sign.enabled=roaming&&journey.rush.mode==='timed'&&(journey.rush.exitReady||Math.hypot(p.x-s.x,p.z-s.z)<20);sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
     postcards.forEach(({s,e})=>{e.enabled=roaming&&!journey.postcardsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<38;if(e.enabled)e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
     const sun=journey.rush.ecology.sun;sunPad.enabled=sunSign.enabled=roaming&&!!sun;
@@ -104,6 +138,7 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     c.fillStyle='#c994f1';for(const t of journey.items)if(!journey.found.has(t.id)){const [x,y]=point(t.x,t.z);if(x>0&&y>0&&x<256&&y<256)c.fillRect(x-2,y-2,4,4);}
     c.fillStyle='#ffe18c';for(const p of Object.values(portals)){const [x,y]=point(p.x,p.z);c.fillRect(x-5,y-5,10,10);}
     c.fillStyle='#f79b68';for(const s of journey.busStops){const [x,y]=point(s.x,s.z);c.fillRect(x-4,y-4,8,8);}
+    c.fillStyle='#7fe7ff';let liveDrawn=0;for(const v of host.liveSnapshot?.()?.transport?.vehicles||[]){if(liveDrawn>=8)break;if(!Number.isFinite(v.x)||!Number.isFinite(v.z)||Math.hypot(v.x,v.z)>560)continue;const [x,y]=point(v.x,v.z);if(x<0||y<0||x>256||y>256)continue;c.beginPath();c.arc(x,y,3.5,0,Math.PI*2);c.fill();liveDrawn++;}
     const sun=journey.rush.ecology.sun;if(sun){const [x,y]=point(sun.x,sun.z);c.beginPath();c.arc(x,y,13,0,Math.PI*2);c.fillStyle='#ffdd6680';c.fill();c.strokeStyle='#ffdf71';c.lineWidth=2;c.stroke();}
     const chaos=journey.rush.chaosTarget;if(chaos){const [x,y]=point(chaos.spot.x,chaos.spot.z);c.fillStyle='#ffdf71';c.fillRect(x-4,y-4,8,8);}
     if(journey.rush.mode==='timed'){c.strokeStyle='#9ef2b2';c.lineWidth=2;for(const s of journey.safeZones){const [x,y]=point(s.x,s.z);c.strokeRect(x-7,y-7,14,14);}}
