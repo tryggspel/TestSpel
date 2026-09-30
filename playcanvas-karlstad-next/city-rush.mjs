@@ -15,8 +15,8 @@ const tierFor=panic=>panic>=100?4:panic>=75?3:panic>=50?2:panic>=25?1:0;
 export class CityRush {
   constructor(city){
     this.city=city;this.spent=0;this.mode='free';this.state='idle';this.best=0;this.xp=0;this.time=RUSH.seconds;this.contract=null;this.contractSerial=0;this.patrolSerial=0;this.storySerial=0;this.escapeGoal=null;this.busGoal=null;
-    this.panic=0;this.panicTier=0;this.chaosCount=0;this.nextChaos=CHAOS.firstDelay;this.chaosTarget=null;this.fallUntil=0;this.nextFallSpawn=0;
-    this.ecology=new CityEcology(this);this.seed=280926;this.random=seededRandom(this.seed);this.challenge=null;this.blackoutUntil=0;
+    this.panic=0;this.panicTier=0;this.chaosCount=0;this.nextChaos=CHAOS.firstDelay;this.chaosTarget=null;this.fallUntil=0;this.nextFallSpawn=0;this.nextRealityCheck=0;this.nextLiveBusCue=0;this.lastLiveBusId=null;this.lastIncidentChaosId=null;
+    this.ecology=new CityEcology(this);this.seed=280926;this.random=seededRandom(this.seed);this.challenge=null;this.blackoutUntil=0;this.nextRealityCheck=0;this.nextLiveBusCue=0;this.lastLiveBusId=null;this.lastIncidentChaosId=null;
     try{this.best=Math.max(0,Math.min(999999,Number(city.storage?.getItem('karlstad:rush:best:1'))||0));}catch{}
   }
   start(mode='timed',options={}){
@@ -40,7 +40,7 @@ export class CityRush {
   objective(p){
     if(this.mode==='timed'&&this.exitReady){this.escapeGoal ||= this.nearestSafe(p);return {...this.escapeGoal,id:'escape',kind:'escape',label:'TRYGGZON · '+this.escapeGoal.name.toUpperCase(),radius:3.3};}
     if(this.city.routeMode==='mission')return null;
-    if(this.city.routeMode==='bus'){this.busGoal ||= nearestByRoute(this.city.nav,p,this.city.busStops);return {...this.busGoal,id:'bus-stop',kind:'bus',label:'BUSS 666 · '+this.busGoal.name.toUpperCase(),radius:6,action:'KLIV PÅ BUSSEN'};}
+    if(this.city.routeMode==='bus'){const liveBus=this.city.nearestLiveBusToAnyStop?.(600);if(!this.busGoal||(liveBus&&liveBus.distance<450))this.busGoal=liveBus?.stop||nearestByRoute(this.city.nav,p,this.city.busStops);const isLive=liveBus&&liveBus.stop.id===this.busGoal.id&&liveBus.distance<450;return {...this.busGoal,id:'bus-stop',kind:'bus',label:(isLive?'LIVE BUSS · ':'BUSS 666 · ')+this.busGoal.name.toUpperCase(),radius:6,action:'KLIV PÅ BUSSEN'};}
     if(this.city.routeMode==='sun'&&this.ecology.sun)return {...this.ecology.sun,id:'sun',kind:'sun',label:'FÖLJ SOLA',radius:4.2};
     if(this.city.routeMode==='sun')this.city.routeMode='hunt';
     const c=this.contract;
@@ -91,7 +91,13 @@ export class CityRush {
   scheduleChaos(){const live=this.live(),scale=live?.chaosDelayScale||1;this.nextChaos=this.spent+(CHAOS.minDelay+Math.floor(this.random()*(CHAOS.maxDelay-CHAOS.minDelay+1)))*scale;}
   triggerChaos(p,f){
     if(this.exitReady||this.fallUntil)return false;
-    const kind=(this.chaosOrder||[0,1,2])[this.chaosCount%3];this.chaosCount++;this.scheduleChaos();
+    const live=this.live();let kind=(this.chaosOrder||[0,1,2])[this.chaosCount%3];
+    if(live?.trafficIncidentId&&live.trafficIncidentId!==this.lastIncidentChaosId){
+      this.lastIncidentChaosId=live.trafficIncidentId;
+      kind=live.trafficIncidentKind==='roadwork'?1:0;
+      this.city.events.push({type:'live-traffic-chaos',title:live.trafficIncidentTitle,kind:live.trafficIncidentKind,level:live.trafficIncidentLevel});
+    }
+    this.chaosCount++;this.scheduleChaos();
     if(kind===0){
       const count=[-.9,0,.9].map(o=>this.spawnEnemy(p,f,null,o)).filter(Boolean).length;
       this.raisePanic(8);this.city.events.push({type:'chaos-bells',count});return true;
@@ -135,8 +141,17 @@ export class CityRush {
       if(this.time===0)this.end(false,'Tiden tog slut. Zombierna hann ikapp.');
     }
   }
+  realityTick(){
+    if(this.challenge||this.spent<this.nextRealityCheck)return;
+    this.nextRealityCheck=this.spent+1.5;
+    const live=this.city.nearestLiveBusToAnyStop?.(450);
+    if(live&&this.spent>=this.nextLiveBusCue&&live.vehicle?.id!==this.lastLiveBusId){
+      this.lastLiveBusId=live.vehicle?.id||null;this.nextLiveBusCue=this.spent+45;
+      this.city.events.push({type:'live-bus-near',stop:live.stop.name,distance:Math.round(live.distance),route:live.vehicle?.route||live.vehicle?.label||null});
+    }
+  }
   step(dt,p,f){
-    if(this.state!=='playing')return;this.clock(dt);if(this.state!=='playing')return;
+    if(this.state!=='playing')return;this.clock(dt);if(this.state!=='playing')return;this.realityTick();
     if(this.fallUntil){
       if(this.spent>=this.fallUntil){
         this.fallUntil=0;this.panic=55;this.panicTier=2;this.city.events.push({type:'panic-reset',panic:this.panic});
