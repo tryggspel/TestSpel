@@ -70,7 +70,18 @@
   <div id="cityJourneyHud">
   <div id="cityEventHud"><b id="cityEventTitle">800 XP → TRYGGZON</b><span id="cityEventDetail">Gatuhändelser · zombie-buss · flykt</span><button id="cityChooseGoal">BYT MÅL ↗</button></div>
   <div id="panicHud" hidden><div class="pressure-row"><span>KARLSTAD PANIK</span><div><i id="panicFill"></i></div><b id="panicValue">0%</b></div><div id="scentRow" class="pressure-row"><span>KAFFEDOFT</span><div><i id="scentFill"></i></div><b id="scentValue">0%</b></div></div>
-  <div id="sunHud" hidden></div></div>
+  <div id="sunHud" hidden></div>
+  <button id="liveCityWidget" type="button" aria-expanded="false" aria-controls="liveCityDetails">
+    <span class="live-city-dot" aria-hidden="true"></span>
+    <b id="liveCityCompact">LIVE KARLSTAD · STARTAR</b><span class="live-city-chevron">⌄</span>
+  </button>
+  <div id="liveCityDetails" hidden>
+    <div><span>VÄDER</span><b id="liveWeather">HÄMTAR…</b></div>
+    <div><span>STADSPULS</span><b id="livePulse">—</b></div>
+    <div><span>VIND</span><b id="liveWind">—</b></div>
+    <div><span>REGN</span><b id="liveRain">—</b></div>
+    <small id="liveSource">LIVE CITY 2.0 · STARTAR</small>
+  </div></div>
   <button id="roundRadarButton" aria-label="Öppna kartan. Radarn visar norr uppåt."><canvas id="roundRadar" width="256" height="256"></canvas><span>RADAR · KARTA ↗</span></button>
   <div id="roundTactic" hidden></div>
   <div id="roundCompass"><b id="roundBearing">N · 0°</b><span id="roundCompassArrow">↑</span><span id="roundCompassText">O’LEARYS</span></div>
