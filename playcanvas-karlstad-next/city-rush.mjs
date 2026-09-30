@@ -1,11 +1,11 @@
-import {nearestByRoute} from './city-guidance.mjs?v=2.5.0';
-import {beginStory,storyAction,stepStory,STREET_STORIES} from './street-stories.mjs?v=2.5.0';
-import {seededRandom,saveDailyResult,dailyRecord} from './daily-challenge.mjs?v=2.5.0';
-import {CityEcology} from './city-ecology.mjs?v=2.5.0';
+import {nearestByRoute} from './city-guidance.mjs?v=2.6.0';
+import {beginStory,storyAction,stepStory,STREET_STORIES} from './street-stories.mjs?v=2.6.0';
+import {seededRandom,saveDailyResult,dailyRecord} from './daily-challenge.mjs?v=2.6.0';
+import {CityEcology} from './city-ecology.mjs?v=2.6.0';
 export const RUSH=Object.freeze({seconds:180,target:800,maxTime:210,maxEnemies:6});
 export const CHAOS=Object.freeze({minDelay:20,maxDelay:45,firstDelay:22,fallSeconds:24,blackoutSeconds:12});
 export const POSTCARDS=Object.freeze([
-  {id:'church',name:'Domkyrkan',file:'domkyrkan.jpg',x:68,z:-91},
+  {id:'church',name:'Domkyrkan',file:'domkyrkan.jpg',x:158,z:-85},
   {id:'autumn',name:'Höstpromenaden',file:'hostgatan.jpg',x:-25,z:-145},
   {id:'street',name:'Stadens gator',file:'gatan.jpg',x:-40,z:30}
 ]);
@@ -39,7 +39,7 @@ export class CityRush {
   nearestSafe(p){return this.escapeGoal||nearestByRoute(this.city.nav,p,this.city.safeZones);}
   objective(p){
     if(this.mode==='timed'&&this.exitReady){this.escapeGoal ||= this.nearestSafe(p);return {...this.escapeGoal,id:'escape',kind:'escape',label:'TRYGGZON · '+this.escapeGoal.name.toUpperCase(),radius:3.3};}
-    if(this.city.routeMode==='mission')return null;
+    if(this.city.routeMode==='mission'||this.city.routeMode==='landmark')return null;
     if(this.city.routeMode==='bus'){const liveBus=this.city.nearestLiveBusToAnyStop?.(600);if(!this.busGoal||(liveBus&&liveBus.distance<450))this.busGoal=liveBus?.stop||nearestByRoute(this.city.nav,p,this.city.busStops);const isLive=liveBus&&liveBus.stop.id===this.busGoal.id&&liveBus.distance<450;return {...this.busGoal,id:'bus-stop',kind:'bus',label:(isLive?'LIVE BUSS · ':'BUSS 666 · ')+this.busGoal.name.toUpperCase(),radius:6,action:'KLIV PÅ BUSSEN'};}
     if(this.city.routeMode==='sun'&&this.ecology.sun)return {...this.ecology.sun,id:'sun',kind:'sun',label:'FÖLJ SOLA',radius:4.2};
     if(this.city.routeMode==='sun')this.city.routeMode='hunt';

@@ -1,5 +1,5 @@
-import {createComicCity} from './comic-city.js?v=2.5.0';
-import {SUN} from './city-ecology.mjs?v=2.5.0';
+import {createComicCity} from './comic-city.js?v=2.6.0';
+import {SUN} from './city-ecology.mjs?v=2.6.0';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
   const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');

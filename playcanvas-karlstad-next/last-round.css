@@ -283,6 +283,11 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
 @media(max-height:650px) and (orientation:landscape){.bus-dashboard{left:auto;right:18px;transform:none;width:236px;padding:8px 12px}#busBalance{width:117px;height:117px}#busInstruction{font-size:12px}.bus-dashboard p{font-size:8px}.bus-header{right:270px;top:10px;left:15px}.bus-progress{right:274px;left:20px;top:74px}#busQuip{left:calc(50% - 112px);top:24%;font-size:10px;max-width:50vw}.bus-dashboard>small{font-size:6px}}
 @media(max-height:740px) and (orientation:portrait){#busBalance{width:126px;height:126px}.bus-dashboard{padding-top:7px}#busQuip{top:17%;font-size:10px}}
 
+/* A street name uses the existing objective panel, never a new control surface. */
+#cityStreet{display:block;color:#b9d3c9;font:700 8px/1.4 system-ui;letter-spacing:.09em;margin-bottom:3px}
+.map-card canvas{max-height:none;aspect-ratio:1}.map-attribution a{color:#c7e4d0;text-underline-offset:2px}
+@media(max-height:650px){#cityStreet{font-size:7px;margin-bottom:1px}}
+
 /* Live City 2.0: compact, touch-friendly city data card. No canvas/render cost. */
 #liveCityWidget{width:100%;min-height:34px;padding:7px 10px;border:1px solid #8fd8c888;border-radius:4px;background:#153d3aed;color:#eaf8e9;display:grid;grid-template-columns:10px 1fr 14px;align-items:center;gap:7px;text-align:left;font:900 8px system-ui;letter-spacing:.05em;pointer-events:auto;touch-action:manipulation}
 #liveCityWidget .live-city-dot{width:8px;height:8px;border-radius:50%;background:#7de3a8;box-shadow:0 0 0 3px #7de3a81f}

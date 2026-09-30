@@ -1,5 +1,5 @@
-import {CityMission} from './city-missions.mjs?v=2.5.0';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.5.0';
+import {CityMission} from './city-missions.mjs?v=2.6.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.6.0';
 
 export const JOURNEY_KEY='karlstad:journey:1';
 const bounded=(v,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max,Number(v))):fallback;
@@ -20,7 +20,7 @@ export class CityJourney extends CityMission {
     this.ambushes=[];
     routes.forEach((route,ri)=>{for(let i=10;i<route.length-4;i+=22){const trigger=route[i],next=route[i+1],dx=next.x-trigger.x,dz=next.z-trigger.z;
       const spawn=nav.point({x:trigger.x-dz*1.5,z:trigger.z+dx*1.5});this.ambushes.push({id:`ambush-${ri}-${i}`,trigger,spawn});}});
-    this.busStops=[{id:'torget',name:'Torget',...nav.point({x:-19,z:35})},{id:'domkyrkan',name:'Domkyrkan',...nav.point({x:47,z:-110})},{id:'sandgrund',name:'Sandgrund',...nav.point({x:sg.x+9,z:sg.z+12})}];
+    this.busStops=[{id:'torget',name:'Torget',...nav.point({x:-19,z:35})},{id:'domkyrkan',name:'Domkyrkan',...nav.point({x:145,z:-117})},{id:'sandgrund',name:'Sandgrund',...nav.point({x:sg.x+9,z:sg.z+12})}];
     this.safeZones=[{...nav.point({x:5,z:24}),name:'Torget'}, {...nav.point(this.delivery),name:'Mitt i City'},...this.busStops.slice(1)];
     this.postcards=POSTCARDS.map(p=>({...p,...nav.point(p)}));this.postcardsFound=new Set();this.routeMode='hunt';this.liveSnapshot=null;
     this.position={...this.layout.spawn};this.heading=0;this.load();this.rush=new CityRush(this);
@@ -70,7 +70,7 @@ export class CityJourney extends CityMission {
     this.balance=Math.max(0,this.balance-25);this.health=100;this.energy=Math.max(20,this.energy);this.contactCooldown=8;this.actors.forEach(a=>a.active=false);this.pendingAmbush=null;
     this.events.push({type:'recover'});this.dirty=true;
   }
-  objective(player=this.position){const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
+  objective(player=this.position){const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;if(this.routeMode==='landmark'&&this.landmarkGoal)return this.landmarkGoal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
   liveVehicles(){
     const list=this.liveSnapshot?.()?.transport?.vehicles;
     return Array.isArray(list)?list.filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.z)):[];
