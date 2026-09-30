@@ -31,7 +31,8 @@ export class CityEcology {
     const r=this.rush,g=r.city,now=r.spent;
     if(this.hordeUntil&&now>=this.hordeUntil){this.hordeUntil=0;this.scent=Math.min(this.scent,55);this.hordeCooldown=now+18;g.events.push({type:'coffee-calm'});}
     if(this.hordeUntil&&now>=this.nextHordeSpawn){this.nextHordeSpawn=now+3;for(const o of [-1,1])r.spawnEnemy(p,f,null,o);}
-    if(now-this.lastCoffee>SCENT.quietSeconds)this.scent=Math.max(0,this.scent-dt*SCENT.decay);
+    const live=r.live?.();
+    if(now-this.lastCoffee>SCENT.quietSeconds)this.scent=Math.max(0,this.scent-dt*SCENT.decay*(live?.scentDecayScale||1));
     if(!this.sun&&now>=this.nextSun&&!r.fallUntil&&!r.exitReady)this.startSun(p,f);
     this.inSun=false;
     if(this.sun){
