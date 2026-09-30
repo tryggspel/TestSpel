@@ -1,5 +1,5 @@
-import {CityMission} from './city-missions.mjs?v=2.4.0';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.4.0';
+import {CityMission} from './city-missions.mjs?v=2.5.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.5.0';
 
 export const JOURNEY_KEY='karlstad:journey:1';
 const bounded=(v,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max,Number(v))):fallback;
@@ -70,7 +70,7 @@ export class CityJourney extends CityMission {
     this.balance=Math.max(0,this.balance-25);this.health=100;this.energy=Math.max(20,this.energy);this.contactCooldown=8;this.actors.forEach(a=>a.active=false);this.pendingAmbush=null;
     this.events.push({type:'recover'});this.dirty=true;
   }
-  objective(player=this.position){const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;const p=this.portals[this.destination];return {...p,label:p.name,radius:4};}
+  objective(player=this.position){const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
   nearestBus(p){return this.busStops.map(s=>({...s,distance:Math.hypot(p.x-s.x,p.z-s.z)})).sort((a,b)=>a.distance-b.distance)[0];}
   nearestPortal(p){return Object.entries(this.portals).map(([id,q])=>({id,...q,distance:Math.hypot(p.x-q.x,p.z-q.z)})).sort((a,b)=>a.distance-b.distance)[0];}
   step(dt,player,forward={x:0,z:-1}){

@@ -1,6 +1,6 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.4.0';
-import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.2.0';
+import {createLastRound} from './last-round.js?v=2.5.0';
+import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.5.0';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -307,7 +307,7 @@ function addPickup(x,z,type='xp',value=25){
 function addGraphicsPass12(){
   addPlazaPattern();
   addRoadDetails();
-  addRouteMarkers();
+  // Route guidance is owned by the active mission; no competing legacy trail.
   // Small rewards make the square worth exploring rather than only crossing.
   addPickup(-12,-10,'xp',20);
   addPickup(12,-9,'energy',30);
@@ -550,7 +550,7 @@ function initScene(){
   try { addLandmarkIdentityPass16(); } catch(e) { console.error('[Landmark Storefront 1.7 skipped]',e); }
 
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
-  objectiveMarker=addCylinder('mitt-i-city-marker',mx,5,mz,.72,10,M.marker);
+  // The active mission owns the destination marker; the mall has no permanent beacon.
   addBox('mitt-i-city-plaza',mx,.02,mz,19,.05,14,M.sidewalk);
   addCrosswalk(mx+12,mz,'z');
   const beacon=new pc.Entity('beacon');
@@ -804,7 +804,7 @@ async function boot(){
       app,player,camera,canvas,origin:{x:ox,z:oz},mall:{x:mx,z:mz},colliders,blocked,resetInput,music:GAME_MUSIC,
       pickupCount:()=>pickupCount,
       oneHand:()=>oneHand,
-      ridePose:pose=>{player.setPosition(pose.x,2.4,pose.z);yaw=pose.heading;pitch=-2;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,pose.roll);},
+      ridePose:pose=>{player.setPosition(pose.x,2.4,pose.z);yaw=pose.heading;pitch=-14;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,pose.roll);},
       resetPickups:()=>{pickups.forEach(e=>e.enabled=true);pickupCount=0;cityPower=0;},
       teleport:(x,z,heading,tilt)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=heading;pitch=tilt;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);}
     });

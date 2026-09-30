@@ -2,7 +2,20 @@
 
 **Status:** Creative north star / gameplay roadmap  
 **Created:** 2026-09-29  
-**Current reference build:** `playcanvas-karlstad-next v2.4.0`
+**Current reference build:** `playcanvas-karlstad-next v2.5.0`
+
+## Implementation checkpoint — 2026-09-30 / Gameplay 2.5
+
+Built on the existing PlayCanvas game in response to playtesting:
+
+- C1 / orientation: one chosen destination across the HUD, compass, map and pooled arrows; paths go around actual buildings. BYT MÅL selects events, bus, sunlight or one of the four existing missions.
+- B1 / Zombie bus: visible interior, steering wheel, three falling/recovering zombie passengers, flying coffee and a pothole; existing routes, rewards, pause and challenge postcards retained.
+- B4 / first interactive street object: a kickable shopping cart for zombie bowling, collision-aware movement and actual zombie hits.
+- E3 / first playable Blackout mission: restore three Karlstads Energi power boxes, 55-second deadline, 260 XP, panic reduction and a stun pulse.
+- E4 / first playable NWT delivery: newspaper pickup, two deliveries, absurd headlines, 45-second deadline and 220 XP.
+- Comic city: shared illustrated facades and clearer/culling destination signs; existing 95-building and six-active-city-zombie budgets retained.
+
+65 rule tests pass, with additional real-engine/real-city API checks for the new interactions and existing missions. Cabin/facade artwork has been rendered and inspected separately. Physical iPhone/GPU performance remains to be checked. Challenge rules are versioned to 2. Zombie-after-death, extended survival and Hell Rounds remain unbuilt; this checkpoint does not mark those later systems complete.
 
 ## Implementation checkpoint — 2026-09-29 / Gameplay 2.4
 

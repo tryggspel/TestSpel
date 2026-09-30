@@ -21,7 +21,7 @@ test('the daily switches at Karlstad midnight in both summer and winter, not dev
 
 test('shared dates, rules and kits reject malformed data; old valid dates replay instead of changing to today',()=>{
   for(const day of ['2026-02-30','2026-9-29','<script>','2026-13-01']){assert.equal(validDay(day),false);assert.ok(challengeRequest('?daily='+day).error);}
-  assert.equal(validDay('2028-02-29'),true);assert.ok(challengeRequest('?daily=2026-09-29&rules=2').error);
+  assert.equal(validDay('2028-02-29'),true);assert.ok(challengeRequest('?daily=2026-09-29&rules=99').error);
   for(const kit of ['-1.45.0.0.0','9999999.60.0.0.0','75.101.0.0.0','75.60.zzzzzzz.0.0'])assert.equal(parseKit(kit),null);
   const r={kind:'daily',day:'2026-09-29',seed:99,score:1234};
   const url=challengeLink('https://example.org/game/?other=remove#map',r),request=challengeRequest(new URL(url).search,new Date('2026-12-24T12:00:00Z'));

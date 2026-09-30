@@ -1,4 +1,4 @@
-import {challengeLink} from './daily-challenge.mjs?v=2.4.0';
+import {challengeLink,CHALLENGE_RULES} from './daily-challenge.mjs?v=2.5.0';
 
 // Draw only on a paused/result screen. Original canvas art; no network or GPU readback.
 export function drawPostcard(canvas,r){
@@ -33,7 +33,7 @@ export function drawPostcard(canvas,r){
   box(42,631,636,57,'#e8d7a9');
   text(r.kind==='bus'?`${Math.round(r.health)}% BUSS KVAR`:`${r.kills||0} ZOMBIES · ${Math.round(r.health)}% LIV`,56,668,23,ink,'left',462);text(time,659,668,25,ink,'right',124);
   text(r.title||'EN HELT VANLIG DAG I VÄRMLAND.',43,724,23,purple,'left',634);
-  text('SEED '+r.seed+' · REGLER 1'+(r.kind==='daily'?' · SAMMA START FÖR ALLA':''),43,758,14,ink,'left',634);
+  text('SEED '+r.seed+' · REGLER '+CHALLENGE_RULES+(r.kind==='daily'?' · SAMMA START FÖR ALLA':''),43,758,14,ink,'left',634);
   box(42,786,636,51,orange);text('UTMANA EN VÄN →',360,821,27,ink,'center',600);
   text('tryggspel.github.io/TestSpel/playcanvas-karlstad-next/',360,862,13,ink,'center',637);
   canvas.setAttribute('aria-label',`${r.title}. ${r.score} poäng. ${Math.round(r.health)} procent ${r.kind==='bus'?'buss kvar':'liv'}. Seed ${r.seed}.`);

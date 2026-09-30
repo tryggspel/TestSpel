@@ -1,4 +1,5 @@
-import {SUN} from './city-ecology.mjs?v=2.4.0';
+import {createComicCity} from './comic-city.js?v=2.5.0';
+import {SUN} from './city-ecology.mjs?v=2.5.0';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
   const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');
@@ -41,7 +42,7 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   },512,256);
   const busViews=journey.busStops.map(s=>{
     primitive('bus-stop-post','box',s.x,1.7,s.z,.15,3.4,.15,ink);
-    const sign=card('Zombieexpressen '+s.name,labelTex(['BUSS 666','KLIV PÅ · BALANSERA'], '#c94846','#fff2cd'),3.3,1.1,s.x,2.8,s.z,true);
+    const sign=card('Zombieexpressen '+s.name,labelTex(['BUSS 666','TA RATTEN · ÖVERLEV'], '#c94846','#fff2cd'),3.3,1.1,s.x,2.8,s.z,true);
     const pad=primitive('bus-stop-pad','cylinder',s.x,.1,s.z,5,.06,5,orangeMat());
     const vehicle=card('Buss 666 vid '+s.name,busTex,5.8,2.9,s.x+4,.05,s.z+1);
     return {s,sign,pad,vehicle};
@@ -52,46 +53,52 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const eventCard=card('Gatuuppdrag',labelTex(['!','GATUUPPDRAG'], '#165c70','#9ff5ed'),2.4,1.1,0,1.2,0);
   const eventPad=primitive('Gatuuppdrag ring','cylinder',0,.1,0,3.8,.03,3.8,material('#78d9d1'));
   const bag=primitive('Kaffeväska','box',0,.5,0,.85,.8,.55,purple);eventCard.enabled=eventPad.enabled=bag.enabled=false;
+  const storySigns=Object.fromEntries([['power',['KARLSTADS ENERGI','SLÅ PÅ STRÖMMEN']],['news',['NWT · EXTRA!','HÄMTA / LEVERERA']],['bowling',['ZOMBIEBOWLING','SPARKA VAGNEN']]].map(([kind,lines])=>[kind,card('Gatuhändelse '+kind,labelTex(lines,kind==='power'?'#216c72':kind==='news'?'#ad4f3f':'#593e76','#fff1c9'),3,1.1,0,1.7,0)]));
+  Object.values(storySigns).forEach(e=>e.enabled=false);
+  const cabinet=primitive('Elbox','box',0,.85,0,1.1,1.5,.6,ink);
+  const switchSign=card('Strömbrytare',labelTex(['⚡','TRYCK SLÅ PÅ'], '#f7d178','#1b4541'),.9,.8,0,.65,.32,true);
+  const paperBundle=card('Tidningsbunt',labelTex(['NWT','ZOMBIE NEKAR'], '#eee6cb','#253e41'),1.2,.7,0,.4,0,true);
+  const cart=new pc.Entity('Zombiebowling kundvagn');root.addChild(cart);
+  const steel=material('#b0d6cc');
+  primitive('vagnbotten','box',0,.5,0,1.2,.1,1.4,steel,cart);
+  for(const x of [-.59,.59]){primitive('vagnsida','box',x,.92,0,.07,.75,1.4,steel,cart);for(const z of [-.52,.52])primitive('vagnhjul','sphere',x,.25,z,.26,.35,.26,ink,cart);}
+  primitive('vagnfront','box',0,.92,-.67,1.2,.7,.07,steel,cart);primitive('vagnhandtag','box',0,1.35,.8,1.4,.13,.14,purple,cart);
+  cabinet.enabled=switchSign.enabled=paperBundle.enabled=cart.enabled=false;
   const chaosFlask=card('Dagens guldtermos',thermosTex(true,160),1.25,1.85,0,.3,0);
   const sunMaterial=material('#f8d970');sunMaterial.opacity=.38;sunMaterial.blendType=pc.BLEND_NORMAL;sunMaterial.depthWrite=false;sunMaterial.emissive=new pc.Color(0.5,0.35,0.04);sunMaterial.update();
   const sunPad=primitive('Sola över Karlstad','cylinder',0,.08,0,SUN.radius*2,.025,SUN.radius*2,sunMaterial);
   const sunSign=card('Följ solen',labelTex(['SOLA!','FÖLJ MIG · 2× XP'], '#f4d176','#224838'),2.7,.85,0,2.5,0);
   chaosFlask.enabled=sunPad.enabled=sunSign.enabled=false;
-  // Original comic facades: cached canvas illustrations, no extra building meshes.
-  host.colliders.filter(b=>b.height>=6&&Math.hypot((b.minx+b.maxx)/2,(b.minz+b.maxz)/2)<165&&!/O.Leary|Mitt|Sandgrund/.test(b.name)).slice(0,9).forEach((b,i)=>{
-    const tex=texture((c,w,h)=>{
-      const colors=['#edbe92','#afd0b2','#efd499','#c7b8da'];c.fillStyle=colors[i%4];c.fillRect(0,0,w,h);c.strokeStyle='#294840';c.lineWidth=10;c.strokeRect(5,5,w-10,h-10);
-      c.fillStyle='#ffffff25';c.beginPath();c.moveTo(0,0);c.lineTo(w*.3,0);c.lineTo(w*.15,h);c.lineTo(0,h);c.fill();
-      for(let row=0;row<2;row++)for(let col=0;col<4;col++){
-        const x=28+col*123,y=30+row*145;c.fillStyle='#395f67';c.fillRect(x,y,87,99);c.strokeRect(x,y,87,99);c.strokeStyle='#f7e6ba';c.lineWidth=5;c.beginPath();c.moveTo(x+43,y);c.lineTo(x+43,y+99);c.moveTo(x,y+48);c.lineTo(x+87,y+48);c.stroke();c.strokeStyle='#294840';c.lineWidth=10;
-        c.fillStyle='#213f35';c.fillRect(x-5,y+99,97,10);
-      }
-      c.fillStyle='#244f42';c.fillRect(14,335,w-28,163);for(let j=0;j<8;j++){c.fillStyle=j%2?'#fff0ca':'#dc7665';c.fillRect(17+j*60,327,59,40);}
-      c.fillStyle='#fff0ce';c.font='900 31px sans-serif';c.textAlign='center';c.fillText(['EN HELT VANLIG DAG','FIKA & FYND','KARLSTAD LEVER'][i%3],w/2,418,w-40);
-    });
-    const e=card('Tecknad fasad',tex,Math.min(20,b.maxx-b.minx-.8),Math.min(8,b.height-.2),(b.minx+b.maxx)/2,.13,b.minz-.18);e.setEulerAngles(0,180,0);
-  });
+  const comicCity=createComicCity(host,draw);
   function nearbyStation(p){return stations.find(s=>Math.hypot(p.x-s.x,p.z-s.z)<4);}
   function update(p,now,game){
-    const roaming=game===journey;
+    const roaming=game===journey;comicCity.update(p);
     const nearby=roaming?journey.items.filter(t=>!journey.found.has(t.id)&&Math.hypot(t.x-p.x,t.z-p.z)<44).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z)).slice(0,pickupPool.length):[];
     pickupPool.forEach((e,i)=>{e.enabled=i<nearby.length;if(!e.enabled)return;const t=nearby[i];e.setPosition(t.x,.28+Math.sin(now/350+i)*.12,t.z);e.setEulerAngles(0,Math.atan2(p.x-t.x,p.z-t.z)*180/Math.PI,Math.sin(now/650+i)*4);});
     secretPool.forEach(({s,e})=>{e.enabled=roaming&&!journey.secretsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<30;if(e.enabled){e.setPosition(s.x,.3+Math.sin(now/400)*.15,s.z);e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);}});
-    portalViews.forEach(v=>{v.e.enabled=v.ring.enabled=roaming;v.e.setEulerAngles(0,Math.atan2(p.x-v.p.x,p.z-v.p.z)*180/Math.PI,0);});
+    portalViews.forEach(v=>{v.e.enabled=v.ring.enabled=roaming&&(Math.hypot(p.x-v.p.x,p.z-v.p.z)<38||(journey.routeMode==='mission'&&journey.destination===v.id));v.e.setEulerAngles(0,Math.atan2(p.x-v.p.x,p.z-v.p.z)*180/Math.PI,0);});
     ambushProps.forEach(({a,e})=>{e.enabled=roaming&&!journey.cleared.has(a.id)&&Math.hypot(p.x-a.spawn.x,p.z-a.spawn.z)<40;});
     const gallery=game===sandgrund;safePad.enabled=safeSign.enabled=gallery;
     visitors.forEach((e,i)=>{const v=sandgrund.visitors[i];e.enabled=gallery&&!v.rescued;if(e.enabled){e.setPosition(v.x,0,v.z);e.setEulerAngles(0,Math.atan2(p.x-v.x,p.z-v.z)*180/Math.PI,0);}});
     for(const s of stations)s.e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);
-    busViews.forEach(({s,sign,pad,vehicle})=>{sign.enabled=pad.enabled=roaming;vehicle.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<60;sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);vehicle.setEulerAngles(0,Math.atan2(p.x-s.x-4,p.z-s.z-1)*180/Math.PI,0);});
-    escapes.forEach(({s,pad,sign})=>{pad.enabled=sign.enabled=roaming&&journey.rush.mode==='timed';sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
+    busViews.forEach(({s,sign,pad,vehicle})=>{sign.enabled=pad.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<45;vehicle.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<60;sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);vehicle.setEulerAngles(0,Math.atan2(p.x-s.x-4,p.z-s.z-1)*180/Math.PI,0);});
+    escapes.forEach(({s,pad,sign})=>{pad.enabled=sign.enabled=roaming&&journey.rush.mode==='timed'&&(journey.rush.exitReady||Math.hypot(p.x-s.x,p.z-s.z)<20);sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
     postcards.forEach(({s,e})=>{e.enabled=roaming&&!journey.postcardsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<38;if(e.enabled)e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
     const sun=journey.rush.ecology.sun;sunPad.enabled=sunSign.enabled=roaming&&!!sun;
     if(roaming&&sun){sunPad.setPosition(sun.x,.08,sun.z);sunSign.setPosition(sun.x,2.4+Math.sin(now/750)*.08,sun.z);sunSign.setEulerAngles(0,Math.atan2(p.x-sun.x,p.z-sun.z)*180/Math.PI,0);}
     const chaos=journey.rush.chaosTarget;chaosFlask.enabled=roaming&&!!chaos&&!journey.rush.exitReady;
     if(chaosFlask.enabled){chaosFlask.setPosition(chaos.spot.x,.35+Math.sin(now/300)*.15,chaos.spot.z);chaosFlask.setEulerAngles(0,Math.atan2(p.x-chaos.spot.x,p.z-chaos.spot.z)*180/Math.PI,0);}
     const c=journey.rush.contract,visible=roaming&&!!c&&!journey.rush.exitReady;
-    eventCard.enabled=eventPad.enabled=bag.enabled=visible;
-    if(visible){eventCard.setPosition(c.spot.x,1.7+Math.sin(now/400)*.1,c.spot.z);eventCard.setEulerAngles(0,Math.atan2(p.x-c.spot.x,p.z-c.spot.z)*180/Math.PI,0);eventPad.setPosition(c.spot.x,.1,c.spot.z);bag.setPosition(c.spot.x,.55,c.spot.z);bag.enabled=c.kind==='parcel';}
+    const story=visible&&storySigns[c.kind];
+    eventCard.enabled=visible&&!story;eventPad.enabled=visible;bag.enabled=visible&&c.kind==='parcel';
+    for(const [kind,e] of Object.entries(storySigns)){e.enabled=visible&&kind===c.kind;if(e.enabled){e.setPosition(c.spot.x,2.3,c.spot.z);e.setEulerAngles(0,Math.atan2(p.x-c.spot.x,p.z-c.spot.z)*180/Math.PI,0);}}
+    cabinet.enabled=switchSign.enabled=visible&&c.kind==='power';paperBundle.enabled=visible&&c.kind==='news';cart.enabled=visible&&c.kind==='bowling';
+    if(visible){eventCard.setPosition(c.spot.x,1.7+Math.sin(now/400)*.1,c.spot.z);eventCard.setEulerAngles(0,Math.atan2(p.x-c.spot.x,p.z-c.spot.z)*180/Math.PI,0);eventPad.setPosition(c.spot.x,.1,c.spot.z);bag.setPosition(c.spot.x,.55,c.spot.z);
+      if(cabinet.enabled){cabinet.setPosition(c.spot.x,.85,c.spot.z);switchSign.setPosition(c.spot.x,.65,c.spot.z+.34);switchSign.setEulerAngles(0,Math.atan2(p.x-c.spot.x,p.z-c.spot.z)*180/Math.PI,0);}
+      if(paperBundle.enabled){paperBundle.setPosition(c.spot.x,.4,c.spot.z);paperBundle.setEulerAngles(0,Math.atan2(p.x-c.spot.x,p.z-c.spot.z)*180/Math.PI,0);}
+      if(cart.enabled){cart.setPosition(c.cart.x,0,c.cart.z);if(Math.hypot(c.cart.vx,c.cart.vz)>.2)cart.setEulerAngles(0,Math.atan2(-c.cart.vx,-c.cart.vz)*180/Math.PI,0);}
+    }
+
   }
   function radar(c,point,roaming){if(!roaming)return;
     c.fillStyle='#c994f1';for(const t of journey.items)if(!journey.found.has(t.id)){const [x,y]=point(t.x,t.z);if(x>0&&y>0&&x<256&&y<256)c.fillRect(x-2,y-2,4,4);}

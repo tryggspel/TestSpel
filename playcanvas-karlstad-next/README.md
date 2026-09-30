@@ -1,6 +1,19 @@
-# Karlstad City — Staden jagar dig (Gameplay 2.4)
+# Karlstad City — Staden jagar dig (Gameplay 2.5)
 
 The active game remains `playcanvas-karlstad-next/`, using PlayCanvas 2.22.4 and the existing city, collisions, music and movement speeds.
+
+## Gameplay 2.5 — one clear destination, inside bus 666, and interactive streets
+
+- **One destination:** BYT MÅL opens the map with the active event, bus, sunlight and four mission destinations. Compass, ground arrows, map route and HUD use the same cached walkable path, including directions to turn or turn around. Manual mission choices survive optional events. The suggested escape and bus stop stay pinned; every marked safe zone still accepts a successful escape. Old competing yellow trails and the permanent mall objective column are removed, and distant signs are culled.
+- **Inside bus 666:** a cached comic cabin frames the existing moving 3D city, with seats, windows, grab handles, wipers and local humour. One finger drags a visible steering wheel; A/D or arrow keys also work. Three passengers slide, tumble and recover; coffee flies and a pothole causes a collective fall. Steering corrects lateral drift, preserving the established route, 30-second trip and 200–350 XP reward. The camera tilts down only during transit so the road is visible through the windscreen. Walking/camera controls are unchanged.
+- **Tänd Karlstad / Karlstads Energi:** reach and activate three separate power boxes in 55 seconds, while the city is dark. Restoring power awards 260 XP, reduces panic and briefly stops active zombies. Each box restores 12 solar energy; the final reward also receives the normal street completion bonus.
+- **NWT: Extra! Extra!:** collect newspapers and complete two nearby deliveries in 45 seconds. Absurd news headlines accompany the stages. Completion awards 220 XP.
+- **Zombiebowling:** move behind a shopping cart, aim and use the existing context button to kick it. The rolling cart uses the same navigation/collision and damage systems. Stop its marked zombies in 40 seconds for 220 XP; cart eliminations pay another 30 XP each. One-hand auto fire waits while within interaction range of the cart.
+- **Comic city:** four shared original facade textures add bold cornices, window reflections, planters, striped awnings, illustrated shop displays and local jokes. Up to two accessible street faces on sixteen nearby buildings use these textures and distance culling. No new building colliders or large image downloads.
+
+New stories join the automatic event rotation and can be selected in BYT MÅL during ordinary play. Daily/friend challenges keep deterministic event selection and disable manual rerolls. Challenge links and daily records use **rules 2**, so scores from the earlier rules are not silently mixed.
+
+The bus paints its static cabin only on start/resize. Three passenger sprites update at most 30 times per second, only during transit, with a maximum 1000-pixel canvas dimension. Floor arrows reuse one mesh and a fixed 18-entity pool; gameplay retains the six-active-city-zombie cap. The real-city headless integration contains 752 entities versus 729 in 2.4; this is an entity count, not a device FPS measurement.
 
 ## Gameplay 2.4 — coffee risk, moving sunlight, daily challenges and result postcards
 
@@ -27,7 +40,7 @@ Gameplay 2.3 fixes included: after 100% panic, the city gets a 12-second break f
 
 The opening brief gives one goal: **earn 800 XP, then reach any green safe zone before the three-minute clock or health runs out**. A successful escape adds a remaining-time score bonus, a personal best and a friend-challenge link. Optional free exploration has no timer. Failed hunts can be retried; coffee points, secrets and postcard discoveries remain saved. Starting a new hunt respawns ordinary thermoses.
 
-The city now has **48 spaced-out thermoses**, down from 135, and three rotating short events:
+The city now has **48 spaced-out thermoses**, down from 135, and six rotating short events (the three new stories above plus):
 
 - Pick up a coffee bag and carry it to a second nearby marker within 32 seconds: 180 XP.
 - Reach a temporary solar glint within 16 seconds: 100 XP.
@@ -47,7 +60,7 @@ PAUS switches between one-hand and the existing two-hand controls. Desktop WASD/
 
 ## Zombie-bussen / Linje 666
 
-Board at Torget, Domkyrkan or Sandgrund. The contextual button changes to **KLIV PÅ BUSSEN** within reach. The trip lasts 30 seconds and follows a collision-checked route through the existing 3D city. Move passenger weight with one horizontal finger drag, or A/D / arrow keys, to counter the zombie driver's swerves and keep the balance marker green.
+Board at Torget, Domkyrkan or Sandgrund. The contextual button changes to **KLIV PÅ BUSSEN** within reach. The trip lasts 30 seconds and follows a collision-checked route through the existing 3D city. Drag the steering wheel with one finger, or use A/D / arrow keys, to counter lateral drift and keep the course marker green. Zombies tumble around the illustrated cabin and recover between turns.
 
 A successful trip awards 200–350 XP and moves the player to the destination. A crash returns to the departure stop with 20 health lost, preserving at least 25 health; the hunt continues. The hunt clock advances during transit. Bus pause, backgrounding and focus loss freeze both clocks. City combat, route markers, collectibles and their view updates are suspended during the ride. There is no second engine or extra 3D city.
 
@@ -72,9 +85,9 @@ Action missions have 100 health, damage cooldowns and loss/retry. Practice remov
 
 City action reuses a 12-zombie render pool, 18 nearby thermos sprites, cached illustrated textures, six pooled hit labels and a fixed grid derived from the existing collision boxes. Inactive actors do not render. The route and HUD update at a reduced rate. Navigation distinguishes grid node IDs from mission object IDs, including moving visitors and the artist.
 
-`node --test playcanvas-karlstad-next/tests/*.test.mjs` runs 59 tests covering rotation, pointer ownership, pause/cancel, navigation, wave victory, pursuit/damage, delivery, clocks, original knockback rules, collection/persistence, point spending, ambushes, recovery, Sandgrund victory escorting around obstacles, timed hunt completion/capture, event expiry and rewards, postcard persistence, one-thumb intent, bus success/crash and 30/120 FPS consistency. Read-only diagnostics: `window.KarlstadRound.snapshot()` and `window.KarlstadCoreLock`.
+`node --test playcanvas-karlstad-next/tests/*.test.mjs` runs 65 tests covering rotation, pointer ownership, pause/cancel, navigation, wave victory, pursuit/damage, delivery, clocks, original knockback rules, collection/persistence, point spending, ambushes, recovery, Sandgrund victory escorting around obstacles, timed hunt completion/capture, event expiry and rewards, postcard persistence, one-thumb intent, bus success/crash and 30/120 FPS consistency. Read-only diagnostics: `window.KarlstadRound.snapshot()` and `window.KarlstadCoreLock`.
 
-The real PlayCanvas 2.22.4 engine was also exercised headlessly with the city's actual building data: all four selectors, complete Fikapanik waves, delivery, a complete Sandgrund boss/escort victory, city pickups, resource carryover, saved progress, return location and isolated practice. The integration run also completes the new street delivery, an actual bus route to Sandgrund with pointer balancing, bus pause/resume/crash, one-thumb turning/walking/cancellation, auto fire without camera rotation, an 800-XP escape and the lazy-loaded postcard album. The Sandgrund walking route spans 166 grid nodes. The 2.4 integration also plays a daily attempt through a real moving-sun route, follows the field for its bonus, completes escape, shares a PNG/dated-link payload and retries with restored resources. Archived daily links and standalone bus links are exercised through boot, pause, victory/crash, sharing and retry. These API tests use NullGraphicsDevice and mock DOM/share APIs, not a GPU or the physical iOS share sheet. The exported card drawing is separately rendered and visually inspected using a local canvas implementation.
+The real PlayCanvas 2.22.4 engine was also exercised headlessly with the city's actual building data: all four selectors, complete Fikapanik waves, delivery, a complete Sandgrund boss/escort victory, city pickups, resource carryover, saved progress, return location and isolated practice. The integration run also completes the new street delivery, an actual bus route to Sandgrund with pointer steering, bus pause/resume/crash, one-thumb turning/walking/cancellation, auto fire without camera rotation, an 800-XP escape and the lazy-loaded postcard album. The Sandgrund walking route spans 166 grid nodes. The 2.4 integration also plays a daily attempt through a real moving-sun route, follows the field for its bonus, completes escape, shares a PNG/dated-link payload and retries with restored resources. Archived daily links and standalone bus links are exercised through boot, pause, victory/crash, sharing and retry. These API tests use NullGraphicsDevice and mock DOM/share APIs, not a GPU or the physical iOS share sheet. The exported card drawing is separately rendered and visually inspected using a local canvas implementation. The 2.5 integration also verifies goal selection, wall-aware guidance, all three power switches and restored light, newspaper pickup/two deliveries, cart interaction/physical motion, and disabled daily rerolls through the actual UI handlers. The cabin, passengers and new facade drawings were rendered and visually inspected with a local canvas implementation.
 
 Control reference: [Activision’s official COD Mobile control guide](https://blog.activision.com/call-of-duty/2019-10/Getting-a-Grip-on-the-Call-of-Duty-Mobile-Controls): left movement stick, right-side relative look, separate weapon buttons and sensitivity settings.
 

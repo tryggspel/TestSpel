@@ -21,7 +21,7 @@ test('a delivery has a pickup and a separate destination; completion rewards exa
 test('short events expire and a new opportunity replaces them without blocking the main hunt',()=>{
   const g=make();g.rush.start();g.rush.step(2.1,{x:0,z:14},{x:0,z:-1});const old=g.rush.contract;
   g.rush.step(33,{x:0,z:14},{x:0,z:-1});assert.equal(g.rush.contract,null);assert.ok(g.drainEvents().some(e=>e.type==='street-missed'));
-  g.rush.step(4.1,{x:0,z:14},{x:0,z:-1});assert.notEqual(g.rush.contract?.id,old.id);assert.equal(g.rush.contract.kind,'solar');
+  g.rush.step(4.1,{x:0,z:14},{x:0,z:-1});assert.notEqual(g.rush.contract?.id,old.id);assert.equal(g.rush.contract.kind,'power');
 });
 test('a hunt wave can be defeated through actual shots and reused actors do not inherit reward IDs',()=>{
   const g=make();g.rush.start();g.rush.contractSerial=2;g.rush.beginContract({x:0,z:14},{x:0,z:-1});const c=g.rush.contract;assert.equal(c.kind,'hunt');
