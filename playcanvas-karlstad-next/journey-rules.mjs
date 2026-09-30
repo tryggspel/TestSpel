@@ -96,7 +96,7 @@ export class CityJourney extends CityMission {
       const live=this.nearestLiveBusToStop(s,600);
       return {...s,distance:Math.hypot(p.x-s.x,p.z-s.z),live:!!live&&live.distance<450,liveDistance:live?.distance??Infinity,liveVehicle:live?.vehicle||null};
     }).sort((a,b)=>a.distance-b.distance)[0];
-  }}
+  }
   nearestPortal(p){return Object.entries(this.portals).map(([id,q])=>({id,...q,distance:Math.hypot(p.x-q.x,p.z-q.z)})).sort((a,b)=>a.distance-b.distance)[0];}
   step(dt,player,forward={x:0,z:-1}){
     if(this.phase!=='playing'||!player||!Number.isFinite(dt)||dt<=0)return;
