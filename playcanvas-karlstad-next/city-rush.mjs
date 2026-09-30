@@ -64,12 +64,13 @@ export class CityRush {
     }
     return best;
   }
+  live(){return this.challenge?null:this.city.liveModifiers?.()||null;}
   spawnEnemy(p,forward,contractId=null,offset=0){
     const g=this.city;if(g.actors.filter(a=>a.active).length>=RUSH.maxEnemies)return null;
     const actor=g.actors.find(a=>!a.active),spot=this.spot(p,forward,true,offset);
     if(!actor||distance(p,spot)<5)return null;
     g.spawn(actor,spot,this.spent>75&&this.patrolSerial%4===0?'tank':this.ecology.scent>=60||this.patrolSerial%3===0?'runner':'walker');
-    actor.patrolId=++this.patrolSerial;actor.contractId=contractId;actor.ambushAt=g.elapsed;actor.speed*=1+Math.min(.5,this.spent/360)+this.panic*.002;
+    actor.patrolId=++this.patrolSerial;actor.contractId=contractId;actor.ambushAt=g.elapsed;const live=this.live();actor.speed*=(1+Math.min(.5,this.spent/360)+this.panic*.002)*(live?.pursuitSpeedScale||1);
     return actor;
   }
   raisePanic(points){
@@ -87,7 +88,7 @@ export class CityRush {
     this.fallUntil=this.spent+CHAOS.fallSeconds;this.nextFallSpawn=this.spent;
     this.city.events.push({type:'panic-fall',seconds:CHAOS.fallSeconds});
   }
-  scheduleChaos(){this.nextChaos=this.spent+CHAOS.minDelay+Math.floor(this.random()*(CHAOS.maxDelay-CHAOS.minDelay+1));}
+  scheduleChaos(){const live=this.live(),scale=live?.chaosDelayScale||1;this.nextChaos=this.spent+(CHAOS.minDelay+Math.floor(this.random()*(CHAOS.maxDelay-CHAOS.minDelay+1)))*scale;}
   triggerChaos(p,f){
     if(this.exitReady||this.fallUntil)return false;
     const kind=(this.chaosOrder||[0,1,2])[this.chaosCount%3];this.chaosCount++;this.scheduleChaos();
