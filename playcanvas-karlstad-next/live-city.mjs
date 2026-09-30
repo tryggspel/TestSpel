@@ -20,7 +20,7 @@ function summary(s){
 
 export function createLiveCity({app,origin,coarse=false,config={},onSnapshot=()=>{}}={}){
   let worker=null,started=false,suspended=false,baseline=0,strikes=0,latest=null;
-  let baselineSamples=[],monitor=null,hud='',providerErrors={};
+  let baselineSamples=[],monitor=null,hud='LIVE2 INIT',providerErrors={};
   const storage=safeStorage();
   const listeners=new Set();
 
@@ -46,6 +46,7 @@ export function createLiveCity({app,origin,coarse=false,config={},onSnapshot=()=
       baselineSamples.push(current);
       if(baselineSamples.length>=4){
         baseline=median(baselineSamples);
+        hud='LIVE2 CONNECT';
         beginWorker();
       }
       return;
@@ -57,7 +58,7 @@ export function createLiveCity({app,origin,coarse=false,config={},onSnapshot=()=
   function beginWorker(){
     if(worker||suspended)return;
     try{
-      worker=new Worker(new URL('./live-city-worker.mjs?v=2.0.0',import.meta.url),{type:'module',name:'karlstad-live-city'});
+      worker=new Worker(new URL('./live-city-worker.js?v=2.0.1',import.meta.url),{name:'karlstad-live-city'});
       worker.onmessage=e=>{
         const m=e.data||{};
         if(m.type==='snapshot')publish(m,'worker');
@@ -78,6 +79,7 @@ export function createLiveCity({app,origin,coarse=false,config={},onSnapshot=()=
     const kick=()=>{
       const cached=staleSnapshot((()=>{try{return JSON.parse(storage?.getItem(CACHE_KEY)||'null')}catch{return null}})());
       if(cached)publish(cached,'cache');
+      else hud='LIVE2 BASELINE';
       monitor=setInterval(monitorPerformance,2000);
       monitorPerformance();
     };
