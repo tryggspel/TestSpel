@@ -1,7 +1,7 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
 import {createLastRound} from './last-round.js?v=2.5.0';
 import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.5.0';
-import {createLiveCity} from './live-city.mjs?v=2.0.0';
+import {createLiveCity} from './live-city.mjs?v=2.1.0';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -18,6 +18,8 @@ const liveWeather=document.getElementById('liveWeather');
 const livePulse=document.getElementById('livePulse');
 const liveWind=document.getElementById('liveWind');
 const liveRain=document.getElementById('liveRain');
+const liveBuses=document.getElementById('liveBuses');
+const liveTraffic=document.getElementById('liveTraffic');
 const liveSource=document.getElementById('liveSource');
 
 const ORIGIN={lat:59.380767,lon:13.50295};
@@ -780,17 +782,19 @@ function formatLiveCity(snapshot){
     liveCityCompact.textContent='LIVE KARLSTAD · STARTAR';
     return;
   }
-  const w=snapshot.weather||null,p=snapshot.pulse||null,t=snapshot.transport||null;
+  const w=snapshot.weather||null,p=snapshot.pulse||null,t=snapshot.transport||null,i=snapshot.incidents||null;
   const temp=Number.isFinite(w?.temperature)?Math.round(w.temperature)+'°C':'—';
   const pulse=Number.isFinite(p?.value)?Math.round(p.value):'—';
-  liveCityCompact.textContent='LIVE KARLSTAD · '+temp+' · PULS '+pulse;
+  const buses=t?.vehicles?.length;
+  const traffic=Number.isFinite(i?.count)?i.count:null;
+  liveCityCompact.textContent='LIVE KARLSTAD · '+temp+' · PULS '+pulse+(Number.isFinite(buses)?' · BUSS '+buses:'');
   if(liveWeather) liveWeather.textContent=Number.isFinite(w?.temperature)?temp:'INGEN DATA';
   if(livePulse) livePulse.textContent=Number.isFinite(p?.value)?pulse+' / 100':'—';
   if(liveWind) liveWind.textContent=Number.isFinite(w?.wind)?Math.round(w.wind)+' m/s':'—';
   if(liveRain) liveRain.textContent=Number.isFinite(w?.rain)?w.rain.toFixed(w.rain<1?1:0)+' mm':'—';
-  if(liveSource){
-    const buses=t?.vehicles?.length;
-    liveSource.textContent='SMHI · LIVE CITY 2.0'+(Number.isFinite(buses)?' · '+buses+' BUSSAR':' · BUSSAR EJ AKTIVA ÄN');
+  if(liveBuses) liveBuses.textContent=Number.isFinite(buses)?String(buses):'EJ ANSLUTET';
+  if(liveTraffic) liveTraffic.textContent=Number.isFinite(traffic)?(traffic?traffic+' HÄNDELSER':'LUGNT'):'EJ ANSLUTET';
+  if(liveSource) liveSource.textContent='SMHI · LIVE CITY 2.1 · '+(Number.isFinite(buses)?'VÄRMLANDSTRAFIK LIVE':'BUSSAR EJ AKTIVA')+' · '+(Number.isFinite(traffic)?'TRAFIKVERKET LIVE':'TRAFIK EJ AKTIV');
   }
 }
 if(liveCityWidget&&liveCityDetails){
@@ -845,6 +849,7 @@ async function boot(){
       pickupCount:()=>pickupCount,
       oneHand:()=>oneHand,
       liveModifiers:()=>liveCity?.modifiers?.()||null,
+      liveSnapshot:()=>liveCity?.snapshot?.()||null,
       liveHud:()=>liveCity?.hudLine?.()||'',
       ridePose:pose=>{player.setPosition(pose.x,2.4,pose.z);yaw=pose.heading;pitch=-14;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,pose.roll);},
       resetPickups:()=>{pickups.forEach(e=>e.enabled=true);pickupCount=0;cityPower=0;},
@@ -865,7 +870,9 @@ async function boot(){
         weatherMs:30*60*1000,
         transportMs:30*1000,
         transportRadiusKm:8,
-        transportProxy:liveConfig.transportProxy||''
+        transportProxy:liveConfig.transportProxy||'',
+        incidentMs:2*60*1000,
+        incidentProxy:liveConfig.incidentProxy||''
       },
       onSnapshot:snapshot=>{formatLiveCity(snapshot);window.dispatchEvent(new CustomEvent('karlstad:live-city',{detail:snapshot}));}
     });
