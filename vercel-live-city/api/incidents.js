@@ -7,10 +7,18 @@ const CACHE_SECONDS=Math.max(60,Number(process.env.INCIDENT_CACHE_SECONDS||'120'
 function normalize(payload){
   const situations=payload?.RESPONSE?.RESULT?.flatMap?.(r=>r.Situation||[])||[];
   const items=[];
+  const now=Date.now();
 
   for(const situation of situations){
     for(const d of situation.Deviation||[]){
-      const geo=parseWgs84(d?.Geometry?.WGS84||d?.Geometry);
+      const counties=Array.isArray(d.Counties)?d.Counties:
+        Number.isFinite(Number(d.CountyNo))?[Number(d.CountyNo)]:[];
+      if(counties.length&& !counties.map(Number).includes(17))continue;
+
+      const endTime=d.EndTime?Date.parse(d.EndTime):NaN;
+      if(Number.isFinite(endTime)&&endTime<now)continue;
+
+      const geo=parseWgs84(d?.Geometry?.WGS84||d?.Geometry?.Point?.WGS84||d?.Geometry?.Line?.WGS84||d?.Geometry);
       if(!geo)continue;
 
       const distanceKm=kmBetween(ORIGIN,geo);
@@ -18,12 +26,12 @@ function normalize(payload){
 
       const xy=gameXY(geo.lat,geo.lon);
       items.push({
-        id:safeText(d.Id||situation.Id,100),
+        id:safeText(d.Id||situation.Id||('incident-'+items.length),100),
         type:safeText(d.MessageType||d.MessageCode,80),
         severity:safeText(d.SeverityText||d.SeverityCode,80),
         header:safeText(d.Header,160),
         message:safeText(d.Message,260),
-        road:safeText(d.RoadNumber,40),
+        road:safeText(d.RoadNumber||d.RoadName,40),
         position:safeText(d.LocationDescriptor||d.PositionalDescription,160),
         startTime:d.StartTime||null,
         endTime:d.EndTime||null,
@@ -46,7 +54,7 @@ export default async function handler(req,res){
   const key=String(process.env.TRAFIKVERKET_API_KEY||'').trim();
   if(!key)return res.status(503).json({error:'trafikverket_key_missing'});
 
-  const body='<REQUEST><LOGIN authenticationkey="'+xmlEscape(key)+'" /><QUERY objecttype="Situation" schemaversion="1.5" limit="100"><FILTER><ELEMENTMATCH><AND><EQ name="Deviation.CountyNo" value="17" /><OR><EXISTS name="Deviation.EndTime" value="false" /><GT name="Deviation.EndTime" value="$now" /></OR></AND></ELEMENTMATCH></FILTER><INCLUDE>Deviation.Id</INCLUDE><INCLUDE>Deviation.Header</INCLUDE><INCLUDE>Deviation.Message</INCLUDE><INCLUDE>Deviation.MessageType</INCLUDE><INCLUDE>Deviation.SeverityCode</INCLUDE><INCLUDE>Deviation.SeverityText</INCLUDE><INCLUDE>Deviation.RoadNumber</INCLUDE><INCLUDE>Deviation.LocationDescriptor</INCLUDE><INCLUDE>Deviation.StartTime</INCLUDE><INCLUDE>Deviation.EndTime</INCLUDE><INCLUDE>Deviation.Geometry.WGS84</INCLUDE></QUERY></REQUEST>';
+  const body='<REQUEST><LOGIN authenticationkey="'+xmlEscape(key)+'" /><QUERY objecttype="Situation" schemaversion="1.5" limit="100"></QUERY></REQUEST>';
 
   try{
     const upstream=await fetch(URL,{
