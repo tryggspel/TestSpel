@@ -1,6 +1,6 @@
-import {LIVE_CITY_VERSION,deriveCityPulse,deriveLiveModifiers,evaluatePerformance} from './live-city-rules.mjs?v=2.0.0';
+import {LIVE_CITY_VERSION,deriveCityPulse,deriveLiveModifiers,evaluatePerformance} from './live-city-rules.mjs?v=2.1.0';
 
-const CACHE_KEY='karlstad:live-city:2';
+const CACHE_KEY='karlstad:live-city:2.1';
 const median=a=>{const b=[...a].sort((x,y)=>x-y);return b.length?b[Math.floor(b.length/2)]:0};
 const safeStorage=()=>{
   try{return localStorage}catch{return null}
@@ -15,7 +15,8 @@ function summary(s){
   if(!s)return '';
   const temp=Number.isFinite(s.weather?.temperature)?Math.round(s.weather.temperature)+'°C':'—';
   const bus=s.transport?.vehicles?.length;
-  return 'LIVE2 '+temp+' · PULS '+(s.pulse?.value??'—')+(Number.isFinite(bus)?' · BUSS '+bus:'');
+  const traffic=s.incidents?.count;
+  return 'LIVE2 '+temp+' · PULS '+(s.pulse?.value??'—')+(Number.isFinite(bus)?' · BUSS '+bus:'')+(Number.isFinite(traffic)?' · TRAFIK '+traffic:'');
 }
 
 export function createLiveCity({app,origin,coarse=false,config={},onSnapshot=()=>{}}={}){
@@ -25,7 +26,7 @@ export function createLiveCity({app,origin,coarse=false,config={},onSnapshot=()=
   const listeners=new Set();
 
   function publish(raw,source='live'){
-    const pulse=raw?.pulse||deriveCityPulse({weather:raw?.weather,transport:raw?.transport});
+    const pulse=raw?.pulse||deriveCityPulse({weather:raw?.weather,transport:raw?.transport,incidents:raw?.incidents});
     latest=Object.freeze({...raw,pulse,source,version:LIVE_CITY_VERSION});
     hud=summary(latest);
     try{storage?.setItem(CACHE_KEY,JSON.stringify({...latest,at:Date.now()}));}catch{}
@@ -58,7 +59,7 @@ export function createLiveCity({app,origin,coarse=false,config={},onSnapshot=()=
   function beginWorker(){
     if(worker||suspended)return;
     try{
-      worker=new Worker(new URL('./live-city-worker.js?v=2.0.1',import.meta.url),{name:'karlstad-live-city'});
+      worker=new Worker(new URL('./live-city-worker.js?v=2.1.0',import.meta.url),{name:'karlstad-live-city'});
       worker.onmessage=e=>{
         const m=e.data||{};
         if(m.type==='snapshot')publish(m,'worker');
@@ -70,7 +71,9 @@ export function createLiveCity({app,origin,coarse=false,config={},onSnapshot=()=
         weatherMs:config.weatherMs,
         transportMs:config.transportMs,
         transportRadiusKm:config.transportRadiusKm,
-        transportProxy:config.transportProxy||''
+        transportProxy:config.transportProxy||'',
+        incidentMs:config.incidentMs,
+        incidentProxy:config.incidentProxy||''
       }});
     }catch(e){providerErrors.worker=String(e?.message||e);console.warn('[Live City 2.0 unavailable]',e)}
   }
