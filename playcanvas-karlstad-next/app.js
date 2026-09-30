@@ -1,6 +1,7 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
 import {createLastRound} from './last-round.js?v=2.5.0';
 import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.5.0';
+import {createLiveCity} from './live-city.mjs?v=2.0.0';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -43,6 +44,7 @@ let audioCtx=null;
 let lowFpsSeconds=0;
 let bootStage='module';
 let lastRound=null;
+let liveCity=null;
 let resetTouch=()=>{};
 
 const MUSIC_STATE={
@@ -756,7 +758,8 @@ function update(dt){
   const [ox,oz]=localXY(OLEARYS.lon,OLEARYS.lat);
   const od=Math.hypot(p.x-ox,p.z-oz);
   const fps=Math.round(app.stats.frame.fps);
-  status.textContent='FPS '+fps+'\nMITT I CITY '+Math.round(d)+' m\nPOWER '+cityPower+' · '+pickupCount+'/'+pickups.length;
+  const liveLine=liveCity?.hudLine?.();
+  status.textContent='FPS '+fps+'\nMITT I CITY '+Math.round(d)+' m\nPOWER '+cityPower+' · '+pickupCount+'/'+pickups.length+(liveLine?'\n'+liveLine:'');
   if(od<9 && d>=8) mission.textContent="O'LEARYS · TINGVALLAGATAN 9 · LANDMARK";
   if(d<8) mission.textContent='MÅL NÅTT · MITT I CITY · CORE LOCK 1.3';
   lastRound?.update();
@@ -812,6 +815,23 @@ async function boot(){
 
     bootStage='Startar spel';
     app.start();
+    // Live City starts only after PlayCanvas is already rendering. It first measures
+    // the untouched baseline FPS, then starts a background worker. No provider fetch
+    // is part of boot or the render loop.
+    const liveConfig=window.KarlstadLiveCityConfig||{};
+    liveCity=createLiveCity({
+      app,origin:ORIGIN,
+      coarse:!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches),
+      config:{
+        weatherMs:30*60*1000,
+        transportMs:30*1000,
+        transportRadiusKm:8,
+        transportProxy:liveConfig.transportProxy||''
+      },
+      onSnapshot:snapshot=>{window.dispatchEvent(new CustomEvent('karlstad:live-city',{detail:snapshot}));}
+    });
+    window.KarlstadLiveCity=liveCity;
+    liveCity.start();
     addEventListener('resize',()=>app.resizeCanvas());
     bootStage='Klar';
     setTimeout(()=>{loadBar.style.width='100%';loading.classList.add('hide');},350);
