@@ -1,9 +1,50 @@
 import GtfsRealtimeBindings from 'gtfs-realtime-bindings';
 import {ORIGIN,kmBetween,gameXY,number,safeText} from '../lib/live-utils.js';
 
-const URL='https://opendata.samtrafiken.se/gtfs-rt-sweden/varm/VehiclePositionsSweden.pb';
+const SOURCES=[
+  {
+    mode:'sweden3-realtime',
+    url:'https://opendata.samtrafiken.se/gtfs-rt-sweden/varm/VehiclePositionsSweden.pb'
+  },
+  {
+    mode:'regional-realtime',
+    url:'https://opendata.samtrafiken.se/gtfs-rt/varm/VehiclePositions.pb'
+  }
+];
 const RADIUS_KM=Number(process.env.KARLSTAD_TRANSIT_RADIUS_KM||'8');
 const CACHE_SECONDS=Math.max(30,Number(process.env.TRANSIT_CACHE_SECONDS||'90'));
+
+async function fetchFeed(key){
+  const attempts=[];
+  for(const source of SOURCES){
+    const upstream=await fetch(source.url+'?key='+encodeURIComponent(key),{
+      headers:{'user-agent':'Karlstad-City-Live/2.2'}
+    });
+
+    if(!upstream.ok){
+      const detail=(await upstream.text()).replace(/\s+/g,' ').trim().slice(0,220);
+      attempts.push({
+        mode:source.mode,
+        status:upstream.status,
+        detail:detail||null
+      });
+      continue;
+    }
+
+    try{
+      const bytes=new Uint8Array(await upstream.arrayBuffer());
+      const feed=GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(bytes);
+      return {mode:source.mode,feed,attempts};
+    }catch(e){
+      attempts.push({
+        mode:source.mode,
+        status:upstream.status,
+        detail:'protobuf_decode_failed'
+      });
+    }
+  }
+  return {mode:null,feed:null,attempts};
+}
 
 export default async function handler(req,res){
   if(req.method==='OPTIONS')return res.status(204).end();
@@ -13,23 +54,17 @@ export default async function handler(req,res){
   if(!key)return res.status(503).json({error:'trafiklab_key_missing'});
 
   try{
-    const upstream=await fetch(URL+'?key='+encodeURIComponent(key),{
-      headers:{'user-agent':'Karlstad-City-Live/2.1'}
-    });
-    if(!upstream.ok){
-      const detail=(await upstream.text()).replace(/\s+/g,' ').trim().slice(0,240);
-      console.error('[transit] Trafiklab HTTP',{status:upstream.status,statusText:upstream.statusText,detail});
+    const result=await fetchFeed(key);
+    if(!result.feed){
+      console.error('[transit] no Trafiklab feed accepted key',result.attempts);
       return res.status(502).json({
         error:'transit_upstream_failed',
-        reason:'trafiklab_http_error',
-        upstreamStatus:upstream.status,
-        upstreamStatusText:upstream.statusText||null,
-        upstreamDetail:detail||null
+        reason:'no_supported_trafiklab_feed',
+        attempts:result.attempts
       });
     }
 
-    const bytes=new Uint8Array(await upstream.arrayBuffer());
-    const feed=GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(bytes);
+    const feed=result.feed;
     const vehicles=[];
 
     for(const entity of feed.entity||[]){
@@ -60,7 +95,8 @@ export default async function handler(req,res){
     res.setHeader('Cache-Control','public, s-maxage='+CACHE_SECONDS+', stale-while-revalidate=45');
 
     return res.status(200).json({
-      source:'Trafiklab GTFS Sweden 3 · Värmlandstrafik',
+      source:'Trafiklab GTFS-RT · Värmlandstrafik',
+      feedMode:result.mode,
       operator:'varm',
       updatedAt:new Date().toISOString(),
       feedTimestamp:feed.header?.timestamp?Number(feed.header.timestamp.toString?.()||feed.header.timestamp):null,
@@ -72,7 +108,7 @@ export default async function handler(req,res){
     console.error('[transit]',{message});
     return res.status(502).json({
       error:'transit_upstream_failed',
-      reason:/decode|protobuf|wire|illegal tag/i.test(message)?'gtfs_decode_failed':'proxy_exception'
+      reason:'proxy_exception'
     });
   }
 }
