@@ -47,6 +47,69 @@ function normalize(payload){
   return items.sort((a,b)=>a.distanceKm-b.distanceKm).slice(0,16);
 }
 
+const QUERY_CANDIDATES=[
+  {mode:'namespace-1.6',xml:'<QUERY objecttype="Situation" namespace="Road.TrafficInfo" schemaversion="1.6" limit="100"></QUERY>'},
+  {mode:'qualified-1.6',xml:'<QUERY objecttype="Road.TrafficInfo.Situation" schemaversion="1.6" limit="100"></QUERY>'},
+  {mode:'legacy-1.5',xml:'<QUERY objecttype="Situation" schemaversion="1.5" limit="100"></QUERY>'}
+];
+
+function extractSituations(payload){
+  const results=payload?.RESPONSE?.RESULT||[];
+  const out=[];
+  for(const r of results){
+    if(Array.isArray(r?.Situation))out.push(...r.Situation);
+    else if(Array.isArray(r?.['Road.TrafficInfo.Situation']))out.push(...r['Road.TrafficInfo.Situation']);
+    else{
+      const hit=Object.entries(r||{}).find(([k,v])=>/Situation$/.test(k)&&Array.isArray(v));
+      if(hit)out.push(...hit[1]);
+    }
+  }
+  return out;
+}
+
+function normalizeAdaptive(payload){
+  const wrapped={RESPONSE:{RESULT:[{Situation:extractSituations(payload)}]}};
+  return normalize(wrapped);
+}
+
+async function queryTrafikverket(key){
+  const diagnostics=[];
+  for(const candidate of QUERY_CANDIDATES){
+    const body='<REQUEST><LOGIN authenticationkey="'+xmlEscape(key)+'" />'+candidate.xml+'</REQUEST>';
+    const upstream=await fetch(URL,{
+      method:'POST',
+      headers:{'content-type':'text/xml','user-agent':'Karlstad-City-Live/2.2'},
+      body
+    });
+
+    const raw=await upstream.text();
+    if(!upstream.ok){
+      diagnostics.push({mode:candidate.mode,status:upstream.status,detail:raw.replace(/\s+/g,' ').trim().slice(0,180)});
+      continue;
+    }
+
+    let payload;
+    try{payload=JSON.parse(raw);}
+    catch{
+      diagnostics.push({mode:candidate.mode,status:upstream.status,detail:'invalid_json'});
+      continue;
+    }
+
+    const apiError=payload?.RESPONSE?.RESULT?.find?.(r=>r.ERROR)?.ERROR;
+    if(apiError){
+      diagnostics.push({
+        mode:candidate.mode,
+        status:upstream.status,
+        detail:String(apiError.MESSAGE||apiError.Message||apiError.SOURCE||apiError.Source||'api_error').slice(0,180)
+      });
+      continue;
+    }
+
+    return {mode:candidate.mode,payload,diagnostics};
+  }
+  return {mode:null,payload:null,diagnostics};
+}
+
 export default async function handler(req,res){
   if(req.method==='OPTIONS')return res.status(204).end();
   if(req.method!=='GET')return res.status(405).json({error:'method_not_allowed'});
@@ -54,39 +117,23 @@ export default async function handler(req,res){
   const key=String(process.env.TRAFIKVERKET_API_KEY||'').trim();
   if(!key)return res.status(503).json({error:'trafikverket_key_missing'});
 
-  const body='<REQUEST><LOGIN authenticationkey="'+xmlEscape(key)+'" /><QUERY objecttype="Situation" schemaversion="1.6" limit="100"></QUERY></REQUEST>';
-
   try{
-    const upstream=await fetch(URL,{
-      method:'POST',
-      headers:{'content-type':'text/xml','user-agent':'Karlstad-City-Live/2.1'},
-      body
-    });
-
-    if(!upstream.ok){
-      const detail=(await upstream.text()).replace(/\s+/g,' ').trim().slice(0,240);
-      console.error('[incidents] Trafikverket HTTP',{status:upstream.status,statusText:upstream.statusText,detail});
+    const result=await queryTrafikverket(key);
+    if(!result.payload){
+      console.error('[incidents] no Trafikverket query mode accepted',result.diagnostics);
       return res.status(502).json({
         error:'incidents_upstream_failed',
-        reason:'trafikverket_http_error',
-        upstreamStatus:upstream.status,
-        upstreamStatusText:upstream.statusText||null,
-        upstreamDetail:detail||null
+        reason:'no_supported_situation_query',
+        attempts:result.diagnostics
       });
     }
 
-    const payload=await upstream.json();
-    const apiError=payload?.RESPONSE?.RESULT?.find?.(r=>r.ERROR)?.ERROR;
-    if(apiError){
-      console.error('[incidents] Trafikverket rejected query',{code:apiError.CODE||apiError.Code||null,message:apiError.MESSAGE||apiError.Message||null});
-      return res.status(502).json({error:'incidents_upstream_failed',reason:'trafikverket_query_rejected'});
-    }
-
-    const items=normalize(payload);
+    const items=normalizeAdaptive(result.payload);
     res.setHeader('Cache-Control','public, s-maxage='+CACHE_SECONDS+', stale-while-revalidate=60');
 
     return res.status(200).json({
       source:'Trafikverket Open API · Situation',
+      queryMode:result.mode,
       updatedAt:new Date().toISOString(),
       radiusKm:RADIUS_KM,
       count:items.length,
@@ -97,7 +144,7 @@ export default async function handler(req,res){
     console.error('[incidents]',{message});
     return res.status(502).json({
       error:'incidents_upstream_failed',
-      reason:/Trafikverket \d+/.test(message)?'trafikverket_http_error':/JSON|Unexpected token/i.test(message)?'trafikverket_invalid_json':'proxy_exception'
+      reason:'proxy_exception'
     });
   }
 }
