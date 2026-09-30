@@ -54,7 +54,7 @@ export default async function handler(req,res){
   const key=String(process.env.TRAFIKVERKET_API_KEY||'').trim();
   if(!key)return res.status(503).json({error:'trafikverket_key_missing'});
 
-  const body='<REQUEST><LOGIN authenticationkey="'+xmlEscape(key)+'" /><QUERY objecttype="Situation" schemaversion="1.5" limit="100"></QUERY></REQUEST>';
+  const body='<REQUEST><LOGIN authenticationkey="'+xmlEscape(key)+'" /><QUERY objecttype="Situation" schemaversion="1.6" limit="100"></QUERY></REQUEST>';
 
   try{
     const upstream=await fetch(URL,{
