@@ -807,6 +807,8 @@ async function boot(){
       app,player,camera,canvas,origin:{x:ox,z:oz},mall:{x:mx,z:mz},colliders,blocked,resetInput,music:GAME_MUSIC,
       pickupCount:()=>pickupCount,
       oneHand:()=>oneHand,
+      liveModifiers:()=>liveCity?.modifiers?.()||null,
+      liveHud:()=>liveCity?.hudLine?.()||'',
       ridePose:pose=>{player.setPosition(pose.x,2.4,pose.z);yaw=pose.heading;pitch=-14;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,pose.roll);},
       resetPickups:()=>{pickups.forEach(e=>e.enabled=true);pickupCount=0;cityPower=0;},
       teleport:(x,z,heading,tilt)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=heading;pitch=tilt;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);}
