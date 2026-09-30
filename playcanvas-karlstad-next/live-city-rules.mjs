@@ -1,4 +1,4 @@
-export const LIVE_CITY_VERSION='2.0.0';
+export const LIVE_CITY_VERSION='2.1.0';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const finite=(v,fallback=0)=>Number.isFinite(Number(v))?Number(v):fallback;
@@ -30,22 +30,68 @@ export function normalizeTransport(data,origin={lat:59.380767,lon:13.50295},radi
   for(const raw of list){
     const lat=finite(raw?.lat,NaN),lon=finite(raw?.lon,NaN);
     if(!Number.isFinite(lat)||!Number.isFinite(lon))continue;
-    const x=(lon-origin.lon)*111.32*Math.cos(lat0),y=(lat-origin.lat)*110.54;
-    const distanceKm=Math.hypot(x,y);
+    const eastKm=(lon-origin.lon)*111.32*Math.cos(lat0),northKm=(lat-origin.lat)*110.54;
+    const distanceKm=Math.hypot(eastKm,northKm);
     if(distanceKm>radiusKm)continue;
     within.push(Object.freeze({
       id:String(raw.id||raw.vehicleId||within.length+1),
+      label:raw.label?String(raw.label):null,
       lat,lon,distanceKm,
+      x:Number.isFinite(Number(raw.x))?Number(raw.x):eastKm*1000,
+      z:Number.isFinite(Number(raw.z))?Number(raw.z):-northKm*1000,
       bearing:Number.isFinite(Number(raw.bearing))?Number(raw.bearing):null,
-      route:raw.route?String(raw.route):null,
-      timestamp:raw.timestamp||null
+      speed:Number.isFinite(Number(raw.speed))?Number(raw.speed):null,
+      route:raw.route||raw.routeId?String(raw.route||raw.routeId):null,
+      timestamp:Number.isFinite(Number(raw.timestamp))?Number(raw.timestamp):null
     }));
     if(within.length>=24)break;
   }
   return Object.freeze({
     source:data?.source||'Trafiklab GTFS-RT proxy',
     updatedAt:data?.updatedAt||null,
+    feedTimestamp:data?.feedTimestamp||null,
     vehicles:Object.freeze(within)
+  });
+}
+
+export function normalizeIncidents(data){
+  const items=(Array.isArray(data?.items)?data.items:[]).slice(0,16).map((raw,i)=>Object.freeze({
+    id:String(raw?.id||'incident-'+i),
+    type:raw?.type?String(raw.type):'Trafikhändelse',
+    severity:raw?.severity?String(raw.severity):null,
+    header:raw?.header?String(raw.header):null,
+    message:raw?.message?String(raw.message):null,
+    road:raw?.road?String(raw.road):null,
+    position:raw?.position?String(raw.position):null,
+    x:Number.isFinite(Number(raw?.x))?Number(raw.x):null,
+    z:Number.isFinite(Number(raw?.z))?Number(raw.z):null,
+    distanceKm:Number.isFinite(Number(raw?.distanceKm))?Number(raw.distanceKm):null
+  }));
+  return Object.freeze({
+    source:data?.source||'Trafikverket Open API',
+    updatedAt:data?.updatedAt||null,
+    count:items.length,
+    items:Object.freeze(items)
+  });
+}
+
+export function incidentProfile(incidents){
+  const items=Array.isArray(incidents?.items)?incidents.items:[];
+  if(!items.length)return Object.freeze({count:0,level:0,kind:null,id:null,title:null});
+  let best=null,bestLevel=-1;
+  for(const item of items){
+    const text=[item.type,item.severity,item.header,item.message].filter(Boolean).join(' ').toLowerCase();
+    const kind=/olyck|krock|brand/.test(text)?'accident':/vägarb|arbete|underhåll/.test(text)?'roadwork':/kö|stillastående|trängsel/.test(text)?'congestion':/hinder|blocker|stängd|avstäng/.test(text)?'obstacle':'other';
+    const severityText=String(item.severity||'').toLowerCase();
+    const level=/mycket stor|extrem|very high|severe/.test(severityText)?3:/stor|high/.test(severityText)?2:/medel|medium/.test(severityText)?1:kind==='other'?0:1;
+    if(level>bestLevel){bestLevel=level;best={item,kind,level};}
+  }
+  return Object.freeze({
+    count:items.length,
+    level:Math.max(0,bestLevel),
+    kind:best?.kind||'other',
+    id:best?.item?.id||null,
+    title:best?.item?.header||best?.item?.type||'Trafikhändelse'
   });
 }
 
@@ -63,22 +109,30 @@ export function deriveCityPulse({weather=null,transport=null,incidents=0,now=new
   if(rain>2)value-=5;
   if(wind>12)value-=5;
   if(cloud<=2&&h>=8&&h<20)value+=4;
-  value+=Math.min(8,Math.max(0,finite(incidents,0))*2);
+  const incidentCount=typeof incidents==='number'?incidents:(incidents?.count||incidents?.items?.length||0);
+  value+=Math.min(8,Math.max(0,finite(incidentCount,0))*2);
   value=Math.round(clamp(value,0,100));
   const band=value>=75?'HÖG':value>=48?'NORMAL':value>=28?'LUGN':'NATT';
-  return Object.freeze({value,band,model:'game-derived',inputs:Object.freeze({buses,rain,wind,incidents:finite(incidents,0)})});
+  return Object.freeze({value,band,model:'game-derived',inputs:Object.freeze({buses,rain,wind,incidents:incidentCount})});
 }
 
 export function deriveLiveModifiers(snapshot){
   const pulse=clamp(finite(snapshot?.pulse?.value,50),0,100);
   const rain=clamp(finite(snapshot?.weather?.rain,0),0,20);
   const wind=clamp(finite(snapshot?.weather?.wind,0),0,40);
+  const traffic=incidentProfile(snapshot?.incidents);
   return Object.freeze({
-    chaosDelayScale:clamp(1.08-(pulse/100)*.22-rain*.006,.80,1.08),
+    chaosDelayScale:clamp(1.08-(pulse/100)*.22-rain*.006-traffic.level*.025,.76,1.08),
     pursuitSpeedScale:clamp(.96+(pulse/100)*.09,.96,1.05),
     scentDecayScale:clamp(1+wind*.008+rain*.006,1,1.24),
     sunAvailability:clamp(1-rain*.08,0.35,1),
-    source:'Live City 2.0'
+    busCount:snapshot?.transport?.vehicles?.length||0,
+    trafficIncidentCount:traffic.count,
+    trafficIncidentLevel:traffic.level,
+    trafficIncidentKind:traffic.kind,
+    trafficIncidentId:traffic.id,
+    trafficIncidentTitle:traffic.title,
+    source:'Live City 2.1'
   });
 }
 
