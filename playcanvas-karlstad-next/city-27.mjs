@@ -1,6 +1,6 @@
-export const CITY27_VERSION='2.7.5';
+export const CITY27_VERSION='2.7.6';
 export const ORIGIN27=Object.freeze({lat:59.380767,lon:13.50295});
-export const MITT_I_CITY_OSM=550299956;
+export const MITT_I_CITY_OSM=234271401;
 export const BLACKOUT_27=Object.freeze({seconds:4,cooldown:150});
 export const MALL_INTERIOR_271=Object.freeze({upper:5.4,rampDepth:11,rampWidth:2.6,rampOffset:2.6,upperWidthFactor:.48,upperDepthFactor:.42,ring:4.1});
 export const PLACES27=Object.freeze([
