@@ -269,7 +269,7 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
 /* One chosen goal across the map, compass and pooled street arrows. */
 #cityChooseGoal{position:absolute;right:6px;top:7px;border:1px solid #81e9e380;border-radius:4px;padding:7px;color:#b6fff3;background:#153f44;font:900 8px system-ui;pointer-events:auto;min-height:32px}
 #cityEventHud{padding-right:84px!important}#cityEventHud b,#cityEventHud span{text-align:left}
-.map-card{max-height:92dvh;overflow:auto;overscroll-behavior:contain;touch-action:pan-y}.map-card canvas{max-height:30dvh}.map-choices{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.map-choices button{min-height:42px;padding:8px;border:1px solid #79c9c1;border-radius:5px;background:#244d48;color:#edf6d7;font:800 10px system-ui}.map-choices button:disabled{opacity:.35}.map-card .round-fine{margin:12px 0 7px}
+.map-card{max-height:92dvh;overflow:auto;overscroll-behavior:contain;touch-action:pan-y}.map-card canvas{max-height:30dvh}.map-surface{position:relative;width:100%;aspect-ratio:1}.map-surface #roundMap{display:block;width:100%;height:100%!important;max-height:none;touch-action:pan-y;-webkit-tap-highlight-color:transparent}.map-pin-layer{position:absolute;inset:0;z-index:4;pointer-events:none}.map-pin{position:absolute;transform:translate(-50%,-50%);width:48px;height:48px;margin:0;padding:0;border:0;border-radius:50%;background:transparent;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}.map-pin span{position:absolute;left:50%;top:50%;width:17px;height:17px;transform:translate(-50%,-50%);border-radius:50%;background:var(--pin-color,#ffca59);border:3px solid #fff0cd;box-shadow:0 0 0 4px #112e2988}.map-pin:active span{transform:translate(-50%,-50%) scale(.82)}.map-pin:focus-visible{outline:3px solid #8df0ce;outline-offset:-5px}.map-tap-hint{color:#fff0cd!important;font-weight:900!important}.map-choices{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.map-choices button{min-height:42px;padding:8px;border:1px solid #79c9c1;border-radius:5px;background:#244d48;color:#edf6d7;font:800 10px system-ui}.map-choices button:disabled{opacity:.35}.map-card .round-fine{margin:12px 0 7px}
 
 /* Illustrated bus cabin, physical passengers and one-finger wheel. */
 #busCabin,#busPassengers{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}#busPassengers{z-index:1}
@@ -299,3 +299,14 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
 #liveCityDetails span{font:800 6px system-ui;letter-spacing:.08em;color:#b9cfc5}
 #liveCityDetails b{font:900 8px system-ui;color:#fff4c7}
 #liveCityDetails small{grid-column:1/-1;font:700 6px system-ui;letter-spacing:.06em;color:#a9c0b5;text-align:center;padding-top:2px}
+
+.map-teleport{display:block;width:100%;min-height:52px;margin:10px 0 4px;border:2px solid #dff6d1;border-radius:6px;background:#58a744;color:#fff;font:1000 12px/1.15 system-ui;letter-spacing:.04em;box-shadow:0 4px 0 #2d6925;touch-action:manipulation}
+.map-teleport:hover{background:#68b952}.map-teleport:active{transform:translateY(2px);box-shadow:0 2px 0 #2d6925}.map-teleport:disabled{opacity:.38;transform:none;box-shadow:none}
+.map-card p.map-teleport-hint{margin:5px 0 13px;color:#b9d7b0;font-size:8px;line-height:1.45}
+
+
+/* Short, occasional dimming; keep navigation legible during the effect. */
+#game{transition:filter .45s ease}
+@media(prefers-reduced-motion:reduce){#game{transition:none}}
+
+.map-area{display:flex;align-items:center;justify-content:space-between;gap:8px;font:800 11px system-ui;color:#bfe5ce}.map-area button{min-height:40px;background:#2b6260;color:#fff1ce;border:1px solid #8bc6b7;border-radius:5px;font:800 10px system-ui;padding:7px 12px}

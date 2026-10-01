@@ -5,13 +5,14 @@ export const STREET_STORIES=Object.freeze({
 });
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 export function beginStory(rush,kind,p,f){
+  if((p.y??1.68)>3.7)return false;
   const def=STREET_STORIES[kind];if(!def)return false;
   if(kind==='bowling'&&rush.city.actors.filter(a=>a.active).length>3)return false;
   if(rush.contract?.kind==='power')rush.blackoutUntil=0;
   const spot=rush.spot(p,f),id='story-'+kind+'-'+(++rush.storySerial);
   const c={id,kind,title:def.title,action:def.action,spot,until:rush.spent+def.seconds,points:def.points,stage:0};
   if(kind==='power'){
-    c.title='TÄND KARLSTAD · ELBOX 1/3';rush.blackoutUntil=c.until;
+    c.title='TÄND KARLSTAD · ELBOX 1/3';rush.tryBlackout(3);
   }else if(kind==='news')c.title='NWT · HÄMTA NYHETERNA';
   else{
     const actors=[-.8,0,.8].map(o=>rush.spawnEnemy(spot,{x:-f.x,z:-f.z},id,o)).filter(Boolean);if(!actors.length)return false;

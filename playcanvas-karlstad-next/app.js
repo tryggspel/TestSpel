@@ -1,8 +1,12 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.6.0';
-import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.6.0';
-import {cityBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.6.0';
-import {createCityArchitecture} from './city-architecture.js?v=2.6.0';
+import {createLastRound} from './last-round.js?v=2.8.0';
+import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.8.0';
+import {cityBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.8.0';
+import {createCityArchitecture} from './city-architecture.js?v=2.8.0';
+import {createMallArchitecture} from './mall-architecture.js?v=2.8.0';
+import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.8.0';
+import {createParkArchitecture} from './park-architecture.js?v=2.8.0';
+import {waterBlocked} from './park-space.mjs?v=2.8.0';
 import {createLiveCity} from './live-city.mjs?v=2.1.0';
 
 const canvas=document.getElementById('game');
@@ -34,7 +38,7 @@ const PLAYER_RADIUS=0.42;
 const EYE=1.68;
 const CORE_LOCK=Object.freeze({version:'1.3.0',baseline:'1.2.2',lookSensitivity:.12,walkSpeed:7.2,sprintMultiplier:1.55,jumpVelocity:6.2,gravity:16,playerRadius:.42,mobileMaxPixelRatio:1.25,desktopMaxPixelRatio:1.6,maxBuildings:95,detailRadius:92});
 window.KarlstadCoreLock=CORE_LOCK;
-const GRAPHICS_PASS=Object.freeze({version:'2.6.0',core:'1.3.0',mode:'geographic-comic-city',heroBudget:4,rule:'no-core-feel-changes'});
+const GRAPHICS_PASS=Object.freeze({version:'2.8.0',core:'1.3.0',mode:'geographic-comic-city',heroBudget:9,rule:'no-core-feel-changes'});
 window.KarlstadGraphicsPass=GRAPHICS_PASS;
 const TOUCH_TUNE=Object.freeze({deadzone:.13,expo:.42,maxStick:.34,lookScale:.9});
 const fpsLook=new FpsLook({span:Math.min(window.innerWidth,window.innerHeight)});
@@ -43,6 +47,8 @@ try{const saved=JSON.parse(localStorage.getItem('karlstad:fps-controls:v2')||'nu
 try{const hand=localStorage.getItem('karlstad:one-hand:1');if(hand!==null)oneHand=hand==='on';}catch{}
 let app,player,camera,yaw=54,pitch=-5;
 let vy=0,onGround=true;
+const mallWalk=new MallWalk();
+let mallGraphics=null;
 let colliders=[];
 let moveX=0,moveY=0;
 let lookDX=0,lookDY=0;
@@ -390,13 +396,6 @@ function addContentGraphicsPass15(){
 function addLandmarkIdentityPass16(){
   // Real storefronts are attached to their address's OSM facade by the 2.6 pass.
 
-  // Mitt i City: make the entrance read as the shopping-hub objective at a glance.
-  const [mx,mz]=localXY(MALL.lon,MALL.lat);
-  addBox('g16-mitt-entry-glass',mx,2.35,mz-.72,7.8,4.25,.16,M.glass);
-  addBox('g16-mitt-entry-header',mx,4.85,mz-.86,9.4,.72,.18,M.light);
-  addBox('g16-mitt-entry-accent',mx,5.43,mz-.92,6.1,.18,.20,M.accent);
-  addPlanter(mx-6.2,mz-2.2); addPlanter(mx+6.2,mz-2.2);
-
   // Sandgrund approach: a light promenade extension toward the real museum.
   // The actual OSM building is selectively admitted by addBuildings().
   for(let z=-240;z>=-430;z-=38) addLamp(-63+(Math.abs(z)-240)*.035,z);
@@ -453,7 +452,7 @@ function initScene(){
   M.energy=mat(0xf4c542,.02,.68);
 
   // Big, cheap surfaces first: readable city structure without texture downloads.
-  addBox('ground',0,-.35,-95,760,.6,950,M.ground);
+  addBox('ground',0,-.35,145,760,.6,930,M.ground);
   // Roads and square paving are built together from actual street lines after OSM loads.
 
   player=new pc.Entity('player');
@@ -486,17 +485,7 @@ function initScene(){
   try { addContentGraphicsPass15(); } catch(e) { console.error('[Content/Graphics 1.5 skipped]',e); }
   try { addLandmarkIdentityPass16(); } catch(e) { console.error('[Landmark Storefront 1.7 skipped]',e); }
 
-  const [mx,mz]=localXY(MALL.lon,MALL.lat);
-  // The active mission owns the destination marker; the mall has no permanent beacon.
-  addBox('mitt-i-city-plaza',mx,.02,mz,19,.05,14,M.sidewalk);
-  addCrosswalk(mx+12,mz,'z');
-  const beacon=new pc.Entity('beacon');
-  beacon.addComponent('light',{type:'omni',range:24,intensity:1.7,color:new pc.Color(1,.72,.22)});
-  beacon.setPosition(mx,4.5,mz); app.root.addChild(beacon); objectiveLight=beacon;
-  // Architectural target frame: readable from Stora Torget even before the player sees the mall facade.
-  addBox('mitt-i-city-gate-left',mx-5.1,2.9,mz,1.0,5.8,1.0,M.heroDark);
-  addBox('mitt-i-city-gate-right',mx+5.1,2.9,mz,1.0,5.8,1.0,M.heroDark);
-  addBox('mitt-i-city-gate-top',mx,5.35,mz,11.2,.9,1.0,M.accent);
+  // Mitt i City now uses its four real street entrances and a walkable interior.
 }
 
 function addBuildings(osm){
@@ -506,7 +495,11 @@ function addBuildings(osm){
     const identity=IDENTITY_IDS.has(b.osm);
     const hero=/Mitt i City|Residenset|Wermland/i.test(b.name);
     const seed=hashStr((b.name||'byggnad')+'|'+Math.round(b.cx)+'|'+Math.round(b.cz));
-    if(!identity){
+    if(!identity&&b.osm!==234271401&&MALL_BUILDING_IDS.has(b.osm)){
+      const cut=splitMallWall(b),colour=cityMats[seed%cityMats.length];
+      for(const q of cut.pieces)addBox('Mitt i City · kvartersfasad',(q.minx+q.maxx)/2,b.h/2,(q.minz+q.maxz)/2,q.maxx-q.minx,b.h,q.maxz-q.minz,colour);
+      for(const q of cut.openings)addBox('Mitt i City · entrévalv',(q.minx+q.maxx)/2,(b.h+3.4)/2,(q.minz+q.maxz)/2,q.maxx-q.minx,b.h-3.4,q.maxz-q.minz,colour);
+    }else if(!identity&&b.osm!==234271401){
       addBox(b.name||'building',b.cx,b.h/2,b.cz,b.sx,b.h,b.sz,hero?M.hero:cityMats[seed%cityMats.length]);
       if(hero||b.dist<92)addBox((b.name||'building')+'-shopfront',b.cx,1.25,b.cz,b.sx*1.002,2.35,b.sz*1.002,hero?M.heroDark:M.glass);
       if(hero)addBox((b.name||'building')+'-roof',b.cx,b.h+.18,b.cz,b.sx*1.03,.32,b.sz*1.03,M.heroDark);
@@ -516,18 +509,23 @@ function addBuildings(osm){
     colliders.push({osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
   }
   const geometry=createCityArchitecture(pc,app,admitted);
-  window.KarlstadArchitecture=Object.freeze({...geometry,buildings:admitted.length});
+  mallGraphics=createMallArchitecture(pc,app,admitted);const {update:animateMall,...mall}=mallGraphics,park=createParkArchitecture(pc,app);
+  window.KarlstadArchitecture=Object.freeze({...geometry,buildings:admitted.length,mall,park,staticDrawCalls:geometry.staticDrawCalls+mall.staticDrawCalls+park.staticDrawCalls});
   return admitted.length;
 }
 
 function blocked(x,z){
+  if(waterBlocked(x,z))return true;
+  if(mallPassage(x,z))return mallGroundBlocked(x,z);
   for(const c of colliders){
     if(x+PLAYER_RADIUS>c.minx&&x-PLAYER_RADIUS<c.maxx&&z+PLAYER_RADIUS>c.minz&&z-PLAYER_RADIUS<c.maxz) return true;
   }
   return false;
 }
-function tryMove(dx,dz){
+function tryMove(dx,dz,dt){
   const p=player.getPosition();
+  const indoor=mallWalk.move(p,dx,dz,dt,blocked);
+  if(indoor){player.setPosition(indoor.x,indoor.y,indoor.z);return;}
   const nx=p.x+dx,nz=p.z+dz;
   if(!blocked(nx,p.z)) p.x=nx;
   if(!blocked(p.x,nz)) p.z=nz;
@@ -631,12 +629,14 @@ function update(dt){
   const a=yaw*Math.PI/180;
   const dx=(ix*Math.cos(a)+iz*Math.sin(a))*speed*dt;
   const dz=(-ix*Math.sin(a)+iz*Math.cos(a))*speed*dt;
-  tryMove(dx,dz);
+  tryMove(dx,dz,dt);
 
   if(onGround&&keys.has('Space')){vy=CORE_LOCK.jumpVelocity;onGround=false;}
   vy-=CORE_LOCK.gravity*dt;
   const p=player.getPosition(); p.y+=vy*dt;
-  if(p.y<=EYE){p.y=EYE;vy=0;onGround=true;} player.setPosition(p);
+  const floor=mallWalk.height;
+  if(p.y<=EYE+floor){p.y=EYE+floor;vy=0;onGround=true;} player.setPosition(p);
+  mallGraphics?.update(dt,p);
 
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
   const d=Math.hypot(p.x-mx,p.z-mz);
@@ -739,7 +739,7 @@ async function boot(){
     const [ox,oz]=localXY(OLEARYS.lon,OLEARYS.lat);
     const [mx,mz]=localXY(MALL.lon,MALL.lat);
     lastRound=createLastRound(pc,{
-      app,player,camera,canvas,origin:{x:ox,z:oz},mall:{x:mx,z:mz},colliders,blocked,resetInput,music:GAME_MUSIC,
+      app,player,camera,canvas,origin:{x:ox,z:oz},mall:{x:MALL_ENTRANCES[0].x,z:MALL_ENTRANCES[0].z},colliders,blocked,resetInput,music:GAME_MUSIC,mallWalk,
       pickupCount:()=>pickupCount,
       oneHand:()=>oneHand,
       liveModifiers:()=>liveCity?.modifiers?.()||null,
@@ -747,7 +747,7 @@ async function boot(){
       liveHud:()=>liveCity?.hudLine?.()||'',
       ridePose:pose=>{player.setPosition(pose.x,2.4,pose.z);yaw=pose.heading;pitch=-14;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,pose.roll);},
       resetPickups:()=>{pickups.forEach(e=>e.enabled=true);pickupCount=0;cityPower=0;},
-      teleport:(x,z,heading,tilt)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=heading;pitch=tilt;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);}
+      teleport:(x,z,heading,tilt)=>{resetInput();mallWalk.reset();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=heading;pitch=tilt;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);}
     });
     app.on('update',update);
 

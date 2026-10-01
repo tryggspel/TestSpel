@@ -96,8 +96,8 @@ test('solar zombie bonuses require a real kill in the light; ordinary kills stil
 test('survival ends with a real breather and sunlight; blackout follows paused game time',()=>{
   const g=make();g.rush.start('free');g.rush.raisePanic(100);g.drainEvents();g.rush.step(25,p,f);
   assert.equal(g.rush.panic,55);assert.ok(g.rush.nextChaos>=37);assert.ok(g.rush.ecology.sun);assert.equal(g.drainEvents().some(e=>e.type==='chaos-bells'),false);
-  g.rush.chaosCount=1;g.rush.triggerChaos(p,f);assert.equal(g.rush.snapshot().blackoutRemaining,12);
-  g.pause();g.step(1,p,f);assert.equal(g.rush.snapshot().blackoutRemaining,12);g.resume();g.rush.clock(12);assert.equal(g.rush.snapshot().blackoutRemaining,0);
+  g.rush.clock(20);g.rush.chaosCount=1;g.rush.triggerChaos(p,f);assert.equal(g.rush.snapshot().blackoutRemaining,4);
+  g.pause();g.step(1,p,f);assert.equal(g.rush.snapshot().blackoutRemaining,4);g.resume();g.rush.clock(4);assert.equal(g.rush.snapshot().blackoutRemaining,0);
 });
 
 test('free exploration keeps selecting chaos after the fourth event without increasing the actor budget',()=>{

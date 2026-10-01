@@ -1,5 +1,5 @@
 export function chooseAimTarget(player, forward, actors, visible = () => true, lockedId = null) {
-  const candidates = actors.filter(a => a.active && a.kind !== 'bin').map(a => {
+  const candidates = actors.filter(a => a.active && a.kind !== 'bin' && Math.abs((player.y??1.68)-1.68-(a.y??0))<2).map(a => {
     const dx = a.x - player.x, dz = a.z - player.z, distance = Math.hypot(dx, dz);
     const dot = (dx * forward.x + dz * forward.z) / Math.max(.001, distance * Math.hypot(forward.x, forward.z));
     return {a, distance, dot};

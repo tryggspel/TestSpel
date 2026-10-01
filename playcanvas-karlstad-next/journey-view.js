@@ -1,5 +1,5 @@
-import {createComicCity} from './comic-city.js?v=2.6.0';
-import {SUN} from './city-ecology.mjs?v=2.6.0';
+import {createComicCity} from './comic-city.js?v=2.8.0';
+import {SUN} from './city-ecology.mjs?v=2.8.0';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
   const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');
@@ -90,13 +90,13 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const sunPad=primitive('Sola över Karlstad','cylinder',0,.08,0,SUN.radius*2,.025,SUN.radius*2,sunMaterial);
   const sunSign=card('Följ solen',labelTex(['SOLA!','FÖLJ MIG · 2× XP'], '#f4d176','#224838'),2.7,.85,0,2.5,0);
   chaosFlask.enabled=sunPad.enabled=sunSign.enabled=false;
-  const comicCity=createComicCity(host,draw);
+  const comicCity=createComicCity(pc,host,draw);
   function nearbyStation(p){return stations.find(s=>Math.hypot(p.x-s.x,p.z-s.z)<4);}
   function update(p,now,game){
     const roaming=game===journey;comicCity.update(p);
     const nearby=roaming?journey.items.filter(t=>!journey.found.has(t.id)&&Math.hypot(t.x-p.x,t.z-p.z)<44).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z)).slice(0,pickupPool.length):[];
     pickupPool.forEach((e,i)=>{e.enabled=i<nearby.length;if(!e.enabled)return;const t=nearby[i];e.setPosition(t.x,.28+Math.sin(now/350+i)*.12,t.z);e.setEulerAngles(0,Math.atan2(p.x-t.x,p.z-t.z)*180/Math.PI,Math.sin(now/650+i)*4);});
-    secretPool.forEach(({s,e})=>{e.enabled=roaming&&!journey.secretsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<30;if(e.enabled){e.setPosition(s.x,.3+Math.sin(now/400)*.15,s.z);e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);}});
+    secretPool.forEach(({s,e})=>{e.enabled=roaming&&!journey.secretsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<30;if(e.enabled){e.setPosition(s.x,(s.y??0)+.3+Math.sin(now/400)*.15,s.z);e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);}});
     portalViews.forEach(v=>{v.e.enabled=v.ring.enabled=roaming&&(Math.hypot(p.x-v.p.x,p.z-v.p.z)<38||(journey.routeMode==='mission'&&journey.destination===v.id));v.e.setEulerAngles(0,Math.atan2(p.x-v.p.x,p.z-v.p.z)*180/Math.PI,0);});
     ambushProps.forEach(({a,e})=>{e.enabled=roaming&&!journey.cleared.has(a.id)&&Math.hypot(p.x-a.spawn.x,p.z-a.spawn.z)<40;});
     const gallery=game===sandgrund;safePad.enabled=safeSign.enabled=gallery;

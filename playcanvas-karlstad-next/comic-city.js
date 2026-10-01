@@ -1,4 +1,5 @@
-import {IDENTITY_IDS,SHOP_IDS} from './city-geography.mjs?v=2.6.0';
+import {IDENTITY_IDS,SHOP_IDS} from './city-geography.mjs?v=2.8.0';
+import {MALL_CORRIDORS} from './mall-space.mjs?v=2.8.0';
 const ink='#253d40',cream='#fff0c8';
 const palettes=[['#eeb985','#d88c67','#ae4e45'],['#a7c7b4','#789e91','#367c75'],['#dec5a0','#b29a7e','#70568a'],['#c4b6d7','#9886b7','#a85159']];
 const shops=[['PÅTÅR & PANIK','ÖPPET TILLS VIDARE'],['KARLSTAD LEVER','KAFFE • KULTUR • KAOS'],['HERR GÅRMAN','GÅ. GÄRNA FORT.'],['DEN SISTA BULLEN','EN PER ÖVERLEVANDE']];
@@ -27,22 +28,57 @@ export function drawComicFacade(c,w,h,variant=0,upperOnly=false){
   if(upperOnly)c.clearRect(0,548,640,220); // Real businesses supply their own ground-floor artwork and logo.
   c.restore();
 }
-export function createComicCity(host,{texture,card}){
-  const textures=Array.from({length:4},(_,i)=>texture((c,w,h)=>drawComicFacade(c,w,h,i),512,768)),views=[];
-  const buildings=host.colliders.filter(b=>b.height>=6&&!IDENTITY_IDS.has(b.osm)&&!SHOP_IDS.has(b.osm)&&!/O.Leary|Mitt|Sandgrund|Residens/i.test(b.name)).sort((a,b)=>Math.hypot((a.minx+a.maxx)/2,(a.minz+a.maxz)/2)-Math.hypot((b.minx+b.maxx)/2,(b.minz+b.maxz)/2)).slice(0,16);
-  for(const [i,b] of buildings.entries()){
-    const cx=(b.minx+b.maxx)/2,cz=(b.minz+b.maxz)/2;
-    const faces=[{x:cx,z:b.minz-.23,yaw:180,width:b.maxx-b.minx,test:{x:cx,z:b.minz-3}},{x:cx,z:b.maxz+.23,yaw:0,width:b.maxx-b.minx,test:{x:cx,z:b.maxz+3}},{x:b.minx-.23,z:cz,yaw:-90,width:b.maxz-b.minz,test:{x:b.minx-3,z:cz}},{x:b.maxx+.23,z:cz,yaw:90,width:b.maxz-b.minz,test:{x:b.maxx+3,z:cz}}].filter(f=>f.width>7&&!host.blocked(f.test.x,f.test.z)).slice(0,2);
-    for(const face of faces){const e=card('Serietecknad gatufasad',textures[i%4],Math.min(24,face.width-.5),Math.min(14,b.height-.2),face.x,.13,face.z);e.setEulerAngles(0,face.yaw,0);views.push({e,x:face.x,z:face.z});}
-  }
-  // One extra shared upper-floor texture gives real shops finished facades without fictional signs.
-  const shopUpper=texture((c,w,h)=>drawComicFacade(c,w,h*768/388,0,true),512,384);
-  for(const b of host.colliders.filter(b=>SHOP_IDS.has(b.osm))){
-    const x=(b.minx+b.maxx)/2;
-    for(const [z,yaw] of [[b.minz-.19,180],[b.maxz+.19,0]]){
-      if(host.blocked(x,z+(yaw===180?-3:3)))continue;
-      const e=card('Karlstad · butiksövervåning',shopUpper,Math.min(28,b.maxx-b.minx-.3),Math.max(1,b.height-5.4),x,5.4,z);e.setEulerAngles(0,yaw,0);views.push({e,x,z});
+// Full-width modules keep windows at a readable scale even on long OSM blocks.
+// Four baked textures, spatial batches, no per-window entities or frame-time canvas work.
+export function facadePanels(buildings,blocked=()=>false){
+  const panels=[];
+  for(const b of buildings){
+    if(b.height<5||IDENTITY_IDS.has(b.osm)||b.osm===234271401)continue;
+    const cx=(b.minx+b.maxx)/2,cz=(b.minz+b.maxz)/2,h=b.height-.08;
+    const faces=[{x:cx,z:b.minz-.25,yaw:180,w:b.maxx-b.minx},{x:cx,z:b.maxz+.25,yaw:0,w:b.maxx-b.minx},{x:b.minx-.25,z:cz,yaw:-90,w:b.maxz-b.minz},{x:b.maxx+.25,z:cz,yaw:90,w:b.maxz-b.minz}];
+    for(const face of faces){
+      const a=face.yaw*Math.PI/180,tx=Math.cos(a),tz=-Math.sin(a),nx=Math.sin(a),nz=Math.cos(a);
+      if(face.w<2||[-.35,0,.35].every(t=>blocked(face.x+tx*face.w*t+nx*1.2,face.z+tz*face.w*t+nz*1.2)))continue;
+      const count=Math.max(1,Math.ceil(face.w/13)),w=face.w/count;
+      for(let i=0;i<count;i++){
+        const offset=-face.w/2+(i+.5)*w,x=face.x+tx*offset,z=face.z+tz*offset;
+        let parts=[{lo:-w/2,hi:w/2,y:SHOP_IDS.has(b.osm)?5.4:.04,top:h}];
+        // Do not paint over any of the real mall entrance passages.
+        for(const cut of MALL_CORRIDORS){
+          const alongX=Math.abs(tx)>.5,fixed=alongX?z:x;
+          if(fixed<(alongX?cut.minz:cut.minx)-.6||fixed>(alongX?cut.maxz:cut.maxx)+.6)continue;
+          const sign=alongX?tx:tz,origin=alongX?x:z;
+          const a=((alongX?cut.minx:cut.minz)-origin)/sign,b=((alongX?cut.maxx:cut.maxz)-origin)/sign,lo=Math.min(a,b),hi=Math.max(a,b),next=[];
+          for(const q of parts){const l=Math.max(q.lo,lo),r=Math.min(q.hi,hi);if(r<=l||q.y>=3.4){next.push(q);continue;}
+            if(q.lo<l)next.push({...q,hi:l});if(r<q.hi)next.push({...q,lo:r});next.push({...q,lo:l,hi:r,y:3.4});}
+          parts=next;
+        }
+        for(const q of parts)if(q.top>q.y)panels.push({osm:b.osm,x,z,tx,tz,nx,nz,w,h,...q,variant:Math.abs(b.osm)%4});
+      }
     }
   }
-  return {update(p){for(const v of views)v.e.enabled=Math.hypot(p.x-v.x,p.z-v.z)<100;},count:views.length};
+  return panels;
+}
+export function createComicCity(pc,host,{texture}){
+  const textures=Array.from({length:4},(_,i)=>texture((c,w,h)=>drawComicFacade(c,w,h,i),1024,1024));
+  const materials=textures.map(t=>{t.anisotropy=Math.min(4,host.app.graphicsDevice.maxAnisotropy||1);const m=new pc.StandardMaterial();m.useLighting=false;m.diffuse.set(0,0,0);m.emissive.set(1,1,1);m.emissiveMap=t;m.update();return m;});
+  const panels=facadePanels(host.colliders,host.blocked),groups=new Map();
+  for(const p of panels){
+    const key=p.variant+':'+Math.floor(p.x/160)+':'+Math.floor(p.z/160);
+    if(!groups.has(key))groups.set(key,{positions:[],normals:[],uv:[],indices:[],variant:p.variant,minx:Infinity,maxx:-Infinity,minz:Infinity,maxz:-Infinity});
+    const g=groups.get(key),k=g.positions.length/3;
+    for(const [t,y] of [[p.lo,p.y],[p.hi,p.y],[p.hi,p.top],[p.lo,p.top]]){
+      const x=p.x+p.tx*t,z=p.z+p.tz*t;g.positions.push(x,y,z);g.normals.push(p.nx,0,p.nz);g.uv.push(t/p.w+.5,y/p.h);
+      g.minx=Math.min(g.minx,x);g.maxx=Math.max(g.maxx,x);g.minz=Math.min(g.minz,z);g.maxz=Math.max(g.maxz,z);
+    }
+    g.indices.push(k,k+1,k+2,k,k+2,k+3);
+  }
+  const views=[];
+  for(const [key,g] of groups){
+    const mesh=new pc.Mesh(host.app.graphicsDevice);mesh.setPositions(g.positions);mesh.setNormals(g.normals);mesh.setUvs(0,g.uv);mesh.setIndices(g.indices);mesh.update(pc.PRIMITIVE_TRIANGLES);
+    const e=new pc.Entity('Karlstad · fönster, puts och butiksvåning '+key);e.addComponent('render',{meshInstances:[new pc.MeshInstance(mesh,materials[g.variant])]});host.app.root.addChild(e);views.push({...g,e});
+  }
+  const budget={buildings:new Set(panels.map(p=>p.osm)).size,modules:panels.length,staticBatches:views.length,textures:4,textureSize:1024};
+  if(typeof window!=='undefined')window.KarlstadFacades=Object.freeze(budget);
+  return {update(p){for(const v of views){const dx=Math.max(v.minx-p.x,0,p.x-v.maxx),dz=Math.max(v.minz-p.z,0,p.z-v.maxz);v.e.enabled=dx*dx+dz*dz<145*145;}},count:views.length};
 }
