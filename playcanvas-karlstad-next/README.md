@@ -1,3 +1,12 @@
+# Karlstad City — Graphics 2.7.1
+
+## 2.7.1 — playable Mitt i City upper floor + city wayfinding
+
+- **Playable two-level Mitt i City:** both escalators now drive the player's actual floor height. The upper shopping ring holds the player at 5.4 metres, descending the opposite escalator returns smoothly to ground level, and height-aware atrium rails only collide on the upper floor.
+- **Map quick destinations:** Stora Torget, Mitt i City, Domkyrkan, Sandgrund, O’Learys, Värmlands museum, Duvan, Åhléns, Stadshotellet and Biblioteket are direct destination buttons. Choosing one feeds the same cached route to the map, compass, radar and cyan ground arrows.
+- **Street wayfinding:** three low-cost signposts point toward the main destinations around Torget, Mitt i City and the northern Sandgrund route. They share the existing sign texture atlas and static city batch, so they add no per-frame logic or dynamic lights.
+- **Cache correctness:** Journey now imports the current city-rush module under the 2.7.1 cache key, preventing an older 2.6 cached director from leaking into this release.
+
 # Karlstad City — Staden jagar dig (Graphics 2.7)
 
 ## Graphics 2.7 — Mitt i City interior and a more recognisable Karlstad

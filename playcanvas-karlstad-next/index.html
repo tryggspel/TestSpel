@@ -30,7 +30,7 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:9px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.7.0">
+<link rel="stylesheet" href="./last-round.css?v=2.7.1">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
@@ -96,7 +96,7 @@
 </div>
 <div id="roundPanel" role="dialog" aria-modal="true" aria-label="Karlstad efter stängning">
   <section id="round-city-intro" class="round-card city-card" hidden>
-    <div class="episode-label"><span>KARLSTAD / STADSJAKTEN</span><span>2.7</span></div>
+    <div class="episode-label"><span>KARLSTAD / STADSJAKTEN</span><span>2.7.1</span></div>
     <h1>STADEN<br><em>JAGAR DIG.</em></h1>
     <p class="round-lead">Tre minuter. En stad utan tålamod.</p>
     <div class="city-rules"><span><b>01 · SAMLA 800 XP</b>Följ cyanpilarna till gatuhändelser. BYT MÅL öppnar kartan.</span><span><b>02 · TA BUSS 666</b>Ta ratten. Rädda bussen. Upp till 350 XP.</span><span><b>03 · FLY TILL GRÖNT</b>Nå en tryggzon innan tiden tar slut. Livet får inte ta slut!</span></div>
@@ -127,7 +127,7 @@
     <button id="momentRetry" class="round-secondary" hidden>EN BUSSRESA TILL →</button><button id="momentClose" class="round-tertiary">Tillbaka</button>
   </section>
   <section id="round-intro" class="round-card">
-    <div class="episode-label"><span>KARLSTAD / SPECIALUPPDRAG</span><span>2.7</span></div>
+    <div class="episode-label"><span>KARLSTAD / SPECIALUPPDRAG</span><span>2.7.1</span></div>
     <nav id="missionPicker" aria-label="Välj uppdrag">
       <button id="select-sista-rundan" aria-pressed="true"><b>01</b><span>SISTA RUNDAN<small>O’Learys · knuffa</small></span></button>
       <button id="select-fikapanik" aria-pressed="false"><b>02</b><span>FIKAPANIK<small>Torget · 24 zombies</small></span></button>
@@ -195,15 +195,16 @@
   </section>
   <section id="round-map" class="round-card map-card" hidden>
     <div class="episode-label">KARLSTAD / CENTRUM</div><h2>HIT SKA DU.</h2>
-    <canvas id="roundMap" width="500" height="500" aria-label="Karlstadkarta med riktiga gator, Torget, Domkyrkan, biblioteket, Sandgrund och företag"></canvas>
+    <canvas id="roundMap" width="500" height="500" aria-label="Karlstadkarta med riktiga gator och snabbmål till Mitt i City, Sandgrund, Domkyrkan, O’Learys och andra landmärken"></canvas>
     <p class="round-fine map-attribution">Kartunderlag © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap-bidragsgivare</a></p>
     <p id="mapCurrentGoal" class="record"></p>
-    <div id="mapGoals"><p class="round-fine">VÄLJ ETT MÅL · PILARNA VISAR GÅNGVÄGEN</p>
-    <div class="map-choices"><button id="route-event">Aktiv gatuhändelse</button><button id="route-bus">Buss 666</button><button id="route-sun">Följ solen</button><button id="route-sista-rundan">O’Learys</button><button id="route-fikapanik">Fikapanik</button><button id="route-radda-fikat">Rädda fikat</button><button id="route-sandgrund">Sandgrund</button><button id="route-place-domkyrkan">Domkyrkan</button><button id="route-place-biblioteket">Biblioteket</button></div>
+    <div id="mapGoals"><p class="round-fine">SNABBMÅL · VÄLJ EN PLATS SÅ VISAR KARTA, KOMPASS OCH CYANPILAR VÄGEN</p>
+    <div class="map-choices"><button id="route-place-torget">Stora Torget</button><button id="route-place-mitt-i-city">Mitt i City</button><button id="route-place-domkyrkan">Domkyrkan</button><button id="route-place-sandgrund">Sandgrund</button><button id="route-place-olearys">O’Learys</button><button id="route-place-varmlands-museum">Värmlands museum</button><button id="route-place-duvan">Duvan</button><button id="route-place-ahlens">Åhléns</button><button id="route-place-stadshotellet">Stadshotellet</button><button id="route-place-biblioteket">Biblioteket</button></div>
+    <p class="round-fine">UPPDRAG OCH HÄNDELSER</p><div class="map-choices"><button id="route-event">Aktiv gatuhändelse</button><button id="route-bus">Buss 666</button><button id="route-sun">Följ solen</button><button id="route-sista-rundan">Sista rundan · O’Learys</button><button id="route-fikapanik">Fikapanik</button><button id="route-radda-fikat">Rädda fikat</button><button id="route-sandgrund">Dödens akvarell · Sandgrund</button></div>
     <p class="round-fine">VAD VILL DU RÅKA UT FÖR?</p><div class="map-choices"><button id="story-power">⚡ Tänd Karlstad</button><button id="story-news">NWT: Extra!</button><button id="story-bowling">Zombiebowling</button></div><p id="mapStoryHint" class="round-fine"></p></div>
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.7.0"></script>
+<script type="module" src="./app.js?v=2.7.1"></script>
 </body>
 </html>

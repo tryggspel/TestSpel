@@ -1,15 +1,16 @@
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.7.0';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.7.0';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.7.0';
-import {CityJourney} from './journey-rules.mjs?v=2.7.0';
-import {createJourneyView} from './journey-view.js?v=2.7.0';
-import {createBusRide} from './bus-ride.js?v=2.7.0';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.7.0';
-import {createPostcard} from './challenge-postcard.js?v=2.7.0';
-import {CityGuidance} from './city-guidance.mjs?v=2.7.0';
-import {RUSH} from './city-rush.mjs?v=2.7.0';
-import {createCityIdentity} from './city-identity.js?v=2.7.0';
-import {drawCityStreets,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt} from './city-geography.mjs?v=2.7.0';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.7.1';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.7.1';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.7.1';
+import {CityJourney} from './journey-rules.mjs?v=2.7.1';
+import {createJourneyView} from './journey-view.js?v=2.7.1';
+import {createBusRide} from './bus-ride.js?v=2.7.1';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.7.1';
+import {createPostcard} from './challenge-postcard.js?v=2.7.1';
+import {CityGuidance} from './city-guidance.mjs?v=2.7.1';
+import {RUSH} from './city-rush.mjs?v=2.7.1';
+import {createCityIdentity} from './city-identity.js?v=2.7.1';
+import {drawCityStreets,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt} from './city-geography.mjs?v=2.7.1';
+import {QUICK_PLACES_271,place27} from './city-27.mjs?v=2.7.1';
 
 export function createLastRound(pc, host) {
   const $ = id => document.getElementById(id);
@@ -30,6 +31,15 @@ export function createLastRound(pc, host) {
     fikapanik:{...navigation.point({x:8,z:6}),name:'Fikapanik'},
     'radda-fikat':{...navigation.point({x:-12,z:19}),name:'Rädda fikat'},
     sandgrund:{...rounds.sandgrund.layout.spawn,name:'Sandgrund'}
+  };
+  const quickPlaceTarget=id=>{
+    let raw=null,label='';
+    if(id==='torget'){raw={x:0,z:0};label='STORA TORGET';}
+    else if(id==='mitt-i-city'){raw=host.mall;label='MITT I CITY';}
+    else if(id==='domkyrkan'||id==='biblioteket'||id==='sandgrund'){const p=landmarkDestination(id,host.colliders);if(p)return {...p,...navigation.point(p)};}
+    else if(id==='olearys'){const shop=STOREFRONTS.find(s=>s.id==='olearys'),p=shop&&storefrontAnchor(shop,host.colliders);if(p){raw=p;label='O’LEARYS';}}
+    else {const p=place27(id);if(p){raw=p;label=p.name;}}
+    if(!raw)return null;const q=navigation.point(raw);return {...q,id:'place-'+id,kind:'landmark',label,radius:5,action:'DU ÄR FRAMME'};
   };
   let storage=null;try{storage=localStorage;}catch{}
   const journey=new CityJourney(navigation,host.mall,portals,storage);
@@ -428,7 +438,7 @@ export function createLastRound(pc, host) {
   function drawMap() {
     $('mapGoals').hidden=!isJourney();$('mapCurrentGoal').textContent=isJourney()?journey.objective(host.player.getPosition()).label:'DITT PÅGÅENDE UPPDRAG';
     $('route-sun').disabled=!journey.rush.ecology.sun;for(const m of MISSIONS)$('route-'+m.id).disabled=!!journey.rush.challenge||journey.rush.exitReady;
-    for(const place of ['domkyrkan','biblioteket'])$('route-place-'+place).disabled=!!journey.rush.challenge||journey.rush.exitReady;
+    for(const place of QUICK_PLACES_271){const button=$('route-place-'+place.id);if(button)button.disabled=!!journey.rush.challenge||journey.rush.exitReady||!quickPlaceTarget(place.id);}
     for(const kind of ['power','news','bowling'])$('story-'+kind).disabled=!!journey.rush.challenge||journey.rush.exitReady;
     $('mapStoryHint').textContent=journey.rush.challenge?'I utmaningar väljer staden händelserna, lika för alla.':journey.rush.exitReady?'800 XP klara. Följ grönt och säkra rundan.':'Starta en ny händelse i närheten. Ersätter pågående gatuhändelse.';
     const c = $('roundMap').getContext('2d'), size = 500;
@@ -439,9 +449,9 @@ export function createLastRound(pc, host) {
     c.fillStyle = '#52695b';
     for (const b of host.colliders) {const [x, y] = point(b.minx, b.minz); c.fillRect(x, y, (b.maxx - b.minx) * scale, (b.maxz - b.minz) * scale);}
     function dot(x,z,label,color,dx=9,dy=-6){const [px,py]=point(x,z);c.fillStyle=color;c.beginPath();c.arc(px,py,4,0,Math.PI*2);c.fill();c.font='bold 11px sans-serif';c.textAlign=dx<0?'right':'left';c.fillText(label,Math.max(6,Math.min(490,px+dx)),Math.max(14,Math.min(488,py+dy)));c.textAlign='left';}
-    dot(0,0,'TORGET','#f5ecd1',-16,17);dot(host.mall.x,host.mall.z,'MITT I CITY','#c9d7c9',-8,-8);
-    for(const id of ['radhuset','domkyrkan','biblioteket','sandgrund']){const p=landmarkDestination(id,host.colliders);if(p)dot(p.x,p.z,p.label,'#f4dab0',id==='radhuset'?-10:9,id==='radhuset'?-17:-6);}
-    for(const shop of STOREFRONTS){const p=storefrontAnchor(shop,host.colliders);if(p)dot(p.x,p.z,shop.name.toUpperCase(),shop.brand==='olearys'?'#9de2aa':'#b9ddea',shop.id==='pressbyran20'?-9:9,shop.id==='pressbyran20'?18:shop.id==='espresso15'?18:-6);}
+    dot(0,0,'TORGET','#f5ecd1',-16,17);
+    for(const place of QUICK_PLACES_271){if(place.id==='torget')continue;const q=quickPlaceTarget(place.id);if(q)dot(q.x,q.z,q.label,place.id==='olearys'?'#9de2aa':place.id==='mitt-i-city'?'#c9d7c9':'#f4dab0',9,-6);}
+    for(const shop of STOREFRONTS.filter(s=>s.id!=='olearys')){const p=storefrontAnchor(shop,host.colliders);if(p)dot(p.x,p.z,shop.name.toUpperCase(),'#b9ddea',shop.id==='pressbyran20'?-9:9,shop.id==='pressbyran20'?18:shop.id==='espresso15'?18:-6);}
     if(isJourney()){const guide=cityGuide.update(host.player.getPosition(),journey.objective(host.player.getPosition()),host.camera.forward),route=guide.path;c.strokeStyle=guide.color;c.lineWidth=3;c.beginPath();route.forEach((p,i)=>{const a=point(p.x,p.z);i?c.lineTo(...a):c.moveTo(...a);});c.stroke();}
     if(!isPush()){const o=game.objective(host.player.getPosition());dot(o.x,o.z,o.label,'#ffef75');}
     const p = host.player.getPosition(); dot(p.x, p.z, 'DU', '#73ded0');
@@ -565,11 +575,11 @@ export function createLastRound(pc, host) {
   $('route-bus').addEventListener('click',()=>chooseRoute('bus'));
   $('route-sun').addEventListener('click',()=>chooseRoute('sun'));
   for(const m of MISSIONS)$('route-'+m.id).addEventListener('click',()=>chooseRoute('mission',m.id));
-  for(const place of ['domkyrkan','biblioteket'])$('route-place-'+place).addEventListener('click',()=>{
+  for(const place of QUICK_PLACES_271){const button=$('route-place-'+place.id);if(!button)continue;button.addEventListener('click',()=>{
     if(!isJourney()||journey.rush.challenge||journey.rush.exitReady)return;
-    const target=landmarkDestination(place,host.colliders);if(!target)return;
-    journey.landmarkGoal={...target,...navigation.point(target)};chooseRoute('landmark');
-  });
+    const target=quickPlaceTarget(place.id);if(!target)return;
+    journey.landmarkGoal=target;chooseRoute('landmark');toast(place.name.toUpperCase(),'Kompass, karta, radar och cyanpilar visar vägen.',1.8);
+  });}
   for(const kind of ['power','news','bowling'])$('story-'+kind).addEventListener('click',()=>{
     if(!isJourney()||journey.rush.challenge||journey.rush.exitReady)return;
     if(journey.rush.beginStory(kind,host.player.getPosition(),host.camera.forward)){journey.routeMode='hunt';resume();}
@@ -612,10 +622,10 @@ export function createLastRound(pc, host) {
   window.addEventListener('pointerdown',()=>{host.music?.unlock?.();if(isJourney()&&!panel)host.music?.city?.(true);},{once:true});
   document.addEventListener('visibilitychange', () => {if (document.hidden && game.phase === 'playing') pause();});
   $('useBtn').textContent = 'UPPDRAG'; $('jumpBtn').textContent = 'HOPPA';
-  window.KarlstadRound = Object.freeze({version: '2.7.0', snapshot: () => ({phase: game.phase, mode:busRide.active()?'bus':isJourney()?'journey':'mission',score: game.score, energy: game.energy,oneHand:!!host.oneHand?.(),bus:busRide.snapshot(),rush:journey.rush.snapshot(),postcard:lastMoment?{...lastMoment}:null,challengeRequest:request,
+  window.KarlstadRound = Object.freeze({version: '2.7.1', snapshot: () => ({phase: game.phase, mode:busRide.active()?'bus':isJourney()?'journey':'mission',score: game.score, energy: game.energy,oneHand:!!host.oneHand?.(),bus:busRide.snapshot(),rush:journey.rush.snapshot(),postcard:lastMoment?{...lastMoment}:null,challengeRequest:request,
     cityIdentity:cityIdentity.snapshot(),
     guidance:guidance?{goal:{...guidance.goal},next:{...guidance.next},turn:guidance.turn,distance:guidance.distance}:null,
-    journey:{balance:journey.balance,lifetime:journey.lifetime,found:journey.found.size,secrets:journey.secretsFound.size,postcards:[...journey.postcardsFound],safeZones:journey.safeZones.map(s=>({...s})),busStops:journey.busStops.map(s=>({...s})),destination:journey.destination,items:journey.items.filter(t=>!journey.found.has(t.id)).map(t=>({...t})),portals:structuredClone(portals)},
+    journey:{balance:journey.balance,lifetime:journey.lifetime,found:journey.found.size,secrets:journey.secretsFound.size,postcards:[...journey.postcardsFound],safeZones:journey.safeZones.map(s=>({...s})),busStops:journey.busStops.map(s=>({...s})),destination:journey.destination,landmarkGoal:journey.landmarkGoal?{...journey.landmarkGoal}:null,items:journey.items.filter(t=>!journey.found.has(t.id)).map(t=>({...t})),portals:structuredClone(portals)},
     rescued:game.rescued||0,visitors:game.visitors?.map(v=>({...v})),
     practice: game.practice, aimHelp, mission:selectedMission, wave:game.wave||0, health:game.health??100, collected:game.collected||0, guide: currentGuide ? {good: currentGuide.good, stance: currentGuide.stance} : null,
     remaining: game.remaining, seed, captured: game.captured, shots: game.shots, bestChain: game.bestChain,
@@ -756,7 +766,7 @@ export function createLastRound(pc, host) {
       if (game.phase === 'ready') {
         $('mission').textContent='KARLSTAD EFTER STÄNGNING · 3 UPPDRAG';
       } else $('mission').textContent = missionInfo().name.toUpperCase();
-      $('status').textContent = `FPS ${Math.round(host.app.stats.frame.fps)} · ${isJourney()?journey.rush.challenge?.kind==='daily'?'DAGENS KARLSTAD 2.7':'STADSJAKTEN 2.7':missionInfo().place.toUpperCase()}`;
+      $('status').textContent = `FPS ${Math.round(host.app.stats.frame.fps)} · ${isJourney()?journey.rush.challenge?.kind==='daily'?'DAGENS KARLSTAD 2.7.1':'STADSJAKTEN 2.7.1':missionInfo().place.toUpperCase()}`;
       const destination = game.phase === 'playing' ? (isPush()?layout.goal:guidance.goal) : olearyLayout.guard;
       const direction = !isPush()&&game.phase==='playing'?guidance.angle:Math.atan2(destination.x - p.x, destination.z - p.z) - Math.atan2(host.camera.forward.x, host.camera.forward.z);
       $('roundCompassArrow').style.transform = `rotate(${-direction * 180 / Math.PI}deg)`;

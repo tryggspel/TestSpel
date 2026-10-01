@@ -1,10 +1,10 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.7.0';
-import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.7.0';
-import {cityBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.7.0';
-import {createCityArchitecture} from './city-architecture.js?v=2.7.0';
-import {createCityExpansion27} from './city-expansion-27.js?v=2.7.0';
-import {MITT_I_CITY_OSM,applyCity27Colliders} from './city-27.mjs?v=2.7.0';
+import {createLastRound} from './last-round.js?v=2.7.1';
+import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.7.1';
+import {cityBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.7.1';
+import {createCityArchitecture} from './city-architecture.js?v=2.7.1';
+import {createCityExpansion27} from './city-expansion-27.js?v=2.7.1';
+import {MITT_I_CITY_OSM,applyCity27Colliders,mittICityLayout,mittICityFloorAt} from './city-27.mjs?v=2.7.1';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -25,7 +25,7 @@ const PLAYER_RADIUS=0.42;
 const EYE=1.68;
 const CORE_LOCK=Object.freeze({version:'1.3.0',baseline:'1.2.2',lookSensitivity:.12,walkSpeed:7.2,sprintMultiplier:1.55,jumpVelocity:6.2,gravity:16,playerRadius:.42,mobileMaxPixelRatio:1.25,desktopMaxPixelRatio:1.6,maxBuildings:95,detailRadius:92});
 window.KarlstadCoreLock=CORE_LOCK;
-const GRAPHICS_PASS=Object.freeze({version:'2.7.0',core:'1.3.0',mode:'recognisable-karlstad-interiors',heroBudget:9,rule:'no-core-feel-changes'});
+const GRAPHICS_PASS=Object.freeze({version:'2.7.1',core:'1.3.0',mode:'recognisable-karlstad-interiors-wayfinding',heroBudget:9,rule:'no-core-feel-changes'});
 window.KarlstadGraphicsPass=GRAPHICS_PASS;
 const TOUCH_TUNE=Object.freeze({deadzone:.13,expo:.42,maxStick:.34,lookScale:.9});
 const fpsLook=new FpsLook({span:Math.min(window.innerWidth,window.innerHeight)});
@@ -35,6 +35,7 @@ try{const hand=localStorage.getItem('karlstad:one-hand:1');if(hand!==null)oneHan
 let app,player,camera,yaw=54,pitch=-5;
 let vy=0,onGround=true;
 let colliders=[];
+let mallLayout27=null;
 let moveX=0,moveY=0;
 let lookDX=0,lookDY=0;
 const keys=new Set();
@@ -508,23 +509,27 @@ function addBuildings(osm){
   }
   const geometry=createCityArchitecture(pc,app,admitted);
   const city27=createCityExpansion27(pc,app,admitted);
+  mallLayout27=mittICityLayout(admitted);
   colliders=applyCity27Colliders(colliders,admitted);
   window.KarlstadArchitecture=Object.freeze({...geometry,buildings:admitted.length});
   window.KarlstadCity27=city27;
   return admitted.length;
 }
 
-function blocked(x,z){
+function blocked(x,z,y=player?.getPosition?.().y??EYE){
   for(const c of colliders){
-    if(x+PLAYER_RADIUS>c.minx&&x-PLAYER_RADIUS<c.maxx&&z+PLAYER_RADIUS>c.minz&&z-PLAYER_RADIUS<c.maxz) return true;
+    if(!(x+PLAYER_RADIUS>c.minx&&x-PLAYER_RADIUS<c.maxx&&z+PLAYER_RADIUS>c.minz&&z-PLAYER_RADIUS<c.maxz))continue;
+    if(Number.isFinite(c.minY)&&y<c.minY)continue;
+    if(Number.isFinite(c.maxY)&&y>c.maxY)continue;
+    return true;
   }
   return false;
 }
 function tryMove(dx,dz){
   const p=player.getPosition();
   const nx=p.x+dx,nz=p.z+dz;
-  if(!blocked(nx,p.z)) p.x=nx;
-  if(!blocked(p.x,nz)) p.z=nz;
+  if(!blocked(nx,p.z,p.y)) p.x=nx;
+  if(!blocked(p.x,nz,p.y)) p.z=nz;
   player.setPosition(p);
 }
 
@@ -627,10 +632,21 @@ function update(dt){
   const dz=(-ix*Math.sin(a)+iz*Math.cos(a))*speed*dt;
   tryMove(dx,dz);
 
+  const p=player.getPosition();
+  let floor=mallLayout27?mittICityFloorAt(mallLayout27,p.x,p.z,Math.max(0,p.y-EYE)):0;
+  let floorEye=EYE+floor;
+  if(onGround){
+    if(p.y>floorEye+.65)onGround=false;
+    else{p.y=floorEye;vy=0;}
+  }
   if(onGround&&keys.has('Space')){vy=CORE_LOCK.jumpVelocity;onGround=false;}
-  vy-=CORE_LOCK.gravity*dt;
-  const p=player.getPosition(); p.y+=vy*dt;
-  if(p.y<=EYE){p.y=EYE;vy=0;onGround=true;} player.setPosition(p);
+  if(!onGround){
+    vy-=CORE_LOCK.gravity*dt;p.y+=vy*dt;
+    floor=mallLayout27?mittICityFloorAt(mallLayout27,p.x,p.z,Math.max(0,p.y-EYE)):0;
+    floorEye=EYE+floor;
+    if(p.y<=floorEye){p.y=floorEye;vy=0;onGround=true;}
+  }
+  player.setPosition(p);
 
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
   const d=Math.hypot(p.x-mx,p.z-mz);
