@@ -18,12 +18,13 @@ export class CityGuidance {
     const anchor=via[0]||goal;
     const start=this.nav.nearest(p),end=this.nav.nearest(anchor);
     const viaKey=via.map(q=>Math.round(q.x*10)+','+Math.round(q.z*10)).join(';');
-    const key=start.id+':'+end.id+':'+(goal.id||goal.kind||goal.label)+':'+viaKey;
+    const direct=via.length&&this.nav.clear(p,goal)?1:0;
+    const key=start.id+':'+end.id+':'+(goal.id||goal.kind||goal.label)+':'+viaKey+':'+direct;
     if(key!==this.key){
       this.key=key;
       if(goal.kind==='wait')this.path=[];
       else if(via.length){
-        if(this.nav.clear(p,goal))this.path=[{x:goal.x,z:goal.z}];
+        if(direct)this.path=[{x:goal.x,z:goal.z}];
         else{
           this.path=[...this.nav.path(p,via[0])];
           for(const q of via)appendUnique(this.path,q);
