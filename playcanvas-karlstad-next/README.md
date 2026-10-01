@@ -1,6 +1,6 @@
-# Karlstad City — Graphics & shops 2.8.0
+# Karlstad City — Graphics & shops 2.8.1
 
-## 2.8.0 — sharper Karlstad, a playable mall and helpful zombie clerks
+## 2.8.1 — sharper Karlstad, a playable mall and helpful zombie clerks
 
 - 81 ordinary OSM blocks now have full-width, modular comic facades: window frames, cornices, flower boxes, awnings and shop displays. Four cached 1024² textures and 37 spatial mesh batches replace the former 16-house, two-face, 24-metre coverage limit. No textures are repainted while walking. Mall passages are cut out of the artwork.
 - Nine reference-based landmark volumes include Rådhuset, Domkyrkan, Sandgrund, Stadsbiblioteket, Duvan, Åhléns, Stadshotellet with its river wing, and Värmlands museum. Their coordinates, the streets, destinations and map share one OSM projection. Generic facades are stylized; this is not a surveyed replica of every window.
@@ -9,7 +9,7 @@
 - Four friendly clerks, including a helper outside Pressbyrån, offer small find-and-return encounters. Same interaction button / E: **HJÄLP → LÄMNA**, or **LUGNA** when they become stressed. Each pays 80 XP and 20 solar energy once per run; they never enter the hostile actor or auto-aim pools. No new movement controls or modal dialogue.
 - Sandgrundsudden follows the real peninsula, paths and piers with a blocked river/pond, planted valleys, a northern secret and bounded ambushes. Upper-floor treasure requires the correct floor. Cross-floor attacks are rejected.
 - Blackouts last at most four seconds and share a 150-second cooldown, including power events. The ordinary first blackout cannot occur before 45 seconds.
-- The 2.7.6 clickable map pins are retained alongside centre/peninsula zoom and indoor maps. **GÅ DIREKT IN I MITT I CITY** is available in **UTFORSKA STADEN**; scored rounds use the walking route. Named destinations remain selectable during challenges until the escape goal opens.
+- The 2.7.6 clickable map pins are retained alongside centre/peninsula zoom and indoor maps. **GÅ DIREKT IN I MITT I CITY** remains available in exploration, the timed hunt and daily/friend challenges until the escape goal opens. The walking route and named destinations remain available as before. The direct shortcut does not reset score, energy, challenge seed or elapsed time.
 
 ### Validation / performance boundaries
 
