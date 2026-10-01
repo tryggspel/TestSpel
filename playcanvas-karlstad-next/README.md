@@ -1,3 +1,12 @@
+# Karlstad City — Graphics 2.7.2
+
+## 2.7.2 — tappable map destinations on mobile
+
+- Landmark dots on the actual map canvas are now interactive, not just visual. Tap Mitt i City, Sandgrund, Domkyrkan, O’Learys, Stora Torget or another quick destination directly on the map.
+- Interactive map pins use an approximately 48 px hit diameter on the 500 px canvas and a larger visible marker, while the named quick-destination buttons remain below the map as a fallback.
+- Pointer movement greater than 14 CSS pixels is treated as scrolling rather than a selection, so vertical map-card scrolling does not accidentally choose a destination.
+- Choosing a map pin still feeds the same destination into compass, radar and cyan ground arrows.
+
 # Karlstad City — Graphics 2.7.1
 
 ## 2.7.1 — playable Mitt i City upper floor + city wayfinding
