@@ -42,7 +42,7 @@ export function mittICityLayout(buildings=[]){
 const asLayout=input=>Array.isArray(input)?mittICityLayout(input):input;
 const wall=(name,minx,maxx,minz,maxz,extra={})=>({name,minx,maxx,minz,maxz,height:6,source:'city27-mitt-i-city',...extra});
 export function mittICityColliders(buildings=[]){
-  const b=mittICityLayout(buildings),gap=7.2,t=.65,x=(b.minx+b.maxx)/2,z=(b.minz+b.maxz)/2;
+  const b=mittICityLayout(buildings),gap=10.5,t=.65,x=(b.minx+b.maxx)/2,z=(b.minz+b.maxz)/2;
   const leftEnd=x-gap/2,rightStart=x+gap/2,topEnd=z-gap/2,bottomStart=z+gap/2;
   return [
     wall('Mitt i City · nordvägg A',b.minx,leftEnd,b.minz-t,b.minz+t),wall('Mitt i City · nordvägg B',rightStart,b.maxx,b.minz-t,b.minz+t),
