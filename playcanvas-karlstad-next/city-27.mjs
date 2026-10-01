@@ -1,4 +1,4 @@
-export const CITY27_VERSION='2.7.1';
+export const CITY27_VERSION='2.7.5';
 export const ORIGIN27=Object.freeze({lat:59.380767,lon:13.50295});
 export const MITT_I_CITY_OSM=550299956;
 export const BLACKOUT_27=Object.freeze({seconds:4,cooldown:150});
@@ -51,6 +51,17 @@ export function mittICityColliders(buildings=[]){
     wall('Mitt i City · östvägg A',b.maxx-t,b.maxx+t,b.minz,topEnd),wall('Mitt i City · östvägg B',b.maxx-t,b.maxx+t,bottomStart,b.maxz)
   ];
 }
+export function mittICityEntrances(input=[]){
+  const b=asLayout(input),outside=3.8,inside=5.2,threshold=.9;
+  if(!b)return [];
+  return [
+    {id:'north',label:'NORDENTRÉ',outside:{x:b.x,z:b.minz-outside},threshold:{x:b.x,z:b.minz+threshold},inside:{x:b.x,z:b.minz+inside},sign:{x:b.x,y:4.75,z:b.minz-.32,yaw:0}},
+    {id:'south',label:'SYDENTRÉ',outside:{x:b.x,z:b.maxz+outside},threshold:{x:b.x,z:b.maxz-threshold},inside:{x:b.x,z:b.maxz-inside},sign:{x:b.x,y:4.75,z:b.maxz+.32,yaw:0}},
+    {id:'west',label:'VÄSTENTRÉ',outside:{x:b.minx-outside,z:b.z},threshold:{x:b.minx+threshold,z:b.z},inside:{x:b.minx+inside,z:b.z},sign:{x:b.minx-.32,y:4.75,z:b.z,yaw:90}},
+    {id:'east',label:'ÖSTENTRÉ',outside:{x:b.maxx+outside,z:b.z},threshold:{x:b.maxx-threshold,z:b.z},inside:{x:b.maxx-inside,z:b.z},sign:{x:b.maxx+.32,y:4.75,z:b.z,yaw:90}}
+  ];
+}
+
 export function mittICityUpperRailColliders(input=[]){
   const b=asLayout(input),cfg=MALL_INTERIOR_271,aw=Math.max(34,b.w)*cfg.upperWidthFactor,ad=Math.max(28,b.d)*cfg.upperDepthFactor;
   const hx=Math.max(.8,(aw-2*cfg.ring)/2),hz=Math.max(.8,(ad-2*cfg.ring)/2),t=.16,gap=1.65;
