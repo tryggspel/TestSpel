@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {CITY27_VERSION,MITT_I_CITY_OSM,BLACKOUT_27,MALL_INTERIOR_271,PLACES27,QUICK_PLACES_271,city27Point,mittICityLayout,mittICityEntrances,mittICityColliders,mittICityUpperRailColliders,mittICityFloorAt,applyCity27Colliders,pointBlockedBy,canBlackout27} from '../city-27.mjs';
 const mall={osm:MITT_I_CITY_OSM,minx:-20,maxx:20,minz:-16,maxz:16,cx:0,cz:0};
 
-test('2.7.5 identifies the graphics release',()=>assert.equal(CITY27_VERSION,'2.7.5'));
+test('2.7.6 identifies the graphics release',()=>assert.equal(CITY27_VERSION,'2.7.6'));
+test('2.7.6 uses the current Mitt i City OSM retail shell',()=>assert.equal(MITT_I_CITY_OSM,234271401));
+
 test('2.7 contains the requested Karlstad landmarks',()=>assert.deepEqual(PLACES27.map(p=>p.id),['mitt-i-city','duvan','ahlens','stadshotellet','varmlands-museum','sandgrundsudden']));
 test('2.7.5 exposes the requested map shortcuts',()=>assert.deepEqual(QUICK_PLACES_271.map(p=>p.id),['torget','mitt-i-city','domkyrkan','sandgrund','olearys','varmlands-museum','duvan','ahlens','stadshotellet','biblioteket']));
 test('Karlstad projection keeps Stora Torget at the origin',()=>{const p=city27Point(13.50295,59.380767);assert.ok(Math.abs(p.x)<1e-9);assert.ok(Math.abs(p.z)<1e-9);});
