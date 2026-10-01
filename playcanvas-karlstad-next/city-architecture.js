@@ -1,4 +1,5 @@
-import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.6.0';
+import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.7.6';
+import {MITT_I_CITY_OSM} from './city-27.mjs?v=2.7.6';
 
 // Static, vertex-coloured geometry: one draw call per landmark, one for streets,
 // one for rooflines and storefront frames. No lights, shadows or per-frame work.
@@ -61,7 +62,7 @@ export function createCityArchitecture(pc,app,buildings){
 
   const batches=[];const town=new ComicMesh();
   for(const b of buildings){
-    if(IDENTITY_IDS.has(b.osm))continue;
+    if(IDENTITY_IDS.has(b.osm)||Number(b.osm)===MITT_I_CITY_OSM)continue;
     if(b.dist<195){
       town.box(b.cx,b.h-.1,b.cz,b.sx+.18,.25,b.sz+.18,'#2b4448');
       town.box(b.cx,b.h-.5,b.cz,b.sx+.26,.20,b.sz+.26,'#e9dcc0');
