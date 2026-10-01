@@ -1,4 +1,4 @@
-import {CITY27_VERSION,PLACES27,place27,city27Point,mittICityLayout,MALL_INTERIOR_271} from './city-27.mjs?v=2.7.1';
+import {CITY27_VERSION,PLACES27,place27,city27Point,mittICityLayout,mittICityEntrances,MALL_INTERIOR_271} from './city-27.mjs?v=2.7.5';
 
 const rgb=hex=>[parseInt(hex.slice(1,3),16)/255,parseInt(hex.slice(3,5),16)/255,parseInt(hex.slice(5,7),16)/255,1];
 class Batch27{
@@ -87,6 +87,7 @@ function createSigns(pc,app,buildings){
     {...place27('ahlens'),text:'ÅHLÉNS',y:9.0,w:10,h:1.6,yaw:0},
     {...place27('stadshotellet'),text:'STADSHOTELLET',y:11.0,w:15,h:1.6,yaw:90},
     {...place27('varmlands-museum'),text:'VÄRMLANDS MUSEUM',y:10.0,w:18,h:1.7,yaw:0},
+    ...mittICityEntrances(mall).map(e=>({text:'INGÅNG',...e.sign,w:7.2,h:.9})),
     ...wayfindingPosts(buildings).flatMap(p=>p.signs)
   ];
   const rows=labelData.length,canvas=document.createElement('canvas');canvas.width=1024;canvas.height=rows*128;const c=canvas.getContext('2d');
@@ -100,9 +101,9 @@ function createSigns(pc,app,buildings){
     normals.push(0,0,1,0,0,1,0,0,1,0,0,1);const v0=1-(i+1)/rows,v1=1-i/rows;uvs.push(0,v0,1,v0,1,v1,0,v1);indices.push(k,k+1,k+2,k,k+2,k+3);
   });
   const mesh=new pc.Mesh(app.graphicsDevice);mesh.setPositions(positions);mesh.setNormals(normals);mesh.setUvs(0,uvs);mesh.setIndices(indices);mesh.update(pc.PRIMITIVE_TRIANGLES);
-  const e=new pc.Entity('Karlstad 2.7.1 · landmärken och vägvisning');e.addComponent('render',{meshInstances:[new pc.MeshInstance(mesh,material)]});app.root.addChild(e);return e;
+  const e=new pc.Entity('Karlstad 2.7.5 · landmärken, entréer och vägvisning');e.addComponent('render',{meshInstances:[new pc.MeshInstance(mesh,material)]});app.root.addChild(e);return e;
 }
 export function createCityExpansion27(pc,app,buildings=[]){
-  const batch=new Batch27();const mall=drawMittICity(batch,buildings);drawLandmarks(batch);for(const p of wayfindingPosts(buildings))batch.box(p.x,1.45,p.z,.18,2.9,.18,'#263f46');batch.finish(pc,app,'Karlstad · Graphics 2.7.1');createSigns(pc,app,buildings);
+  const batch=new Batch27();const mall=drawMittICity(batch,buildings);drawLandmarks(batch);for(const p of wayfindingPosts(buildings))batch.box(p.x,1.45,p.z,.18,2.9,.18,'#263f46');batch.finish(pc,app,'Karlstad · Graphics 2.7.5');createSigns(pc,app,buildings);
   return Object.freeze({version:CITY27_VERSION,staticDrawCalls:2,places:PLACES27.length,wayfindingPosts:3,mall:{x:mall.x,z:mall.z,w:mall.w,d:mall.d,entrances:4,upperFloor:true,upperHeight:MALL_INTERIOR_271.upper,escalators:2}});
 }
