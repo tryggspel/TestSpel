@@ -1,16 +1,16 @@
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.7.4';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.7.4';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.7.4';
-import {CityJourney} from './journey-rules.mjs?v=2.7.4';
-import {createJourneyView} from './journey-view.js?v=2.7.4';
-import {createBusRide} from './bus-ride.js?v=2.7.4';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.7.4';
-import {createPostcard} from './challenge-postcard.js?v=2.7.4';
-import {CityGuidance} from './city-guidance.mjs?v=2.7.4';
-import {RUSH} from './city-rush.mjs?v=2.7.4';
-import {createCityIdentity} from './city-identity.js?v=2.7.4';
-import {drawCityStreets,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt} from './city-geography.mjs?v=2.7.4';
-import {QUICK_PLACES_271,place27} from './city-27.mjs?v=2.7.4';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.7.5';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.7.5';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.7.5';
+import {CityJourney} from './journey-rules.mjs?v=2.7.5';
+import {createJourneyView} from './journey-view.js?v=2.7.5';
+import {createBusRide} from './bus-ride.js?v=2.7.5';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.7.5';
+import {createPostcard} from './challenge-postcard.js?v=2.7.5';
+import {CityGuidance} from './city-guidance.mjs?v=2.7.5';
+import {RUSH} from './city-rush.mjs?v=2.7.5';
+import {createCityIdentity} from './city-identity.js?v=2.7.5';
+import {drawCityStreets,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt} from './city-geography.mjs?v=2.7.5';
+import {QUICK_PLACES_271,place27,mittICityEntrances} from './city-27.mjs?v=2.7.5';
 
 export function createLastRound(pc, host) {
   const $ = id => document.getElementById(id);
@@ -32,10 +32,24 @@ export function createLastRound(pc, host) {
     'radda-fikat':{...navigation.point({x:-12,z:19}),name:'Rädda fikat'},
     sandgrund:{...rounds.sandgrund.layout.spawn,name:'Sandgrund'}
   };
+  const mallRouteLength=(from,route,to)=>{let total=0,prev=from;for(const q of route){total+=Math.hypot(q.x-prev.x,q.z-prev.z);prev=q;}return total+Math.hypot(to.x-prev.x,to.z-prev.z);};
+  const mittICityShortcut=()=>{
+    const layout=host.mallLayout||{x:host.mall.x,z:host.mall.z,minx:host.mall.x-21,maxx:host.mall.x+21,minz:host.mall.z-16,maxz:host.mall.z+16,w:42,d:32};
+    const player=host.player.getPosition(),inside=player.x>layout.minx&&player.x<layout.maxx&&player.z>layout.minz&&player.z<layout.maxz;
+    if(inside)return {x:layout.x,z:layout.z,id:'place-mitt-i-city',kind:'landmark',label:'MITT I CITY · ATRIET',radius:4.5,action:'DU ÄR INNE'};
+    let best=null,bestDistance=Infinity;
+    for(const entry of mittICityEntrances(layout)){
+      const route=navigation.path(player,entry.outside);if(!route.length)continue;
+      const length=mallRouteLength(player,route,entry.outside);
+      if(length<bestDistance){best=entry;bestDistance=length;}
+    }
+    const entry=best||mittICityEntrances(layout)[0];if(!entry)return null;
+    return {x:entry.inside.x,z:entry.inside.z,id:'place-mitt-i-city',kind:'landmark',label:'MITT I CITY · GÅ IN',radius:3.2,action:'DU ÄR INNE',entrance:entry.id,via:[entry.outside,entry.threshold]};
+  };
   const quickPlaceTarget=id=>{
     let raw=null,label='';
     if(id==='torget'){raw={x:0,z:0};label='STORA TORGET';}
-    else if(id==='mitt-i-city'){raw=host.mall;label='MITT I CITY';}
+    else if(id==='mitt-i-city')return mittICityShortcut();
     else if(id==='domkyrkan'||id==='biblioteket'||id==='sandgrund'){const p=landmarkDestination(id,host.colliders);if(p)return {...p,...navigation.point(p)};}
     else if(id==='olearys'){const shop=STOREFRONTS.find(s=>s.id==='olearys'),p=shop&&storefrontAnchor(shop,host.colliders);if(p){raw=p;label='O’LEARYS';}}
     else {const p=place27(id);if(p){raw=p;label=p.name;}}
@@ -644,7 +658,7 @@ export function createLastRound(pc, host) {
   window.addEventListener('pointerdown',()=>{host.music?.unlock?.();if(isJourney()&&!panel)host.music?.city?.(true);},{once:true});
   document.addEventListener('visibilitychange', () => {if (document.hidden && game.phase === 'playing') pause();});
   $('useBtn').textContent = 'UPPDRAG'; $('jumpBtn').textContent = 'HOPPA';
-  window.KarlstadRound = Object.freeze({version: '2.7.4', snapshot: () => ({phase: game.phase, mode:busRide.active()?'bus':isJourney()?'journey':'mission',score: game.score, energy: game.energy,oneHand:!!host.oneHand?.(),bus:busRide.snapshot(),rush:journey.rush.snapshot(),postcard:lastMoment?{...lastMoment}:null,challengeRequest:request,
+  window.KarlstadRound = Object.freeze({version: '2.7.5', snapshot: () => ({phase: game.phase, mode:busRide.active()?'bus':isJourney()?'journey':'mission',score: game.score, energy: game.energy,oneHand:!!host.oneHand?.(),bus:busRide.snapshot(),rush:journey.rush.snapshot(),postcard:lastMoment?{...lastMoment}:null,challengeRequest:request,
     cityIdentity:cityIdentity.snapshot(),
     guidance:guidance?{goal:{...guidance.goal},next:{...guidance.next},turn:guidance.turn,distance:guidance.distance}:null,
     journey:{balance:journey.balance,lifetime:journey.lifetime,found:journey.found.size,secrets:journey.secretsFound.size,postcards:[...journey.postcardsFound],safeZones:journey.safeZones.map(s=>({...s})),busStops:journey.busStops.map(s=>({...s})),destination:journey.destination,landmarkGoal:journey.landmarkGoal?{...journey.landmarkGoal}:null,items:journey.items.filter(t=>!journey.found.has(t.id)).map(t=>({...t})),portals:structuredClone(portals)},
@@ -788,7 +802,7 @@ export function createLastRound(pc, host) {
       if (game.phase === 'ready') {
         $('mission').textContent='KARLSTAD EFTER STÄNGNING · 3 UPPDRAG';
       } else $('mission').textContent = missionInfo().name.toUpperCase();
-      $('status').textContent = `FPS ${Math.round(host.app.stats.frame.fps)} · ${isJourney()?journey.rush.challenge?.kind==='daily'?'DAGENS KARLSTAD 2.7.4':'STADSJAKTEN 2.7.4':missionInfo().place.toUpperCase()}`;
+      $('status').textContent = `FPS ${Math.round(host.app.stats.frame.fps)} · ${isJourney()?journey.rush.challenge?.kind==='daily'?'DAGENS KARLSTAD 2.7.5':'STADSJAKTEN 2.7.5':missionInfo().place.toUpperCase()}`;
       const destination = game.phase === 'playing' ? (isPush()?layout.goal:guidance.goal) : olearyLayout.guard;
       const direction = !isPush()&&game.phase==='playing'?guidance.angle:Math.atan2(destination.x - p.x, destination.z - p.z) - Math.atan2(host.camera.forward.x, host.camera.forward.z);
       $('roundCompassArrow').style.transform = `rotate(${-direction * 180 / Math.PI}deg)`;
