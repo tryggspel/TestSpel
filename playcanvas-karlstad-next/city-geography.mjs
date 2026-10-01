@@ -27,7 +27,7 @@ export const STREET_SIGNS=Object.freeze([
   [-51,-262,'VÄSTRA TORGGATAN',0],[-43,-375,'VÄSTRA TORGGATAN',0],
   [-66,164,'DROTTNINGGATAN',90]
 ]);
-const reserved=new Set([...IDENTITY_IDS,...SHOP_IDS]);
+const reserved=new Set([...IDENTITY_IDS,...SHOP_IDS,234271401]);
 export function cityBuildings(osm,max=95){
   const all=[];
   for(const e of osm.elements||[]){
