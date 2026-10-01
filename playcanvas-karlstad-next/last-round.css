@@ -287,3 +287,7 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
 #cityStreet{display:block;color:#b9d3c9;font:700 8px/1.4 system-ui;letter-spacing:.09em;margin-bottom:3px}
 .map-card canvas{max-height:none;aspect-ratio:1}.map-attribution a{color:#c7e4d0;text-underline-offset:2px}
 @media(max-height:650px){#cityStreet{font-size:7px;margin-bottom:1px}}
+
+.map-teleport{display:block;width:100%;min-height:52px;margin:10px 0 4px;border:2px solid #dff6d1;border-radius:6px;background:#58a744;color:#fff;font:1000 12px/1.15 system-ui;letter-spacing:.04em;box-shadow:0 4px 0 #2d6925;touch-action:manipulation}
+.map-teleport:hover{background:#68b952}.map-teleport:active{transform:translateY(2px);box-shadow:0 2px 0 #2d6925}.map-teleport:disabled{opacity:.38;transform:none;box-shadow:none}
+.map-card p.map-teleport-hint{margin:5px 0 13px;color:#b9d7b0;font-size:8px;line-height:1.45}
