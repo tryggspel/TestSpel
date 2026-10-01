@@ -1,3 +1,26 @@
+# Karlstad City — Graphics & shops 2.8.0
+
+## 2.8.0 — sharper Karlstad, a playable mall and helpful zombie clerks
+
+- 81 ordinary OSM blocks now have full-width, modular comic facades: window frames, cornices, flower boxes, awnings and shop displays. Four cached 1024² textures and 37 spatial mesh batches replace the former 16-house, two-face, 24-metre coverage limit. No textures are repainted while walking. Mall passages are cut out of the artwork.
+- Nine reference-based landmark volumes include Rådhuset, Domkyrkan, Sandgrund, Stadsbiblioteket, Duvan, Åhléns, Stadshotellet with its river wing, and Värmlands museum. Their coordinates, the streets, destinations and map share one OSM projection. Generic facades are stylized; this is not a surveyed replica of every window.
+- Mitt i City has four street entrances, an atrium/food court, an upper shopping loop and two continuously moving escalators. Walk onto a ramp to ride it; no extra controls. Rails prevent sideways falls and the upper floor has separate pathfinding. The map shows the floor and the route back down.
+- Enter **Coop City and Cervera on plan 0**, and **Clas Ohlson on plan 1**. Rooms have shelves, counters and friendly fictional zombie staff. Tenant names/floors and the three original logos are from the current centre directory; room layouts are a playable interpretation, not an exact indoor survey. Eight additional tenant fronts remain visible.
+- Four friendly clerks, including a helper outside Pressbyrån, offer small find-and-return encounters. Same interaction button / E: **HJÄLP → LÄMNA**, or **LUGNA** when they become stressed. Each pays 80 XP and 20 solar energy once per run; they never enter the hostile actor or auto-aim pools. No new movement controls or modal dialogue.
+- Sandgrundsudden follows the real peninsula, paths and piers with a blocked river/pond, planted valleys, a northern secret and bounded ambushes. Upper-floor treasure requires the correct floor. Cross-floor attacks are rejected.
+- Blackouts last at most four seconds and share a 150-second cooldown, including power events. The ordinary first blackout cannot occur before 45 seconds.
+- The 2.7.6 clickable map pins are retained alongside centre/peninsula zoom and indoor maps. **GÅ DIREKT IN I MITT I CITY** is available in **UTFORSKA STADEN**; scored rounds use the walking route. Named destinations remain selectable during challenges until the escape goal opens.
+
+### Validation / performance boundaries
+
+- Main: 83 Node tests; Live City branch: 91. Includes actual OSM reachability, all four entrances, both escalators, shop entry/counters, upper-floor collection, friendly rewards/stress, blackout cooldown and existing mission/bus/daily rules.
+- Actual PlayCanvas 2.22.4 API integration: movement, four missions, bus balance, daily sharing, guidance and sign UV/backfaces. Browser/WebGL checks used Chromium + SwiftShader: no page errors; map pin → mall direct entry → clerk request → pickup → return produced exactly +80 XP.
+- Movement core remains 1.3.0 (walk 7.2, look .12, radius .42), mobile DPR cap 1.25, desktop 1.6, 95 buildings, six director enemies / twelve pooled hostile views. Four fixed friendly views have distance culling and no pathfinding. The mall uses two static batches and two moving-step meshes; park geometry uses three static batches. No real-time shadows or reflections were added.
+- Physical iPhone 11 frame rate has not been measured in this environment. Software WebGL verifies rendering, not device performance.
+- Source details: [art/GEOGRAPHY-SOURCES.md](art/GEOGRAPHY-SOURCES.md).
+
+## Historical release notes
+
 # Karlstad City — Graphics / Navigation 2.7.6
 
 ## 2.7.6 — current Mitt i City shell, recognizable facade and direct map entry

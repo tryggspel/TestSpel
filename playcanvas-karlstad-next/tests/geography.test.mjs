@@ -47,5 +47,5 @@ test('a chosen architectural destination stays selected during chaos, then yield
   const g=new CityJourney(nav,cityPoint(13.50055,59.37988),portals);g.rush.start('free');g.routeMode='landmark';g.landmarkGoal=landmarkDestination('domkyrkan',buildings);
   g.rush.beginStory('news',{x:0,z:14},{x:0,z:-1});assert.equal(g.objective().id,'place-domkyrkan');
   g.rush.mode='timed';g.reward(800);assert.equal(g.objective().kind,'escape');
-  assert.equal(CHALLENGE_RULES,3);assert.ok(challengeRequest('?daily=2026-09-30&rules=2').error,'Previous map scores must not be presented as comparable');
+  assert.equal(CHALLENGE_RULES,4);assert.ok(challengeRequest('?daily=2026-09-30&rules=3').error,'Previous map scores must not be presented as comparable');
 });

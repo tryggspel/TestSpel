@@ -1,16 +1,20 @@
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.7.6';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.7.6';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.7.6';
-import {CityJourney} from './journey-rules.mjs?v=2.7.6';
-import {createJourneyView} from './journey-view.js?v=2.7.6';
-import {createBusRide} from './bus-ride.js?v=2.7.6';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.7.6';
-import {createPostcard} from './challenge-postcard.js?v=2.7.6';
-import {CityGuidance} from './city-guidance.mjs?v=2.7.6';
-import {RUSH} from './city-rush.mjs?v=2.7.6';
-import {createCityIdentity} from './city-identity.js?v=2.7.6';
-import {drawCityStreets,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt} from './city-geography.mjs?v=2.7.6';
-import {QUICK_PLACES_271,place27,mittICityEntrances} from './city-27.mjs?v=2.7.6';
+import {FriendlyClerks} from './friendly-clerks.mjs?v=2.8.0';
+import {createFriendlyView} from './friendly-view.js?v=2.8.0';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.8.0';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.8.0';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.8.0';
+import {CityJourney} from './journey-rules.mjs?v=2.8.0';
+import {createJourneyView} from './journey-view.js?v=2.8.0';
+import {createBusRide} from './bus-ride.js?v=2.8.0';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.8.0';
+import {createPostcard} from './challenge-postcard.js?v=2.8.0';
+import {CityGuidance} from './city-guidance.mjs?v=2.8.0';
+import {RUSH} from './city-rush.mjs?v=2.8.0';
+import {createCityIdentity} from './city-identity.js?v=2.8.0';
+import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.8.0';
+
+import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.8.0';
+import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.8.0';
 
 export function createLastRound(pc, host) {
   const $ = id => document.getElementById(id);
@@ -21,7 +25,8 @@ export function createLastRound(pc, host) {
   const target = Math.max(0, Math.min(999999, Number(params.get('target')) || 0));
   const olearyLayout = layoutFor(seed, host.origin);
   const navigation = new CityNavigation(host.blocked);
-  const cityGuide=new CityGuidance(navigation);let guidance=null;
+  const cityGuide=new CityGuidance(navigation),mallGuide=createMallGuidance(cityGuide);let guidance=null,mapWide=false;
+  const guideFor=(p,goal)=>mallGuide.update(p,goal,host.camera.forward,host.mallWalk?.snapshot());
   const rounds = {'sista-rundan':new LastRound(olearyLayout,host.blocked),fikapanik:new CityMission('fikapanik',navigation,host.mall,seed),'radda-fikat':new CityMission('radda-fikat',navigation,host.mall,seed)};
   const galleryBox=host.colliders.find(b=>/Sandgrund|Lars Lerin/i.test(b.name));
   const gallerySite=galleryBox?{x:(galleryBox.minx+galleryBox.maxx)/2,z:galleryBox.maxz+9}:{x:-13,z:-397};
@@ -32,31 +37,14 @@ export function createLastRound(pc, host) {
     'radda-fikat':{...navigation.point({x:-12,z:19}),name:'Rädda fikat'},
     sandgrund:{...rounds.sandgrund.layout.spawn,name:'Sandgrund'}
   };
-  const mallRouteLength=(from,route,to)=>{let total=0,prev=from;for(const q of route){total+=Math.hypot(q.x-prev.x,q.z-prev.z);prev=q;}return total+Math.hypot(to.x-prev.x,to.z-prev.z);};
-  const mittICityShortcut=()=>{
-    const layout=host.mallLayout||{x:host.mall.x,z:host.mall.z,minx:host.mall.x-21,maxx:host.mall.x+21,minz:host.mall.z-16,maxz:host.mall.z+16,w:42,d:32};
-    const player=host.player.getPosition(),inside=player.x>layout.minx&&player.x<layout.maxx&&player.z>layout.minz&&player.z<layout.maxz;
-    if(inside)return {x:layout.x,z:layout.z,id:'place-mitt-i-city',kind:'landmark',label:'MITT I CITY · ATRIET',radius:4.5,action:'DU ÄR INNE'};
-    let best=null,bestDistance=Infinity;
-    for(const entry of mittICityEntrances(layout)){
-      const route=navigation.path(player,entry.outside);if(!route.length)continue;
-      const length=mallRouteLength(player,route,entry.outside);
-      if(length<bestDistance){best=entry;bestDistance=length;}
-    }
-    const entry=best||mittICityEntrances(layout)[0];if(!entry)return null;
-    return {x:entry.inside.x,z:entry.inside.z,id:'place-mitt-i-city',kind:'landmark',label:'MITT I CITY · GÅ IN',radius:3.2,action:'DU ÄR INNE',entrance:entry.id,via:[entry.outside,entry.threshold]};
-  };
-  const quickPlaceTarget=id=>{
-    let raw=null,label='';
-    if(id==='torget'){raw={x:0,z:0};label='STORA TORGET';}
-    else if(id==='mitt-i-city')return mittICityShortcut();
-    else if(id==='domkyrkan'||id==='biblioteket'||id==='sandgrund'){const p=landmarkDestination(id,host.colliders);if(p)return {...p,...navigation.point(p)};}
-    else if(id==='olearys'){const shop=STOREFRONTS.find(s=>s.id==='olearys'),p=shop&&storefrontAnchor(shop,host.colliders);if(p){raw=p;label='O’LEARYS';}}
-    else {const p=place27(id);if(p){raw=p;label=p.name;}}
-    if(!raw)return null;const q=navigation.point(raw);return {...q,id:'place-'+id,kind:'landmark',label,radius:5,action:'DU ÄR FRAMME'};
-  };
+  function quickPlaceTarget(id){
+    if(id==='torget')return {...navigation.point({x:0,z:0}),id:'place-torget',kind:'landmark',label:'STORA TORGET',radius:4};
+    if(id==='olearys'){const p=storefrontAnchor(STOREFRONTS.find(s=>s.id==='olearys'),host.colliders);return p?{...navigation.point(p),id:'place-olearys',kind:'landmark',label:'O’LEARYS',radius:4}:null;}
+    return landmarkDestination(id,host.colliders);
+  }
   let storage=null;try{storage=localStorage;}catch{}
   const journey=new CityJourney(navigation,host.mall,portals,storage);
+  journey.clerks=new FriendlyClerks(journey,host.colliders);
   let selectedMission = MISSIONS.some(m=>m.id===params.get('challenge')) ? params.get('challenge') : 'sista-rundan';
   let game = rounds['sista-rundan'], layout = olearyLayout;
   const missionInfo = () => MISSIONS.find(m=>m.id===selectedMission);
@@ -167,7 +155,8 @@ export function createLastRound(pc, host) {
         shape('#f6c34b', () => {c.moveTo(194, 226); c.lineTo(181, 158); c.lineTo(185, 67); c.quadraticCurveTo(198, 53, 209, 69); c.lineTo(210, 130); c.lineTo(229, 119); c.lineTo(246, 139); c.lineTo(240, 211); c.closePath();});
         c.fillStyle = '#18372e'; c.font = '900 47px sans-serif'; c.fillText('1', 213, 185);
       }
-    }, 256, 384);
+      if(kind==='clerk'){box(80,197,105,100,'#f4e5b9',8);box(106,182,47,37,'#f4e5b9',5);box(99,213,73,25,'#285d59',3);c.fillStyle='#d5ffdc';c.font='900 15px sans-serif';c.textAlign='center';c.fillText('HJÄLP?',136,232);c.strokeStyle='#213c39';c.lineWidth=4;c.beginPath();c.moveTo(97,109);c.lineTo(114,104);c.moveTo(143,103);c.lineTo(161,112);c.stroke();}
+    }, kind==='clerk'?512:256, kind==='clerk'?768:384);
     fanTextures.set(key,result);return result;
   }
 
@@ -236,6 +225,7 @@ export function createLastRound(pc, host) {
   pops.forEach(p=>p.e.enabled=false);let popIndex=0;
   function spawnPop(x,z){const pop=pops[popIndex++%pops.length];Object.assign(pop,{life:.65,x,z});}
   const journeyView=createJourneyView(pc,host,{card,texture,labelTex,primitive,material,fanTex,root},journey,portals,rounds.sandgrund);
+  const friendlyView=createFriendlyView({card,fanTex,labelTex},journey.clerks);
   const busRide=createBusRide(host,{driverTexture:fanTex('walker','#e79355'),passengerTextures:[fanTex('walker','#e79355'),fanTex('runner','#73b8ad'),fanTex('tank','#a184c1')],
     onTick:dt=>{journey.rush.clock(dt);if(journey.rush.state==='caught')busRide.stop();},
     onArrive:(result,to,from)=>{journey.rush.buses++;recordBusMoment(result,to,from);journey.position={x:to.x,z:to.z};journey.heading=0;journey.reward(result.points);journey.contactCooldown=4;journey.save();host.music?.city?.();toast('”NÄSTA: '+to.name.toUpperCase()+'!”','Bussresan klar! +'+result.points+' XP. Inga återbetalningar.',3);if(busChallenge)openMoment('bus-intro');},
@@ -254,9 +244,9 @@ export function createLastRound(pc, host) {
   function updateRoute(p,destination){
     const visible=!isPush()&&game.phase==='playing'&&destination.kind!=='wait'&&(isJourney()||selectedMission!=='fikapanik');
     const path=visible?(guidance?.path||navigation.path(p,destination)):[];
-    routePips.forEach((e,i)=>{const q=path[i+1],next=path[i+2]||destination;e.enabled=!!q;if(q){e.setPosition(q.x,.13,q.z);e.setEulerAngles(0,Math.atan2(q.x-next.x,q.z-next.z)*180/Math.PI,0);e.render.meshInstances[0].material=destination.kind==='escape'?escapeMat:routeMat;}});
+    routePips.forEach((e,i)=>{const q=path[i+1],next=path[i+2]||destination;e.enabled=!!q;if(q){e.setPosition(q.x,(q.y??0)+.13,q.z);e.setEulerAngles(0,Math.atan2(q.x-next.x,q.z-next.z)*180/Math.PI,0);e.render.meshInstances[0].material=destination.kind==='escape'?escapeMat:routeMat;}});
     activeFlag.enabled=visible&&isJourney()&&Math.hypot(p.x-destination.x,p.z-destination.z)<55;
-    if(activeFlag.enabled){activeFlag.setPosition(destination.x,3.5,destination.z);activeFlag.setEulerAngles(0,Math.atan2(p.x-destination.x,p.z-destination.z)*180/Math.PI,0);}
+    if(activeFlag.enabled){activeFlag.setPosition(destination.x,(destination.y??0)+3.5,destination.z);activeFlag.setEulerAngles(0,Math.atan2(p.x-destination.x,p.z-destination.z)*180/Math.PI,0);}
   }
 
   function selectMission(id) {
@@ -430,6 +420,9 @@ export function createLastRound(pc, host) {
   function use() {
     if (panel||busRide.active()) return;
     if(isJourney()){
+      const here=host.player.getPosition();
+      if(journey.clerks.interact(here))return;
+      if(mallInside(here)){journey.landmarkGoal=landmarkDestination('mitticity',host.colliders);journey.routeMode='landmark';toast('MITT I CITY · TVÅ PLAN','Gå på rulltrappan för att åka med. Fikaförrådet väntar på plan 1.',3);return;}
       if(journey.rush.interact(host.player.getPosition(),host.camera.forward))return;
       if(journey.nearestBus(host.player.getPosition()).distance<6.5){boardBus();return;}
       const p=host.player.getPosition(),station=journeyView.nearbyStation(p),portal=journey.nearestPortal(p);
@@ -447,53 +440,62 @@ export function createLastRound(pc, host) {
     if(busRide.active())return;
     if (panel === 'map') {game.phase === 'paused' ? resume() : setPanel(null); return;}
     if (panel) return;
-    if (game.phase === 'playing') {game.pause(); host.music?.pause?.();} setPanel('map'); drawMap();
+    if (game.phase === 'playing') {game.pause(); host.music?.pause?.();} mapWide=host.player.getPosition().z<-510||(!isPush()&&game.objective(host.player.getPosition()).z<-510);setPanel('map'); drawMap();
   }
   function drawMap() {
     $('mapGoals').hidden=!isJourney();$('mapCurrentGoal').textContent=isJourney()?journey.objective(host.player.getPosition()).label:'DITT PÅGÅENDE UPPDRAG';
     $('route-sun').disabled=!journey.rush.ecology.sun;for(const m of MISSIONS)$('route-'+m.id).disabled=!!journey.rush.challenge||journey.rush.exitReady;
-    for(const place of QUICK_PLACES_271){const button=$('route-place-'+place.id);if(button)button.disabled=journey.rush.exitReady||!quickPlaceTarget(place.id);}
-    const directMall=$('teleport-mitt-i-city');if(directMall)directMall.disabled=!isJourney()||journey.rush.exitReady;
-    for(const kind of ['power','news','bowling'])$('story-'+kind).disabled=!!journey.rush.challenge||journey.rush.exitReady;
-    $('mapStoryHint').textContent=journey.rush.challenge?'Utmaningens händelser är låsta och lika för alla. Snabbmål och vägvisning kan väljas fritt.':journey.rush.exitReady?'800 XP klara. Följ grönt och säkra rundan.':'Starta en ny händelse i närheten. Ersätter pågående gatuhändelse.';
+    for(const place of PLACE_ROUTES)$('route-place-'+place).disabled=journey.rush.exitReady;
+    $('teleport-mitt-i-city').disabled=!isJourney()||journey.rush.mode!=='free';
+    for(const kind of ['power','news','bowling'])$('story-'+kind).disabled=!!journey.rush.challenge||journey.rush.exitReady||(host.mallWalk?.height??0)>2;
+    $('mapStoryHint').textContent=journey.rush.challenge?'I utmaningar väljer staden händelserna, lika för alla.':journey.rush.exitReady?'800 XP klara. Följ grönt och säkra rundan.':'Starta en ny händelse i närheten. Ersätter pågående gatuhändelse.';
+    const pinLayer=$('mapPinLayer');pinLayer.replaceChildren();pinLayer.hidden=!isJourney();
     const c = $('roundMap').getContext('2d'), size = 500;
-    const pinLayer=$('mapPinLayer');if(pinLayer){pinLayer.replaceChildren();pinLayer.hidden=!isJourney();}
     c.fillStyle = '#142b29'; c.fillRect(0, 0, size, size);
-    const scale = .68, center = {x: 0, z: -145};
+    const indoor=mallInside(host.player.getPosition())&&!mapWide,scale=indoor?5.6:mapWide?.39:.68,center=indoor?{x:-127,z:104}:mapWide?{x:-28,z:-282}:{x:0,z:-145};
+    $('mapZoom').textContent=mapWide?'NÄRBILD CENTRUM':'HELA KARLSTAD';
+    $('mapArea').textContent=indoor?'MITT I CITY · PLAN '+(host.mallWalk?.level||0):mapWide?'STADEN + SANDGRUNDSUDDEN':'CENTRUM';
     const point = (x, z) => [(x - center.x) * scale + size / 2, (z - center.z) * scale + size / 2];
-    drawCityStreets(c,point,scale,size);
+    drawCityGround(c,point,scale);drawCityStreets(c,point,scale,size);
     c.fillStyle = '#52695b';
     for (const b of host.colliders) {const [x, y] = point(b.minx, b.minz); c.fillRect(x, y, (b.maxx - b.minx) * scale, (b.maxz - b.minz) * scale);}
-    function dot(x,z,label,color,dx=9,dy=-6,interactiveId=null){
-      const [px,py]=point(x,z),r=interactiveId?8:4;
-      c.fillStyle=color;c.beginPath();c.arc(px,py,r,0,Math.PI*2);c.fill();
-      if(interactiveId){
-        c.strokeStyle='#fff0cd';c.lineWidth=2;c.stroke();
-        if(pinLayer){
-          const button=document.createElement('button');
-          button.type='button';button.className='map-pin';button.dataset.place=interactiveId;
-          button.style.left=(px/size*100)+'%';button.style.top=(py/size*100)+'%';button.style.setProperty('--pin-color',color);
-          button.setAttribute('aria-label','Välj '+label+' som destination');button.title='Välj '+label;
-          button.innerHTML='<span aria-hidden="true"></span>';
-          button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();chooseQuickPlace(interactiveId);});
-          pinLayer.appendChild(button);
-        }
+    const mapGoal=isPush()?layout.goal:isJourney()?guideFor(host.player.getPosition(),journey.objective(host.player.getPosition())).goal:game.objective(host.player.getPosition()),labels=[];
+    function dot(x,z,label,color,dx=9,dy=-6,priority=1,placeId=null){
+      const [px,py]=point(x,z);if(px<0||px>size||py<0||py>size)return;
+      c.fillStyle=color;c.beginPath();c.arc(px,py,4,0,Math.PI*2);c.fill();
+      if(placeId&&isJourney()&&!journey.rush.exitReady){
+        const button=document.createElement('button');button.type='button';button.className='map-pin';button.dataset.place=placeId;
+        button.style.left=(px/size*100)+'%';button.style.top=(py/size*100)+'%';button.style.setProperty('--pin-color',color);
+        button.setAttribute('aria-label','Välj '+label+' som destination');button.innerHTML='<span aria-hidden="true"></span>';
+        button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();chooseQuickPlace(placeId);});pinLayer.appendChild(button);
       }
-      c.font=interactiveId?'900 12px sans-serif':'bold 11px sans-serif';c.textAlign=dx<0?'right':'left';c.fillStyle=interactiveId?'#fff0cd':color;
-      c.fillText(label,Math.max(6,Math.min(490,px+dx)),Math.max(14,Math.min(488,py+dy)));c.textAlign='left';
+      labels.push({px,py,label,color,dx,dy,priority});
     }
-    dot(0,0,'TORGET','#f5ecd1',-16,17);
-    for(const place of QUICK_PLACES_271){
-      const q=quickPlaceTarget(place.id);if(!q)continue;
-      dot(q.x,q.z,q.label,place.id==='olearys'?'#9de2aa':place.id==='mitt-i-city'?'#c9d7c9':'#f4dab0',place.id==='torget'?-12:9,place.id==='torget'?18:-6,journey.rush.exitReady?null:place.id);
-    }
-    for(const shop of STOREFRONTS.filter(s=>s.id!=='olearys')){const p=storefrontAnchor(shop,host.colliders);if(p)dot(p.x,p.z,shop.name.toUpperCase(),'#b9ddea',shop.id==='pressbyran20'?-9:9,shop.id==='pressbyran20'?18:shop.id==='espresso15'?18:-6);}
-    if(isJourney()){const guide=cityGuide.update(host.player.getPosition(),journey.objective(host.player.getPosition()),host.camera.forward),route=guide.path;c.strokeStyle=guide.color;c.lineWidth=3;c.beginPath();route.forEach((p,i)=>{const a=point(p.x,p.z);i?c.lineTo(...a):c.moveTo(...a);});c.stroke();}
-    if(!isPush()){const o=game.objective(host.player.getPosition());dot(o.x,o.z,o.label,'#ffef75');}
-    const p = host.player.getPosition(); dot(p.x, p.z, 'DU', '#73ded0');
+    if(!indoor){
+      dot(0,0,'TORGET','#f5ecd1',12,15,1,'torget');
+      const places=mapWide?['mitticity','duvan','ahlens','stadshotellet','domkyrkan','biblioteket','sandgrund','museum','udden']:['mitticity','radhuset','domkyrkan','biblioteket','sandgrund','duvan','ahlens','stadshotellet'];
+      const offsets={mitticity:[-12,-6],duvan:[8,23],ahlens:[-8,10],stadshotellet:[-12,-13],radhuset:[-12,-18],domkyrkan:[10,-1],biblioteket:[10,8],sandgrund:[12,0],museum:[-12,-9],udden:[12,-4]};
+      for(const id of places){const place=landmarkDestination(id,host.colliders);if(place&&mapGoal.id!==place.id)dot(place.x,place.z,place.label.replace(' · TVÅ PLAN',''),'#f4dab0',...offsets[id],1,id==='radhuset'?null:id);}
+      if(!mapWide)for(const shop of STOREFRONTS){const p=storefrontAnchor(shop,host.colliders);if(p)dot(p.x,p.z,shop.name.toUpperCase(),shop.brand==='olearys'?'#9de2aa':'#b9ddea',shop.id==='pressbyran20'?-9:9,shop.id==='pressbyran20'?18:shop.id==='espresso15'?18:-6,1,shop.id==='olearys'?'olearys':null);}
+    }else drawMallPlan(c,point,scale,host.mallWalk?.level||0,journey.secretsFound.has(MALL_CACHE.id));
+    if(isJourney()){const guide=guideFor(host.player.getPosition(),journey.objective(host.player.getPosition())),route=guide.path;c.strokeStyle=guide.color;c.lineWidth=3;c.beginPath();route.forEach((p,i)=>{const a=point(p.x,p.z);i?c.lineTo(...a):c.moveTo(...a);});c.stroke();}
+    if(!isPush())dot(mapGoal.x,mapGoal.z,mapGoal.label,'#ffef75',9,-6,10);
+    const p = host.player.getPosition(); dot(p.x, p.z, 'DU', '#73ded0',9,-6,20);
     const f = host.camera.forward, [px, py] = point(p.x, p.z);
     c.strokeStyle = '#73ded0'; c.lineWidth = 3; c.beginPath(); c.moveTo(px, py); c.lineTo(px + f.x * 17, py + f.z * 17); c.stroke();
-    c.fillStyle='#f4e4bf';c.font='bold 13px sans-serif';c.fillText('N ↑',18,25);c.font='10px sans-serif';c.fillText('100 M',407,477);c.fillRect(407,483,100*scale,2);
+    // The paused map can afford a small label layout; no per-frame DOM or texture work.
+    const occupied=[{x:8,y:8,w:36,h:25},{x:401,y:464,w:92,h:29}];c.font='bold 11px sans-serif';c.textAlign='left';
+    for(const l of labels.sort((a,b)=>b.priority-a.priority)){
+      const w=c.measureText(l.label)?.width||l.label.length*6.5;
+      const x=Math.max(7,Math.min(size-w-7,l.px+l.dx-(l.dx<0?w:0)));let slot;
+      for(const d of [0,-16,16,-32,32,-48,48,-64,64]){
+        const y=Math.max(14,Math.min(478,l.py+l.dy+d)),box={x:x-3,y:y-12,w:w+6,h:16};
+        if(!occupied.some(b=>box.x<b.x+b.w&&box.x+box.w>b.x&&box.y<b.y+b.h&&box.y+box.h>b.y)){slot={...box,baseline:y};break;}
+      }
+      if(!slot)continue;occupied.push(slot);c.fillStyle='#142b29dd';c.fillRect(slot.x,slot.y,slot.w,slot.h);
+      c.fillStyle=l.color;c.fillText(l.label,x,slot.baseline);
+    }
+    c.fillStyle='#f4e4bf';c.font='bold 13px sans-serif';c.fillText('N ↑',18,25);c.font='10px sans-serif';c.fillText(indoor?'10 M':'100 M',407,477);c.fillRect(407,483,(indoor?10:100)*scale,2);
   }
   function drawRadar(p) {
     const c = $('roundRadar').getContext('2d'), size = 256;
@@ -504,9 +506,10 @@ export function createLastRound(pc, host) {
     c.fillStyle = '#142f29'; c.fillRect(0, 0, size, size);
     c.strokeStyle = '#39594a'; c.lineWidth = 1;
     for (let i = 16; i < size; i += 32) {c.beginPath(); c.moveTo(i, 0); c.lineTo(i, size); c.moveTo(0, i); c.lineTo(size, i); c.stroke();}
-    drawCityStreets(c,point,scale,size);
+    drawCityGround(c,point,scale);drawCityStreets(c,point,scale,size);
     c.fillStyle = '#506151';
     for (const block of host.colliders) {const [x, y] = point(block.minx, block.minz); c.fillRect(x, y, (block.maxx - block.minx) * scale, (block.maxz - block.minz) * scale);}
+    if(mallInside(p))drawMallPlan(c,point,scale,host.mallWalk?.level||0,journey.secretsFound.has(MALL_CACHE.id));
     const circle = (x, z, radius, fill, stroke) => {c.beginPath(); c.arc(...point(x, z), radius, 0, Math.PI * 2); if (fill) {c.fillStyle = fill; c.fill();} if (stroke) {c.strokeStyle = stroke; c.lineWidth = 3; c.stroke();}};
     const objective=isPush()?layout.goal:guidance?.goal||game.objective(p);
     if(objective.kind!=='wait')circle(objective.x,objective.z,Math.max(1.5,objective.radius)*scale,'#81e9e338',guidance?.color||'#ffcd60');
@@ -535,8 +538,8 @@ export function createLastRound(pc, host) {
     if(!isPush()){
       const station=isJourney()?journeyView.nearbyStation(p):null,portal=isJourney()?journey.nearestPortal(p):null,bus=isJourney()?journey.nearestBus(p):null;
       const interactive=isJourney()&&['power','bowling'].includes(journey.rush.contract?.kind)&&Math.hypot(p.x-journey.rush.contract.spot.x,p.z-journey.rush.contract.spot.z)<3.3;
-      $('useBtn').textContent=interactive?journey.rush.contract.action:bus?.distance<6.5?'KLIV PÅ BUSSEN':station?(station.type==='clue'?'LÄS TIPS':'LADDA SOL'):portal?.distance<9?'STARTA UPPDRAG':'UPPDRAG';
-      $('roundTactic').textContent=currentTarget?`${currentTarget.name.toUpperCase()} · ${'●'.repeat(Math.max(0,currentTarget.hp))}${host.oneHand?.()?' · AUTOELD':''}`:isJourney()?(bus.distance<6.5?'BUSS 666 · 30 SEKUNDERS KAOS · +200–350 XP':journey.rush.exitReady?'800 XP KLARA · FÖLJ GRÖNT TILL TRYGGZON':station?station.brand+' · TRYCK '+$('useBtn').textContent:portal.distance<9?portal.name.toUpperCase()+' · TRYCK STARTA':guidance?.turn||'FÖLJ CYANPILARNA TILL DITT MÅL'):selectedMission==='sandgrund'?(game.rescued<3?'GÅ NÄRA BESÖKARE · LED DEM TILL GRÖNA PLATSEN':'BESÖKARNA ÄR SÄKRA · STOPPA ZOMBIE-LERIN'):selectedMission==='fikapanik'?'VÄND DIG OM · ZOMBIERNA KOMMER FRÅN FLERA HÅLL':game.collected<3?'HÄMTA GULA TERMOSAR · FÖLJ RADARN':'FÖLJ GULA SPÅRET TILL MITT I CITY';return;
+      $('useBtn').textContent=isJourney()&&journey.clerks.prompt(p)?journey.clerks.prompt(p):isJourney()&&mallInside(p)?'VISA VÄG I GALLERIAN':interactive?journey.rush.contract.action:bus?.distance<6.5?'KLIV PÅ BUSSEN':station?(station.type==='clue'?'LÄS TIPS':'LADDA SOL'):portal?.distance<9?'STARTA UPPDRAG':'UPPDRAG';
+      $('roundTactic').textContent=isJourney()&&journey.clerks.near(p)?journey.clerks.near(p).name.toUpperCase()+' · SNÄLL ZOMBIE · TRYCK '+journey.clerks.prompt(p):isJourney()&&mallInside(p)&&!currentTarget?'MITT I CITY · PLAN '+(host.mallWalk?.level||0)+' · KLIV PÅ RULLTRAPPAN FÖR ATT ÅKA':currentTarget?`${currentTarget.name.toUpperCase()} · ${'●'.repeat(Math.max(0,currentTarget.hp))}${host.oneHand?.()?' · AUTOELD':''}`:isJourney()?(bus.distance<6.5?'BUSS 666 · 30 SEKUNDERS KAOS · +200–350 XP':journey.rush.exitReady?'800 XP KLARA · FÖLJ GRÖNT TILL TRYGGZON':station?station.brand+' · TRYCK '+$('useBtn').textContent:portal.distance<9?portal.name.toUpperCase()+' · TRYCK STARTA':guidance?.turn||'FÖLJ CYANPILARNA TILL DITT MÅL'):selectedMission==='sandgrund'?(game.rescued<3?'GÅ NÄRA BESÖKARE · LED DEM TILL GRÖNA PLATSEN':'BESÖKARNA ÄR SÄKRA · STOPPA ZOMBIE-LERIN'):selectedMission==='fikapanik'?'VÄND DIG OM · ZOMBIERNA KOMMER FRÅN FLERA HÅLL':game.collected<3?'HÄMTA GULA TERMOSAR · FÖLJ RADARN':'FÖLJ GULA SPÅRET TILL MITT I CITY';return;
     }
     if (!currentGuide) {$('roundTactic').textContent = 'HITTA ETT FAN · GULA CIRKELN PÅ RADARN = HEMGÅNG'; return;}
     const a = currentTarget, g = currentGuide;
@@ -607,23 +610,22 @@ export function createLastRound(pc, host) {
     journey.rush.busGoal=null;journey.routeMode=mode;if(destination)journey.destination=destination;
     resume();toast('DITT MÅL ÄR VALT','Karta, kompass och cyanpilar visar samma väg.',1.6);
   }
+  $('mapZoom').addEventListener('click',()=>{mapWide=!mapWide;drawMap();});
   $('route-event').addEventListener('click',()=>chooseRoute('hunt'));
   $('route-bus').addEventListener('click',()=>chooseRoute('bus'));
   $('route-sun').addEventListener('click',()=>chooseRoute('sun'));
   for(const m of MISSIONS)$('route-'+m.id).addEventListener('click',()=>chooseRoute('mission',m.id));
-  function chooseQuickPlace(id){
+  function chooseQuickPlace(place){
     if(!isJourney()||journey.rush.exitReady)return false;
-    const place=QUICK_PLACES_271.find(p=>p.id===id),target=quickPlaceTarget(id);if(!place||!target)return false;
-    journey.landmarkGoal=target;chooseRoute('landmark');toast(place.name.toUpperCase(),'Kompass, karta, radar och cyanpilar visar vägen.',1.8);return true;
+    const target=quickPlaceTarget(place);if(!target)return false;
+    journey.landmarkGoal={...target,...navigation.point(target)};chooseRoute('landmark');return true;
   }
-  for(const place of QUICK_PLACES_271){const button=$('route-place-'+place.id);if(!button)continue;button.addEventListener('click',()=>chooseQuickPlace(place.id));}
-  const directMall=$('teleport-mitt-i-city');
-  if(directMall)directMall.addEventListener('click',()=>{
-    if(!isJourney()||journey.rush.exitReady)return;
-    const m=host.mallLayout||{x:host.mall.x,z:host.mall.z,minx:host.mall.x-21,maxx:host.mall.x+21,minz:host.mall.z-16,maxz:host.mall.z+16};
-    const target={x:m.x,z:m.z,id:'place-mitt-i-city',kind:'landmark',label:'MITT I CITY · ATRIET',radius:4.5,action:'DU ÄR INNE'};
-    journey.landmarkGoal=target;journey.routeMode='landmark';journey.position={x:m.x,z:m.z};journey.save();
-    host.teleport(m.x,m.z,0,-4);resume();toast('MITT I CITY','Du är inne i atriet. Rulltrapporna leder upp till plan 1.',2.4);
+  for(const place of PLACE_ROUTES)$('route-place-'+place).addEventListener('click',()=>chooseQuickPlace(place));
+  $('teleport-mitt-i-city').addEventListener('click',()=>{
+    if(!isJourney()||journey.rush.mode!=='free')return;
+    journey.landmarkGoal=quickPlaceTarget('mitticity');journey.routeMode='landmark';
+    host.teleport(-145,116,0,-4);journey.position={x:-145,z:116};journey.save();resume();
+    toast('VÄLKOMMEN TILL MITT I CITY','Plan 0: Coop och Cervera. Rulltrappan leder till Clas Ohlson på plan 1.',4);
   });
   for(const kind of ['power','news','bowling'])$('story-'+kind).addEventListener('click',()=>{
     if(!isJourney()||journey.rush.challenge||journey.rush.exitReady)return;
@@ -667,14 +669,14 @@ export function createLastRound(pc, host) {
   window.addEventListener('pointerdown',()=>{host.music?.unlock?.();if(isJourney()&&!panel)host.music?.city?.(true);},{once:true});
   document.addEventListener('visibilitychange', () => {if (document.hidden && game.phase === 'playing') pause();});
   $('useBtn').textContent = 'UPPDRAG'; $('jumpBtn').textContent = 'HOPPA';
-  window.KarlstadRound = Object.freeze({version: '2.7.6', snapshot: () => ({phase: game.phase, mode:busRide.active()?'bus':isJourney()?'journey':'mission',score: game.score, energy: game.energy,oneHand:!!host.oneHand?.(),bus:busRide.snapshot(),rush:journey.rush.snapshot(),postcard:lastMoment?{...lastMoment}:null,challengeRequest:request,
-    cityIdentity:cityIdentity.snapshot(),
+  window.KarlstadRound = Object.freeze({version: '2.8.0', snapshot: () => ({phase: game.phase, mode:busRide.active()?'bus':isJourney()?'journey':'mission',score: game.score, energy: game.energy,oneHand:!!host.oneHand?.(),bus:busRide.snapshot(),rush:journey.rush.snapshot(),postcard:lastMoment?{...lastMoment}:null,challengeRequest:request,
+    clerks:journey.clerks.snapshot(),cityIdentity:cityIdentity.snapshot(),mall:{...host.mallWalk?.snapshot(),inside:mallInside(host.player.getPosition()),cacheFound:journey.secretsFound.has(MALL_CACHE.id)},
     guidance:guidance?{goal:{...guidance.goal},next:{...guidance.next},turn:guidance.turn,distance:guidance.distance}:null,
-    journey:{balance:journey.balance,lifetime:journey.lifetime,found:journey.found.size,secrets:journey.secretsFound.size,postcards:[...journey.postcardsFound],safeZones:journey.safeZones.map(s=>({...s})),busStops:journey.busStops.map(s=>({...s})),destination:journey.destination,landmarkGoal:journey.landmarkGoal?{...journey.landmarkGoal}:null,items:journey.items.filter(t=>!journey.found.has(t.id)).map(t=>({...t})),portals:structuredClone(portals)},
+    journey:{balance:journey.balance,lifetime:journey.lifetime,found:journey.found.size,secrets:journey.secretsFound.size,postcards:[...journey.postcardsFound],safeZones:journey.safeZones.map(s=>({...s})),busStops:journey.busStops.map(s=>({...s})),destination:journey.destination,items:journey.items.filter(t=>!journey.found.has(t.id)).map(t=>({...t})),portals:structuredClone(portals)},
     rescued:game.rescued||0,visitors:game.visitors?.map(v=>({...v})),
     practice: game.practice, aimHelp, mission:selectedMission, wave:game.wave||0, health:game.health??100, collected:game.collected||0, guide: currentGuide ? {good: currentGuide.good, stance: currentGuide.stance} : null,
     remaining: game.remaining, seed, captured: game.captured, shots: game.shots, bestChain: game.bestChain,
-    player: {x: host.player.getPosition().x, z: host.player.getPosition().z}, forward: {x: host.camera.forward.x, y: host.camera.forward.y, z: host.camera.forward.z},
+    player: {x: host.player.getPosition().x,y:host.player.getPosition().y, z: host.player.getPosition().z}, forward: {x: host.camera.forward.x, y: host.camera.forward.y, z: host.camera.forward.z},
     actors: game.actors.map(a => ({id: a.id, x: a.x, z: a.z, active: a.active, hp:a.hp, kind:a.kind})), goal: {...layout.goal}, objective:isPush()?layout.goal:game.objective(host.player.getPosition())})});
   explore(true);
   if(request.kind==='bus'){
@@ -701,6 +703,7 @@ export function createLastRound(pc, host) {
       }
     }
     for (const event of game.drainEvents()) {
+      if(event.type==='friendly')toast(event.name.toUpperCase()+(event.points?' · +'+event.points+' XP · +20 SOL':''),event.text,4.5);
       if (event.type === 'shot') {sound(event.charged ? 'charge' : 'shot'); $('reticle').classList.toggle('hit', event.hit); if(!event.hit&&game.shots<3)toast('SIKTA PÅ FIGURERNA',isPush()?'Knuffa dem från din sida mot HEMGÅNG.':'Solstötar når 15 meter. SUPER når 18 meter.');}
       if (event.type === 'chain') {sound('chain'); toast(`${event.count}× KEDJETRÄFF!`, 'Det där räknas som lagarbete.');}
       if (event.type === 'capture') {sound('capture'); toast(event.boss ? 'INGEN MER ÖVERTID.' : 'HEM MED DIG!', event.boss ? 'Vakten kan äntligen gå på rast.' : event.name + ' har lämnat matchen.');}
@@ -712,7 +715,7 @@ export function createLastRound(pc, host) {
       if(event.type==='thermos'){sound('energy');$('journeyPickupToast').textContent='+'+event.points+' KAFFEPOÄNG · +15 SOL'+(event.chain%5===0?' · FIKAKEDJA!':'');$('journeyPickupToast').classList.add('visible');pickupToastUntil=now+1300;}
       if(event.type==='secret'){sound('win');toast('HEMLIGHET HITTAD! +200',event.name+' · Fullt liv och full solenergi.',3.5);journey.save();}
       if(event.type==='rustle'){sound('bump');toast('…PRASSEL?','Någon har känt doften av kaffe.',1);}
-      if(event.type==='ambush'){sound('boss');toast('”HAR DU PÅTÅR?!”','Vänd dig om. SOLSTÖT!',1.3);}
+      if(event.type==='ambush'){sound('boss');toast(event.name||'”HAR DU PÅTÅR?!”','Vänd dig om. SOLSTÖT!',1.3);}
       if(event.type==='ambush-clear'){sound('capture');$('journeyPickupToast').textContent='BAKHÅLL KLARAT · +30 KAFFEPOÄNG';$('journeyPickupToast').classList.add('visible');pickupToastUntil=now+1800;journey.save();}
       if(event.type==='refill'){sound('energy');toast('KAFFEKRAFT! +40 SOL','−25 kaffepoäng. Nu blir det andra bullar.',1.5);}
       if(event.type==='recover'){host.teleport(journey.layout.spawn.x,journey.layout.spawn.z,0,-2);journey.position={...journey.layout.spawn};journey.heading=0;journey.save();toast('EN LITEN FIKAPAUS.','Tillbaka på Torget. Upp till 25 kaffepoäng tappade; dina fynd finns kvar.',3);}
@@ -757,6 +760,7 @@ export function createLastRound(pc, host) {
     document.body.classList.toggle('city-blackout',isJourney()&&!busRide.active()&&journey.rush.blackoutUntil>journey.rush.spent);
     document.body.classList.toggle('city-in-sun',isJourney()&&!busRide.active()&&journey.rush.ecology.inSun);
     if(busRide.active())return;
+    friendlyView.update(p,now,isJourney());
     // Do not remove and re-add live render components on every frame.
     for(const [id,v] of actorViews)if(id.startsWith('city-')===isPush()){v.e.enabled=false;v.shadow.enabled=false;}
     for (const a of game.actors) {
@@ -782,14 +786,14 @@ export function createLastRound(pc, host) {
     uiTime += dt;
     if (uiTime > .08) {
       uiTime = 0;
-      guidance=!isPush()?cityGuide.update(p,game.objective(p),host.camera.forward):null;
+      guidance=!isPush()?guideFor(p,game.objective(p)):null;
       updateGuide(p); drawRadar(p);
       const timed=isJourney()&&journey.rush.mode==='timed',time=Math.ceil(journey.rush.time);
       $('roundScore').textContent = (isJourney()?(timed?journey.rush.xp:journey.balance):game.score).toLocaleString('sv-SE'); $('roundTime').textContent = timed?Math.floor(time/60)+':'+String(time%60).padStart(2,'0'):isJourney()?String(journey.found.size):game.practice ? '∞' : String(Math.ceil(game.remaining)).padStart(2, '0');
-      $('roundTime').classList.toggle('urgent',timed?time<=30:!isJourney()&&!game.practice && game.remaining <= 15); $('roundProgress').textContent = timed?'800':isJourney()?`${journey.secretsFound.size}/5`:isPush()?`${game.captured}/4`:selectedMission==='fikapanik'?`${game.captured}/24`:`${selectedMission==='sandgrund'?game.rescued:game.collected}/3`;
+      $('roundTime').classList.toggle('urgent',timed?time<=30:!isJourney()&&!game.practice && game.remaining <= 15); $('roundProgress').textContent = timed?'800':isJourney()?`${journey.secretsFound.size}/${journey.secrets.length}`:isPush()?`${game.captured}/4`:selectedMission==='fikapanik'?`${game.captured}/24`:`${selectedMission==='sandgrund'?game.rescued:game.collected}/3`;
       const contract=journey.rush.contract,chaos=journey.rush.chaosTarget;$('cityEventHud').hidden=!isJourney();
       const goal=guidance?.goal;
-      $('cityStreet').textContent=streetAt(p);
+      $('cityStreet').textContent=mallInside(p)?'MITT I CITY · PLAN '+(host.mallWalk?.level||0):streetAt(p);
       $('cityEventTitle').textContent=goal?.label||'800 XP → TRYGGZON';
       const activeContract=contract&&goal?.id===contract.id;
       $('cityEventDetail').textContent=(guidance?.turn||'FÖLJ PILARNA')+(goal?.kind==='wait'?'':' · '+guidance?.distance+' M')+(activeContract?' · '+Math.ceil(contract.until-journey.rush.spent)+' S · +'+contract.points+' XP':'');
@@ -811,7 +815,7 @@ export function createLastRound(pc, host) {
       if (game.phase === 'ready') {
         $('mission').textContent='KARLSTAD EFTER STÄNGNING · 3 UPPDRAG';
       } else $('mission').textContent = missionInfo().name.toUpperCase();
-      $('status').textContent = `FPS ${Math.round(host.app.stats.frame.fps)} · ${isJourney()?journey.rush.challenge?.kind==='daily'?'DAGENS KARLSTAD 2.7.6':'STADSJAKTEN 2.7.6':missionInfo().place.toUpperCase()}`;
+      $('status').textContent = `FPS ${Math.round(host.app.stats.frame.fps)} · ${isJourney()?journey.rush.challenge?.kind==='daily'?'DAGENS KARLSTAD 2.8.0':'STADSJAKTEN 2.8.0':missionInfo().place.toUpperCase()}`;
       const destination = game.phase === 'playing' ? (isPush()?layout.goal:guidance.goal) : olearyLayout.guard;
       const direction = !isPush()&&game.phase==='playing'?guidance.angle:Math.atan2(destination.x - p.x, destination.z - p.z) - Math.atan2(host.camera.forward.x, host.camera.forward.z);
       $('roundCompassArrow').style.transform = `rotate(${-direction * 180 / Math.PI}deg)`;

@@ -291,3 +291,10 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
 .map-teleport{display:block;width:100%;min-height:52px;margin:10px 0 4px;border:2px solid #dff6d1;border-radius:6px;background:#58a744;color:#fff;font:1000 12px/1.15 system-ui;letter-spacing:.04em;box-shadow:0 4px 0 #2d6925;touch-action:manipulation}
 .map-teleport:hover{background:#68b952}.map-teleport:active{transform:translateY(2px);box-shadow:0 2px 0 #2d6925}.map-teleport:disabled{opacity:.38;transform:none;box-shadow:none}
 .map-card p.map-teleport-hint{margin:5px 0 13px;color:#b9d7b0;font-size:8px;line-height:1.45}
+
+
+/* Short, occasional dimming; keep navigation legible during the effect. */
+#game{transition:filter .45s ease}
+@media(prefers-reduced-motion:reduce){#game{transition:none}}
+
+.map-area{display:flex;align-items:center;justify-content:space-between;gap:8px;font:800 11px system-ui;color:#bfe5ce}.map-area button{min-height:40px;background:#2b6260;color:#fff1ce;border:1px solid #8bc6b7;border-radius:5px;font:800 10px system-ui;padding:7px 12px}

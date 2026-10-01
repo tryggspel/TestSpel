@@ -62,11 +62,11 @@ export class LastRound {
     this.chains.set(shot, new Set());
     const range = charged ? 18 : 15;
     const candidates = this.actors.filter(a => {
-      if (!a.active) return false;
+      if (!a.active || Math.abs(y-1.68-(a.y??0))>2) return false;
       const ax = a.x - x, az = a.z - z, along = ax * nx + az * nz;
       const side = Math.abs(ax * nz - az * nx), hitY = y + dy * along / horizontal;
       return along > .1 && along < range && side < a.radius + (assist ? .32 + along * .025 : .18)
-        && hitY > -.2 && hitY < (a.kind === 'boss' ? 3.5 : a.kind === 'bin' ? 1.65 : 2.55)
+        && hitY > (a.y??0)-.2 && hitY < (a.y??0)+(a.kind === 'boss' ? 3.5 : a.kind === 'bin' ? 1.65 : 2.55)
         && this.visible(x, z, a.x, a.z);
     }).sort((a, b) => Math.hypot(a.x - x, a.z - z) - Math.hypot(b.x - x, b.z - z));
     const target = candidates[0];
@@ -122,7 +122,7 @@ export class LastRound {
             this.events.push({type: 'boss'});
           } else if (this.captured === 4) this.finish(true);
         }
-        if (player && a.kind !== 'bin' && a.active && this.contactCooldown === 0 && Math.hypot(player.x - a.x, player.z - a.z) < a.radius + .5) {
+        if (player && Math.abs((player.y??1.68)-1.68-(a.y??0))<2 && a.kind !== 'bin' && a.active && this.contactCooldown === 0 && Math.hypot(player.x - a.x, player.z - a.z) < a.radius + .5) {
           this.contactCooldown = 2; this.energy = Math.max(0, this.energy - 8);
           this.score = Math.max(0, this.score - 15); this.events.push({type: 'bump'});
         }

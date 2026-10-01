@@ -43,3 +43,14 @@ Three small, local logo files total approximately **42 kB**, loaded asynchronous
 - `brands/pressbyran.png`: unchanged PNG of the 2026 wordmark from [Pressbyråns official logo page](https://www.pressbyran.se/om-pressbyran/logotyper/). [Original file](https://storage.googleapis.com/pressbyran-media-bucket-prod/public/cb1e2c55-pb-logo-2026-argb-1024x205.png).
 
 Marks belong to their respective owners. Depiction of real shops does not assert sponsorship or a commercial agreement. The earlier Löfbergs, NWT and Karlstads Energi gameplay kiosks remain fictional game stations, distinct from these address-based shopfronts.
+
+## Graphics 2.8 · shops and sharper facades (2026-10-01)
+
+Tenant names and floors: https://mitticity.com/butiker/ . Coop City and Cervera are on plan 0; Clas Ohlson is on plan 1. The three room footprints are a playable interpretation, not a surveyed indoor plan. External mall entrances follow the OSM corridors documented above. Friendly clerks are fictional game characters.
+
+Official tenant logos downloaded unchanged from the centre directory (WebP; 300 px sources, baked into cached sign textures at boot):
+- `cervera.webp`: https://dam.thon.com/transform/e5641523-f00e-4e46-b688-e35fd7a3bc15/cervera-png?io=transform%3Afit%2Cwidth%3A300&format=webp
+- `clas.webp`: https://dam.thon.com/transform/297df5c7-5029-49f5-bcce-1ec63365b046/clas_ohlson-logo-svg?io=transform%3Afit%2Cwidth%3A300&format=webp
+- `coop.webp`: https://dam.thon.com/transform/d9d78941-42e0-4c52-8cf6-6fc693166c71/Coop_City_logo-png?io=transform%3Afit%2Cwidth%3A300&format=webp
+
+The generic street facade artwork remains original procedural comic art. All 81 decorated blocks keep their existing OSM coordinates; their windows and shop drawings are stylized rather than surveyed facades. The nine landmark volumes keep separate, reference-based geometry and artwork.

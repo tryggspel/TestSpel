@@ -1,4 +1,6 @@
-import {LANDMARKS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.6.0';
+import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.8.0';
+import {MALL_ROOMS} from './mall-space.mjs?v=2.8.0';
+import {createMallSigns} from './mall-architecture.js?v=2.8.0';
 const ink='#263f46',paper='#f6ebd3';
 
 // Original comic drawings, baked once. Windows, masonry and print shading cost no geometry.
@@ -37,6 +39,24 @@ export function drawLandmarkFacade(c,w,h,kind){
     box(0,0,1024,512,'#b59a74');box(0,0,1024,45,ink);
     for(const y of [82,288])for(let col=0;col<14;col++)window(18+col*72,y,55,147);
     box(0,448,1024,64,'#655f50');box(297,245,430,54,paper,3);c.fillStyle=ink;c.font='900 35px sans-serif';c.textAlign='center';c.fillText('STADSBIBLIOTEKET',512,282,405);
+  }else if(kind==='hotel'){
+    box(0,0,1024,512,'#dfba7a');box(0,369,1024,143,'#b9a281');
+    for(const y of [12,176,337]){box(0,y+7,1024,12,'#b3986b');box(0,y,1024,9,paper);}
+    for(let col=0;col<11;col++){const x=30+col*91;for(let row=0;row<3;row++)window(x,35+row*159,55,116,row===2);}
+    for(const x of [5,326,685,1003]){box(x,0,16,512,paper);for(let y=20;y<512;y+=25)box(x,y,16,2,'#b3a88e');}
+    for(const x of [202,475,748]){box(x-8,305,75,10,ink);for(let i=0;i<7;i++)box(x+i*8,263,3,44,ink);box(x-8,261,75,5,ink);}
+    box(385,169,260,28,'#eaddb9');c.fillStyle='#4a7a70';c.font='bold 22px Georgia';c.textAlign='center';c.fillText('STADSHOTELLET',515,191,248);
+  }else if(kind==='duvan'||kind==='ahlens'){
+    box(0,0,1024,512,kind==='duvan'?'#b49574':'#d6d5c2');
+    for(let y=15;y<315;y+=23){box(0,y,1024,2,'#897860');for(let x=(y%2)*22;x<1024;x+=44)box(x,y,2,22,'#897860');}
+    for(let i=0;i<10;i++){const x=18+i*102;window(x,34,68,100);window(x,185,68,100);box(x-13,0,12,512,paper);}
+    box(0,340,1024,172,'#315763');for(let i=1;i<13;i++)box(i*80,348,7,164,paper);box(0,331,1024,18,paper);
+    if(kind==='ahlens')box(0,283,1024,62,'#b52e39');
+  }else if(kind==='museum-old'||kind==='museum-new'){
+    box(0,0,1024,512,kind==='museum-old'?'#a95c41':'#b57250');
+    for(let y=10;y<512;y+=17){box(0,y,1024,2,'#764939');if(kind==='museum-old')for(let x=(y%2)*29;x<1024;x+=58)box(x,y,2,17,'#764939');}
+    for(let i=0;i<8;i++)window(26+i*126,kind==='museum-old'?154:99,75,kind==='museum-old'?160:301,kind==='museum-old');
+    box(0,0,1024,34,'#354b48');box(0,476,1024,36,'#707566');
   }else if(kind==='glass'){
     box(0,0,1024,512,'#355868');
     for(let i=0;i<8;i++){const x=i*128;box(x+4,10,6,488,'#e9e5d1');c.fillStyle='#9ac1bd';c.beginPath();c.moveTo(x+13,13);c.lineTo(x+108,13);c.lineTo(x+20,469);c.lineTo(x+13,469);c.fill();box(x+9,435,114,12,'#6b8e8c');}
@@ -74,18 +94,34 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
     }else if(mark.id==='biblioteket'){
       mount('Biblioteket · Västra Torggatan',facade('library',1024,256),d,10,b.minx-.05,0,z,-90);
       mount('Biblioteket · sydfasad',facade('library',1024,256),w,10,x,0,b.maxz+.05);
-    }else{
+    }else if(mark.id==='sandgrund'){
       const glass=facade('glass',1024,256);mount('Sandgrund · panoramafönster',glass,w-2,2.6,x,.8,b.maxz+.10);
       const sign=texture((c,sw,sh)=>{c.clearRect(0,0,sw,sh);c.textAlign='center';c.textBaseline='middle';c.font='italic 900 124px Georgia,serif';c.strokeStyle='#7a321b';c.lineWidth=6;c.strokeText('Sandgrund',sw/2,sh*.51,sw-36);c.fillStyle='#f4a329';c.fillText('Sandgrund',sw/2,sh*.51,sw-36);},1024,160);
       mount('Sandgrund · orange takskylt',sign,22,3.4,x+6,3.92,b.maxz+3.86);
       mount('Sandgrund · Lars Lerin',labelTex(['LARS LERIN'],'#ede8d7','#263f46'),5.1,.67,x-8,3,b.maxz+3.90);
+    }else if(mark.id==='stadshotellet'||mark.id==='hotel-wing'){
+      mount(mark.name+' · söder',facade('hotel',1024,384),w,13.3,x,0,b.maxz+.05);
+      mount(mark.name+' · älven',facade('hotel',1024,384),d,13.3,b.minx-.05,0,z,-90);
+      mount(mark.name+' · norr',facade('hotel'),w,13.3,x,0,b.minz-.08,180);
+      mount(mark.name+' · öster',facade('hotel'),d,13.3,b.maxx+.08,0,z,90);
+      if(mark.id==='stadshotellet')mount('Elite Stadshotellet · entré',labelTex(['ELITE','STADSHOTELLET'],'#294e50',paper),5.4,1.69,x,3.0,b.maxz+.82);
+    }else if(mark.id==='duvan'||mark.id==='ahlens'){
+      mount(mark.name+' · butiksfasad',facade(mark.id,1024,384),d,mark.id==='duvan'?15.8:9.7,mark.id==='duvan'?b.minx-.06:b.maxx+.10,0,z,mark.id==='duvan'?-90:90);
+      const side=mark.id==='duvan'?'duvan':'ahlens',height=mark.id==='duvan'?15.8:9.7;
+      mount(mark.name+' · nordfasad',facade(side),w,height,x,0,b.minz-.08,180);
+      mount(mark.name+' · sydfasad',facade(side),w,height,x,0,b.maxz+.08,0);
+      mount(mark.name+' · baksida',facade(side),d,height,mark.id==='duvan'?b.maxx+.08:b.minx-.08,0,z,mark.id==='duvan'?90:-90);
+    }else if(mark.id==='museum'){
+      mount('Cyrillushuset · tegel',facade('museum-old'),28.8,6.8,-146,0,-478.95);
+      mount('Cyrillushuset · älven',facade('museum-old'),35.8,6.8,-160.54,0,-497,-90);
+      for(const [x,z,w,yaw] of [[-94,-467,25,150],[-69,-470,24,45],[-57.9,-494,28,97]])mount('Museet · trä och glas',facade('museum-new'),w,6.8,x,0,z,yaw);
     }
   }
   const brandTextures=new Map();
   function brandTexture(brand){
     if(brandTextures.has(brand))return brandTextures.get(brand);
-    const bg=brand==='olearys'?'#155939':'#fff7e9',name=STOREFRONTS.find(s=>s.brand===brand).name;
-    const t=texture((c,w,h)=>{c.fillStyle=bg;c.fillRect(0,0,w,h);c.fillStyle=brand==='olearys'?paper:ink;c.textAlign='center';c.font='bold 48px sans-serif';c.fillText(name,w/2,h*.63,w-40);},512,160);
+    const bg=brand==='olearys'?'#155939':brand==='museum'?'#864638':'#fff7e9',name=(STOREFRONTS.find(s=>s.brand===brand)||PLACE_SIGNS.find(s=>s.brand===brand)||MALL_ROOMS.find(s=>s.id===brand)).name;
+    const t=texture((c,w,h)=>{c.fillStyle=bg;c.fillRect(0,0,w,h);c.fillStyle=['olearys','museum'].includes(brand)?paper:ink;c.textAlign='center';c.font='bold 48px sans-serif';c.fillText(name,w/2,h*.63,w-40);},512,160);
     brandTextures.set(brand,t);logoStates[brand]='fallback';
     if(typeof Image!=='undefined'){
       const img=new Image();img.onload=()=>{
@@ -93,7 +129,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
         c.fillStyle=bg;c.fillRect(0,0,w,h);const fit=Math.min((w-44)/img.naturalWidth,(h-28)/img.naturalHeight),iw=img.naturalWidth*fit,ih=img.naturalHeight*fit;
         c.drawImage(img,(w-iw)/2,(h-ih)/2,iw,ih);c.strokeStyle=brand==='olearys'?'#d5cba6':'#263f46';c.lineWidth=4;c.strokeRect(4,4,w-8,h-8);t.setSource(canvas);logoStates[brand]='official';
       };
-      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(brand==='espresso'?'.svg':'.png')+'?v=2.6.0',import.meta.url).href;
+      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.8.0',import.meta.url).href;
     }
     return t;
   }
@@ -103,6 +139,9 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
     mount(shop.address,labelTex([shop.address.toUpperCase()],'#254e65','#f8efcf'),3.3,.42,p.x-3,2.1,p.z+out*.23,p.yaw);
     shops.push({id:shop.id,name:shop.name,address:shop.address,...p});
   }
+  for(const p of PLACE_SIGNS)mount(p.name+' · originalskylt',brandTexture(p.brand),p.w,p.w*160/512,p.x,p.y,p.z,p.yaw);
+  createMallSigns({mount,texture,labelTex,brandTexture});
+  for(const [x,z,text,yaw] of [[-59,-373,'MUSEUM ← · UDDEN ↑',0],[-182,-471,'SANDGRUNDSUDDEN ↑',0],[-227,-574,'KLARÄLVEN · BRYGGOR',90],[-221,-756,'SANDGRUNDSUDDEN',0]])mount(text,labelTex([text],'#315e59','#fff0cc'),5.5,1.2,x,2,z,yaw);
   // Street names at the important real intersections. Signs are world-fixed, not camera billboards.
   const signs=STREET_SIGNS;
   const signCache=new Map();for(const [x,z,text,yaw] of signs){if(!signCache.has(text))signCache.set(text,texture((c,w,h)=>{c.fillStyle='#24516a';c.fillRect(0,0,w,h);c.strokeStyle='#f6efcf';c.lineWidth=5;c.strokeRect(5,5,w-10,h-10);c.fillStyle='#f6efcf';c.font='700 39px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(text,w/2,h/2,w-24);},512,96));mount('Gatunamn · '+text,signCache.get(text),4.5,.844,x,2.65,z,yaw);}

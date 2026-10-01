@@ -1,5 +1,7 @@
-import {CityMission} from './city-missions.mjs?v=2.7.1';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.7.1';
+import {CityMission} from './city-missions.mjs?v=2.8.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.8.0';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.8.0';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.8.0';
 
 export const JOURNEY_KEY='karlstad:journey:1';
 const bounded=(v,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max,Number(v))):fallback;
@@ -16,10 +18,12 @@ export class CityJourney extends CityMission {
     for(const p of [{x:1,z:7},{x:1,z:1},{x:7,z:1},{x:13,z:1},{x:19,z:7},{x:-8,z:14}]){const q=nav.point(p);unique.set(`t:${q.x}:${q.z}`,{...q,id:`t:${q.x}:${q.z}`});}
     const sg=portals.sandgrund;
     this.secrets=[[-43,-8,'Bakom rubrikerna'],[53,5,'Bortaklackens gömma'],[-164,48,'Gallerian efter stängning'],[68,-91,'Domkyrkans skugga'],[sg.x+30,sg.z+12,'Penselns hemlighet']].map(([x,z,name],i)=>({...nav.point({x,z}),id:'secret-'+i,name}));
+    this.secrets.push({...MALL_CACHE},{...nav.point({x:-199,z:-831}),id:'udden-cache',name:'Sola längst ut på Sandgrundsudden'});
     this.items=[...unique.values()].filter(p=>!this.secrets.some(s=>Math.hypot(p.x-s.x,p.z-s.z)<3));
     this.ambushes=[];
     routes.forEach((route,ri)=>{for(let i=10;i<route.length-4;i+=22){const trigger=route[i],next=route[i+1],dx=next.x-trigger.x,dz=next.z-trigger.z;
       const spawn=nav.point({x:trigger.x-dz*1.5,z:trigger.z+dx*1.5});this.ambushes.push({id:`ambush-${ri}-${i}`,trigger,spawn});}});
+    for(const p of [...PARK_ENCOUNTERS,{id:'mall-fight',name:'REAN ÄR ODÖDLIG',x:-127,z:104,spawnX:-151,spawnZ:116}])this.ambushes.push({id:p.id,name:p.name,trigger:nav.point(p),spawn:nav.point({x:p.spawnX,z:p.spawnZ})});
     this.busStops=[{id:'torget',name:'Torget',...nav.point({x:-19,z:35})},{id:'domkyrkan',name:'Domkyrkan',...nav.point({x:145,z:-117})},{id:'sandgrund',name:'Sandgrund',...nav.point({x:sg.x+9,z:sg.z+12})}];
     this.safeZones=[{...nav.point({x:5,z:24}),name:'Torget'}, {...nav.point(this.delivery),name:'Mitt i City'},...this.busStops.slice(1)];
     this.postcards=POSTCARDS.map(p=>({...p,...nav.point(p)}));this.postcardsFound=new Set();this.routeMode='hunt';
@@ -70,29 +74,30 @@ export class CityJourney extends CityMission {
     this.balance=Math.max(0,this.balance-25);this.health=100;this.energy=Math.max(20,this.energy);this.contactCooldown=8;this.actors.forEach(a=>a.active=false);this.pendingAmbush=null;
     this.events.push({type:'recover'});this.dirty=true;
   }
-  objective(player=this.position){const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;if(this.routeMode==='landmark'&&this.landmarkGoal)return this.landmarkGoal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
+  objective(player=this.position){if(this.routeMode==='help'&&!this.rush?.exitReady){const help=this.clerks?.objective();if(help)return help;}const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;if(this.routeMode==='landmark'&&this.landmarkGoal)return this.landmarkGoal.id==='place-mitticity'?mallGoal(player,this.secretsFound.has(MALL_CACHE.id)):this.landmarkGoal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
   nearestBus(p){return this.busStops.map(s=>({...s,distance:Math.hypot(p.x-s.x,p.z-s.z)})).sort((a,b)=>a.distance-b.distance)[0];}
   nearestPortal(p){return Object.entries(this.portals).map(([id,q])=>({id,...q,distance:Math.hypot(p.x-q.x,p.z-q.z)})).sort((a,b)=>a.distance-b.distance)[0];}
   step(dt,player,forward={x:0,z:-1}){
     if(this.phase!=='playing'||!player||!Number.isFinite(dt)||dt<=0)return;
     this.position={x:player.x,z:player.z};this.heading=Math.atan2(-forward.x,-forward.z)*180/Math.PI;this.pursuitRange=this.rush.ecology.scent>=40?38:22;super.step(dt,player);
     if(this.phase!=='playing')return;
+    this.clerks?.step(Math.min(dt,1),player);
     this.rush.step(Math.min(dt,1),player,forward);if(this.phase!=='playing')return;
-    for(const item of this.items)if(!this.found.has(item.id)&&Math.hypot(player.x-item.x,player.z-item.z)<1.65){
+    for(const item of this.items)if((player.y??1.68)<3.7&&!this.found.has(item.id)&&Math.hypot(player.x-item.x,player.z-item.z)<1.65){
       this.found.add(item.id);this.collectChain=this.elapsed-this.lastCollect<6?this.collectChain+1:1;this.lastCollect=this.elapsed;
       const bonus=this.collectChain%5===0?25:0;this.reward(25+bonus);this.energy=Math.min(100,this.energy+15);this.rush?.raisePanic(5);this.rush?.ecology.coffee();
       this.events.push({type:'thermos',points:25+bonus,chain:this.collectChain,x:item.x,z:item.z});
     }
-    for(const s of this.secrets)if(!this.secretsFound.has(s.id)&&Math.hypot(player.x-s.x,player.z-s.z)<1.8){
+    for(const s of this.secrets)if(Math.abs((player.y??1.68)-1.68-(s.y??0))<1.8&&!this.secretsFound.has(s.id)&&Math.hypot(player.x-s.x,player.z-s.z)<1.8){
       this.secretsFound.add(s.id);this.reward(200);this.energy=100;this.health=100;this.events.push({type:'secret',name:s.name});
     }
-    for(const p of this.postcards)if(!this.postcardsFound.has(p.id)&&Math.hypot(player.x-p.x,player.z-p.z)<2.4){this.postcardsFound.add(p.id);this.reward(100);this.rush.addTime(8);this.events.push({type:'postcard',name:p.name});this.save();}
+    for(const p of this.postcards)if((player.y??1.68)<3.7&&!this.postcardsFound.has(p.id)&&Math.hypot(player.x-p.x,player.z-p.z)<2.4){this.postcardsFound.add(p.id);this.reward(100);this.rush.addTime(8);this.events.push({type:'postcard',name:p.name});this.save();}
     if(this.pendingAmbush&&this.elapsed>=this.pendingAmbush.at){
       const free=this.actors.find(a=>!a.active),ambush=this.pendingAmbush.ambush;
-      if(free&&this.actors.filter(a=>a.active).length<6){this.spawn(free,ambush.spawn,this.rush.ecology.scent>=60||this.cleared.size%3===0?'runner':'walker');free.ambushId=ambush.id;free.ambushAt=this.elapsed;this.events.push({type:'ambush'});}
+      if(free&&(player.y??1.68)<3.7&&this.actors.filter(a=>a.active).length<6){this.spawn(free,ambush.spawn,this.rush.ecology.scent>=60||this.cleared.size%3===0?'runner':'walker');free.ambushId=ambush.id;free.ambushAt=this.elapsed;this.events.push({type:'ambush',name:ambush.name});}
       this.pendingAmbush=null;
     }
-    if(this.elapsed>8&&!this.pendingAmbush&&this.elapsed-this.lastAmbush>(this.rush.ecology.scent>=80?10:18)&&this.actors.filter(a=>a.active).length<3){
+    if((player.y??1.68)<3.7&&this.elapsed>8&&!this.pendingAmbush&&this.elapsed-this.lastAmbush>(this.rush.ecology.scent>=80?10:18)&&this.actors.filter(a=>a.active).length<3){
       const ambush=this.ambushes.find(a=>{
         const dx=a.spawn.x-player.x,dz=a.spawn.z-player.z,d=Math.hypot(dx,dz);
         const outOfView=(dx*forward.x+dz*forward.z)/Math.max(.01,d)<.35||!this.visible(player.x,player.z,a.spawn.x,a.spawn.z);
