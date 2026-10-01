@@ -1,8 +1,10 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.6.0';
-import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.6.0';
-import {cityBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.6.0';
-import {createCityArchitecture} from './city-architecture.js?v=2.6.0';
+import {createLastRound} from './last-round.js?v=2.7.0';
+import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.7.0';
+import {cityBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.7.0';
+import {createCityArchitecture} from './city-architecture.js?v=2.7.0';
+import {createCityExpansion27} from './city-expansion-27.js?v=2.7.0';
+import {MITT_I_CITY_OSM,applyCity27Colliders} from './city-27.mjs?v=2.7.0';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -23,7 +25,7 @@ const PLAYER_RADIUS=0.42;
 const EYE=1.68;
 const CORE_LOCK=Object.freeze({version:'1.3.0',baseline:'1.2.2',lookSensitivity:.12,walkSpeed:7.2,sprintMultiplier:1.55,jumpVelocity:6.2,gravity:16,playerRadius:.42,mobileMaxPixelRatio:1.25,desktopMaxPixelRatio:1.6,maxBuildings:95,detailRadius:92});
 window.KarlstadCoreLock=CORE_LOCK;
-const GRAPHICS_PASS=Object.freeze({version:'2.6.0',core:'1.3.0',mode:'geographic-comic-city',heroBudget:4,rule:'no-core-feel-changes'});
+const GRAPHICS_PASS=Object.freeze({version:'2.7.0',core:'1.3.0',mode:'recognisable-karlstad-interiors',heroBudget:9,rule:'no-core-feel-changes'});
 window.KarlstadGraphicsPass=GRAPHICS_PASS;
 const TOUCH_TUNE=Object.freeze({deadzone:.13,expo:.42,maxStick:.34,lookScale:.9});
 const fpsLook=new FpsLook({span:Math.min(window.innerWidth,window.innerHeight)});
@@ -492,19 +494,23 @@ function addBuildings(osm){
   const cityMats=[M.stone,M.plaster,M.brick,M.light,M.building];
   for(const b of admitted){
     const identity=IDENTITY_IDS.has(b.osm);
+    const mall27=Number(b.osm)===MITT_I_CITY_OSM;
     const hero=/Mitt i City|Residenset|Wermland/i.test(b.name);
     const seed=hashStr((b.name||'byggnad')+'|'+Math.round(b.cx)+'|'+Math.round(b.cz));
-    if(!identity){
+    if(!identity&&!mall27){
       addBox(b.name||'building',b.cx,b.h/2,b.cz,b.sx,b.h,b.sz,hero?M.hero:cityMats[seed%cityMats.length]);
       if(hero||b.dist<92)addBox((b.name||'building')+'-shopfront',b.cx,1.25,b.cz,b.sx*1.002,2.35,b.sz*1.002,hero?M.heroDark:M.glass);
       if(hero)addBox((b.name||'building')+'-roof',b.cx,b.h+.18,b.cz,b.sx*1.03,.32,b.sz*1.03,M.heroDark);
       addFacadePass12(b,hero,seed);
       if(hero)addHeroLandmarkPass14(b);
     }
-    colliders.push({osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
+    if(!mall27)colliders.push({osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
   }
   const geometry=createCityArchitecture(pc,app,admitted);
+  const city27=createCityExpansion27(pc,app,admitted);
+  colliders=applyCity27Colliders(colliders,admitted);
   window.KarlstadArchitecture=Object.freeze({...geometry,buildings:admitted.length});
+  window.KarlstadCity27=city27;
   return admitted.length;
 }
 

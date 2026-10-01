@@ -1,4 +1,14 @@
-# Karlstad City — Staden jagar dig (Graphics 2.6)
+# Karlstad City — Staden jagar dig (Graphics 2.7)
+
+## Graphics 2.7 — Mitt i City interior and a more recognisable Karlstad
+
+- **Mitt i City is now enterable:** the sealed OSM collision shell is replaced by eight wall segments with four open entrances. A batched interior adds an atrium, upper shopping ring and two escalators without changing the 1.3.0 movement core.
+- **More Karlstad landmarks:** Duvan, Åhléns, Elite Stadshotellet and Värmlands Museum receive simplified comic-style landmark masses and shared in-world signs. Sandgrundsudden gets a park, riverside paths, water edges and trees so the route north reads as a real district instead of empty ground.
+- **Rare, short darkness:** blackout duration is capped at **4 seconds** and repeated blackouts are separated by at least **150 seconds**. Other Chaos Director events may still occur between them.
+- **Performance rule:** the 2.7 expansion is two static draw calls (one vertex-colour city batch + one shared sign atlas). No new dynamic lights, shadows, actor pools or per-frame texture uploads are introduced.
+- **Regression coverage:** eight 2.7 tests cover real-place data, Mitt i City entrance/collision behaviour and blackout timing, extending the 2.6 suite from 70 to 78 tests.
+
+The new locations use the same Stora Torget projection as Graphics 2.6. The 2.7 coordinate anchors are based on the real central-Karlstad locations for Mitt i City, Duvan, Åhléns, Stadshotellet, Värmlands Museum and Sandgrundsudden; the meshes remain stylised game interpretations rather than survey-grade replicas.
 
 The active game remains `playcanvas-karlstad-next/`, using PlayCanvas 2.22.4, the existing city data, music and movement speeds.
 

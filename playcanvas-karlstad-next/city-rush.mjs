@@ -1,9 +1,10 @@
-import {nearestByRoute} from './city-guidance.mjs?v=2.6.0';
-import {beginStory,storyAction,stepStory,STREET_STORIES} from './street-stories.mjs?v=2.6.0';
-import {seededRandom,saveDailyResult,dailyRecord} from './daily-challenge.mjs?v=2.6.0';
-import {CityEcology} from './city-ecology.mjs?v=2.6.0';
+import {nearestByRoute} from './city-guidance.mjs?v=2.7.0';
+import {beginStory,storyAction,stepStory,STREET_STORIES} from './street-stories.mjs?v=2.7.0';
+import {seededRandom,saveDailyResult,dailyRecord} from './daily-challenge.mjs?v=2.7.0';
+import {CityEcology} from './city-ecology.mjs?v=2.7.0';
+import {BLACKOUT_27,canBlackout27} from './city-27.mjs?v=2.7.0';
 export const RUSH=Object.freeze({seconds:180,target:800,maxTime:210,maxEnemies:6});
-export const CHAOS=Object.freeze({minDelay:20,maxDelay:45,firstDelay:22,fallSeconds:24,blackoutSeconds:12});
+export const CHAOS=Object.freeze({minDelay:20,maxDelay:45,firstDelay:22,fallSeconds:24,blackoutSeconds:BLACKOUT_27.seconds,blackoutCooldown:BLACKOUT_27.cooldown});
 export const POSTCARDS=Object.freeze([
   {id:'church',name:'Domkyrkan',file:'domkyrkan.jpg',x:158,z:-85},
   {id:'autumn',name:'Höstpromenaden',file:'hostgatan.jpg',x:-25,z:-145},
@@ -16,14 +17,14 @@ export class CityRush {
   constructor(city){
     this.city=city;this.spent=0;this.mode='free';this.state='idle';this.best=0;this.xp=0;this.time=RUSH.seconds;this.contract=null;this.contractSerial=0;this.patrolSerial=0;this.storySerial=0;this.escapeGoal=null;this.busGoal=null;
     this.panic=0;this.panicTier=0;this.chaosCount=0;this.nextChaos=CHAOS.firstDelay;this.chaosTarget=null;this.fallUntil=0;this.nextFallSpawn=0;
-    this.ecology=new CityEcology(this);this.seed=280926;this.random=seededRandom(this.seed);this.challenge=null;this.blackoutUntil=0;
+    this.ecology=new CityEcology(this);this.seed=280926;this.random=seededRandom(this.seed);this.challenge=null;this.blackoutUntil=0;this.lastBlackout=-Infinity;
     try{this.best=Math.max(0,Math.min(999999,Number(city.storage?.getItem('karlstad:rush:best:1'))||0));}catch{}
   }
   start(mode='timed',options={}){
     this.city.endChallenge();this.challenge=options.challenge||null;
     if(this.challenge)this.city.beginChallenge(options.kit);
     this.seed=this.challenge?.seed||options.seed||280926;this.random=seededRandom(this.seed);
-    this.replayKit=this.city.runKit();this.ecology.reset();this.blackoutUntil=0;this.peakPanic=0;this.buses=0;this.streetWins=0;this.dailyBest=this.challenge?.kind==='daily'?dailyRecord(this.city.storage,this.challenge.day).best:0;
+    this.replayKit=this.city.runKit();this.ecology.reset();this.blackoutUntil=0;this.lastBlackout=-Infinity;this.peakPanic=0;this.buses=0;this.streetWins=0;this.dailyBest=this.challenge?.kind==='daily'?dailyRecord(this.city.storage,this.challenge.day).best:0;
     this.mode=mode;this.state='playing';this.xp=0;this.time=this.challenge?.seconds||RUSH.seconds;this.spent=0;this.contract=null;this.contractSerial=0;this.patrolSerial=0;this.storySerial=0;this.escapeGoal=null;this.busGoal=null;
     this.nextContract=2;this.nextPatrol=6;this.alerted=false;this.exitReady=false;this.bonus=0;
     this.panic=0;this.panicTier=0;this.chaosCount=0;this.nextChaos=CHAOS.firstDelay;this.chaosTarget=null;this.fallUntil=0;this.nextFallSpawn=0;
@@ -97,7 +98,8 @@ export class CityRush {
     }
     if(kind===1){
       const count=[-.55,.55].map(o=>this.spawnEnemy(p,f,null,o)).filter(Boolean).length;
-      this.blackoutUntil=Math.max(this.blackoutUntil,this.spent+CHAOS.blackoutSeconds);this.raisePanic(6);this.city.events.push({type:'chaos-blackout',seconds:CHAOS.blackoutSeconds,count});return true;
+      if(!canBlackout27(this.spent,this.lastBlackout)){this.raisePanic(4);this.city.events.push({type:'chaos-bells',count});return true;}
+      this.lastBlackout=this.spent;this.blackoutUntil=Math.max(this.blackoutUntil,this.spent+CHAOS.blackoutSeconds);this.raisePanic(6);this.city.events.push({type:'chaos-blackout',seconds:CHAOS.blackoutSeconds,count});return true;
     }
     this.chaosTarget={kind:'gold',title:'GULDTERMOS',spot:this.spot(p,f,false,.35),until:this.spent+14,points:160};
     this.raisePanic(3);this.city.events.push({type:'chaos-gold',seconds:14,points:160});return true;
@@ -180,5 +182,5 @@ export class CityRush {
     this.city.endChallenge();
     this.city.events.push({type:'hunt-finish',escaped,reason,score:this.finalScore});this.city.save();
   }
-  snapshot(){return {seed:this.seed,challenge:this.challenge?{...this.challenge}:null,ecology:this.ecology.snapshot(),blackoutRemaining:Math.max(0,this.blackoutUntil-(this.spent||0)),peakPanic:this.peakPanic||0,dailyBest:this.dailyBest||0,mode:this.mode,state:this.state,xp:this.xp,target:RUSH.target,time:this.time,spent:this.spent||0,best:this.best,exitReady:!!this.exitReady,panic:this.panic,panicTier:this.panicTier,chaosCount:this.chaosCount,fallRemaining:this.fallUntil?Math.max(0,this.fallUntil-this.spent):0,chaosTarget:this.chaosTarget?{...this.chaosTarget,spot:{...this.chaosTarget.spot}}:null,contract:this.contract?{...this.contract,cart:this.contract.cart?{...this.contract.cart,hit:[...this.contract.cart.hit]}:undefined,spot:{...this.contract.spot}}:null};}
+  snapshot(){return {seed:this.seed,challenge:this.challenge?{...this.challenge}:null,ecology:this.ecology.snapshot(),lastBlackout:this.lastBlackout,blackoutRemaining:Math.max(0,this.blackoutUntil-(this.spent||0)),peakPanic:this.peakPanic||0,dailyBest:this.dailyBest||0,mode:this.mode,state:this.state,xp:this.xp,target:RUSH.target,time:this.time,spent:this.spent||0,best:this.best,exitReady:!!this.exitReady,panic:this.panic,panicTier:this.panicTier,chaosCount:this.chaosCount,fallRemaining:this.fallUntil?Math.max(0,this.fallUntil-this.spent):0,chaosTarget:this.chaosTarget?{...this.chaosTarget,spot:{...this.chaosTarget.spot}}:null,contract:this.contract?{...this.contract,cart:this.contract.cart?{...this.contract.cart,hit:[...this.contract.cart.hit]}:undefined,spot:{...this.contract.spot}}:null};}
 }
