@@ -1,3 +1,12 @@
+# Karlstad City — UI 2.7.4
+
+## 2.7.4 — map destinations remain selectable in Dagens utmaning
+
+- Fixes the disabled destination buttons shown during daily/friend challenges.
+- Challenge mode still locks mission rerolls and manually chosen street events, preserving the shared challenge setup.
+- Navigation is no longer treated as a challenge-changing action: Mitt i City, Domkyrkan, Sandgrund, O’Learys and the other quick destinations remain selectable from both the real map pins and the named buttons.
+- After 800 XP, quick destinations still lock as intended so the green escape/safe-zone objective takes precedence.
+
 # Karlstad City — UI 2.7.3
 
 ## 2.7.3 — real touch buttons on the map
