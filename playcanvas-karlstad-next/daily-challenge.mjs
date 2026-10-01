@@ -45,7 +45,7 @@ export function challengeRequest(search,now=new Date()){
   return {kind:null,target,seed};
 }
 export function challengeLink(base,record){
-  const url=new URL(base);url.search='';url.hash='';url.searchParams.set('v','2.8.0');url.searchParams.set('rules',String(CHALLENGE_RULES));
+  const url=new URL(base);url.search='';url.hash='';url.searchParams.set('v','2.8.1');url.searchParams.set('rules',String(CHALLENGE_RULES));
   if(record.kind==='daily')url.searchParams.set('daily',record.day);
   else if(record.kind==='bus'){url.searchParams.set('challenge','bus');url.searchParams.set('from',record.from);}
   else if(record.kind==='mission')url.searchParams.set('challenge',record.mission);

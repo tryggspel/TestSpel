@@ -1,7 +1,7 @@
-import {CityMission} from './city-missions.mjs?v=2.8.0';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.8.0';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.8.0';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.8.0';
+import {CityMission} from './city-missions.mjs?v=2.8.1';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.8.1';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.8.1';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.8.1';
 
 export const JOURNEY_KEY='karlstad:journey:1';
 const bounded=(v,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max,Number(v))):fallback;

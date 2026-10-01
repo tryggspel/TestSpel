@@ -1,8 +1,8 @@
 // One coordinate system for buildings, signs, the street mesh and the player map.
-export {CITY_STREETS} from './city-streets.mjs?v=2.8.0';
-import {CITY_STREETS} from './city-streets.mjs?v=2.8.0';
-import {MUSEUM_BUILDING,PENINSULA_SHORE,PARK_PATHS,PARK_PIERS} from './city-sites.mjs?v=2.8.0';
-import {MALL_ENTRANCES,MALL_CORRIDORS} from './mall-space.mjs?v=2.8.0';
+export {CITY_STREETS} from './city-streets.mjs?v=2.8.1';
+import {CITY_STREETS} from './city-streets.mjs?v=2.8.1';
+import {MUSEUM_BUILDING,PENINSULA_SHORE,PARK_PATHS,PARK_PIERS} from './city-sites.mjs?v=2.8.1';
+import {MALL_ENTRANCES,MALL_CORRIDORS} from './mall-space.mjs?v=2.8.1';
 export const CITY_ORIGIN=Object.freeze({lat:59.380767,lon:13.50295});
 export function cityPoint(lon,lat){return {x:(lon-CITY_ORIGIN.lon)*111320*Math.cos(CITY_ORIGIN.lat*Math.PI/180),z:-(lat-CITY_ORIGIN.lat)*110540};}
 export const LANDMARKS=Object.freeze([

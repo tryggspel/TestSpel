@@ -1,20 +1,20 @@
-import {FriendlyClerks} from './friendly-clerks.mjs?v=2.8.0';
-import {createFriendlyView} from './friendly-view.js?v=2.8.0';
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.8.0';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.8.0';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.8.0';
-import {CityJourney} from './journey-rules.mjs?v=2.8.0';
-import {createJourneyView} from './journey-view.js?v=2.8.0';
-import {createBusRide} from './bus-ride.js?v=2.8.0';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.8.0';
-import {createPostcard} from './challenge-postcard.js?v=2.8.0';
-import {CityGuidance} from './city-guidance.mjs?v=2.8.0';
-import {RUSH} from './city-rush.mjs?v=2.8.0';
-import {createCityIdentity} from './city-identity.js?v=2.8.0';
-import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.8.0';
+import {FriendlyClerks} from './friendly-clerks.mjs?v=2.8.1';
+import {createFriendlyView} from './friendly-view.js?v=2.8.1';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.8.1';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.8.1';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.8.1';
+import {CityJourney} from './journey-rules.mjs?v=2.8.1';
+import {createJourneyView} from './journey-view.js?v=2.8.1';
+import {createBusRide} from './bus-ride.js?v=2.8.1';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.8.1';
+import {createPostcard} from './challenge-postcard.js?v=2.8.1';
+import {CityGuidance} from './city-guidance.mjs?v=2.8.1';
+import {RUSH} from './city-rush.mjs?v=2.8.1';
+import {createCityIdentity} from './city-identity.js?v=2.8.1';
+import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.8.1';
 
-import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.8.0';
-import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.8.0';
+import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.8.1';
+import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.8.1';
 
 export function createLastRound(pc, host) {
   const $ = id => document.getElementById(id);
@@ -446,7 +446,7 @@ export function createLastRound(pc, host) {
     $('mapGoals').hidden=!isJourney();$('mapCurrentGoal').textContent=isJourney()?journey.objective(host.player.getPosition()).label:'DITT PÅGÅENDE UPPDRAG';
     $('route-sun').disabled=!journey.rush.ecology.sun;for(const m of MISSIONS)$('route-'+m.id).disabled=!!journey.rush.challenge||journey.rush.exitReady;
     for(const place of PLACE_ROUTES)$('route-place-'+place).disabled=journey.rush.exitReady;
-    $('teleport-mitt-i-city').disabled=!isJourney()||journey.rush.mode!=='free';
+    $('teleport-mitt-i-city').disabled=!isJourney()||journey.rush.exitReady;
     for(const kind of ['power','news','bowling'])$('story-'+kind).disabled=!!journey.rush.challenge||journey.rush.exitReady||(host.mallWalk?.height??0)>2;
     $('mapStoryHint').textContent=journey.rush.challenge?'I utmaningar väljer staden händelserna, lika för alla.':journey.rush.exitReady?'800 XP klara. Följ grönt och säkra rundan.':'Starta en ny händelse i närheten. Ersätter pågående gatuhändelse.';
     const pinLayer=$('mapPinLayer');pinLayer.replaceChildren();pinLayer.hidden=!isJourney();
@@ -622,7 +622,7 @@ export function createLastRound(pc, host) {
   }
   for(const place of PLACE_ROUTES)$('route-place-'+place).addEventListener('click',()=>chooseQuickPlace(place));
   $('teleport-mitt-i-city').addEventListener('click',()=>{
-    if(!isJourney()||journey.rush.mode!=='free')return;
+    if(!isJourney()||journey.rush.exitReady)return;
     journey.landmarkGoal=quickPlaceTarget('mitticity');journey.routeMode='landmark';
     host.teleport(-145,116,0,-4);journey.position={x:-145,z:116};journey.save();resume();
     toast('VÄLKOMMEN TILL MITT I CITY','Plan 0: Coop och Cervera. Rulltrappan leder till Clas Ohlson på plan 1.',4);
@@ -669,7 +669,7 @@ export function createLastRound(pc, host) {
   window.addEventListener('pointerdown',()=>{host.music?.unlock?.();if(isJourney()&&!panel)host.music?.city?.(true);},{once:true});
   document.addEventListener('visibilitychange', () => {if (document.hidden && game.phase === 'playing') pause();});
   $('useBtn').textContent = 'UPPDRAG'; $('jumpBtn').textContent = 'HOPPA';
-  window.KarlstadRound = Object.freeze({version: '2.8.0', snapshot: () => ({phase: game.phase, mode:busRide.active()?'bus':isJourney()?'journey':'mission',score: game.score, energy: game.energy,oneHand:!!host.oneHand?.(),bus:busRide.snapshot(),rush:journey.rush.snapshot(),postcard:lastMoment?{...lastMoment}:null,challengeRequest:request,
+  window.KarlstadRound = Object.freeze({version: '2.8.1', snapshot: () => ({phase: game.phase, mode:busRide.active()?'bus':isJourney()?'journey':'mission',score: game.score, energy: game.energy,oneHand:!!host.oneHand?.(),bus:busRide.snapshot(),rush:journey.rush.snapshot(),postcard:lastMoment?{...lastMoment}:null,challengeRequest:request,
     clerks:journey.clerks.snapshot(),cityIdentity:cityIdentity.snapshot(),mall:{...host.mallWalk?.snapshot(),inside:mallInside(host.player.getPosition()),cacheFound:journey.secretsFound.has(MALL_CACHE.id)},
     guidance:guidance?{goal:{...guidance.goal},next:{...guidance.next},turn:guidance.turn,distance:guidance.distance}:null,
     journey:{balance:journey.balance,lifetime:journey.lifetime,found:journey.found.size,secrets:journey.secretsFound.size,postcards:[...journey.postcardsFound],safeZones:journey.safeZones.map(s=>({...s})),busStops:journey.busStops.map(s=>({...s})),destination:journey.destination,items:journey.items.filter(t=>!journey.found.has(t.id)).map(t=>({...t})),portals:structuredClone(portals)},
@@ -815,7 +815,7 @@ export function createLastRound(pc, host) {
       if (game.phase === 'ready') {
         $('mission').textContent='KARLSTAD EFTER STÄNGNING · 3 UPPDRAG';
       } else $('mission').textContent = missionInfo().name.toUpperCase();
-      $('status').textContent = `FPS ${Math.round(host.app.stats.frame.fps)} · ${isJourney()?journey.rush.challenge?.kind==='daily'?'DAGENS KARLSTAD 2.8.0':'STADSJAKTEN 2.8.0':missionInfo().place.toUpperCase()}`;
+      $('status').textContent = `FPS ${Math.round(host.app.stats.frame.fps)} · ${isJourney()?journey.rush.challenge?.kind==='daily'?'DAGENS KARLSTAD 2.8.1':'STADSJAKTEN 2.8.1':missionInfo().place.toUpperCase()}`;
       const destination = game.phase === 'playing' ? (isPush()?layout.goal:guidance.goal) : olearyLayout.guard;
       const direction = !isPush()&&game.phase==='playing'?guidance.angle:Math.atan2(destination.x - p.x, destination.z - p.z) - Math.atan2(host.camera.forward.x, host.camera.forward.z);
       $('roundCompassArrow').style.transform = `rotate(${-direction * 180 / Math.PI}deg)`;
