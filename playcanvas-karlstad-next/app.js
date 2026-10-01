@@ -1,10 +1,10 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.7.2';
-import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.7.2';
-import {cityBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.7.2';
-import {createCityArchitecture} from './city-architecture.js?v=2.7.2';
-import {createCityExpansion27} from './city-expansion-27.js?v=2.7.2';
-import {MITT_I_CITY_OSM,applyCity27Colliders,mittICityLayout,mittICityFloorAt} from './city-27.mjs?v=2.7.2';
+import {createLastRound} from './last-round.js?v=2.7.3';
+import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.7.3';
+import {cityBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.7.3';
+import {createCityArchitecture} from './city-architecture.js?v=2.7.3';
+import {createCityExpansion27} from './city-expansion-27.js?v=2.7.3';
+import {MITT_I_CITY_OSM,applyCity27Colliders,mittICityLayout,mittICityFloorAt} from './city-27.mjs?v=2.7.3';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -25,7 +25,7 @@ const PLAYER_RADIUS=0.42;
 const EYE=1.68;
 const CORE_LOCK=Object.freeze({version:'1.3.0',baseline:'1.2.2',lookSensitivity:.12,walkSpeed:7.2,sprintMultiplier:1.55,jumpVelocity:6.2,gravity:16,playerRadius:.42,mobileMaxPixelRatio:1.25,desktopMaxPixelRatio:1.6,maxBuildings:95,detailRadius:92});
 window.KarlstadCoreLock=CORE_LOCK;
-const GRAPHICS_PASS=Object.freeze({version:'2.7.2',core:'1.3.0',mode:'recognisable-karlstad-interiors-wayfinding',heroBudget:9,rule:'no-core-feel-changes'});
+const GRAPHICS_PASS=Object.freeze({version:'2.7.3',core:'1.3.0',mode:'recognisable-karlstad-interiors-wayfinding',heroBudget:9,rule:'no-core-feel-changes'});
 window.KarlstadGraphicsPass=GRAPHICS_PASS;
 const TOUCH_TUNE=Object.freeze({deadzone:.13,expo:.42,maxStick:.34,lookScale:.9});
 const fpsLook=new FpsLook({span:Math.min(window.innerWidth,window.innerHeight)});

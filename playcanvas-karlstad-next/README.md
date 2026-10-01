@@ -1,3 +1,12 @@
+# Karlstad City — UI 2.7.3
+
+## 2.7.3 — real touch buttons on the map
+
+- Replaced the Safari-sensitive canvas pointer hit testing from 2.7.2 with real HTML buttons positioned over every selectable map destination.
+- Each pin now has a 48 × 48 CSS-pixel touch target with ordinary button click handling, while the canvas remains purely visual.
+- The overlay travels with the responsive square map and works independently of the scrollable map panel.
+- Destination selection still updates the same route, compass, radar and cyan ground arrows; the named buttons below the map remain as a second path.
+
 # Karlstad City — Graphics 2.7.2
 
 ## 2.7.2 — tappable map destinations on mobile
