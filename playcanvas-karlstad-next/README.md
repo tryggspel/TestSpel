@@ -1,3 +1,13 @@
+# Karlstad City — Navigation 2.7.5
+
+## 2.7.5 — Mitt i City entrance shortcut
+
+- **Mitt i City now routes through a door instead of stopping at the facade.** Selecting the mall chooses the nearest of four open entrances by actual walkable route distance.
+- Street navigation leads to an outside entrance point, then explicit waypoints continue through the collision gap to a point inside the atrium.
+- Once the player crosses the doorway, guidance immediately switches to the atrium and never points back outside.
+- Four **INGÅNG** signs make the playable openings visible, and the map shortcut is labelled **Mitt i City · GÅ IN**.
+- This is a walking shortcut, not a teleport; the locked movement core and the two-floor interior remain unchanged.
+
 # Karlstad City — UI 2.7.4
 
 ## 2.7.4 — map destinations remain selectable in Dagens utmaning
