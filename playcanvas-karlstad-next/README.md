@@ -1,3 +1,13 @@
+# Karlstad City — Graphics / Navigation 2.7.6
+
+## 2.7.6 — current Mitt i City shell, recognizable facade and direct map entry
+
+- **Root cause fixed:** the old Mitt i City OSM id no longer exists in the current city snapshot. The game now binds the mall to the current retail building way `234271401`, removes that shell from generic city rendering/collision, and reserves it inside the 95-building budget.
+- **Recognizable exterior:** the custom mall uses a light facade, glass shopfront rhythm and green/white **MITT I CITY** entrance branding based on current street references instead of an anonymous brown block.
+- **Current interior cues:** lightweight shop signs include Coop City on plan 0 and Clas Ohlson, Cubus and Deichmann on plan 1, matching the current centre directory.
+- **Direct map shortcut:** a large **GÅ DIREKT IN I MITT I CITY** button teleports the player to the ground-floor atrium, closes the map and leaves the escalators available immediately. It works during normal exploration and daily/friend challenges until the 800-XP escape objective takes precedence.
+- **Walking still works:** the ordinary "Väg till Mitt i City" destination remains available for players who want to walk there.
+
 # Karlstad City — Navigation 2.7.5
 
 ## 2.7.5 — Mitt i City entrance shortcut
