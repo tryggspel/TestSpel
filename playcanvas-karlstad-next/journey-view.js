@@ -1,5 +1,6 @@
-import {createComicCity} from './comic-city.js?v=2.8.1';
-import {SUN} from './city-ecology.mjs?v=2.8.1';
+import {createBusModel} from './transit-art.js?v=2.9.0';
+import {createComicCity} from './comic-city.js?v=2.9.0';
+import {SUN} from './city-ecology.mjs?v=2.9.0';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
   const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');
@@ -33,18 +34,11 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const visitors=Array.from({length:3},(_,i)=>card('Besökare '+i,fanTex('visitor',['#e9b978','#75bbb5','#a990c9'][i]),1.5,2.3,0,0,0));
   const safePad=primitive('Sandgrund safe area','cylinder',sandgrund.safe.x,.1,sandgrund.safe.z,8,.035,8,mint);
   const safeSign=card('Besökarnas samling',labelTex(['SAMLINGSPLATS','BESÖKARE HIT'], '#225345','#b8f4ca'),4.2,1.3,sandgrund.safe.x,2.4,sandgrund.safe.z,true);
-  const busTex=texture((c,w,h)=>{
-    c.scale(w/512,h/256);c.strokeStyle='#17372f';c.lineWidth=10;c.lineJoin='round';
-    c.fillStyle='#e29448';c.beginPath();c.roundRect(20,30,472,180,24);c.fill();c.stroke();
-    c.fillStyle='#203f48';for(let i=0;i<5;i++){c.fillRect(40+i*82,52,68,76);c.strokeRect(40+i*82,52,68,76);}
-    c.fillStyle='#eef3c5';c.fillRect(27,143,457,43);c.fillStyle='#294c38';c.font='900 31px sans-serif';c.textAlign='center';c.fillText('666 · SISTA HÅLLPLATSEN',256,176);
-    for(const x of [115,406]){c.beginPath();c.arc(x,214,29,0,Math.PI*2);c.fillStyle='#17372f';c.fill();c.beginPath();c.arc(x,214,13,0,Math.PI*2);c.fillStyle='#c3c9a4';c.fill();}
-  },512,256);
   const busViews=journey.busStops.map(s=>{
     primitive('bus-stop-post','box',s.x,1.7,s.z,.15,3.4,.15,ink);
-    const sign=card('Zombieexpressen '+s.name,labelTex(['BUSS 666','TA RATTEN · ÖVERLEV'], '#c94846','#fff2cd'),3.3,1.1,s.x,2.8,s.z,true);
+    const sign=card('Zombieexpressen '+s.name,labelTex(['VÄRMLANDSTRAFIK',s.name.toUpperCase()], '#f9b000','#243941'),3.3,1.1,s.x,2.8,s.z,true);
     const pad=primitive('bus-stop-pad','cylinder',s.x,.1,s.z,5,.06,5,orangeMat());
-    const vehicle=card('Buss 666 vid '+s.name,busTex,5.8,2.9,s.x+4,.05,s.z+1);
+    const vehicle=createBusModel(pc,host,draw,s.x+6,s.z+2);
     return {s,sign,pad,vehicle};
   });
   function orangeMat(){return material('#f59554');}
@@ -74,16 +68,16 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   function update(p,now,game){
     const roaming=game===journey;comicCity.update(p);
     const nearby=roaming?journey.items.filter(t=>!journey.found.has(t.id)&&Math.hypot(t.x-p.x,t.z-p.z)<44).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z)).slice(0,pickupPool.length):[];
-    pickupPool.forEach((e,i)=>{e.enabled=i<nearby.length;if(!e.enabled)return;const t=nearby[i];e.setPosition(t.x,.28+Math.sin(now/350+i)*.12,t.z);e.setEulerAngles(0,Math.atan2(p.x-t.x,p.z-t.z)*180/Math.PI,Math.sin(now/650+i)*4);});
-    secretPool.forEach(({s,e})=>{e.enabled=roaming&&!journey.secretsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<30;if(e.enabled){e.setPosition(s.x,(s.y??0)+.3+Math.sin(now/400)*.15,s.z);e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);}});
-    portalViews.forEach(v=>{v.e.enabled=v.ring.enabled=roaming&&(Math.hypot(p.x-v.p.x,p.z-v.p.z)<38||(journey.routeMode==='mission'&&journey.destination===v.id));v.e.setEulerAngles(0,Math.atan2(p.x-v.p.x,p.z-v.p.z)*180/Math.PI,0);});
-    ambushProps.forEach(({a,e})=>{e.enabled=roaming&&!journey.cleared.has(a.id)&&Math.hypot(p.x-a.spawn.x,p.z-a.spawn.z)<40;});
+    pickupPool.forEach((e,i)=>{e.enabled=i<nearby.length;if(!e.enabled)return;const t=nearby[i];e.setPosition(t.x,(t.y||0)+.28+Math.sin(now/350+i)*.12,t.z);e.setEulerAngles(0,Math.atan2(p.x-t.x,p.z-t.z)*180/Math.PI,Math.sin(now/650+i)*4);});
+    secretPool.forEach(({s,e})=>{e.enabled=roaming&&journey.rush.mode!=='trail'&&!journey.secretsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<30;if(e.enabled){e.setPosition(s.x,(s.y??0)+.3+Math.sin(now/400)*.15,s.z);e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);}});
+    portalViews.forEach(v=>{v.e.enabled=v.ring.enabled=roaming&&!journey.rush.peaceful&&(Math.hypot(p.x-v.p.x,p.z-v.p.z)<38||(journey.routeMode==='mission'&&journey.destination===v.id));v.e.setEulerAngles(0,Math.atan2(p.x-v.p.x,p.z-v.p.z)*180/Math.PI,0);});
+    ambushProps.forEach(({a,e})=>{e.enabled=roaming&&!journey.rush.peaceful&&!journey.cleared.has(a.id)&&Math.hypot(p.x-a.spawn.x,p.z-a.spawn.z)<40;});
     const gallery=game===sandgrund;safePad.enabled=safeSign.enabled=gallery;
     visitors.forEach((e,i)=>{const v=sandgrund.visitors[i];e.enabled=gallery&&!v.rescued;if(e.enabled){e.setPosition(v.x,0,v.z);e.setEulerAngles(0,Math.atan2(p.x-v.x,p.z-v.z)*180/Math.PI,0);}});
     for(const s of stations)s.e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);
-    busViews.forEach(({s,sign,pad,vehicle})=>{sign.enabled=pad.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<45;vehicle.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<60;sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);vehicle.setEulerAngles(0,Math.atan2(p.x-s.x-4,p.z-s.z-1)*180/Math.PI,0);});
+    busViews.forEach(({s,sign,pad,vehicle})=>{sign.enabled=pad.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<45;vehicle.enabled=roaming&&Math.hypot(p.x-s.x,p.z-s.z)<60;sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
     escapes.forEach(({s,pad,sign})=>{pad.enabled=sign.enabled=roaming&&journey.rush.mode==='timed'&&(journey.rush.exitReady||Math.hypot(p.x-s.x,p.z-s.z)<20);sign.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
-    postcards.forEach(({s,e})=>{e.enabled=roaming&&!journey.postcardsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<38;if(e.enabled)e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
+    postcards.forEach(({s,e})=>{e.enabled=roaming&&!journey.rush.peaceful&&!journey.postcardsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<38;if(e.enabled)e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);});
     const sun=journey.rush.ecology.sun;sunPad.enabled=sunSign.enabled=roaming&&!!sun;
     if(roaming&&sun){sunPad.setPosition(sun.x,.08,sun.z);sunSign.setPosition(sun.x,2.4+Math.sin(now/750)*.08,sun.z);sunSign.setEulerAngles(0,Math.atan2(p.x-sun.x,p.z-sun.z)*180/Math.PI,0);}
     const chaos=journey.rush.chaosTarget;chaosFlask.enabled=roaming&&!!chaos&&!journey.rush.exitReady;
@@ -102,7 +96,7 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   }
   function radar(c,point,roaming){if(!roaming)return;
     c.fillStyle='#c994f1';for(const t of journey.items)if(!journey.found.has(t.id)){const [x,y]=point(t.x,t.z);if(x>0&&y>0&&x<256&&y<256)c.fillRect(x-2,y-2,4,4);}
-    c.fillStyle='#ffe18c';for(const p of Object.values(portals)){const [x,y]=point(p.x,p.z);c.fillRect(x-5,y-5,10,10);}
+    c.fillStyle='#ffe18c';if(!journey.rush.peaceful)for(const p of Object.values(portals)){const [x,y]=point(p.x,p.z);c.fillRect(x-5,y-5,10,10);}
     c.fillStyle='#f79b68';for(const s of journey.busStops){const [x,y]=point(s.x,s.z);c.fillRect(x-4,y-4,8,8);}
     const sun=journey.rush.ecology.sun;if(sun){const [x,y]=point(sun.x,sun.z);c.beginPath();c.arc(x,y,13,0,Math.PI*2);c.fillStyle='#ffdd6680';c.fill();c.strokeStyle='#ffdf71';c.lineWidth=2;c.stroke();}
     const chaos=journey.rush.chaosTarget;if(chaos){const [x,y]=point(chaos.spot.x,chaos.spot.z);c.fillStyle='#ffdf71';c.fillRect(x-4,y-4,8,8);}

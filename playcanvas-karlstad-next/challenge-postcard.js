@@ -1,4 +1,4 @@
-import {challengeLink,CHALLENGE_RULES} from './daily-challenge.mjs?v=2.8.1';
+import {challengeLink,CHALLENGE_RULES} from './daily-challenge.mjs?v=2.9.0';
 
 // Draw only on a paused/result screen. Original canvas art; no network or GPU readback.
 export function drawPostcard(canvas,r){
@@ -9,7 +9,7 @@ export function drawPostcard(canvas,r){
   const circle=(x,y,r,fill)=>{c.fillStyle=fill;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();};
   box(0,0,720,900,cream);c.strokeStyle=ink;c.lineWidth=12;c.strokeRect(16,16,688,868);
   box(32,32,656,61,ink);text('KARLSTAD CITY',51,73,33,cream);text('EFTER STÄNGNING',666,71,12,'#a8dfb5','right',175);
-  const label=r.kind==='daily'?'DAGENS KARLSTAD · '+r.day:r.kind==='bus'?'LINJE 666 · '+(r.place||'KARLSTAD').toUpperCase():r.kind==='mission'?'SPECIALUPPDRAG · '+r.place.toUpperCase():'STADSJAKTEN · 3 MINUTER';
+  const label=r.kind==='daily'?'DAGENS KARLSTAD · '+r.day:r.kind==='boat'?'BÅTBUSS · MARIEBERGSSKOGEN':r.kind==='bus'?'LINJE 666 · '+(r.place||'KARLSTAD').toUpperCase():r.kind==='mission'?'SPECIALUPPDRAG · '+r.place.toUpperCase():'STADSJAKTEN · 3 MINUTER';
   text(label,42,126,18,ink,'left',636);
   c.save();c.beginPath();c.rect(32,144,656,204);c.clip();box(32,144,656,204,'#b8dbbe');
   for(let i=0;i<14;i++){const a=i*Math.PI/7;c.beginPath();c.moveTo(567,191);c.lineTo(567+Math.cos(a)*530,191+Math.sin(a)*530);c.lineTo(567+Math.cos(a+.13)*530,191+Math.sin(a+.13)*530);c.fillStyle='#e7cc76';c.fill();}
@@ -26,12 +26,12 @@ export function drawPostcard(canvas,r){
     circle(601,297,24,'#b8d883');box(578,322,46,42,purple);circle(593,290,8,cream);circle(610,294,8,cream);circle(594,292,3,ink);circle(610,296,3,ink);box(592,311,21,5,ink);
   }
   c.restore();box(32,349,656,140,ink);
-  const lines=r.kind==='bus'?(r.won?['ÖVERLEVDE','ZOMBIEBUSSEN.']:['AVSTIGNING.','OPLANERAD.']):r.won?['KARLSTAD FÖRSÖKTE.','JAG KOM UNDAN.']:['KAFFET VAR GOTT.','SLUTET VAR SÄMRE.'];
+  const lines=r.kind==='boat'?['KAPTENEN VAR DÖD.','JAG HADE LIVBOJAR.']:r.kind==='bus'?(r.won?['ÖVERLEVDE','ZOMBIEBUSSEN.']:['AVSTIGNING.','OPLANERAD.']):r.won?['KARLSTAD FÖRSÖKTE.','JAG KOM UNDAN.']:['KAFFET VAR GOTT.','SLUTET VAR SÄMRE.'];
   lines.forEach((line,i)=>text(line,52,408+i*53,42,i? '#ffcf6e':cream,'left',613));
   text(String(r.score),43,607,110,ink,'left',470);text(r.kind==='mission'?'POÄNG':'XP',669,603,29,purple,'right');
   const seconds=Math.round(r.seconds||0),time=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
   box(42,631,636,57,'#e8d7a9');
-  text(r.kind==='bus'?`${Math.round(r.health)}% BUSS KVAR`:`${r.kills||0} ZOMBIES · ${Math.round(r.health)}% LIV`,56,668,23,ink,'left',462);text(time,659,668,25,ink,'right',124);
+  text(r.kind==='boat'?`${r.saved||0} PASSAGERARE RÄDDADE`:r.kind==='bus'?`${Math.round(r.health)}% BUSS KVAR`:`${r.kills||0} ZOMBIES · ${Math.round(r.health)}% LIV`,56,668,23,ink,'left',462);text(time,659,668,25,ink,'right',124);
   text(r.title||'EN HELT VANLIG DAG I VÄRMLAND.',43,724,23,purple,'left',634);
   text('SEED '+r.seed+' · REGLER '+CHALLENGE_RULES+(r.kind==='daily'?' · SAMMA START FÖR ALLA':''),43,758,14,ink,'left',634);
   box(42,786,636,51,orange);text('UTMANA EN VÄN →',360,821,27,ink,'center',600);

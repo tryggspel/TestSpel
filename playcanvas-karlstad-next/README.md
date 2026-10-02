@@ -1,3 +1,30 @@
+# Karlstad City — City Explore 2.9.0
+
+## 2.9.0 — clearer view, a peaceful city and trips by water and rail
+
+Built on the existing PlayCanvas game and movement core.
+
+- **Clean City Explore** is the first start button: no pursuit, damage, panic, blackouts or street/special challenges. Collect thermoses, discover golden caches, choose a real place on the map, visit the mall and chat with friendly zombie staff. **Termosrundan** is a separate three-minute, enemy-free collection run with a local record; ordinary thermoses refill for each new run.
+- **Clear mobile view:** one compact status strip, one direction strip and a small map/pause control. Large duplicated mission, panic, scent and control panels are removed from the view. Additional action-mode statistics live in the paused map; clean mode shows collection statistics. The existing one-thumb walking/turning control is retained, with a jump button in clean mode.
+- **Sandgrundsudden is reachable:** corrected a discontinuity in the western shoreline at the southern approach. World water, collision and map use the same outline. A thermos trail continues to the tip.
+- **Mapped city expansion:** real OSM footprints for Tingvallagymnasiet and its two adjacent school buildings, Löfbergs Kaffeskrapa/office, Karlstad Central, Home Hotel Bilan and Frimurarlogen are reserved within the existing 95-building cap. The schoolyard is open rather than a solid bounding box. New street/rail and shoreline data around Inre hamn appear in both the world and the map. Torget gains Fredsmonumentet at its mapped location, benches and small market stalls.
+- **Båtbuss:** board at Inre hamn and arrive at the Mariebergsskogen landing. Clean mode has an 18-second calm crossing and a return boat. Action mode has a 36-second illustrated deck rescue: tap a passenger to throw a lifejacket aboard or a lifebuoy in the water. Rescue up to 12 people, earn a local best and share a replay postcard. Same one-button input; pause and abort are available.
+- **Rail and bus trips:** Karlstad Central has a periodic in-game boarding window for a short train trip to Kil, seven platform thermoses and a return train. Clean-mode buses offer calm travel between city stops. Three-dimensional yellow/grey buses use the official Värmlandstrafik logo. These are game trips, not live timetables.
+- **Bilan:** a small enterable lobby/cell corridor with bars, a thermos and an always-open return to the street. No trap locks the player in.
+- **More expressive zombies:** four cached poses per hostile type with uneven eyes, a loose tooth, arm/leg motion and character accessories. Existing AI and actor pools are reused.
+- **Mitt i City stability:** removed the wrapped whole-mesh escalator translation that snapped every cycle; the existing continuous player conveyor remains. Increased the camera near plane from 0.05 to 0.12 to reduce depth fighting. Indoor standing height and continuous ascent were checked in the actual engine.
+
+### Validation and scope
+
+- 89 main rule tests / 97 on the Live City branch. Includes ten minutes of peaceful simulation, same-floor pickup and three-minute completion, shoreline access, deterministic rescue at 30/120 simulation FPS, replay links and all existing mission, bus, daily, mall and clerk rules.
+- Actual PlayCanvas 2.22.4 integration checks cover existing missions, input, daily results and sharing. Chromium/SwiftShader checks cover 414 × 750 mobile HUD, real navigation to the peninsula and new destinations, indoor height stability, ascent, calm ferry/bus/train return trips, and a full 12-person rescue. Software rendering is not a physical iPhone performance measurement.
+- Movement core **1.3.0** is unchanged: walking 7.2, look sensitivity 0.12, radius 0.42; mobile DPR cap 1.25; 95 buildings; six director zombies; 18 pooled thermos views. The southern extension adds five static geometry batches. Generic facade batches drop from 37 to 33 because additional landmarks replace generic blocks. Zombie textures are baked at startup, not repainted every frame. The 3D world does not render behind the boat/train overlays.
+- **The city remains a stylized interpretation.** Mapped footprints, street axes and dock positions are based on OSM; heights, facade detail and interiors are simplified. Mariebergsskogen currently has a small explorable landing garden, and Kil has a station forecourt/platform; neither destination is a complete town/park reconstruction. Bilan's lobby is a playable interpretation.
+- Challenge rules advance to **5** because expanded collection and travel change scoring opportunities. Earlier rule links receive the existing clear fallback.
+- Sources and logo attribution: [art/GEOGRAPHY-SOURCES.md](art/GEOGRAPHY-SOURCES.md).
+
+## Previous release
+
 # Karlstad City — Graphics & shops 2.8.1
 
 ## 2.8.1 — sharper Karlstad, a playable mall and helpful zombie clerks

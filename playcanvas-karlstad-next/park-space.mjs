@@ -1,4 +1,4 @@
-import {PENINSULA_SHORE,PARK_PIERS} from './city-sites.mjs?v=2.8.1';
+import {PENINSULA_SHORE,PARK_PIERS} from './city-sites.mjs?v=2.9.0';
 const half=PENINSULA_SHORE.length/2;
 // OSM-derived bank limits, two-metre rows: constant-time water collision at runtime.
 export function peninsulaBanks(z){

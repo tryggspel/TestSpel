@@ -1,5 +1,5 @@
-import {MALL_ROOMS,mallRoom} from './mall-space.mjs?v=2.8.1';
-import {STOREFRONTS,storefrontAnchor} from './city-geography.mjs?v=2.8.1';
+import {MALL_ROOMS,mallRoom} from './mall-space.mjs?v=2.9.0';
+import {STOREFRONTS,storefrontAnchor} from './city-geography.mjs?v=2.9.0';
 const stories={
   coop:{name:'Kvittot-Kjell',itemName:'KVITTOT',request:'Kassan vägrar ta emot gurkan. Hämta kvittot så kan jag reklamera mig själv.',thanks:'Kvittot säger att jag varit utgången sedan tisdag. Men du får bonus!',panic:'Det PIPER! Är det kassan? Är det jag?!'},
   cervera:{name:'Rut i returen',itemName:'KOPPEN',request:'Jag har lagt kaffekoppen bland returerna. Hämta den? Jag vågar inte fråga mig själv.',thanks:'Tack! Jag skulle erbjuda kaffe, men glömde vilken ände av koppen man använder.',panic:'Tänk om allt porslin går sönder samtidigt!'},
@@ -17,10 +17,11 @@ export class FriendlyClerks {
   }
   reset(){this.active=null;for(const q of this.people){q.stage='idle';q.stress=0;q.calmUntil=0;q.greeted=false;}this.elapsed=0;}
   near(p){return this.people.find(q=>sameFloor(p,q)&&Math.hypot(p.x-q.x,p.z-q.z)<3.6&&(!q.room||mallRoom(p)?.id===q.room));}
-  prompt(p){const q=this.near(p);return q?(q.stress>=60?'LUGNA':q.stage==='found'?'LÄMNA '+q.itemName:q.stage==='done'?'PRATA':'HJÄLP'):null;}
+  prompt(p){const q=this.near(p);return q?(this.city.rush?.peaceful?'PRATA':q.stress>=60?'LUGNA':q.stage==='found'?'LÄMNA '+q.itemName:q.stage==='done'?'PRATA':'HJÄLP'):null;}
   say(q,text,reward=0){this.city.events.push({type:'friendly',name:q.name,text,points:reward});}
   interact(p){
     const q=this.near(p);if(!q)return false;
+    if(this.city.rush?.peaceful){this.say(q,q.thanks.replace('Men du får bonus!','Kvittot kan du få ändå.'));return true;}
     if(this.city.rush?.exitReady){this.say(q,'Du har poängen! Följ grönt till tryggzonen, jag vaktar … någonting.');return true;}
     if(q.stress>=60){q.stress=12;q.calmUntil=this.elapsed+12;this.say(q,'Okej. Andas in. Andas … behöver jag andas? Tack. Nu tar vi en sak i taget.');return true;}
     if(q.stage==='found'){

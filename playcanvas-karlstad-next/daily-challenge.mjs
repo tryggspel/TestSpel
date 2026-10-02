@@ -1,7 +1,7 @@
 // Versioned, local challenge rules. Dates always follow Karlstad's calendar.
 // The corrected city geometry changes walkable routes and pickup paths.
 // Keep scores/replays from the previous map out of the new challenge comparison.
-export const CHALLENGE_RULES=4;
+export const CHALLENGE_RULES=5;
 export const DAILY_VARIANTS=Object.freeze([
   {id:'no-super',title:'SOL UTAN SUPER',description:'800 XP och hem. Vanliga solstötar får göra hela jobbet.',seconds:180,noSuper:true},
   {id:'espresso',title:'DUBBEL ESPRESSO',description:'800 XP och hem. Kaffet doftar starkare. Följ solen för att skaka av dig doften.',seconds:180,scentScale:1.6},
@@ -40,13 +40,15 @@ export function challengeRequest(search,now=new Date()){
     if(!validDay(day))return {error:'Datumet i utmaningslänken är ogiltigt. Dagens runda finns här.'};
     return {kind:'daily',challenge:dailyFor(day),target};
   }
+  if(p.get('challenge')==='boat')return {kind:'boat',seed,target};
   if(p.get('challenge')==='bus')return {kind:'bus',from:['torget','domkyrkan','sandgrund'].includes(p.get('from'))?p.get('from'):'torget',seed,target};
   if(p.has('hunt'))return {kind:'hunt',seed,target,kit:parseKit(p.get('kit'))};
   return {kind:null,target,seed};
 }
 export function challengeLink(base,record){
-  const url=new URL(base);url.search='';url.hash='';url.searchParams.set('v','2.8.1');url.searchParams.set('rules',String(CHALLENGE_RULES));
+  const url=new URL(base);url.search='';url.hash='';url.searchParams.set('v','2.9.0');url.searchParams.set('rules',String(CHALLENGE_RULES));
   if(record.kind==='daily')url.searchParams.set('daily',record.day);
+  else if(record.kind==='boat')url.searchParams.set('challenge','boat');
   else if(record.kind==='bus'){url.searchParams.set('challenge','bus');url.searchParams.set('from',record.from);}
   else if(record.kind==='mission')url.searchParams.set('challenge',record.mission);
   else {url.searchParams.set('hunt','1');if(record.kit)url.searchParams.set('kit',encodeKit(record.kit));}

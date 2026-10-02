@@ -1,4 +1,6 @@
-import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.8.1';
+import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.9.0';
+
+import {SOUTH_IDS} from './city-south-space.mjs?v=2.9.0';
 
 // Static, vertex-coloured geometry: one draw call per landmark, one for streets,
 // one for rooflines and storefront frames. No lights, shadows or per-frame work.
@@ -97,7 +99,7 @@ export function createCityArchitecture(pc,app,buildings){
   }
   for(const [x,z] of STREET_SIGNS)town.box(x,1.73,z,.09,3.46,.09,'#29444a');
   town.finish(pc,app,'Karlstad · taklinjer och butiksfasader',material);
-  for(const b of buildings.filter(b=>IDENTITY_IDS.has(b.osm))){
+  for(const b of buildings.filter(b=>IDENTITY_IDS.has(b.osm)&&!SOUTH_IDS.has(b.osm))){
     const m=new ComicMesh(),x=b.cx,z=b.cz,w=b.sx,d=b.sz;
     if(b.osm===75070676){
       // Cruciform cathedral with the bell/clock tower at its WEST end, facing Torget.
