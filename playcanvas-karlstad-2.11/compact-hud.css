@@ -1,0 +1,112 @@
+/* One status strip + one direction. Keep the horizon and reticle unobstructed. */
+.round-playing .brand,.round-playing #status,.round-playing #lookHint,
+.journey-playing #roundTactic,.journey-playing #cityJourneyHud,
+.journey-playing #roundPhase{display:none}
+#mapStatus{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0;font:700 11px/1.5 system-ui;color:#cee7d6}
+#mapStatus span{background:#23483e;padding:5px 8px;border-radius:5px}
+.round-playing #roundHud{top:max(10px,env(safe-area-inset-top));left:12px;right:auto;transform:none;grid-template-columns:76px 98px 62px;padding:7px 10px 4px;border:1px solid #abc7ad55;border-radius:9px;background:#112e29d9;box-shadow:none}
+.round-playing .round-stat strong{font-size:23px}
+.round-playing .round-stat span{font-size:11px;letter-spacing:.04em}
+.round-playing .energy-row{font-size:11px;margin:3px 0;gap:6px}
+.journey-playing #roundHud>.round-stat:nth-child(3){display:none}
+.journey-playing #roundHud{grid-template-columns:100px 124px}
+.journey-playing #roundHud .energy-row{grid-column:1/3}
+.round-playing #roundRadarButton{top:max(10px,env(safe-area-inset-top));right:66px;width:76px;border-width:1px;border-radius:9px;background:#112e29d9}
+.round-playing #roundRadarButton span{font-size:11px;padding:4px;letter-spacing:0}
+.round-playing #roundPause{top:max(10px,env(safe-area-inset-top));right:12px;width:44px;height:44px;padding:0}
+.round-playing #roundPause span{display:none}
+.round-playing #roundCompass{top:max(120px,calc(env(safe-area-inset-top) + 114px));bottom:auto;left:12px;transform:none;max-width:min(500px,calc(100vw - 24px));border-radius:6px;padding:5px 9px;gap:7px;white-space:nowrap;font-size:11px;letter-spacing:0;background:#112e29c9}
+.round-playing #roundCompassText{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.round-playing #roundBearing{display:none}
+.round-playing #roundCompassArrow{font-size:19px}
+.round-playing #roundToast{top:auto;bottom:27%;max-width:calc(100vw - 32px);filter:none;transform:translate(-50%,5px)}
+.round-playing #roundToast.visible{transform:translate(-50%,0)}
+.round-playing #roundToast strong{font-size:15px;padding:6px 10px}
+.round-playing #roundToast span{font-size:11px;padding:6px 10px;max-width:340px}
+.round-playing #journeyPickupToast{top:auto;bottom:24%;font-size:11px}
+.round-playing #bark{display:none}
+.journey-playing #useBtn[data-context="false"]{display:none}
+.round-playing #roundUtilities{top:auto;bottom:22px}
+.round-playing #solarWeapon{opacity:.65}
+@media(pointer:coarse){
+ .round-playing #roundHud{right:150px;min-width:0;grid-template-columns:1fr 1fr;left:10px;padding:5px 8px}
+ .round-playing .round-stat strong{font-size:21px}
+ .round-playing .round-stat span{font-size:11px}
+ .round-playing .energy-row{font-size:11px;margin:3px 0}
+ .round-playing #roundRadarButton{right:62px;width:76px}
+ .round-playing #roundPause{right:10px}
+ .round-playing.one-hand #roundUtilities{top:auto;bottom:max(153px,calc(env(safe-area-inset-bottom) + 140px));left:50%;right:auto;transform:translateX(-50%);max-width:88vw}
+ .round-playing.one-hand #roundUtilities #useBtn{min-height:44px;min-width:130px;font-size:11px;padding:8px 14px}
+ .round-playing.one-hand #joy{width:128px;height:128px;bottom:max(14px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#153c313d;border-color:#e5d3956e}
+ .round-playing.one-hand #joy i{left:39px;top:39px}
+ .round-playing.one-hand #buttons{bottom:max(36px,calc(env(safe-area-inset-bottom) + 24px))}
+ .round-playing.one-hand #buttons #superBtn{min-width:56px;min-height:52px;font-size:11px}
+ .round-playing #solarWeapon{transform:scale(.5) rotate(-11deg);transform-origin:bottom left;left:8px;bottom:4px;opacity:.65}
+ .round-playing #roundCompass{max-width:calc(100vw - 20px);left:10px;font-size:11px}
+ .round-playing #roundUtilities #mapBtn{display:none}
+}
+@media(max-height:500px){
+ .round-playing #roundHud{max-width:230px}
+ .round-playing #roundCompass{top:max(104px,calc(env(safe-area-inset-top) + 100px));max-width:50vw}
+ .round-playing.one-hand #joy{left:max(80px,calc(env(safe-area-inset-left) + 64px));bottom:10px;width:112px;height:112px}
+ .round-playing.one-hand #joy i{left:31px;top:31px}
+ .round-playing.one-hand #roundUtilities{bottom:12px;left:auto;right:14px;transform:none}
+ .round-playing.one-hand #buttons{bottom:72px}
+ .round-playing #roundToast{bottom:18%;left:50%;max-width:46vw}
+}
+
+.clean-explore #buttons,.clean-explore #fireLeftBtn,.clean-explore #solarWeapon,.clean-explore #refillBtn,.clean-explore #aimAssistBtn,.clean-explore #roundHealthRow,.clean-explore #roundHud .energy-row,.clean-explore #roundHud>.round-stat:nth-child(3){display:none!important}
+.clean-explore #roundCompass{top:max(75px,calc(env(safe-area-inset-top) + 69px))}
+.clean-explore #route-event,.clean-explore #route-sun,.clean-explore #route-sista-rundan,.clean-explore #route-fikapanik,.clean-explore #route-radda-fikat,.clean-explore #route-sandgrund,.clean-explore #mapStoryHint,.clean-explore .map-story-buttons{display:none}
+
+#boatLayer{position:fixed;inset:0;z-index:80;background:#348c9a;touch-action:none;color:#fff0cb}
+.boat-riding .hud,.boat-riding #roundOverlay{visibility:hidden}
+#boatCanvas{width:100%;height:100%;display:block}
+.boat-header{position:absolute;top:max(12px,env(safe-area-inset-top));left:14px;right:14px;display:flex;gap:12px;align-items:center;background:#173d42ee;padding:10px 12px;border-radius:9px;pointer-events:none}
+.boat-header div{flex:1}.boat-header small,.boat-header b,.boat-header span{display:block}.boat-header small{font:800 11px system-ui;color:#ffc831}.boat-header b{font:900 15px system-ui;margin:4px 0}.boat-header span{font:800 11px system-ui}
+.boat-header button{width:44px;height:44px;background:#ffce54;color:#183d43;border:0;border-radius:7px;font-size:20px;pointer-events:auto}
+.boat-progress{position:absolute;top:max(105px,calc(env(safe-area-inset-top) + 104px));left:16px;right:16px;height:4px;background:#193e43}.boat-progress i{display:block;height:100%;background:#ffcb4e}
+.boat-person{position:absolute;transform:translate(-50%,-50%);width:clamp(60px,15vw,145px);height:clamp(95px,20vw,185px);background:transparent;border:0;border-radius:30%;touch-action:manipulation;cursor:pointer}
+.boat-person:focus-visible{outline:3px solid #fff}.boat-person:active{background:#fff5}
+#boatQuip{position:absolute;bottom:max(24px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(90vw,650px);background:#1c4249ed;border-left:4px solid #ffcd4b;border-radius:5px;padding:12px 14px;text-align:center;font:800 12px/1.4 system-ui}
+#boatPaused{position:absolute;inset:0;display:grid;place-items:center;background:#123b45d9}#boatPaused>div{padding:28px;background:#153c3b;width:min(88vw,390px);border-top:4px solid #ffd06b}
+@media(max-height:500px){.boat-header{max-width:65vw;padding:6px 10px}.boat-header b{font-size:13px}.boat-progress{top:94px;right:38vw}#boatQuip{bottom:8px;padding:6px 10px}.boat-person{height:95px;width:95px}}
+.clean-explore #buttons{display:block!important}.clean-explore #buttons #jumpBtn{display:block!important;width:56px;height:44px}.clean-explore #buttons #superBtn,.clean-explore #buttons #turnBtn,.clean-explore #buttons #fireBtn{display:none!important}
+
+#scenicLayer{position:fixed;inset:0;z-index:80;color:#fff0cb;background:#aecfd0}#scenicCanvas{width:100%;height:100%;display:block}.scenic-note{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:#173d42e8;padding:10px 14px;border-radius:5px;font:800 11px system-ui;white-space:nowrap}#scenicPaused{position:absolute;inset:0;background:#143b42d9;display:grid;place-items:center}#scenicPaused>div{padding:24px;background:#173d42;width:min(90vw,380px)}
+
+.city-card{max-height:calc(100dvh - 36px);overflow-y:auto;touch-action:pan-y}.city-card>.city-rules{display:none}
+
+.clean-explore #roundCompass{top:max(120px,calc(env(safe-area-inset-top) + 114px))}
+
+.clean-explore .action-only,.clean-explore #pauseHuntHelp,.clean-explore #openAlbum{display:none}
+/* 2.10: mobilsprint — spaken lyser när tummen dras förbi kanten framåt. */
+#joy.sprint{border-color:#ffd56c;box-shadow:0 0 0 3px #ffd56c55,0 0 18px #ffd56c66}
+#joy.sprint i{background:#ffd56c;border-color:#fff3c4}
+/* 2.10: spökrunda, stämpelkarta, Halloween */
+#ghostHud{position:absolute;z-index:9;left:50%;transform:translateX(-50%);top:max(118px,calc(env(safe-area-inset-top) + 118px));padding:6px 12px;border-radius:999px;background:#0b2a33d9;border:1px solid #bff3ff66;color:#d9fbff;font:800 12px/1.2 system-ui,sans-serif;letter-spacing:.06em;white-space:nowrap;pointer-events:none}
+#ghostHud.ahead{border-color:#8af5b8;color:#b8ffd6}
+.stamp-book{margin:14px 0 6px;padding:12px;border:1px solid #85aa8544;border-radius:6px;background:#0f2d26}
+.stamp-book h3{margin:0 0 4px;font:900 13px/1.2 system-ui,sans-serif;letter-spacing:.08em;color:#f5c860}
+#stampGrid{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+#stampGrid li{padding:6px 7px;border-radius:4px;border:1px dashed #85aa8566;color:#9fb9a3;font:700 11px/1.25 system-ui,sans-serif;overflow-wrap:break-word;hyphens:auto}
+#stampGrid li.stamped{border:1px solid #f5c860;background:#f5c86022;color:#ffe9a8}
+#cursedRow{margin-top:12px}.cursed-meter{height:8px;border-radius:9px;background:#2a1d3a;overflow:hidden;margin:6px 0}
+#cursedFill{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c3cc4,#b8ff6a)}
+#cursedRow h3{color:#c9a6ff}#cursedClue{margin:4px 0 0;font:600 12px/1.4 system-ui,sans-serif;color:#e4d6ff}
+.halloween #roundToast{border-color:#9b6cc6}
+body.cursed-omen::after{content:'';position:fixed;inset:0;z-index:30;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,#3b0f5ccc 100%);animation:cursedOmen 1.6s ease-out forwards}
+@keyframes cursedOmen{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){body.cursed-omen::after{animation:none;opacity:.6}}
+/* 2.11: Ryde — styrstång i underkant, batteri och gågatuläge. */
+#rydeHud{display:none;position:absolute;z-index:5;inset:0;pointer-events:none}
+.ryde-riding #rydeHud{display:block}
+.ryde-riding #jumpBtn{visibility:hidden}
+.ryde-bar{position:absolute;left:50%;transform:translateX(-50%);bottom:max(4px,env(safe-area-inset-bottom));width:min(92vw,520px);display:flex;align-items:center;justify-content:space-between;height:22px;border-radius:12px;background:linear-gradient(#24353a,#14262a);border:2px solid #0b1a1a;box-shadow:0 4px 0 #0008}
+.ryde-bar .grip{display:block;width:22%;height:100%;border-radius:10px;background:#0f1d20}
+.ryde-stem{display:block;width:16px;height:40px;margin-top:34px;border-radius:6px;background:#29c7a2;border:2px solid #0b1a1a}
+.ryde-info{position:absolute;left:50%;transform:translateX(-50%);top:max(158px,calc(env(safe-area-inset-top) + 158px));display:inline-flex;white-space:nowrap;align-items:center;gap:8px;padding:5px 10px;border-radius:999px;background:#0b2a26d9;border:1px solid #29c7a288;color:#dffcf2;font:800 12px/1.2 system-ui,sans-serif;letter-spacing:.05em}
+.ryde-battery{display:inline-block;width:64px;height:8px;border-radius:5px;background:#22403a;overflow:hidden}
+#rydeBattery{display:block;height:100%;width:100%;background:#29c7a2}
+#rydeHud.slow .ryde-info{border-color:#e79aa6;background:#3a1d24d9;color:#ffe1e6}
+#rydeHud.slow #rydeBattery{background:#e79aa6}

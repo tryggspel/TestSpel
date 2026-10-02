@@ -1,0 +1,36 @@
+# Kör spelets tester på varje PR och push som rör 2.11-versionen eller OSM-datan.
+# Lägg filen i .github/workflows/.
+name: Karlstad 2.11 tests
+
+on:
+  pull_request:
+    paths:
+      - 'playcanvas-karlstad-2.11/**'
+      - 'karlstad-city-mobile/data/**'
+  push:
+    branches: [main]
+    paths:
+      - 'playcanvas-karlstad-2.11/**'
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: playcanvas-karlstad-2.11
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Regel- och modultester
+        run: node --test tests/*.mjs
+      - name: En enda cache-nyckel i alla moduler
+        run: node tools/set-version.mjs

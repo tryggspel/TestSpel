@@ -4,13 +4,16 @@ on:
   push:
     branches: [main]
     paths:
+      - 'index.html'
       - 'karlstad-city-mobile/**'
       - 'playcanvas-karlstad/**'
       - 'playcanvas-karlstad-next/**'
+      - 'playcanvas-karlstad-2.11/**'
       - 'eduke32-karlstad/**'
       - 'eduke32-vanilla/**'
       - 'eduke32-diagnostic/**'
       - '.github/workflows/deploy-karlstad-mobile.yml'
+      - '.github/workflows/karlstad-2.11-tests.yml'
   workflow_dispatch:
 
 permissions:
@@ -23,7 +26,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Nytt: ingen deploy om testerna fallerar.
+  test:
+    uses: ./.github/workflows/karlstad-2.11-tests.yml
+
   deploy:
+    needs: test
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -46,6 +54,11 @@ jobs:
           if [ -d playcanvas-karlstad-next ]; then
             mkdir -p _site/playcanvas-karlstad-next
             cp -R playcanvas-karlstad-next/. _site/playcanvas-karlstad-next/
+          fi
+          if [ -d playcanvas-karlstad-2.11 ]; then
+            mkdir -p _site/playcanvas-karlstad-2.11
+            cp -R playcanvas-karlstad-2.11/. _site/playcanvas-karlstad-2.11/
+            rm -rf _site/playcanvas-karlstad-2.11/tests _site/playcanvas-karlstad-2.11/tools
           fi
           if [ -d eduke32-karlstad ]; then
             mkdir -p _site/eduke32-karlstad
