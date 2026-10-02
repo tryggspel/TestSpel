@@ -1,7 +1,7 @@
-import {nearestByRoute} from './city-guidance.mjs?v=2.8.1';
-import {beginStory,storyAction,stepStory,STREET_STORIES} from './street-stories.mjs?v=2.8.1';
-import {seededRandom,saveDailyResult,dailyRecord} from './daily-challenge.mjs?v=2.8.1';
-import {CityEcology} from './city-ecology.mjs?v=2.8.1';
+import {nearestByRoute} from './city-guidance.mjs?v=2.9.0';
+import {beginStory,storyAction,stepStory,STREET_STORIES} from './street-stories.mjs?v=2.9.0';
+import {seededRandom,saveDailyResult,dailyRecord} from './daily-challenge.mjs?v=2.9.0';
+import {CityEcology} from './city-ecology.mjs?v=2.9.0';
 export const RUSH=Object.freeze({seconds:180,target:800,maxTime:210,maxEnemies:6});
 export const CHAOS=Object.freeze({minDelay:20,maxDelay:45,firstDelay:22,fallSeconds:24,blackoutSeconds:4,blackoutGap:150,firstBlackout:45});
 export const POSTCARDS=Object.freeze([
@@ -34,6 +34,7 @@ export class CityRush {
     if(this.challenge?.panic)this.raisePanic(this.challenge.panic);
     g.save();
   }
+  get peaceful(){return this.mode==='clean'||this.mode==='trail';}
   earn(points){if(this.state==='playing'){this.xp+=points;if(this.mode==='timed'&&this.xp>=RUSH.target&&!this.exitReady){this.exitReady=true;this.chaosTarget=null;this.city.events.push({type:'exit-open'});}}}
   addTime(seconds){if(this.mode==='timed'&&this.state==='playing')this.time=Math.min(RUSH.maxTime,this.time+seconds);}
   nearestSafe(p){return this.escapeGoal||nearestByRoute(this.city.nav,p,this.city.safeZones);}
@@ -51,8 +52,8 @@ export class CityRush {
     if(this.chaosTarget)return {...this.chaosTarget.spot,id:'gold',kind:'gold',label:this.chaosTarget.title,radius:2.3};
     return {...p,id:'next-event',kind:'wait',label:'NÄSTA GATUHÄNDELSE OM '+Math.max(1,Math.ceil(this.nextContract-this.spent))+' S',radius:2.4};
   }
-  beginStory(kind,p,f){return beginStory(this,kind,p,f);}
-  interact(p,f){return storyAction(this,p,f);}
+  beginStory(kind,p,f){if(this.peaceful)return false;return beginStory(this,kind,p,f);}
+  interact(p,f){return !this.peaceful&&storyAction(this,p,f);}
   spot(p,forward={x:0,z:-1},back=false,offset=0){
     const heading=Math.atan2(forward.x,forward.z)+(back?Math.PI:0)+offset;
     let best=this.city.nav.point(p),bestDistance=0;
@@ -66,6 +67,7 @@ export class CityRush {
   }
   live(){return this.challenge?null:this.city.liveModifiers?.()||null;}
   spawnEnemy(p,forward,contractId=null,offset=0){
+    if(this.peaceful)return null;
     const g=this.city;if(g.actors.filter(a=>a.active).length>=RUSH.maxEnemies)return null;
     const actor=g.actors.find(a=>!a.active),spot=this.spot(p,forward,true,offset);
     if(!actor||distance(p,spot)<5)return null;
@@ -74,7 +76,7 @@ export class CityRush {
     return actor;
   }
   raisePanic(points){
-    if(this.state!=='playing'||!Number.isFinite(points)||points<=0)return this.panic;
+    if(this.peaceful||this.state!=='playing'||!Number.isFinite(points)||points<=0)return this.panic;
     const before=this.panic;this.panic=Math.min(100,this.panic+points);this.peakPanic=Math.max(this.peakPanic||0,this.panic);const tier=tierFor(this.panic);
     for(let level=this.panicTier+1;level<=tier;level++){
       this.city.events.push({type:'panic-tier',level,panic:this.panic});
@@ -90,11 +92,13 @@ export class CityRush {
   }
   scheduleChaos(){const live=this.live(),scale=live?.chaosDelayScale||1;this.nextChaos=this.spent+(CHAOS.minDelay+Math.floor(this.random()*(CHAOS.maxDelay-CHAOS.minDelay+1)))*scale;}
   tryBlackout(seconds=CHAOS.blackoutSeconds){
+    if(this.peaceful)return false;
     if(this.state!=='playing'||this.spent<this.nextBlackout)return false;
     this.blackoutUntil=this.spent+Math.min(CHAOS.blackoutSeconds,Math.max(0,seconds));
     this.nextBlackout=this.spent+CHAOS.blackoutGap;return true;
   }
   triggerChaos(p,f){
+    if(this.peaceful)return false;
     if(this.exitReady||this.fallUntil)return false;
     const live=this.live();let kind=(this.chaosOrder||[0,1,2])[this.chaosCount%3];
     if(live?.trafficIncidentId&&live.trafficIncidentId!==this.lastIncidentChaosId){
@@ -121,6 +125,7 @@ export class CityRush {
     this.city.events.push({type:'chaos-gold-complete',points:c.points});
   }
   beginContract(p,f){
+    if(this.peaceful)return false;
     const index=(this.contractSerial++ + this.seed%3)%6,id='street-'+this.contractSerial;
     const story={1:'power',3:'news',4:'bowling'}[index];if(story){if(!this.beginStory(story,p,f))this.nextContract=this.spent+4;return;}
     if(index===2){
@@ -141,6 +146,7 @@ export class CityRush {
   clock(dt){
     if(this.state!=='playing'||!Number.isFinite(dt)||dt<=0)return;
     this.spent+=dt;this.raisePanic(dt*.035);
+    if(this.mode==='trail'){this.time=Math.max(0,this.time-dt);if(this.time===0){this.state='finished';this.city.phase='paused';this.city.events.push({type:'trail-finish',score:this.xp,count:this.city.found.size});}return;}
     if(this.mode==='timed'){
       this.time=Math.max(0,this.time-dt);
       if(this.time<=30&&!this.alerted){this.alerted=true;this.city.events.push({type:'hunt-alarm'});}
@@ -148,7 +154,7 @@ export class CityRush {
     }
   }
   realityTick(){
-    if(this.challenge||this.spent<this.nextRealityCheck)return;
+    if(this.peaceful||this.challenge||this.spent<this.nextRealityCheck)return;
     this.nextRealityCheck=this.spent+1.5;
     const live=this.city.nearestLiveBusToAnyStop?.(450);
     if(live&&this.spent>=this.nextLiveBusCue&&live.vehicle?.id!==this.lastLiveBusId){
@@ -157,7 +163,7 @@ export class CityRush {
     }
   }
   step(dt,p,f){
-    if(this.state!=='playing')return;this.clock(dt);if(this.state!=='playing')return;
+    if(this.state!=='playing')return;this.clock(dt);if(this.state!=='playing'||this.peaceful)return;
     // The upper gallery is a brief refuge. The hunt clock keeps running, while
     // street events wait for the player to return to their ground-floor arena.
     if((p.y??1.68)>3.7)return;

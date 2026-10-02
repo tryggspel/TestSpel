@@ -1,12 +1,15 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.8.1';
-import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.8.1';
-import {cityBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.8.1';
-import {createCityArchitecture} from './city-architecture.js?v=2.8.1';
-import {createMallArchitecture} from './mall-architecture.js?v=2.8.1';
-import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.8.1';
-import {createParkArchitecture} from './park-architecture.js?v=2.8.1';
-import {waterBlocked} from './park-space.mjs?v=2.8.1';
+import {createLastRound} from './last-round.js?v=2.9.0';
+import {FpsLook, wrapYaw,oneThumbIntent} from './fps-controls.mjs?v=2.9.0';
+import {cityBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.9.0';
+import {createCityArchitecture} from './city-architecture.js?v=2.9.0';
+import {createMallArchitecture} from './mall-architecture.js?v=2.9.0';
+import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.9.0';
+import {createParkArchitecture} from './park-architecture.js?v=2.9.0';
+import {atKil,KIL} from './scenic-transit.js?v=2.9.0';
+import {createSouthCity} from './city-south.js?v=2.9.0';
+import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage} from './city-south-space.mjs?v=2.9.0';
+import {waterBlocked} from './park-space.mjs?v=2.9.0';
 import {createLiveCity} from './live-city.mjs?v=2.1.0';
 
 const canvas=document.getElementById('game');
@@ -38,7 +41,7 @@ const PLAYER_RADIUS=0.42;
 const EYE=1.68;
 const CORE_LOCK=Object.freeze({version:'1.3.0',baseline:'1.2.2',lookSensitivity:.12,walkSpeed:7.2,sprintMultiplier:1.55,jumpVelocity:6.2,gravity:16,playerRadius:.42,mobileMaxPixelRatio:1.25,desktopMaxPixelRatio:1.6,maxBuildings:95,detailRadius:92});
 window.KarlstadCoreLock=CORE_LOCK;
-const GRAPHICS_PASS=Object.freeze({version:'2.8.1',core:'1.3.0',mode:'geographic-comic-city',heroBudget:9,rule:'no-core-feel-changes'});
+const GRAPHICS_PASS=Object.freeze({version:'2.9.0',core:'1.3.0',mode:'geographic-comic-city',heroBudget:9,rule:'no-core-feel-changes'});
 window.KarlstadGraphicsPass=GRAPHICS_PASS;
 const TOUCH_TUNE=Object.freeze({deadzone:.13,expo:.42,maxStick:.34,lookScale:.9});
 const fpsLook=new FpsLook({span:Math.min(window.innerWidth,window.innerHeight)});
@@ -259,9 +262,6 @@ function addPlazaPattern(){
   for(let z=-24;z<=24;z+=6) addBox('plaza-seam-z',0,.045,z,60,.012,.055,M.marking);
 
   // A strong center landmark gives the player a Duke-style orientation anchor.
-  addBox('torget-landmark-base',0,.22,-3,4.2,.44,4.2,M.concrete);
-  addCylinder('torget-landmark',0,2.5,-3,.72,4.7,M.hero);
-  addSphere('torget-landmark-cap',0,5.08,-3,.9,M.marker);
 
   [[-18,-18,0],[18,-18,180],[-18,17,0],[18,17,180]].forEach(p=>addBench(p[0],p[1],p[2]));
   [[-25,-20],[25,-20],[-25,20],[25,20]].forEach(p=>addPlanter(p[0],p[1]));
@@ -400,17 +400,7 @@ function addLandmarkIdentityPass16(){
   // The actual OSM building is selectively admitted by addBuildings().
   for(let z=-240;z>=-430;z-=38) addLamp(-63+(Math.abs(z)-240)*.035,z);
 
-  // Mariebergsskogen is a destination marker in 1.6, not a full zone yet.
-  // Use the real bearing, clamped to the edge of the current playable district.
-  const [rx,rz]=localXY(MARIEBERG.lon,MARIEBERG.lat);
-  const len=Math.hypot(rx,rz)||1, edge=RADIUS-24;
-  const px=rx/len*edge, pz=rz/len*edge;
-  addBox('g16-marieberg-gate-l',px-3.2,2.0,pz,.55,4.0,.55,M.trunk);
-  addBox('g16-marieberg-gate-r',px+3.2,2.0,pz,.55,4.0,.55,M.trunk);
-  addBox('g16-marieberg-gate-top',px,3.85,pz,7.0,.5,.65,M.park||M.tree);
-  addSphere('g16-marieberg-marker',px,5.25,pz,.72,M.marker);
-  addTree(px-5.6,pz+2.4,.8); addTree(px+5.4,pz+2.8,.9); addTree(px,pz+5.8,.82);
-  addPickup(px,pz-3.2,'energy',40);
+
 }
 
 function addStreetProps(){
@@ -452,7 +442,7 @@ function initScene(){
   M.energy=mat(0xf4c542,.02,.68);
 
   // Big, cheap surfaces first: readable city structure without texture downloads.
-  addBox('ground',0,-.35,145,760,.6,930,M.ground);
+  addBox('ground',0,-.35,170,1080,.6,980,M.ground);
   // Roads and square paving are built together from actual street lines after OSM loads.
 
   player=new pc.Entity('player');
@@ -460,7 +450,7 @@ function initScene(){
   app.root.addChild(player);
 
   camera=new pc.Entity('camera');
-  camera.addComponent('camera',{clearColor:new pc.Color(.53,.77,.86),nearClip:.05,farClip:620,fov:74});
+  camera.addComponent('camera',{clearColor:new pc.Color(.53,.77,.86),nearClip:.12,farClip:620,fov:74});
   player.addChild(camera);
   camera.setLocalPosition(0,0,0);
 
@@ -506,19 +496,24 @@ function addBuildings(osm){
       addFacadePass12(b,hero,seed);
       if(hero)addHeroLandmarkPass14(b);
     }
-    colliders.push({osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
+    colliders.push({precise:[77107220,100024120,100024325].includes(b.osm),polygon:b.polygon,osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
   }
-  const geometry=createCityArchitecture(pc,app,admitted);
+  const geometry=createCityArchitecture(pc,app,admitted),south=createSouthCity(pc,app,admitted);
   mallGraphics=createMallArchitecture(pc,app,admitted);const {update:animateMall,...mall}=mallGraphics,park=createParkArchitecture(pc,app);
-  window.KarlstadArchitecture=Object.freeze({...geometry,buildings:admitted.length,mall,park,staticDrawCalls:geometry.staticDrawCalls+mall.staticDrawCalls+park.staticDrawCalls});
+  window.KarlstadArchitecture=Object.freeze({...geometry,buildings:admitted.length,mall,park,south,staticDrawCalls:geometry.staticDrawCalls+mall.staticDrawCalls+park.staticDrawCalls+south.staticDrawCalls});
   return admitted.length;
 }
 
 function blocked(x,z){
-  if(waterBlocked(x,z))return true;
+  if(atKil({x,z}))return !(x>KIL.x-48&&x<KIL.x+48&&z>KIL.z-4&&z<KIL.z+24);
+  const remote=mariebergBlocked(x,z);if(remote!==null)return remote;
+  if(waterBlocked(x,z)||southWaterBlocked(x,z))return true;
+  if(southPassage(x,z,colliders))return false;
   if(mallPassage(x,z))return mallGroundBlocked(x,z);
   for(const c of colliders){
-    if(x+PLAYER_RADIUS>c.minx&&x-PLAYER_RADIUS<c.maxx&&z+PLAYER_RADIUS>c.minz&&z-PLAYER_RADIUS<c.maxz) return true;
+    if(x+PLAYER_RADIUS<=c.minx||x-PLAYER_RADIUS>=c.maxx||z+PLAYER_RADIUS<=c.minz||z-PLAYER_RADIUS>=c.maxz)continue;
+    if(c.precise){if(footprintContains(x,z,c.polygon)||footprintContains(x+.42,z,c.polygon)||footprintContains(x-.42,z,c.polygon)||footprintContains(x,z+.42,c.polygon)||footprintContains(x,z-.42,c.polygon))return true;continue;}
+    return true;
   }
   return false;
 }

@@ -2,7 +2,18 @@
 
 **Status:** Creative north star / gameplay roadmap  
 **Created:** 2026-09-29  
-**Current reference build:** `playcanvas-karlstad-next v2.5.0`
+**Current reference build:** `playcanvas-karlstad-next v2.9.0`
+
+## Implementation checkpoint — 2026-10-02 / City Explore 2.9.0
+
+The current playtest priorities add a peaceful branch of the city loop without replacing the action game:
+
+- Clean City Explore: no pursuing zombies or challenges; thermoses, real places, friendly shop staff and calm transport. Optional three-minute Termosrundan uses the same streets, one-thumb movement and jump control.
+- C1 / orientation: smaller HUD, map-based secondary information, repaired Sandgrund approach, Inre hamn water/streets/rail, actual school/factory/station/prison footprints and preserved courtyard access.
+- B1 / signature transport: yellow Värmlandstrafik buses; boat deck rescue with jackets/lifebuoys, 12 passengers and shareable replay; calm ferry and train excursions with return trips.
+- Graphic work: Torget monument/market, sharper landmark details, four-pose zombie atlases and removal of snapping escalator geometry.
+
+Scope still open: full Mariebergsskogen and Kil environments; measured iPhone 11 GPU performance; zombie-after-death, extended survival and Hell Rounds. Those later pillars are not marked complete. Current remote destinations are small explorable landing/platform areas.
 
 ## Implementation checkpoint — 2026-09-30 / Gameplay 2.5
 

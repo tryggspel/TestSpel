@@ -1,7 +1,9 @@
-import {CityMission} from './city-missions.mjs?v=2.8.1';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.8.1';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.8.1';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.8.1';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.9.0';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.9.0';
+import {CityMission} from './city-missions.mjs?v=2.9.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.9.0';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.9.0';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.9.0';
 
 export const JOURNEY_KEY='karlstad:journey:1';
 const bounded=(v,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max,Number(v))):fallback;
@@ -19,6 +21,11 @@ export class CityJourney extends CityMission {
     const sg=portals.sandgrund;
     this.secrets=[[-43,-8,'Bakom rubrikerna'],[53,5,'Bortaklackens gömma'],[-164,48,'Gallerian efter stängning'],[68,-91,'Domkyrkans skugga'],[sg.x+30,sg.z+12,'Penselns hemlighet']].map(([x,z,name],i)=>({...nav.point({x,z}),id:'secret-'+i,name}));
     this.secrets.push({...MALL_CACHE},{...nav.point({x:-199,z:-831}),id:'udden-cache',name:'Sola längst ut på Sandgrundsudden'});
+    for(const destination of [...SOUTH_PLACES,{x:-199,z:-831}]){const path=nav.path(this.layout.spawn,destination);for(let i=8;i<path.length;i+=8){const q=path[i];unique.set(`t:${q.x}:${q.z}`,{...q,id:`t:${q.x}:${q.z}`});}}
+    for(const [i,q] of [[-144,119,0],[-140,116,0],[-140,92,5.4],[-128,90,5.4],[-108,90,5.4],[-104,117,5.4]].entries())unique.set('mall-term-'+i,{x:q[0],z:q[1],y:q[2],id:'mall-term-'+i});
+    for(let i=0;i<6;i++)unique.set('marieberg-'+i,{x:-787-i*5,z:1310+(i%2)*24,id:'marieberg-'+i});
+    for(let i=0;i<7;i++)unique.set('kil-'+i,{x:KIL.x-35+i*11,z:KIL.z+16,id:'kil-'+i});
+    unique.set('bilan-cell',{x:326.89,z:155,id:'bilan-cell'});
     this.items=[...unique.values()].filter(p=>!this.secrets.some(s=>Math.hypot(p.x-s.x,p.z-s.z)<3));
     this.ambushes=[];
     routes.forEach((route,ri)=>{for(let i=10;i<route.length-4;i+=22){const trigger=route[i],next=route[i+1],dx=next.x-trigger.x,dz=next.z-trigger.z;
@@ -35,7 +42,7 @@ export class CityJourney extends CityMission {
     this.balance=bounded(v.balance,999999);this.lifetime=bounded(v.lifetime,9999999);this.energy=bounded(v.energy,100,45);this.health=bounded(v.health,100,100)||100;
     const pick=(list,valid)=>new Set(Array.isArray(list)?list.filter(id=>valid.some(p=>p.id===id)):[]);
     this.found=pick(v.found,this.items);this.secretsFound=pick(v.secrets,this.secrets);this.cleared=pick(v.cleared,this.ambushes);this.postcardsFound=pick(v.postcards,this.postcards);
-    if(v.position&&Number.isFinite(v.position.x)&&Number.isFinite(v.position.z))this.position=this.nav.point(v.position);
+    if(v.position&&Number.isFinite(v.position.x)&&Number.isFinite(v.position.z))this.position=atKil(v.position)?{x:KIL.x,z:KIL.z}:atMarieberg(v.position)?{x:MARIEBERG.x,z:MARIEBERG.z}:this.nav.point(v.position);
     if(Number.isFinite(v.heading))this.heading=v.heading;
     if(this.portals[v.destination])this.destination=v.destination;
   }
@@ -58,7 +65,7 @@ export class CityJourney extends CityMission {
     this.balance-=25;target.energy=Math.min(100,target.energy+40);this.energy=target.energy;this.dirty=true;target.events.push({type:'refill'});this.save();return true;
   }
   shoot(args){
-    if(args.power&&this.rush?.challenge?.noSuper)return null;
+    if(this.rush?.peaceful||args.power&&this.rush?.challenge?.noSuper)return null;
     this.weakShot=!args.power&&this.energy<3;
     const before=this.energy,kills=this.captured;
     const result=super.shoot(args);if(result){if(!args.power)this.energy=Math.min(100,Math.max(0,before-3)+8*(this.captured-kills));this.rush?.raisePanic(args.power?3.5:1.2);this.dirty=true;}return result;
@@ -74,7 +81,17 @@ export class CityJourney extends CityMission {
     this.balance=Math.max(0,this.balance-25);this.health=100;this.energy=Math.max(20,this.energy);this.contactCooldown=8;this.actors.forEach(a=>a.active=false);this.pendingAmbush=null;
     this.events.push({type:'recover'});this.dirty=true;
   }
-  objective(player=this.position){if(this.routeMode==='help'&&!this.rush?.exitReady){const help=this.clerks?.objective();if(help)return help;}const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;if(this.routeMode==='landmark'&&this.landmarkGoal)return this.landmarkGoal.id==='place-mitticity'?mallGoal(player,this.secretsFound.has(MALL_CACHE.id)):this.landmarkGoal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
+  objective(player=this.position){if(atKil(player))return {...KIL,id:'return-train',kind:'landmark',label:'RETURTÅG · KARLSTAD C',radius:8,action:'KLIV OMBORD'};if(atMarieberg(player))return {...MARIEBERG,id:'return-boat',kind:'landmark',label:'RETURBÅT · INRE HAMN',radius:7,action:'KLIV OMBORD'};if(this.rush.peaceful&&this.routeMode==='bus'){const bus=this.nearestBus(player);return {...bus,id:'clean-bus-'+bus.id,kind:'landmark',label:'BUSSHÅLLPLATS · '+bus.name.toUpperCase(),radius:6};}if(this.rush.peaceful&&this.routeMode!=='landmark'){if(this.rush.mode==='trail'){const item=this.items.filter(t=>!this.found.has(t.id)).sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z))[0];if(item)return {...item,kind:'coffee',label:'NÄSTA TERMOS',radius:1.8};}return {...player,id:'explore',kind:'wait',label:'CITY EXPLORE · VÄLJ PLATS PÅ KARTAN',radius:2};}if(this.routeMode==='help'&&!this.rush?.exitReady){const help=this.clerks?.objective();if(help)return help;}const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;if(this.routeMode==='landmark'&&this.landmarkGoal)return this.landmarkGoal.id==='place-mitticity'?mallGoal(player,this.rush.mode==='trail'||this.secretsFound.has(MALL_CACHE.id)):this.landmarkGoal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
+  stepExplore(dt,p,f){
+    this.elapsed+=dt;this.position={x:p.x,z:p.z};this.heading=Math.atan2(-f.x,-f.z)*180/Math.PI;
+    this.actors.forEach(a=>a.active=false);this.pendingAmbush=null;this.rush.clock(dt);
+    if(this.rush.state!=='playing')return;
+    for(const item of this.items)if(!this.found.has(item.id)&&Math.abs((p.y??1.68)-1.68-(item.y||0))<1.5&&Math.hypot(p.x-item.x,p.z-item.z)<1.65){
+      this.found.add(item.id);this.reward(25);this.energy=Math.min(100,this.energy+15);this.events.push({type:'thermos',points:25,chain:0,x:item.x,z:item.z});
+    }
+    if(this.rush.mode==='clean')for(const item of this.secrets)if(!this.secretsFound.has(item.id)&&Math.abs((p.y??1.68)-1.68-(item.y||0))<1.5&&Math.hypot(p.x-item.x,p.z-item.z)<1.8){this.secretsFound.add(item.id);this.reward(200);this.events.push({type:'secret',name:item.name});}
+    if(this.elapsed-this.lastSave>=4){this.lastSave=this.elapsed;this.save();}
+  }
   liveVehicles(){
     const list=this.liveSnapshot?.()?.transport?.vehicles;
     return Array.isArray(list)?list.filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.z)):[];
@@ -104,11 +121,12 @@ export class CityJourney extends CityMission {
   nearestPortal(p){return Object.entries(this.portals).map(([id,q])=>({id,...q,distance:Math.hypot(p.x-q.x,p.z-q.z)})).sort((a,b)=>a.distance-b.distance)[0];}
   step(dt,player,forward={x:0,z:-1}){
     if(this.phase!=='playing'||!player||!Number.isFinite(dt)||dt<=0)return;
+    if(this.rush.peaceful||atMarieberg(player)||atKil(player)){this.stepExplore(Math.min(dt,1),player,forward);return;}
     this.position={x:player.x,z:player.z};this.heading=Math.atan2(-forward.x,-forward.z)*180/Math.PI;this.pursuitRange=this.rush.ecology.scent>=40?38:22;super.step(dt,player);
     if(this.phase!=='playing')return;
     this.clerks?.step(Math.min(dt,1),player);
     this.rush.step(Math.min(dt,1),player,forward);if(this.phase!=='playing')return;
-    for(const item of this.items)if((player.y??1.68)<3.7&&!this.found.has(item.id)&&Math.hypot(player.x-item.x,player.z-item.z)<1.65){
+    for(const item of this.items)if(Math.abs((player.y??1.68)-1.68-(item.y||0))<1.5&&!this.found.has(item.id)&&Math.hypot(player.x-item.x,player.z-item.z)<1.65){
       this.found.add(item.id);this.collectChain=this.elapsed-this.lastCollect<6?this.collectChain+1:1;this.lastCollect=this.elapsed;
       const bonus=this.collectChain%5===0?25:0;this.reward(25+bonus);this.energy=Math.min(100,this.energy+15);this.rush?.raisePanic(5);this.rush?.ecology.coffee();
       this.events.push({type:'thermos',points:25+bonus,chain:this.collectChain,x:item.x,z:item.z});

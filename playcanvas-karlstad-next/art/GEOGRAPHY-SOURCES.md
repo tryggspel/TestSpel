@@ -54,3 +54,19 @@ Official tenant logos downloaded unchanged from the centre directory (WebP; 300 
 - `coop.webp`: https://dam.thon.com/transform/d9d78941-42e0-4c52-8cf6-6fc693166c71/Coop_City_logo-png?io=transform%3Afit%2Cwidth%3A300&format=webp
 
 The generic street facade artwork remains original procedural comic art. All 81 decorated blocks keep their existing OSM coordinates; their windows and shop drawings are stylized rather than surveyed facades. The nine landmark volumes keep separate, reference-based geometry and artwork.
+
+
+## City Explore 2.9 · 2026-10-02
+
+Derived geometry in `city-south-data.mjs` is © OpenStreetMap contributors, ODbL. Coordinates use the existing origin/projection; no new pixel-to-world alignment is introduced.
+
+- OSM map extract: https://api.openstreetmap.org/api/0.6/map?bbox=13.48,59.366,13.516,59.383
+- Klarälven relation 2153149: https://api.openstreetmap.org/api/0.6/relation/2153149/full
+- Additional water: Inre hamn way 6959681, Mariebergsviken 10844531, Pråmkanalen 81834339. Central river/harbour geometry is clipped, triangulated offline and paired with precomputed two-metre collision rows. OSM outer/inner rings are preserved.
+- School ways 77107220, 100024120 and 100024325; Löfbergs 80278038 and 103767839; Karlstad Central 356121937; Home Hotel Bilan 80868525; Frimurarlogen 101608925. Kil station: https://api.openstreetmap.org/api/0.6/way/100310623/full
+- Boat landing nodes: Inre hamn 5754143904 and Mariebergsskogen 4230809786. Boarding positions use the adjacent safe quays. Remote destinations retain world coordinates but are small game areas, not complete geographic replicas.
+- Tingvalla facade cues (arched windows/doors, yellow brick, low metal roof, iron fence): [Länsstyrelsen's building record](https://ext-dokument.lansstyrelsen.se/Varmland/Dokumentarkiv/Kulturmiljo/Byggnadsminnen/tingvallagymnasiet.pdf) and [Karlstad's Tingvallastaden reference](https://karlstad.se/kommun-och-politik/sa-arbetar-vi-med/kulturmiljo/omradesbeskrivningar/tingvallastaden). All game artwork is original mesh geometry.
+- Bilan's former prison identity and architectural reference: https://www.strawberry.se/hotell/sverige/karlstad/home-hotel-bilan/ . Lobby/cell corridor is fictional game layout with a permanently open exit.
+- Löfbergs location reference: https://www.lofbergs.se/kaffebar/ . The coffee tower and wordmarks are stylized; the nearby concept kiosks still do not represent real business addresses.
+- Boat route reference: [Värmlandstrafik 2026 season](https://www.varmlandstrafik.se/varmlandstrafik/nyhetsarkiv/nyhetsarkiv-varmlandstrafik/2026-03-11-sa-ser-sommarens-batbussasong-ut), line 91 Inre hamn–Mariebergsskogen. Train destination reference: https://www.jernhusen.se/hitta-din-station/kil-station/ and https://www.varmlandstrafik.se/varmlandstrafik/res-med-oss/tidtabeller/tag . Travel time/boarding availability in the game is fictional, not a live public-transport timetable.
+- `brands/varmlandstrafik.svg`: unchanged official logo, downloaded from https://www.varmlandstrafik.se/images/18.27ed5965185a5174b3e11bd7/1674035489724/VarmlandTrafikLogga.svg . Yellow/grey follows the agency's [colour identity](https://www.varmlandstrafik.se/varmlandstrafik/sidor/om/om-varmlandstrafik/grafisk-profil/om-var-grafiska-profil/farger) in the game's comic palette. Depiction does not imply sponsorship.

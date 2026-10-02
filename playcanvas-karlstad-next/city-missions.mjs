@@ -1,4 +1,4 @@
-import {LastRound} from './last-round-rules.mjs?v=2.8.1';
+import {LastRound} from './last-round-rules.mjs?v=2.9.0';
 
 export const MISSIONS = Object.freeze([
   {id:'sista-rundan',name:'Sista rundan',place:'O’Learys',tag:'KNUFFA · 90 SEK',title:'SISTA<br><em>RUNDAN.</em>',lead:'Matchen är slut. Zombiefansen håller inte med.',description:'Knuffa tre fans till HEMGÅNG. Sedan kommer Kapten Övertid. Gå bakom figurerna och använd soptunnan för kedjeträffar.',win:'STÄNGT & KLART.'},
@@ -9,7 +9,7 @@ export const MISSIONS = Object.freeze([
 
 // Small fixed navigation grid built from the city's existing collision boxes.
 export class CityNavigation {
-  constructor(blocked = () => false, bounds = {minX:-317,maxX:256,minZ:-875,maxZ:278}, cell = 3) {
+  constructor(blocked = () => false, bounds = {minX:-317,maxX:418,minZ:-875,maxZ:620}, cell = 3) {
     this.blocked=blocked;this.bounds=bounds;this.cell=cell;this.width=Math.floor((bounds.maxX-bounds.minX)/cell)+1;
     this.height=Math.floor((bounds.maxZ-bounds.minZ)/cell)+1;this.nodes=[];this.byCell=new Map();this.cache=new Map();
     for(let iz=0;iz<this.height;iz++)for(let ix=0;ix<this.width;ix++){

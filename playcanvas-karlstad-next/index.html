@@ -30,7 +30,8 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:9px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.8.1">
+<link rel="stylesheet" href="./last-round.css?v=2.9.0">
+<link rel="stylesheet" href="./compact-hud.css?v=2.9.0">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
@@ -71,19 +72,7 @@
   <div id="cityEventHud"><small id="cityStreet">STORA TORGET</small><b id="cityEventTitle">800 XP → TRYGGZON</b><span id="cityEventDetail">Gatuhändelser · zombie-buss · flykt</span><button id="cityChooseGoal">BYT MÅL ↗</button></div>
   <div id="panicHud" hidden><div class="pressure-row"><span>KARLSTAD PANIK</span><div><i id="panicFill"></i></div><b id="panicValue">0%</b></div><div id="scentRow" class="pressure-row"><span>KAFFEDOFT</span><div><i id="scentFill"></i></div><b id="scentValue">0%</b></div></div>
   <div id="sunHud" hidden></div>
-  <button id="liveCityWidget" type="button" aria-expanded="false" aria-controls="liveCityDetails">
-    <span class="live-city-dot" aria-hidden="true"></span>
-    <b id="liveCityCompact">LIVE KARLSTAD · STARTAR</b><span class="live-city-chevron">⌄</span>
-  </button>
-  <div id="liveCityDetails" hidden>
-    <div><span>VÄDER</span><b id="liveWeather">HÄMTAR…</b></div>
-    <div><span>STADSPULS</span><b id="livePulse">—</b></div>
-    <div><span>VIND</span><b id="liveWind">—</b></div>
-    <div><span>REGN</span><b id="liveRain">—</b></div>
-    <div><span>LIVEBUSSAR</span><b id="liveBuses">—</b></div>
-    <div><span>TRAFIK</span><b id="liveTraffic">—</b></div>
-    <small id="liveSource">LIVE CITY 2.1 · STARTAR</small>
-  </div></div>
+</div>
   <button id="roundRadarButton" aria-label="Öppna kartan. Radarn visar norr uppåt."><canvas id="roundRadar" width="256" height="256"></canvas><span>RADAR · KARTA ↗</span></button>
   <div id="roundTactic" hidden></div>
   <div id="roundCompass"><b id="roundBearing">N · 0°</b><span id="roundCompassArrow">↑</span><span id="roundCompassText">O’LEARYS</span></div>
@@ -91,6 +80,15 @@
   <div id="roundToast" role="status" aria-live="polite"><strong id="roundToastTitle"></strong><span id="roundToastText"></span></div>
   <div id="solarFlash"></div><div id="damageFlash"></div>
   <div id="solarWeapon" aria-hidden="true" hidden><div class="weapon-top">SOL / 01</div><div class="weapon-barrel"><i>✳</i></div><div class="weapon-grip"></div></div>
+</div>
+<div id="scenicLayer" hidden><canvas id="scenicCanvas" aria-hidden="true"></canvas><header class="boat-header"><div><small id="scenicFrom"></small><b id="scenicDestination"></b></div><strong id="scenicClock"></strong><button id="scenicPause" aria-label="Pausa resan">Ⅱ</button></header><div class="boat-progress"><i id="scenicProgress"></i></div><div class="scenic-note">EN KAFFEPAUS MED UTSIKT.</div><div id="scenicPaused" hidden><div><h2>PAUS PÅ RESAN.</h2><button id="scenicResume" class="round-primary">FORTSÄTT →</button><button id="scenicAbort" class="round-secondary">TILLBAKA TILL HÅLLPLATSEN</button></div></div></div>
+<div id="boatLayer" hidden>
+  <canvas id="boatCanvas" aria-hidden="true"></canvas>
+  <header class="boat-header"><div><small>BÅTBUSS / INRE HAMN</small><b id="boatDestination">MARIEBERGSSKOGEN</b><span id="boatScore"></span></div><strong id="boatClock"></strong><button id="boatPause" aria-label="Pausa båtturen">Ⅱ</button></header>
+  <div class="boat-progress"><i id="boatProgress"></i></div>
+  <button id="boatPerson0" class="boat-person" aria-label="Hjälp person 1" hidden></button><button id="boatPerson1" class="boat-person" aria-label="Hjälp person 2" hidden></button><button id="boatPerson2" class="boat-person" aria-label="Hjälp person 3" hidden></button><button id="boatPerson3" class="boat-person" aria-label="Hjälp person 4" hidden></button>
+  <div id="boatQuip" role="status"></div>
+  <div id="boatPaused" hidden><div><h2>ANKARPAUS.</h2><p>Båten och klockan väntar.</p><button id="boatResume" class="round-primary">FORTSÄTT →</button><button id="boatAbort" class="round-secondary">TILLBAKA TILL AVGÅNGSBRYGGAN</button></div></div>
 </div>
 <div id="busLayer" hidden>
   <canvas id="busCabin" aria-hidden="true"></canvas><canvas id="busPassengers" aria-hidden="true"></canvas><div class="bus-windscreen" aria-hidden="true"></div>
@@ -109,14 +107,15 @@
 </div>
 <div id="roundPanel" role="dialog" aria-modal="true" aria-label="Karlstad efter stängning">
   <section id="round-city-intro" class="round-card city-card" hidden>
-    <div class="episode-label"><span>KARLSTAD / STADSJAKTEN</span><span>2.8.1</span></div>
-    <h1>STADEN<br><em>JAGAR DIG.</em></h1>
-    <p class="round-lead">Tre minuter. En stad utan tålamod.</p>
+    <div class="episode-label"><span>KARLSTAD / STADSJAKTEN</span><span>2.9.0</span></div>
+    <h1>KARLSTAD<br><em>ÄR DITT.</em></h1>
+    <p class="round-lead">Promenera, hitta nya platser och samla termosar.</p>
     <div class="city-rules"><span><b>01 · SAMLA 800 XP</b>Följ cyanpilarna till gatuhändelser. BYT MÅL öppnar kartan.</span><span><b>02 · TA BUSS 666</b>Ta ratten. Rädda bussen. Upp till 350 XP.</span><span><b>03 · FLY TILL GRÖNT</b>Nå en tryggzon innan tiden tar slut. Livet får inte ta slut!</span></div>
     <p id="cityControlCopy" class="control-hint"></p>
+    <button id="cityClean" class="round-primary">CLEAN CITY EXPLORE →</button><p class="round-fine">Bara Karlstad och termosar. Inga fiender. Inga uppdrag.</p><button id="cityTrail" class="round-secondary">TERMOSRUNDAN · 3 MINUTER</button>
     <button id="dailyOpen" class="daily-tile"><span id="dailyDate"></span><b id="dailyTitle"></b><small id="dailyTeaser"></small><strong>SPELA DAGENS →</strong></button>
-    <button id="cityStart" class="round-secondary">STARTA JAKTEN · 3:00 <span>→</span></button>
-    <button id="cityFree" class="round-tertiary">Utforska utan tidspress</button>
+    <button id="cityStart" class="round-secondary">ZOMBIEJAKTEN · 3:00 <span>→</span></button>
+    <button id="cityFree" class="round-tertiary">Stadsvandring med zombies</button>
     <p id="cityChallengeTarget" class="round-fine"></p>
   </section>
   <section id="round-daily-intro" class="round-card compact" hidden>
@@ -126,6 +125,8 @@
     <p id="dailyBest" class="record"></p><p id="dailyTarget" class="round-fine"></p>
     <button id="dailyStart" class="round-primary">SPELA UTMANINGEN →</button><button id="dailyBack" class="round-tertiary">Till vanliga stadsjakten</button>
   </section>
+  <section id="round-boat-intro" class="round-card compact" hidden><div class="episode-label">BÅTBUSS / KOMPISUTMANING</div><h2>KAPTENEN<br><em>ÄR DÖD.</em></h2><p>36 sekunder på däck. Tryck på passagerarna: flytväst ombord, livboj i vattnet. Rädda minst 8 av 12 för ankomstbonus.</p><p id="boatChallengeTarget" class="record"></p><button id="boatChallengeStart" class="round-primary">KLIV OMBORD →</button></section>
+  <section id="round-trail-result" class="round-card compact" hidden><div class="episode-label">TERMOSRUNDAN / TIDEN ÄR SLUT</div><h2>KAFFET<br><em>ÄR DITT.</em></h2><p id="trailResultScore" class="round-lead"></p><p id="trailResultBest" class="record"></p><button id="trailRetry" class="round-primary">EN RUNDA TILL →</button><button id="trailExplore" class="round-secondary">CLEAN CITY EXPLORE</button></section>
   <section id="round-bus-intro" class="round-card compact" hidden>
     <div class="episode-label">KOMPISUTMANING / LINJE 666</div><h2>BILJETT TILL<br><em>KAOSET.</em></h2>
     <p id="busChallengeFrom" class="round-lead"></p><p>Ta ratten inuti buss 666. Motstyr när markören glider och håll bussen på vägen i 30 sekunder. Zombies och kaffe far genom kupén. Ett finger på ratten, A / D på dator.</p><p id="busChallengeTarget" class="record"></p>
@@ -140,7 +141,7 @@
     <button id="momentRetry" class="round-secondary" hidden>EN BUSSRESA TILL →</button><button id="momentClose" class="round-tertiary">Tillbaka</button>
   </section>
   <section id="round-intro" class="round-card">
-    <div class="episode-label"><span>KARLSTAD / SPECIALUPPDRAG</span><span>2.8.1</span></div>
+    <div class="episode-label"><span>KARLSTAD / SPECIALUPPDRAG</span><span>2.9.0</span></div>
     <nav id="missionPicker" aria-label="Välj uppdrag">
       <button id="select-sista-rundan" aria-pressed="true"><b>01</b><span>SISTA RUNDAN<small>O’Learys · knuffa</small></span></button>
       <button id="select-fikapanik" aria-pressed="false"><b>02</b><span>FIKAPANIK<small>Torget · 24 zombies</small></span></button>
@@ -164,12 +165,12 @@
     <div class="episode-label">TIMEOUT / KLOCKAN STÅR STILL</div>
     <h2>TA EN<br><em>FIKAPAUS.</em></h2>
     <p id="pauseControlSummary"></p>
-    <p><b>Stadsjakten:</b> 800 XP, sedan till en grön tryggzon inom tre minuter. Cyan = gatuhändelse. Orange = buss. Specialuppdragen pausar jaktklockan; bussresan räknas in. Kaffedoften lockar zombies. Följ det rörliga solfältet för energi, mindre doft och dubbla zombiepoäng. Nya jakter fyller på termosarna. Kaffepoäng, hemligheter och vykort sparas på denna enhet.</p>
+    <p id="pauseHuntHelp"><b>Stadsjakten:</b> 800 XP, sedan till en grön tryggzon inom tre minuter. Cyan = gatuhändelse. Orange = buss. Specialuppdragen pausar jaktklockan; bussresan räknas in. Kaffedoften lockar zombies. Följ det rörliga solfältet för energi, mindre doft och dubbla zombiepoäng. Nya jakter fyller på termosarna. Kaffepoäng, hemligheter och vykort sparas på denna enhet.</p>
     <div class="fps-settings"><button id="handModeBtn" class="round-secondary">EN HAND · AUTOELD</button><small id="handModeHint"></small><button id="lookModeBtn" class="round-secondary">SIKTA: SVEPA</button><label for="lookSensitivity">KÄNSLIGHET <output id="lookSensitivityValue">100%</output></label><input id="lookSensitivity" type="range" min="0.45" max="1.8" step="0.05" value="1"><small>Tvåhandsläge: svep eller håll högerstyrspaken åt sidan. Enhandsläge laddar automatiskt med 25 kaffepoäng om solenergin tar slut under eld.</small></div>
     <p id="roundPauseControls" class="control-hint"></p>
     <button id="roundResume" class="round-primary">FORTSÄTT SPELA →</button>
     <button id="roundRestart" class="round-secondary">Börja om samma runda</button>
-    <button id="cityNewRun" class="round-secondary">NY STADSJAKT · 3 MINUTER</button>
+    <button id="cityNewRun" class="round-secondary">VÄLJ SPELSÄTT</button>
     <button id="openMoment" class="round-secondary" hidden>MITT SENASTE CHALLENGE-VYKORT</button>
     <button id="openAlbum" class="round-secondary">MINA VYKORT · 3 ATT HITTA</button>
     <div class="pause-footer"><button id="roundQuit">Utforska staden</button><button id="roundMute">LJUD PÅ</button></div>
@@ -212,15 +213,30 @@
     <div class="map-surface"><canvas id="roundMap" width="500" height="500" aria-label="Karlstadkarta med markerade destinationer"></canvas><div id="mapPinLayer" class="map-pin-layer" aria-label="Klickbara destinationer på kartan"></div></div>
     <p class="round-fine map-attribution">Kartunderlag © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap-bidragsgivare</a></p>
     <p id="mapCurrentGoal" class="record"></p>
+    <button id="teleport-harbour" class="map-teleport" type="button">⚓ GÅ DIREKT TILL BÅTBUSSEN · INRE HAMN</button><button id="teleport-torget" class="map-teleport" type="button">☀ TILLBAKA TILL STORA TORGET</button>
     <button id="teleport-mitt-i-city" class="map-teleport" type="button">⚡ GÅ DIREKT IN I MITT I CITY</button>
     <p class="round-fine map-teleport-hint">Tar dig direkt till atriet på plan 0. Där finns butiker och rulltrappor upp till plan 1.</p>
-    <div id="mapGoals"><p class="round-fine">SNABBMÅL · VÄLJ EN PLATS SÅ VISAR KARTA, KOMPASS OCH CYANPILAR VÄGEN</p>
+    <div id="mapStatus" aria-label="Stadens läge"></div>
+  <button id="liveCityWidget" type="button" aria-expanded="false" aria-controls="liveCityDetails">
+    <span class="live-city-dot" aria-hidden="true"></span>
+    <b id="liveCityCompact">LIVE KARLSTAD · STARTAR</b><span class="live-city-chevron">⌄</span>
+  </button>
+  <div id="liveCityDetails" hidden>
+    <div><span>VÄDER</span><b id="liveWeather">HÄMTAR…</b></div>
+    <div><span>STADSPULS</span><b id="livePulse">—</b></div>
+    <div><span>VIND</span><b id="liveWind">—</b></div>
+    <div><span>REGN</span><b id="liveRain">—</b></div>
+    <div><span>LIVEBUSSAR</span><b id="liveBuses">—</b></div>
+    <div><span>TRAFIK</span><b id="liveTraffic">—</b></div>
+    <small id="liveSource">LIVE CITY 2.1 · STARTAR</small>
+  </div>
+    <div id="mapGoals"><button id="route-place-tingvalla" class="map-goal" type="button">Tingvallagymnasiet</button><button id="route-place-bilan" class="map-goal" type="button">Gamla fängelset · Bilan</button><button id="route-place-station" class="map-goal" type="button">Karlstad C</button><button id="route-place-lofbergs" class="map-goal" type="button">Löfbergs kaffeskrapa</button><button id="route-place-hamn" class="map-goal" type="button">Inre hamn · båtbuss</button><p class="round-fine">SNABBMÅL · VÄLJ EN PLATS SÅ VISAR KARTA, KOMPASS OCH CYANPILAR VÄGEN</p>
     <div class="map-choices"><button id="route-place-torget">Stora Torget</button><button id="route-place-mitticity">Väg till Mitt i City</button><button id="route-place-domkyrkan">Domkyrkan</button><button id="route-place-sandgrund">Sandgrund</button><button id="route-place-olearys">O’Learys</button><button id="route-place-museum">Värmlands museum</button><button id="route-place-duvan">Duvan</button><button id="route-place-ahlens">Åhléns</button><button id="route-place-stadshotellet">Stadshotellet</button><button id="route-place-udden">Sandgrundsudden</button><button id="route-place-biblioteket">Biblioteket</button></div>
-    <p class="round-fine">UPPDRAG OCH HÄNDELSER</p><div class="map-choices"><button id="route-event">Aktiv gatuhändelse</button><button id="route-bus">Buss 666</button><button id="route-sun">Följ solen</button><button id="route-sista-rundan">Sista rundan · O’Learys</button><button id="route-fikapanik">Fikapanik</button><button id="route-radda-fikat">Rädda fikat</button><button id="route-sandgrund">Dödens akvarell · Sandgrund</button></div>
-    <p class="round-fine">VAD VILL DU RÅKA UT FÖR?</p><div class="map-choices"><button id="story-power">⚡ Tänd Karlstad</button><button id="story-news">NWT: Extra!</button><button id="story-bowling">Zombiebowling</button></div><p id="mapStoryHint" class="round-fine"></p></div>
+    <p id="mapActivityTitle" class="round-fine">UPPDRAG OCH HÄNDELSER</p><div class="map-choices"><button id="route-event">Aktiv gatuhändelse</button><button id="route-bus">Buss 666</button><button id="route-sun">Följ solen</button><button id="route-sista-rundan">Sista rundan · O’Learys</button><button id="route-fikapanik">Fikapanik</button><button id="route-radda-fikat">Rädda fikat</button><button id="route-sandgrund">Dödens akvarell · Sandgrund</button></div>
+    <p class="round-fine action-only">VAD VILL DU RÅKA UT FÖR?</p><div class="map-choices action-only"><button id="story-power">⚡ Tänd Karlstad</button><button id="story-news">NWT: Extra!</button><button id="story-bowling">Zombiebowling</button></div><p id="mapStoryHint" class="round-fine"></p></div>
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.8.1"></script>
+<script type="module" src="./app.js?v=2.9.0"></script>
 </body>
 </html>
