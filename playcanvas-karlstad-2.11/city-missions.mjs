@@ -45,7 +45,13 @@ export class CityNavigation {
     for(let i=0;i<900&&n&&field[n.id]>=0;i++){
       out.push({x:n.x,z:n.z});if(field[n.id]===0)break;
       n=this.nodes[n.links.find(id=>field[id]===field[n.id]-1)];
-    }return out;
+    }
+    // Keep the fast fixed city grid, but allow a verified clear final leg to nearby
+    // real destinations just outside it (for example Haga). This avoids thousands
+    // of extra navigation nodes on iPhone while still ending at the actual target.
+    const outside=to.x<this.bounds.minX||to.x>this.bounds.maxX||to.z<this.bounds.minZ||to.z>this.bounds.maxZ;
+    if(outside&&out.length&&this.clear(out.at(-1),to))out.push({x:to.x,z:to.z});
+    return out;
   }
   waypoint(from,to){if(this.clear(from,to))return to;const n=this.nearest(from),field=this.field(to);return this.nodes[n.links.find(id=>field[id]>=0&&field[id]<field[n.id])]||n;}
   point(p){const n=this.nearest(p);return {x:n.x,z:n.z};}
