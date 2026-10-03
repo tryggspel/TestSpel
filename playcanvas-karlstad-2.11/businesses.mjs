@@ -1,6 +1,7 @@
 import {cityPoint} from './city-geography.mjs?v=2.11.1';
 
 const FACE_YAW=Object.freeze({north:180,south:0,east:90,west:-90});
+const FACADE_OFFSET=.34; // comic-city panels sit at .25; real businesses must render in front.
 const PALETTES=Object.freeze({
   musicpartner:{bg:'#252729',fg:'#f5efdf',accent:'#e78336',kind:'music-office'},
   synsam:{bg:'#232729',fg:'#f36a32',accent:'#f36a32',kind:'optics'},
@@ -49,10 +50,10 @@ export function businessAnchor(business,colliders=[]){
   const margin=1.6,p=pin||{x:(b.minx+b.maxx)/2,z:(b.minz+b.maxz)/2};
   if(face==='north'||face==='south'){
     const span=Math.max(3,b.maxx-b.minx-2*margin),width=Math.min(business.width||10,span);
-    return Object.freeze({x:clamp(p.x,b.minx+margin,b.maxx-margin),z:(face==='north'?b.minz-.10:b.maxz+.10),yaw,width,direct:false});
+    return Object.freeze({x:clamp(p.x,b.minx+margin,b.maxx-margin),z:(face==='north'?b.minz-FACADE_OFFSET:b.maxz+FACADE_OFFSET),yaw,width,direct:false});
   }
   const span=Math.max(3,b.maxz-b.minz-2*margin),width=Math.min(business.width||10,span);
-  return Object.freeze({x:(face==='west'?b.minx-.10:b.maxx+.10),z:clamp(p.z,b.minz+margin,b.maxz-margin),yaw,width,direct:false});
+  return Object.freeze({x:(face==='west'?b.minx-FACADE_OFFSET:b.maxx+FACADE_OFFSET),z:clamp(p.z,b.minz+margin,b.maxz-margin),yaw,width,direct:false});
 }
 
 // Known real businesses just outside the current OSM building snapshot. They are kept as
