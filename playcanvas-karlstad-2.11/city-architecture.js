@@ -156,17 +156,18 @@ function addFlatSignQuad(mesh,cx,cy,cz,tangent,normal,w,h,offset,colour){
 function addressText(b,face){
   const street=String(b.tags?.['addr:street']||face?.street||'').trim();
   const number=String(b.tags?.['addr:housenumber']||'').trim();
-  return (street+(number?' '+number:'')).toUpperCase().replace(/[^A-ZÅÄÖ0-9 -]/g,'').replace(/\s+/g,' ').trim();
+  const named=!!String(b.name||'').trim()||IDENTITY_IDS.has(b.osm)||SOUTH_IDS.has(b.osm);
+  return (street+(!named&&number?' '+number:'')).toUpperCase().replace(/[^A-ZÅÄÖ0-9 -]/g,'').replace(/\s+/g,' ').trim();
 }
 function drawAddressPlate(mesh,b,face,label,x,z){
   const widths=[...label].map(ch=>ch===' '?3:5),cells=widths.reduce((n,w,i)=>n+w+(i?1:0),0);
-  // 2.11.12: high-contrast Karlstad-style facade plate. The old cream/white text
-  // disappeared against the generic beige facades in actual FPS view.
-  const pixel=Math.max(.050,Math.min(.068,6.05/Math.max(1,cells)));
-  const boardW=Math.max(3.05,cells*pixel+.34),boardH=Math.max(.66,7*pixel+.22);
-  const y=Math.max(2.85,Math.min(3.55,b.h*.29));
-  addFlatSignQuad(mesh,x,y,z,face.tangent,face.normal,boardW+.18,boardH+.18,.075,'#17252b');
-  addFlatSignQuad(mesh,x,y,z,face.tangent,face.normal,boardW,boardH,.095,'#f5f2e8');
+  // Unified Karlstad wayfinding: same dark green / cream family as building-name signs.
+  // Street plaques stay deliberately small so architecture and landmark names remain primary.
+  const pixel=Math.max(.024,Math.min(.034,3.05/Math.max(1,cells)));
+  const boardW=Math.max(2.10,Math.min(3.35,cells*pixel+.22)),boardH=Math.max(.36,7*pixel+.14);
+  const y=2.34;
+  addFlatSignQuad(mesh,x,y,z,face.tangent,face.normal,boardW+.09,boardH+.09,.075,'#f5e5bd');
+  addFlatSignQuad(mesh,x,y,z,face.tangent,face.normal,boardW,boardH,.090,'#214b49');
   let cursor=-cells*pixel/2;
   [...label].forEach((ch,i)=>{
     if(i)cursor+=pixel;
@@ -174,12 +175,12 @@ function drawAddressPlate(mesh,b,face,label,x,z){
     const glyph=streetGlyph(ch);if(!glyph){cursor+=5*pixel;return;}
     for(let row=0;row<7;row++)for(let col=0;col<5;col++)if(glyph[row][col]==='1'){
       const along=cursor+(col+.5)*pixel,px=x+face.tangent[0]*along,pz=z+face.tangent[1]*along,py=y+(3-row)*pixel;
-      addStreetPixel(mesh,px,py,pz,face.tangent,face.normal,pixel*.90,'#17252b',.125);
+      addStreetPixel(mesh,px,py,pz,face.tangent,face.normal,pixel*.86,'#f5e5bd',.116);
     }
     if(ch==='Ä'||ch==='Ö'){
-      for(const d of [-1.2,1.2]){const along=cursor+(2+d)*pixel;addStreetPixel(mesh,x+face.tangent[0]*along,y+4.18*pixel,z+face.tangent[1]*along,face.tangent,face.normal,pixel*.64,'#17252b',.125);}
+      for(const d of [-1.2,1.2]){const along=cursor+(2+d)*pixel;addStreetPixel(mesh,x+face.tangent[0]*along,y+4.18*pixel,z+face.tangent[1]*along,face.tangent,face.normal,pixel*.60,'#f5e5bd',.116);}
     }else if(ch==='Å'){
-      const along=cursor+2*pixel;addStreetPixel(mesh,x+face.tangent[0]*along,y+4.18*pixel,z+face.tangent[1]*along,face.tangent,face.normal,pixel*.70,'#17252b',.125);
+      const along=cursor+2*pixel;addStreetPixel(mesh,x+face.tangent[0]*along,y+4.18*pixel,z+face.tangent[1]*along,face.tangent,face.normal,pixel*.66,'#f5e5bd',.116);
     }
     cursor+=5*pixel;
   });
@@ -187,10 +188,12 @@ function drawAddressPlate(mesh,b,face,label,x,z){
 function addBuildingAddressSign(mesh,b){
   const face=nearestStreetFacade(b,b.tags?.['addr:street']);if(!face)return 0;
   const label=addressText(b,face);if(!label)return 0;
-  const repeats=face.span>48?3:face.span>24?2:1;
-  const margin=3.7;
+  const named=!!String(b.name||'').trim()||IDENTITY_IDS.has(b.osm)||SOUTH_IDS.has(b.osm);
+  // One small plaque near a corner on named buildings; at most two on exceptionally long generic blocks.
+  const repeats=named?1:face.span>58?2:1;
+  const margin=2.4;
   for(let i=0;i<repeats;i++){
-    const t=(i+1)/(repeats+1);
+    const t=named?.16:(repeats===1?.50:(i===0?.24:.76));
     let x=face.x,z=face.z;
     if(Math.abs(face.tangent[0])>.5){
       const lo=b.minx+margin,hi=b.maxx-margin;
@@ -358,7 +361,7 @@ export function createCityArchitecture(pc,app,buildings){
     town.box(p.x+1.2,1.34,p.z+out*.11,1.55,2.48,.10,'#203a42');
     town.box(p.x+1.7,1.15,p.z+out*.18,.08,.38,.09,'#f4daa1');
   }
-  for(const sign of STREET_SIGNS)addStreetNameSign(town,sign,buildings);
+  for(const [x,z] of STREET_SIGNS)town.box(x,1.58,z,.07,3.16,.07,'#29444a');
   addInnerstadStreetFurniture(town);
   const addressPlates=addAddressPlates(town,buildings);
   town.finish(pc,app,'Karlstad · taklinjer, referensfasader, adresskyltar och gågatumöbler',material);
