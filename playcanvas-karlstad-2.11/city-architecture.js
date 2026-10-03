@@ -15,6 +15,91 @@ export function coreContourBuildings(buildings,max=CORE_CONTOUR_LIMIT){
   return buildings.filter(b=>b.dist<CORE_CONTOUR_RADIUS&&!IDENTITY_IDS.has(b.osm)&&!MALL_BUILDING_IDS.has(b.osm)).sort((a,b)=>a.dist-b.dist||a.osm-b.osm).slice(0,max);
 }
 const rgb=hex=>[parseInt(hex.slice(1,3),16)/255,parseInt(hex.slice(3,5),16)/255,parseInt(hex.slice(5,7),16)/255,1];
+const STREET_GLYPHS=Object.freeze({
+  A:['01110','10001','10001','11111','10001','10001','10001'],
+  D:['11110','10001','10001','10001','10001','10001','11110'],
+  E:['11111','10000','10000','11110','10000','10000','11111'],
+  G:['01111','10000','10000','10111','10001','10001','01111'],
+  I:['11111','00100','00100','00100','00100','00100','11111'],
+  K:['10001','10010','10100','11000','10100','10010','10001'],
+  L:['10000','10000','10000','10000','10000','10000','11111'],
+  N:['10001','11001','10101','10011','10001','10001','10001'],
+  O:['01110','10001','10001','10001','10001','10001','01110'],
+  R:['11110','10001','10001','11110','10100','10010','10001'],
+  S:['01111','10000','10000','01110','00001','00001','11110'],
+  T:['11111','00100','00100','00100','00100','00100','00100'],
+  V:['10001','10001','10001','10001','01010','01010','00100'],
+  Y:['10001','10001','01010','00100','00100','00100','00100']
+});
+const signClamp=(v,a,b)=>a<=b?Math.max(a,Math.min(b,v)):(a+b)/2;
+function pickStreetFacade(x,z,rotation,buildings){
+  let best=null;
+  for(const b of buildings){
+    if(!Number.isFinite(b.minx)||!Number.isFinite(b.maxx)||!Number.isFinite(b.minz)||!Number.isFinite(b.maxz))continue;
+    if(rotation===90){
+      if(z<b.minz-6||z>b.maxz+6)continue;
+      const along=z<b.minz?b.minz-z:z>b.maxz?z-b.maxz:0;
+      for(const edge of [b.minx,b.maxx]){
+        const edgeDist=Math.abs(x-edge);if(edgeDist>34)continue;
+        const score=edgeDist+along*2.2;
+        if(!best||score<best.score)best={b,score,out:x>=edge?1:-1,edge};
+      }
+    }else{
+      if(x<b.minx-6||x>b.maxx+6)continue;
+      const along=x<b.minx?b.minx-x:x>b.maxx?x-b.maxx:0;
+      for(const edge of [b.minz,b.maxz]){
+        const edgeDist=Math.abs(z-edge);if(edgeDist>34)continue;
+        const score=edgeDist+along*2.2;
+        if(!best||score<best.score)best={b,score,out:z>=edge?1:-1,edge};
+      }
+    }
+  }
+  return best;
+}
+function streetGlyph(ch){return STREET_GLYPHS[ch==='Ä'||ch==='Å'?'A':ch==='Ö'?'O':ch]||STREET_GLYPHS.E;}
+function addStreetPixel(mesh,cx,cy,cz,tangent,normal,size){
+  const hw=size*.41,hh=size*.41,tx=tangent[0]*hw,tz=tangent[1]*hw,nx=normal[0]*.066,nz=normal[1]*.066;
+  mesh.quad([cx+nx-tx,cy-hh,cz+nz-tz],[cx+nx+tx,cy-hh,cz+nz+tz],[cx+nx+tx,cy+hh,cz+nz+tz],[cx+nx-tx,cy+hh,cz+nz-tz],'#fff8de');
+}
+function addStreetNameSign(mesh,sign,buildings){
+  const [sx,sz,label,rotation=0]=sign,face=pickStreetFacade(sx,sz,rotation,buildings);
+  const widths=[...label].map(ch=>ch===' '?3:5),cells=widths.reduce((n,w,i)=>n+w+(i?1:0),0);
+  const span=face?(rotation===90?face.b.maxz-face.b.minz:face.b.maxx-face.b.minx):5.2;
+  const pixel=Math.max(.034,Math.min(.055,(Math.max(2.5,Math.min(5.15,span-.45))-.28)/cells));
+  const boardW=Math.max(2.45,cells*pixel+.28),half=boardW/2;
+  let x=sx,z=sz,out=face?.out||1;
+  if(face){
+    if(rotation===90){x=face.edge+out*.075;z=signClamp(sz,face.b.minz+half+.12,face.b.maxz-half-.12);}
+    else{z=face.edge+out*.075;x=signClamp(sx,face.b.minx+half+.12,face.b.maxx-half-.12);}
+  }else{
+    mesh.box('street-sign-post',1.45,0,.07,2.9,.07,'#29444a');
+  }
+  const normal=rotation===90?[out,0]:[0,out],tangent=rotation===90?[0,-out]:[out,0],y=2.78;
+  if(rotation===90){
+    mesh.box(x+normal[0]*.018,y,z,.095,.70,boardW+.14,'#efe4c8');
+    mesh.box(x+normal[0]*.054,y,z,.105,.58,boardW,'#234d63');
+  }else{
+    mesh.box(x,y,z+normal[1]*.018,boardW+.14,.70,.095,'#efe4c8');
+    mesh.box(x,y,z+normal[1]*.054,boardW,.58,.105,'#234d63');
+  }
+  let cursor=-cells*pixel/2;
+  [...label].forEach((ch,i)=>{
+    if(i)cursor+=pixel;
+    if(ch===' '){cursor+=3*pixel;return;}
+    const glyph=streetGlyph(ch);
+    for(let row=0;row<7;row++)for(let col=0;col<5;col++)if(glyph[row][col]==='1'){
+      const along=cursor+(col+.5)*pixel,px=x+tangent[0]*along,pz=z+tangent[1]*along,py=y+(3-row)*pixel;
+      addStreetPixel(mesh,px,py,pz,tangent,normal,pixel);
+    }
+    if(ch==='Ä'||ch==='Ö'){
+      for(const d of [-1.2,1.2]){const along=cursor+(2+d)*pixel;addStreetPixel(mesh,x+tangent[0]*along,y+4.18*pixel,z+tangent[1]*along,tangent,normal,pixel*.72);}
+    }else if(ch==='Å'){
+      const along=cursor+2*pixel;addStreetPixel(mesh,x+tangent[0]*along,y+4.18*pixel,z+tangent[1]*along,tangent,normal,pixel*.78);
+    }
+    cursor+=5*pixel;
+  });
+}
+
 export class ComicMesh {
   constructor(srgb=false){this.srgb=srgb;this.positions=[];this.normals=[];this.colors=[];this.indices=[];}
   tri(a,b,c,colour){
@@ -161,7 +246,7 @@ export function createCityArchitecture(pc,app,buildings){
     town.box(p.x+1.2,1.34,p.z+out*.11,1.55,2.48,.10,'#203a42');
     town.box(p.x+1.7,1.15,p.z+out*.18,.08,.38,.09,'#f4daa1');
   }
-  for(const [x,z] of STREET_SIGNS)town.box(x,1.73,z,.09,3.46,.09,'#29444a');
+  for(const sign of STREET_SIGNS)addStreetNameSign(town,sign,buildings);
   addInnerstadStreetFurniture(town);
   town.finish(pc,app,'Karlstad · taklinjer, referensfasader och gågatumöbler',material);
   for(const b of buildings.filter(b=>IDENTITY_IDS.has(b.osm)&&!SOUTH_IDS.has(b.osm))){
