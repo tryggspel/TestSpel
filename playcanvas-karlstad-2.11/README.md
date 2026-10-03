@@ -1,3 +1,15 @@
+# Karlstad City — 2.11.9 · Västra Torggatan, östra fasadraden
+
+Detta pass bygger den motsatta sidan av Västra Torggatan med samma referensmetod som 2.11.4–2.11.8. Tre ytterligare OSM-hus får individuella gatufasader: **Home Hotel Plaza, Västra Torggatan 2**, **Västra Torggatan 8** och **Västra Torggatan 10**.
+
+Home Hotel Plaza bygger på hotellets aktuella officiella exteriörbild: ljusbrunt tegel, vit putsdekor, välvda fönster, små järnbalkonger och markerad mittentré. Västra Torggatan 8 får den dokumenterade ljusa klassicistiska fasaden, butiksvåning med markiser och mörk/glaserad påbyggnad överst. Västra Torggatan 10 följer Karlstads lokalhistoriska dokumentation av ett i huvudsak bevarat 1860-talshus med central inkörsport och regelbunden putsfasad.
+
+Google Street View-länkar har genererats från respektive OSM-hus som positionsankare. Den interaktiva Street View-renderingen är fortfarande inte åtkomlig i den här exekveringsmiljön, därför modelleras bara detaljer som också kan verifieras i offentliga exteriörbilder. Inga Google- eller tredjepartsbilder distribueras i spelet.
+
+Alla tre hus reserveras inom den befintliga 95-husbudgeten, använder exakt OSM-polygon för kollision och renderas i den befintliga statiska stadsbatchen.
+
+## Föregående version
+
 # Karlstad City — 2.11.8 · Drottninggatan 24 + Västra Torggatan 3/9
 
 Detta pass fortsätter den handbyggda innerstadslinjen med tre nya adressbundna OSM-fasader. **Drottninggatan 24** får sin karakteristiska rosa/grå stenbeklädnad, höga blå fönsterfält och blå horisontella skärmtak. **Västra Torggatan 9** får en ljus, historiserande fasad med pilastrar, markerade fönsteromfattningar och en tydlig butikssockel i linje med Karlstads kulturmiljöprogram. **Västra Torggatan 3** görs försiktigt som en tegelbaserad fortsättning av det dokumenterade gågatustråket, utan påhittade företagsnamn.

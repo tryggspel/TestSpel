@@ -1,4 +1,4 @@
-import {cityPoint} from './city-geography.mjs?v=2.11.8';
+import {cityPoint} from './city-geography.mjs?v=2.11.9';
 
 const FACE_YAW=Object.freeze({north:180,south:0,east:90,west:-90});
 const FACADE_OFFSET=.34; // comic-city panels sit at .25; real businesses must render in front.
@@ -17,7 +17,8 @@ const PALETTES=Object.freeze({
   hm:{bg:'#f3efe7',fg:'#c51f36',accent:'#c51f36',kind:'retail'},
   scandic:{bg:'#252a31',fg:'#ffffff',accent:'#d84b62',kind:'hotel'},
   radhuscafe:{bg:'#654936',fg:'#fff0d5',accent:'#d49a56',kind:'cafe'},
-  savoy:{bg:'#191f21',fg:'#f6efe3',accent:'#c94e37',kind:'hotel'}
+  savoy:{bg:'#191f21',fg:'#f6efe3',accent:'#c94e37',kind:'hotel'},
+  homeplaza:{bg:'#302b27',fg:'#f5eee3',accent:'#b98258',kind:'hotel'}
 });
 const B=(id,name,address,osm,face,extra={})=>Object.freeze({id,name,address,osm,face,...PALETTES[id],...extra});
 
@@ -31,6 +32,7 @@ export const REAL_BUSINESSES=Object.freeze([
   B('scandic','Scandic Karlstad City','Drottninggatan 4',106864598,'south',{width:11.5,door:.55}),
   B('radhuscafe','Rådhuscaféet','Tingvallagatan 8',101456563,'east',{width:8.8,door:.62}),
   B('savoy','Hotel Savoy','Västra Torggatan 1',106078942,'east',{width:10.6,door:.20,signOnly:true}),
+  B('homeplaza','Home Hotel Plaza','Västra Torggatan 2',110733713,'west',{width:11.2,door:.50,signOnly:true}),
   B('fratelli','Hotel Fratelli','Drottninggatan 17',104529134,'north',{width:8.8,signOnly:true}),
   B('hemkop','Hemköp','Drottninggatan 33',101257268,'north',{width:10.8,door:.52}),
   B('burgerking','Burger King','Östra Torggatan 9',101247031,'east',{width:9.6,door:.78}),

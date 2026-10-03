@@ -11,13 +11,13 @@ const buildings=cityBuildings(osm);
 const targets=buildings.filter(b=>INNERSTAD_REFERENCE_IDS.has(b.osm));
 const desired={north:[0,-1],south:[0,1],east:[1,0],west:[-1,0]};
 
-test('inner-city reference batches bind to thirteen real OSM address buildings',()=>{
-  assert.equal(targets.length,13);
+test('inner-city reference batches bind to sixteen real OSM address buildings',()=>{
+  assert.equal(targets.length,16);
   for(const b of targets){
     const p=INNERSTAD_PROFILES[b.osm];
     assert.equal(p.address,b.tags['addr:street']+' '+b.tags['addr:housenumber']);
   }
-  for(const id of [104396327,104529134,110733723,101935904,106078942,103767827,101485439,104778900,106864602])assert.ok(targets.some(b=>b.osm===id),'reference id '+id+' stays inside the 95-building detail budget');
+  for(const id of [104396327,104529134,110733723,101935904,106078942,103767827,101485439,104778900,106864602,110733713,105746413,104529128])assert.ok(targets.some(b=>b.osm===id),'reference id '+id+' stays inside the 95-building detail budget');
 });
 
 test('reference fronts face their real street side and generate bounded static geometry',()=>{
@@ -57,4 +57,12 @@ test('Elite Stadshotellet uses its dedicated reference facade instead of the gen
   assert.match(identity,/kind==='stadshotellet'/);
   assert.match(identity,/ELITE STADSHOTELLET/);
   assert.match(identity,/const hotelKind=mark\.id==='stadshotellet'\?'stadshotellet':'hotel'/);
+});
+
+
+test('east-side Vastra Torggatan references face west toward the pedestrian street',()=>{
+  for(const id of [110733713,105746413,104529128]){
+    const b=targets.find(x=>x.osm===id),p=INNERSTAD_PROFILES[id],edge=referenceFront(b);
+    assert.equal(p.front,'west');assert.ok(edge.nx<-.92,p.address);
+  }
 });

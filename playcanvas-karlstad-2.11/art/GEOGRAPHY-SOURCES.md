@@ -128,3 +128,14 @@ Google Street View was explicitly attempted as the preferred method. Interactive
 - **Gågatan street furniture.** Benches, dark lamp posts, planters and hanging/greenery rhythm are based on repeated contemporary imagery of Västra Torggatan and Drottninggatan, including Real Advice/Objektvision street photos.
 
 Google Street View remains the preferred visual reference when an inspectable panorama is available. The execution environment still cannot drive the interactive Street View viewer directly, so every geometric detail in this pass is cross-checked against public still imagery and OSM instead of pretending that an uninspected panorama was used.
+
+
+## Inner-city reference pass · 2.11.9
+
+This pass fills the **east side of Västra Torggatan** opposite the already modelled 1/3/5/9/11 row. OSM remains authoritative for footprint, address and height. Public facade photographs drive only the hand-built facade interpretation.
+
+- **Västra Torggatan 2 / OSM 110733713 · Home Hotel Plaza.** Official current exterior reference: https://www.strawberry.se/hotell/sverige/karlstad/home-hotel-plaza/ . The official image supports light brown brick, white stucco trim, arched windows, small iron balconies, rounded/turret-like vertical accents and a central entrance composition. Google hotel/address cross-check: https://www.google.se/travel/hotels/entity/ChkIqrqoi63c9tqrARoML2cvMTF4aGQ0bXRsEAE . Street View position anchor: https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=59.37847263750001,13.502201824999998 .
+- **Västra Torggatan 8 / OSM 105746413.** Current exterior reference: https://www.hemnet.se/bostad/lagenhet-1rum-karlstad-karlstads-kommun-vastra-torggatan-8-20923755 and current building/facade data: https://www.svenskfast.se/bostadsratt/varmland/karlstad/karlstad/centrum/vastra-torggatan-8/449015/ . The facade interpretation uses the photographed white classical plaster, decorative window surrounds, ground-floor awnings and dark glazed upper extension. Street View position anchor: https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=59.379478014285716,13.501972414285714 .
+- **Västra Torggatan 10 / OSM 104529128.** Local-history/current facade reference: https://www.tidsresankarlstad.se/vastra-torggatan-10/ . The source states that the building dates from after the 1865 fire and has largely retained its late-1860s appearance; the game models a restrained plaster/pilaster rhythm and the documented central carriage passage without copying historical advertising. Street View position anchor: https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=59.37970909375,13.50216565625 .
+
+Google Street View remains the preferred position/panorama source. In this execution environment the Google Maps Street View renderer rejects automated access, so panorama-specific facade claims are not made unless the same feature is independently visible in an inspectable still image.
