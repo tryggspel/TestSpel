@@ -1,3 +1,13 @@
+# Karlstad City — 2.11.6 · Drottninggatan västerut + Västra Torggatan
+
+Andra innerstadspasset fortsätter den handbyggda referensmetoden från 2.11.4–2.11.5. Fyra ytterligare OSM-hus får egna gatufasader: **Hotel Fratelli, Drottninggatan 17**, **Drottninggatan 20**, **Drottninggatan 26** och **Hotel Savoy, Västra Torggatan 1**.
+
+Fratelli får varm tegelkaraktär, ljusa fönsteromfattningar och randiga markiser. Drottninggatan 20 får 1960-tals tegel över en ljus butiksbas och lång metallkanopy. Drottninggatan 26 tolkas som ett sent 1970-tals kontors-/butikshus med regelbundet fasadgrid och tyngre takfot. Savoy får mörkt hotell-/restaurangband, varm tegelfasad och tydlig entré. Fratelli och Savoy använder nu endast läsbara verksamhetsskyltar ovanpå de handbyggda fasaderna i stället för generiska verksamhetspaneler.
+
+OSM står fortsatt för adress, fotavtryck och höjd. Referensbilder används endast för handbyggd geometri och färg-/rytmtolkning; inga fotografier distribueras med spelet. De nya husen reserveras inom den befintliga detaljbudgeten i stället för att höja antalet hus eller lägga till arbete per bildruta.
+
+## Föregående version
+
 # Karlstad City — 2.11.5 · Innerstadens referensfasader, pass 1
 
 Första fortsättningen på Kungsgatan-metoden från 2.11.4. Fem riktiga OSM-hus får egna handbyggda gatufasader i stället för generisk stadsdekor: **Drottninggatan 19**, **Västra Torggatan 5**, **Västra Torggatan 11**, **Kungsgatan 12** och **Kungsgatan 20**.
