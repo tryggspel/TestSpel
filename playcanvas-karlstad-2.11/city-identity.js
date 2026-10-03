@@ -1,7 +1,7 @@
-import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.2';
-import {MALL_ROOMS} from './mall-space.mjs?v=2.11.2';
-import {REAL_BUSINESSES,businessAnchor} from './businesses.mjs?v=2.11.2';
-import {createMallSigns} from './mall-architecture.js?v=2.11.2';
+import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.3';
+import {MALL_ROOMS} from './mall-space.mjs?v=2.11.3';
+import {REAL_BUSINESSES,businessAnchor} from './businesses.mjs?v=2.11.3';
+import {createMallSigns} from './mall-architecture.js?v=2.11.3';
 const ink='#263f46',paper='#f6ebd3';
 
 // Original comic drawings, baked once. Windows, masonry and print shading cost no geometry.
@@ -177,7 +177,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
         c.fillStyle=bg;c.fillRect(0,0,w,h);const fit=Math.min((w-44)/img.naturalWidth,(h-28)/img.naturalHeight),iw=img.naturalWidth*fit,ih=img.naturalHeight*fit;
         c.drawImage(img,(w-iw)/2,(h-ih)/2,iw,ih);c.strokeStyle=brand==='olearys'?'#d5cba6':'#263f46';c.lineWidth=4;c.strokeRect(4,4,w-8,h-8);t.setSource(canvas);logoStates[brand]='official';
       };
-      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.2',import.meta.url).href;
+      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.3',import.meta.url).href;
     }
     return t;
   }
