@@ -198,7 +198,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
   const landmarkIds=new Set(LANDMARKS.map(m=>m.osm)),shopIds=new Set(STOREFRONTS.map(s=>s.osm));
   for(const b of host.colliders){
     if(!b.name||landmarkIds.has(b.osm)||shopIds.has(b.osm)||SOUTH_IDS.has(b.osm)||BUSINESS_OSM_IDS.has(b.osm)||/PARKERING|PRESSBYRÅN/i.test(b.name))continue;
-    if(Math.hypot((b.minx+b.maxx)/2,(b.minz+b.maxz)/2)>390)continue;
+    if(Math.hypot((b.minx+b.maxx)/2,(b.minz+b.maxz)/2)>440)continue;
     const p=nearestStreetFace(b);if(!p)continue;
     const name=b.name.toUpperCase();
     mount('Byggnadsnamn · '+b.name,labelTex([name],'#214b49','#f5e5bd'),Math.max(4.0,Math.min(6.2,name.length*.30)),.58,p.x,2.68,p.z,p.yaw);
