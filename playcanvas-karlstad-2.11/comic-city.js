@@ -1,4 +1,5 @@
 import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.4';
+import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.4';
 import {IDENTITY_IDS,SHOP_IDS} from './city-geography.mjs?v=2.11.4';
 import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.4';
 const ink='#253d40',cream='#fff0c8';
@@ -57,6 +58,7 @@ export function facadePanels(buildings,blocked=()=>false){
     const faces=[{x:cx,z:b.minz-.25,yaw:180,w:b.maxx-b.minx},{x:cx,z:b.maxz+.25,yaw:0,w:b.maxx-b.minx},{x:b.minx-.25,z:cz,yaw:-90,w:b.maxz-b.minz},{x:b.maxx+.25,z:cz,yaw:90,w:b.maxz-b.minz}];
     for(const face of faces){
       if(KUNGSGATAN_PROFILES[b.osm]&&face.yaw===0)continue; // Reference geometry follows the actual south polygon edge.
+      if(INNERSTAD_PROFILES[b.osm]&&face.yaw===referenceFaceYaw(b.osm))continue; // Do not paint a generic facade over a hand-built reference front.
       const a=face.yaw*Math.PI/180,tx=Math.cos(a),tz=-Math.sin(a),nx=Math.sin(a),nz=Math.cos(a);
       if(face.w<2||[-.35,0,.35].every(t=>blocked(face.x+tx*face.w*t+nx*1.2,face.z+tz*face.w*t+nz*1.2)))continue;
       const count=Math.max(1,Math.ceil(face.w/13)),w=face.w/count;
