@@ -89,10 +89,10 @@ Panorama `w8KtpcPLB5AximYHC5oAcQ`, camera 59.3810358, 13.5030645, June 2026 imag
 This pass continues the hand-built facade system from Kungsgatan 14–18. OSM supplies footprint, address and height; visual references only guide facade colour, window rhythm, storefront proportions and characteristic details. No third-party photograph is included in the game.
 
 First bound buildings:
-- Drottninggatan 19 / OSM 104396327 — yellow-brick Läkarhuset frontage. Public facade reference: Real Advice, “Stadsrum förvärvar Läkarhuset i Karlstad”; current address/business cross-check: Synsam Outlet Karlstad.
-- Västra Torggatan 5 / OSM 108352774 — brick pedestrian-street frontage with green awning/street-level rhythm. Public facade references: Real Advice and Wikimedia Commons.
-- Västra Torggatan 11 / OSM 105746401 — red four-storey corner frontage with pale window surrounds. Public facade reference: Lokalguiden.
-- Kungsgatan 12 / OSM 101170479 — pale 1960-era block with regular broad bays. Public facade reference: Objektvision.
-- Kungsgatan 20 / OSM 102590980 — orange-brick frontage with strong blue balcony identity. Public facade reference: Hyresbostäder.
+- Drottninggatan 19 / OSM 104396327 — yellow-brick Läkarhuset frontage. Public facade reference: https://www.realadvice.se/2019/04/11/stadsrum-forvarvar-lakarhuset-i-karlstad/ ; current address/business cross-check: https://www.synsam.se/optiker/synsam-outlet-karlstad .
+- Västra Torggatan 5 / OSM 108352774 — brick pedestrian-street frontage with green awning/street-level rhythm. Public facade references: https://www.realadvice.se/objekt/vastra-torggatan-5-centrum/ and https://commons.wikimedia.org/wiki/File:V%C3%A4stra_Torggatan_5,_Karlstad.JPG .
+- Västra Torggatan 11 / OSM 105746401 — red four-storey corner frontage with pale window surrounds. Public facade reference: https://www.lokalguiden.se/lokal/5-v%C3%A4stra-torggatan-11-centrum .
+- Kungsgatan 12 / OSM 101170479 — pale 1960-era block with regular broad bays. Public facade reference: https://objektvision.se/Beskriv/258051625 .
+- Kungsgatan 20 / OSM 102590980 — orange-brick frontage with strong blue balcony identity. Public facade reference: https://hyresbostader.se/sok-ledigt/118602-0350/ .
 
 Direct interactive Google Street View rendering is not available in this build environment, so these five are an initial reference-photo pass. Exact panorama-by-panorama refinement should retain these OSM bindings and static-mesh limits.
