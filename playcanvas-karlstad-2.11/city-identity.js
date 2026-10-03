@@ -1,6 +1,6 @@
 import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,CITY_STREETS,storefrontAnchor} from './city-geography.mjs?v=2.11.9';
 import {MALL_ROOMS} from './mall-space.mjs?v=2.11.9';
-import {REAL_BUSINESSES,businessAnchor} from './businesses.mjs?v=2.11.9';
+import {REAL_BUSINESSES,BUSINESS_OSM_IDS,businessAnchor} from './businesses.mjs?v=2.11.9';
 import {createMallSigns} from './mall-architecture.js?v=2.11.9';
 import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.9';
 const ink='#263f46',paper='#f6ebd3';
@@ -151,7 +151,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       mount('Cyrillushuset · älven',facade('museum-old'),35.8,6.8,-160.54,0,-497,-90);
       for(const [x,z,w,yaw] of [[-94,-467,25,150],[-69,-470,24,45],[-57.9,-494,28,97]])mount('Museet · trä och glas',facade('museum-new'),w,6.8,x,0,z,yaw);
     }
-    if(['residenset','biskopsgarden','opera'].includes(mark.id)){
+    if(['radhuset','biblioteket','residenset','biskopsgarden','opera'].includes(mark.id)){
       const p=nearestStreetFace(b);
       if(p){
         const name=mark.name.toUpperCase();
@@ -162,7 +162,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
   }
   const landmarkIds=new Set(LANDMARKS.map(m=>m.osm)),shopIds=new Set(STOREFRONTS.map(s=>s.osm));
   for(const b of host.colliders){
-    if(!b.name||landmarkIds.has(b.osm)||shopIds.has(b.osm)||SOUTH_IDS.has(b.osm)||/PARKERING|PRESSBYRÅN/i.test(b.name))continue;
+    if(!b.name||landmarkIds.has(b.osm)||shopIds.has(b.osm)||SOUTH_IDS.has(b.osm)||BUSINESS_OSM_IDS.has(b.osm)||/PARKERING|PRESSBYRÅN/i.test(b.name))continue;
     if(Math.hypot((b.minx+b.maxx)/2,(b.minz+b.maxz)/2)>390)continue;
     const p=nearestStreetFace(b);if(!p)continue;
     const name=b.name.toUpperCase();
