@@ -2,7 +2,7 @@ import {cityPoint} from './city-geography.mjs?v=2.11.1';
 
 const FACE_YAW=Object.freeze({north:180,south:0,east:90,west:-90});
 const PALETTES=Object.freeze({
-  musicpartner:{bg:'#252729',fg:'#f5efdf',accent:'#e78336',kind:'music'},
+  musicpartner:{bg:'#252729',fg:'#f5efdf',accent:'#e78336',kind:'music-office'},
   synsam:{bg:'#232729',fg:'#f36a32',accent:'#f36a32',kind:'optics'},
   apoteket:{bg:'#258a43',fg:'#ffffff',accent:'#72bd44',kind:'pharmacy'},
   normal:{bg:'#1d2425',fg:'#ffffff',accent:'#31bea9',kind:'retail'},
@@ -18,16 +18,15 @@ const B=(id,name,address,osm,face,extra={})=>Object.freeze({id,name,address,osm,
 // Current real-world tenants used only as lightweight facade identity.
 // Coordinates are address pins where the OSM building lacks the exact sub-address.
 export const REAL_BUSINESSES=Object.freeze([
-  B('musicpartner','MusicPartner','Kungsgatan 6D',119214077,'south',{lon:13.508280,lat:59.381016,width:11.5}),
+  B('musicpartner','MusicPartner','Kungsgatan 6D',119214077,'south',{lon:13.508280,lat:59.381016,width:11.5,door:.72}),
   B('synsam','Synsam','Östra Torggatan 11',100833292,'east',{lon:13.5040455,lat:59.380140,width:8.4}),
-  B('normal','Normal','Drottninggatan 11',104778905,'north',{lon:13.5028741,lat:59.3792396,width:9.4,approximateBuilding:true}),
+  B('normal','Normal','Drottninggatan 11',104778905,'north',{lon:13.5028741,lat:59.3792396,width:9.4,approximateBuilding:true,door:.60}),
   B('fratelli','Hotel Fratelli','Drottninggatan 17',104529134,'north',{width:8.8}),
-  B('hemkop','Hemköp','Drottninggatan 33',101257268,'north',{width:10.8}),
-  B('burgerking','Burger King','Östra Torggatan 9',101247031,'east',{width:9.6}),
-  B('sibylla','Sibylla','Östra Torggatan 7',101588783,'east',{width:8.8}),
-  B('grekiska','Grekiska Grill & Bar','Tingvallagatan 15',101608925,'north',{width:10.8}),
-  B('leprechaun','The Leprechaun','Östra Torggatan 4',101217187,'west',{width:9.0}),
-  B('apoteket','Apoteket','Järnvägsgatan 14',117343944,'west',{width:7.8})
+  B('hemkop','Hemköp','Drottninggatan 33',101257268,'north',{width:10.8,door:.52}),
+  B('burgerking','Burger King','Östra Torggatan 9',101247031,'east',{width:9.6,door:.78}),
+  B('sibylla','Sibylla','Östra Torggatan 7',101588783,'east',{width:8.8,door:.30}),
+  B('grekiska','Grekiska Grill & Bar','Tingvallagatan 15',101608925,'north',{width:10.8,door:.72}),
+  B('leprechaun','The Leprechaun','Östra Torggatan 4',101217187,'west',{width:9.0,door:.28})
 ]);
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -54,3 +53,10 @@ export function businessAnchor(business,colliders=[]){
   const span=Math.max(3,b.maxz-b.minz-2*margin),width=Math.min(business.width||10,span);
   return Object.freeze({x:(face==='west'?b.minx-.10:b.maxx+.10),z:clamp(p.z,b.minz+margin,b.maxz-margin),yaw,width,direct:false});
 }
+
+// Known real businesses just outside the current OSM building snapshot. They are kept as
+// source data but not rendered as floating facades until the west-city building extract expands.
+export const UNMAPPED_BUSINESSES=Object.freeze([
+  Object.freeze({id:'gobanana',name:'Go Banana',address:'Drottninggatan 37B',lon:13.4955016,lat:59.3792166,...PALETTES.gobanana})
+]);
+export const BUSINESS_OSM_IDS=new Set(REAL_BUSINESSES.map(b=>b.osm).filter(Number.isFinite));
