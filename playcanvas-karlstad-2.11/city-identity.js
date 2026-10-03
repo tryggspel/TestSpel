@@ -1,7 +1,8 @@
-import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.9';
+import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,CITY_STREETS,storefrontAnchor} from './city-geography.mjs?v=2.11.9';
 import {MALL_ROOMS} from './mall-space.mjs?v=2.11.9';
 import {REAL_BUSINESSES,businessAnchor} from './businesses.mjs?v=2.11.9';
 import {createMallSigns} from './mall-architecture.js?v=2.11.9';
+import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.9';
 const ink='#263f46',paper='#f6ebd3';
 
 // Original comic drawings, baked once. Windows, masonry and print shading cost no geometry.
@@ -94,8 +95,22 @@ export function drawClock(c,w,h){
 export function createCityIdentity(pc,host,{card,texture,labelTex}){
   const group=new pc.Entity('Karlstad · platsidentitet');host.app.root.addChild(group);
   const facades=new Map(),logoStates={},shops=[];
-  function mount(name,tex,w,h,x,y,z,yaw=0){const e=card(name,tex,w,h,x,y,z);e.reparent(group);e.setEulerAngles(0,yaw,0);return e;}
+  function mount(name,tex,w,h,x,y,z,yaw=0,twoSided=false){const e=card(name,tex,w,h,x,y,z,twoSided);e.reparent(group);e.setEulerAngles(0,yaw,0);return e;}
   function facade(kind,w=1024,h=512){if(!facades.has(kind))facades.set(kind,texture((c,cw,ch)=>drawLandmarkFacade(c,cw,ch,kind),w,h));return facades.get(kind);}
+  function nearestStreetFace(b){
+    const cx=(b.minx+b.maxx)/2,cz=(b.minz+b.maxz)/2;let best=null;
+    for(const s of CITY_STREETS)for(let i=1;i<s.points.length;i++){
+      const [x,z]=s.points[i-1],[ex,ez]=s.points[i],dx=ex-x,dz=ez-z,den=dx*dx+dz*dz||1;
+      const t=Math.max(0,Math.min(1,((cx-x)*dx+(cz-z)*dz)/den)),qx=x+t*dx,qz=z+t*dz,d2=(cx-qx)**2+(cz-qz)**2;
+      if(!best||d2<best.d2)best={s,qx,qz,d2};
+    }
+    if(!best)return null;
+    const dx=best.qx-cx,dz=best.qz-cz;
+    if(Math.abs(dx)>Math.abs(dz)){
+      const east=dx>0;return {street:best.s.name,x:east?b.maxx+.18:b.minx-.18,z:Math.max(b.minz+2,Math.min(b.maxz-2,best.qz)),yaw:east?90:-90};
+    }
+    const south=dz>0;return {street:best.s.name,x:Math.max(b.minx+2,Math.min(b.maxx-2,best.qx)),z:south?b.maxz+.18:b.minz-.18,yaw:south?0:180};
+  }
   for(const mark of LANDMARKS){
     const b=host.colliders.find(b=>b.osm===mark.osm);if(!b)continue;
     const x=(b.minx+b.maxx)/2,z=(b.minz+b.maxz)/2,w=b.maxx-b.minx-.3,d=b.maxz-b.minz-.3;
@@ -136,6 +151,22 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       mount('Cyrillushuset · älven',facade('museum-old'),35.8,6.8,-160.54,0,-497,-90);
       for(const [x,z,w,yaw] of [[-94,-467,25,150],[-69,-470,24,45],[-57.9,-494,28,97]])mount('Museet · trä och glas',facade('museum-new'),w,6.8,x,0,z,yaw);
     }
+    if(['residenset','biskopsgarden','opera'].includes(mark.id)){
+      const p=nearestStreetFace(b);
+      if(p){
+        const name=mark.name.toUpperCase();
+        mount(mark.name+' · namn',labelTex([name],'#214b49','#f5e5bd'),Math.max(4.4,Math.min(6.4,name.length*.34)),.62,p.x,2.72,p.z,p.yaw);
+        mount(mark.name+' · gata',labelTex([p.street.toUpperCase()],'#214b49','#f5e5bd'),3.0,.38,p.x,2.12,p.z,p.yaw);
+      }
+    }
+  }
+  const landmarkIds=new Set(LANDMARKS.map(m=>m.osm)),shopIds=new Set(STOREFRONTS.map(s=>s.osm));
+  for(const b of host.colliders){
+    if(!b.name||landmarkIds.has(b.osm)||shopIds.has(b.osm)||SOUTH_IDS.has(b.osm)||/PARKERING|PRESSBYRÅN/i.test(b.name))continue;
+    if(Math.hypot((b.minx+b.maxx)/2,(b.minz+b.maxz)/2)>390)continue;
+    const p=nearestStreetFace(b);if(!p)continue;
+    const name=b.name.toUpperCase();
+    mount('Byggnadsnamn · '+b.name,labelTex([name],'#214b49','#f5e5bd'),Math.max(4.0,Math.min(6.2,name.length*.30)),.58,p.x,2.68,p.z,p.yaw);
   }
   const businessTextures=new Map();
   function businessTexture(b){
@@ -216,6 +247,6 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
   // Street names at important intersections use the same green/cream family as building names.
   // Kept compact so they read as wayfinding, not facade branding.
   const signs=STREET_SIGNS;
-  const signCache=new Map();for(const [x,z,text,yaw] of signs){if(!signCache.has(text))signCache.set(text,labelTex([text],'#214b49','#f5e5bd'));mount('Gatunamn · '+text,signCache.get(text),3.25,.56,x,2.52,z,yaw);}
+  const signCache=new Map();for(const [x,z,text,yaw] of signs){if(!signCache.has(text))signCache.set(text,labelTex([text],'#214b49','#f5e5bd'));mount('Gatunamn · '+text,signCache.get(text),3.25,.56,x,2.52,z,yaw,true);}
   return {snapshot:()=>({landmarks:LANDMARKS.map(m=>({id:m.id,name:m.name,present:host.colliders.some(b=>b.osm===m.osm)})),shops:shops.map(s=>({...s})),businesses:realBusinesses.map(s=>({...s})),logos:{...logoStates},staticCards:group.children.length})};
 }
