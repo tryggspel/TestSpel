@@ -12,19 +12,19 @@ import {drawSouthWater} from './city-south.js?v=2.11.14';
 export const CITY_ORIGIN=Object.freeze({lat:59.380767,lon:13.50295});
 export function cityPoint(lon,lat){return {x:(lon-CITY_ORIGIN.lon)*111320*Math.cos(CITY_ORIGIN.lat*Math.PI/180),z:-(lat-CITY_ORIGIN.lat)*110540};}
 export const LANDMARKS=Object.freeze([
-  {id:'radhuset',osm:101456563,name:'Rådhuset',front:'east'},
-  {id:'domkyrkan',osm:75070676,name:'Domkyrkan',front:'west'},
-  {id:'biblioteket',osm:75360972,name:'Stadsbiblioteket',front:'west'},
-  {id:'sandgrund',osm:95639598,name:'Sandgrund',front:'south'},
+  {id:'radhuset',osm:101456563,name:'Rådhuset',front:'east',street:'Tingvallagatan'},
+  {id:'domkyrkan',osm:75070676,name:'Domkyrkan',front:'west',street:'Västra Kyrkogatan'},
+  {id:'biblioteket',osm:75360972,name:'Stadsbiblioteket',front:'west',street:'Västra Torggatan'},
+  {id:'sandgrund',osm:95639598,name:'Sandgrund',front:'south',street:'Västra Torggatan'},
   {id:'museum',osm:1151016,name:'Värmlands museum',front:'south'},
-  {id:'stadshotellet',osm:102496100,name:'Elite Stadshotellet',front:'south'},
-  {id:'hotel-wing',osm:103695866,name:'Stadshotellet · älvfasad',front:'west'},
+  {id:'stadshotellet',osm:102496100,name:'Elite Stadshotellet',front:'south',street:'Kungsgatan'},
+  {id:'hotel-wing',osm:103695866,name:'Stadshotellet · älvfasad',front:'west',street:'Museigatan'},
   {id:'duvan',osm:102190062,name:'Galleria Duvan',front:'west'},
   {id:'ahlens',osm:102026709,name:'Åhléns',front:'east'},
   // 2.11: fler historiska byggnader från stadskartan, i samma tecknade stil som Domkyrkan.
   {id:'residenset',osm:101186411,name:'Residenset',front:'east'},
-  {id:'biskopsgarden',osm:106864586,name:'Biskopsgården',front:'east'},
-  {id:'opera',osm:75896103,name:'Wermland Opera',front:'east'}
+  {id:'biskopsgarden',osm:106864586,name:'Biskopsgården',front:'east',street:'Västra Torggatan'},
+  {id:'opera',osm:75896103,name:'Wermland Opera',front:'east',street:'Malmtorgsgatan'}
 ]);
 // Store locator pins are not always on the facade. Bind to the address's OSM building,
 // then project onto its street-facing wall. Never place a shop on an arbitrary nearby house.
