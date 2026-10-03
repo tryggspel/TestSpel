@@ -77,3 +77,9 @@ Derived geometry in `city-south-data.mjs` is © OpenStreetMap contributors, ODbL
 - Kvartersfyllnad, gågator (highway=pedestrian), gatstensytan vid Museigatan (way 923099551), Västra bron (ways 101485444, 101485446, 101485447, 101485449), Residenset (101186411), Biskopsgården (106864586) och Wermland Opera (75896103): OpenStreetMap-utdraget i `data/`, © OpenStreetMap contributors, ODbL.
 - En stadskarta över Karlstad (2006) användes som referens för namn och lägen (stadsdelar, parker, gågator). Kartbilden ingår inte i spelet.
 - Landmärkenas former, färger och detaljer är stiliserade tolkningar, inte uppmätta.
+
+
+## Kungsgatan reference pass · 2.11.4
+
+User-provided Street View: https://maps.app.goo.gl/isAY5kcebe71yz1q9
+Panorama `w8KtpcPLB5AximYHC5oAcQ`, camera 59.3810358, 13.5030645, June 2026 imagery, visually inspected 2026-10-03. Kungsgatan 14/16/18 are bound to OSM ways 104778937/106078910/104529126. Colours, window rhythm and terrace construction are hand-built interpretations; no imagery is shipped. Roofs/heights retain the existing OSM interpretation. The foliage obscures parts of the facades, so unobserved details are simplified. This pass covers only the north facade row facing the square, not a complete survey of Stora Torget.

@@ -1,7 +1,7 @@
-import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.3';
-import {MALL_ROOMS} from './mall-space.mjs?v=2.11.3';
-import {REAL_BUSINESSES,businessAnchor} from './businesses.mjs?v=2.11.3';
-import {createMallSigns} from './mall-architecture.js?v=2.11.3';
+import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.4';
+import {MALL_ROOMS} from './mall-space.mjs?v=2.11.4';
+import {REAL_BUSINESSES,businessAnchor} from './businesses.mjs?v=2.11.4';
+import {createMallSigns} from './mall-architecture.js?v=2.11.4';
 const ink='#263f46',paper='#f6ebd3';
 
 // Original comic drawings, baked once. Windows, masonry and print shading cost no geometry.
@@ -177,13 +177,13 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
         c.fillStyle=bg;c.fillRect(0,0,w,h);const fit=Math.min((w-44)/img.naturalWidth,(h-28)/img.naturalHeight),iw=img.naturalWidth*fit,ih=img.naturalHeight*fit;
         c.drawImage(img,(w-iw)/2,(h-ih)/2,iw,ih);c.strokeStyle=brand==='olearys'?'#d5cba6':'#263f46';c.lineWidth=4;c.strokeRect(4,4,w-8,h-8);t.setSource(canvas);logoStates[brand]='official';
       };
-      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.3',import.meta.url).href;
+      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.4',import.meta.url).href;
     }
     return t;
   }
   for(const shop of STOREFRONTS){
     const p=storefrontAnchor(shop,host.colliders);if(!p)continue;const out=shop.face==='north'?-1:1;
-    mount(shop.brand==='olearys'?'OLearys readable sign':shop.name+' · '+shop.address,brandTexture(shop.brand),5.3,1.656,p.x,3.38,p.z+out*.22,p.yaw);
+    mount(shop.brand==='olearys'?'OLearys readable sign':shop.name+' · '+shop.address,brandTexture(shop.brand),5.3,shop.id==='pressbyran14'?.72:1.656,p.x,shop.id==='pressbyran14'?2.45:3.38,p.z+out*.22,p.yaw);
     mount(shop.address,labelTex([shop.address.toUpperCase()],'#254e65','#f8efcf'),3.3,.42,p.x-3,2.1,p.z+out*.23,p.yaw);
     shops.push({id:shop.id,name:shop.name,address:shop.address,...p});
   }

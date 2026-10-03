@@ -1,8 +1,9 @@
-import {KIL} from './scenic-transit.js?v=2.11.3';
-import {ComicMesh} from './city-architecture.js?v=2.11.3';
-import {WATER_TRIANGLES,WATER_POLYGONS,SOUTH_STREETS,RAIL_LINES,SCHOOL_YARD,FREDSMONUMENT} from './city-south-data.mjs?v=2.11.3';
-import {SOUTH_IDS,HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.11.3';
-import {splitMallWall} from './mall-space.mjs?v=2.11.3';
+import {addKungsgatanTerraces} from './kungsgatan-reference.mjs?v=2.11.4';
+import {KIL} from './scenic-transit.js?v=2.11.4';
+import {ComicMesh} from './city-architecture.js?v=2.11.4';
+import {WATER_TRIANGLES,WATER_POLYGONS,SOUTH_STREETS,RAIL_LINES,SCHOOL_YARD,FREDSMONUMENT} from './city-south-data.mjs?v=2.11.4';
+import {SOUTH_IDS,HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.11.4';
+import {splitMallWall} from './mall-space.mjs?v=2.11.4';
 
 const REMOTE_RETAIL=Object.freeze([
   Object.freeze({id:'willys',name:'WILLYS BRYGGUDDEN',x:271,z:413,w:38,d:26,h:8,wall:'#d9d5c4',accent:'#2b7a48',front:'south'}),
@@ -81,7 +82,7 @@ export function createSouthCity(pc,app,buildings){
   for(const [bx,bz] of [[-47,-18],[-47,17],[56,-18],[56,17]]){square.box(bx,.6,bz,3.6,.3,.8,'#e3ddc5');square.box(bx,.28,bz,2.8,.55,.5,'#788c82');}
   {const tx=-42,tz=-19;const car=(x,z,w=8)=>{square.box(x,1.05,z,w,2.1,3.4,'#f1c735');square.box(x,2.22,z,w-.8,.55,3.1,'#315b86');square.box(x,1.45,z-1.73,w-.9,.7,.08,'#8dc1c3');for(const dx of [-w*.30,w*.30])square.box(x+dx,.34,z-1.55,1.2,.65,.5,'#26383d');};car(tx,tz,8.6);square.box(tx+2.8,2.55,tz,2.6,2.5,3.0,'#f1c735');square.box(tx+2.8,3.82,tz,3.0,.28,3.35,'#315b86');square.box(tx-3.3,2.0,tz,.55,2.2,.55,'#26383d');square.box(tx-3.3,3.1,tz,.9,.45,.9,'#315b86');car(tx+10.5,tz,7.6);car(tx+19.5,tz,7.6);for(const x of [tx+5.5,tx+15])square.box(x,.78,tz,1.4,.22,.35,'#394f54');}
   // Kungsgatan: two low glass-walled outdoor seating areas, kept off the central crossing.
-  for(const [cx,cz] of [[-24,-38],[18,-38]]){square.box(cx,.06,cz,9,.10,4.8,'#b7aa8b');for(const sx of [-4.45,4.45]){square.box(cx+sx,1.0,cz,.12,1.9,4.6,'#31494f');square.box(cx+sx,1.0,cz,.07,1.55,4.2,'#86afb4');}for(const sz of [-2.25,2.25]){square.box(cx,1.0,cz+sz,8.8,1.9,.12,'#31494f');square.box(cx,1.0,cz+sz,8.3,1.55,.07,'#86afb4');}for(const dx of [-2.3,2.3]){square.box(cx+dx,.72,cz,2.8,.14,1.4,'#b5865c');square.box(cx+dx,.34,cz,.18,.68,.18,'#394d4f');}}
+  addKungsgatanTerraces(square);
   // A small market table and striped awnings keep the central crossing open.
   for(const [bx,bz,col] of [[28,-20,'#a75a55'],[40,-20,'#4d817b']]){
     square.box(bx,.8,bz,5.4,1.4,2,'#b48a62');square.box(bx,2.9,bz,6,.16,3.2,col);
