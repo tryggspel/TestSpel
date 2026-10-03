@@ -396,7 +396,12 @@ export function createCityArchitecture(pc,app,buildings){
     }else if(b.osm===102496100||b.osm===103695866){
       m.box(x,6.7,z,w,13.4,d,'#dfbd79','#bfab79');m.roof(x,13.45,z,w+.5,d+.5,3.1,w>d?'x':'z');
       for(const h of [.65,4.4,8.9,13.0])m.box(x,h,z,w+.25,.30,d+.25,'#f4e8c9');
-      if(b.osm===102496100){m.box(x,7,b.maxz+.36,9,14,.72,'#f1e3bd');m.roof(x,14.0,b.maxz-.7,10,3.5,2.8,'x');}
+      if(b.osm===102496100){
+        // Keep the central roof crown, but do not place an opaque stucco slab in front
+        // of the illustrated Elite facade. The old .72 m deep white box hid the hotel's
+        // central windows and made the entrance look like a blank billboard.
+        m.roof(x,14.0,b.maxz-.7,10,3.5,2.8,'x');
+      }
       else for(let zz=b.minz+5;zz<b.maxz-3;zz+=11){m.box(b.minx-.3,6.6,zz,1.2,.18,3.4,'#273d41');m.box(b.minx-1,7.1,zz,.10,1.1,3.4,'#273d41');}
       m.box(b.minx-1.2,2.8,z,2.8,.17,d-1,'#2c6254');
     }else if(b.osm===102190062){
