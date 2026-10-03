@@ -2,9 +2,16 @@ import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} fro
 
 import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.0';
 import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.0';
+import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.0';
 
 // Static, vertex-coloured geometry: one draw call per landmark, one for streets,
 // one for rooflines and storefront frames. No lights, shadows or per-frame work.
+const CORE_CONTOUR_RADIUS=195;
+const CORE_CONTOUR_LIMIT=64;
+const CORE_WALLS=['#e4d2ae','#d9b991','#c8906d','#e8ddc6','#bca98d','#d8c49c','#c8a17b','#eadab8'];
+export function coreContourBuildings(buildings,max=CORE_CONTOUR_LIMIT){
+  return buildings.filter(b=>b.dist<CORE_CONTOUR_RADIUS&&!IDENTITY_IDS.has(b.osm)&&!MALL_BUILDING_IDS.has(b.osm)).sort((a,b)=>a.dist-b.dist||a.osm-b.osm).slice(0,max);
+}
 const rgb=hex=>[parseInt(hex.slice(1,3),16)/255,parseInt(hex.slice(3,5),16)/255,parseInt(hex.slice(5,7),16)/255,1];
 export class ComicMesh {
   constructor(srgb=false){this.srgb=srgb;this.positions=[];this.normals=[];this.colors=[];this.indices=[];}
@@ -108,8 +115,20 @@ export function createCityArchitecture(pc,app,buildings){
   road.finish(pc,app,'Karlstad · verkliga gatustråk',material);
 
   const batches=[];const town=new ComicMesh();
+  // Work recovery: 64 ordinary centre buildings use their real OSM footprints in one batch.
+  // Mitt i City stays separate so its four entrances and walkable interior are untouched.
+  const contours=coreContourBuildings(buildings),contourIds=new Set(contours.map(b=>b.osm));
+  for(const b of contours){
+    const seed=Math.abs((b.osm*2654435761)>>>0),wall=CORE_WALLS[seed%CORE_WALLS.length],h=Math.max(3.2,b.h);
+    town.walls(b.polygon,0,h,wall);
+    town.walls(b.polygon,.04,.72,'#788a80',.035);
+    const floors=Math.max(1,Math.min(5,Math.round(h/3.2)));
+    for(let f=0;f<floors;f++){const y=f*3.2+1.28;if(y+1.0<h-.55)town.walls(b.polygon,y,y+1.0,'#5d7a7c',.05);}
+    town.polygon(b.polygon,h+.015,'#3b5155');
+    if(b.tags['roof:shape']==='gabled'||(b.area<260&&b.sx<26&&b.sz<26))town.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
+  }
   for(const b of buildings){
-    if(IDENTITY_IDS.has(b.osm)||b.osm===234271401)continue;
+    if(IDENTITY_IDS.has(b.osm)||MALL_BUILDING_IDS.has(b.osm)||contourIds.has(b.osm))continue;
     if(b.dist<195){
       town.box(b.cx,b.h-.1,b.cz,b.sx+.18,.25,b.sz+.18,'#2b4448');
       town.box(b.cx,b.h-.5,b.cz,b.sx+.26,.20,b.sz+.26,'#e9dcc0');
@@ -233,7 +252,7 @@ export function createCityArchitecture(pc,app,buildings){
     }
     batches.push(m.finish(pc,app,'Karlstad · '+(b.name||b.osm),material));
   }
-  return {streetWays:CITY_STREETS.length,landmarks:batches.length,staticDrawCalls:2+batches.length};
+  return {streetWays:CITY_STREETS.length,landmarks:batches.length,contours:contours.length,contourIds:Object.freeze([...contourIds]),staticDrawCalls:2+batches.length};
 }
 
 // 2.11: kvartersfyllnad — stadens övriga OSM-byggnader i samma tecknade stil (färgade väggar,
