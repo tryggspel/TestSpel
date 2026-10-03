@@ -1,8 +1,9 @@
-import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.3';
+import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.4';
+import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.4';
 
-import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.3';
-import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.3';
-import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.3';
+import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.4';
+import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.4';
+import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.4';
 
 // Static, vertex-coloured geometry: one draw call per landmark, one for streets,
 // one for rooflines and storefront frames. No lights, shadows or per-frame work.
@@ -119,12 +120,13 @@ export function createCityArchitecture(pc,app,buildings){
   // Mitt i City stays separate so its four entrances and walkable interior are untouched.
   const contours=coreContourBuildings(buildings),contourIds=new Set(contours.map(b=>b.osm));
   for(const b of contours){
-    const seed=Math.abs((b.osm*2654435761)>>>0),wall=CORE_WALLS[seed%CORE_WALLS.length],h=Math.max(3.2,b.h);
+    const seed=Math.abs((b.osm*2654435761)>>>0),wall=KUNGSGATAN_PROFILES[b.osm]?.wall||CORE_WALLS[seed%CORE_WALLS.length],h=Math.max(3.2,b.h);
     town.walls(b.polygon,0,h,wall);
     town.walls(b.polygon,.04,.72,'#788a80',.035);
     const floors=Math.max(1,Math.min(5,Math.round(h/3.2)));
-    for(let f=0;f<floors;f++){const y=f*3.2+1.28;if(y+1.0<h-.55)town.walls(b.polygon,y,y+1.0,'#5d7a7c',.05);}
+    for(let f=0;f<floors&&!KUNGSGATAN_PROFILES[b.osm];f++){const y=f*3.2+1.28;if(y+1.0<h-.55)town.walls(b.polygon,y,y+1.0,'#5d7a7c',.05);}
     town.polygon(b.polygon,h+.015,'#3b5155');
+    addKungsgatanFacade(town,b);
     if(b.tags['roof:shape']==='gabled'||(b.area<260&&b.sx<26&&b.sz<26))town.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
   for(const b of buildings){
@@ -136,6 +138,7 @@ export function createCityArchitecture(pc,app,buildings){
     }
   }
   for(const shop of STOREFRONTS){
+    if(KUNGSGATAN_PROFILES[shop.osm])continue; // The reference facade supplies the shop glazing; keep the existing sign.
     const p=storefrontAnchor(shop,buildings);if(!p)continue;const out=shop.face==='north'?-1:1;
     const green=shop.brand==='olearys'?'#155939':shop.brand==='espresso'?'#30554e':'#24477e';
     town.box(p.x,2.7,p.z,10.2,5.4,.12,green);

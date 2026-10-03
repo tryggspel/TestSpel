@@ -1,3 +1,15 @@
+# Karlstad City — 2.11.4 · Kungsgatan vid Stora Torget
+
+Första Street View-baserade fasadpasset för Kungsgatan 14, 16 och 18. Tre individuella färger och fönsterrytmer ersätter de generiska sydfasaderna. Fasadytorna följer OSM-polygonernas sneda gatukant. Kungsgatan 14 får grå paneler, smala fönsterposter och lägre Pressbyrån-skylt; grannhusen får ljus respektive rosatonad puts, med röda detaljer på det ljusa huset.
+
+De två befintliga uteserveringarna får mörka stolpar, uppdelade glastak, låga vindskärmar, bord och stolar. De ligger fortfarande på torgsidan av Kungsgatan och lämnar mittpassagen fri. Geometrin använder de befintliga statiska batcherna; inga nya texturer, ljus eller arbete per bildruta tillkommer.
+
+Referens: användarens Google Street View-panorama vid 59.3810358, 13.5030645, fotograferat juni 2026 och granskat 3 oktober 2026. Egna geometriska tolkningar, inga kopierade panoramabilder. Byggnadshöjder från befintlig OSM-data; fönsterantal, materialfärger och serveringsmått är visuella uppskattningar. Endast denna fasadrad har granskats, inte hela torget.
+
+Validering: samtliga 123 befintliga tester passerade efter fasadändringen. Tre nya geometritester verifierar adressbindning, utåtvända trianglar, avsaknad av överlappande generiska sydfasader och fri mittpassage. Separat mjukvarurendering av de faktiska vertexdata har granskats. Riktig PlayCanvas-rendering och telefonprestanda återstår att verifiera; den lokala speladressen kunde inte öppnas i granskningswebbläsaren.
+
+## Föregående version
+
 # Karlstad City — 2.11.0 (isolerad förbättringsversion)
 
 ## 2.11.0 — hela kvarteren, gågator, Västra bron och Ryde

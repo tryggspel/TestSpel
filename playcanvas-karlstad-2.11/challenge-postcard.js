@@ -1,4 +1,4 @@
-import {challengeLink,CHALLENGE_RULES} from './daily-challenge.mjs?v=2.11.3';
+import {challengeLink,CHALLENGE_RULES} from './daily-challenge.mjs?v=2.11.4';
 
 // Draw only on a paused/result screen. Original canvas art; no network or GPU readback.
 export function drawPostcard(canvas,r){
