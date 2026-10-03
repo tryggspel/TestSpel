@@ -30,8 +30,8 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:11px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.11.2">
-<link rel="stylesheet" href="./compact-hud.css?v=2.11.2">
+<link rel="stylesheet" href="./last-round.css?v=2.11.3">
+<link rel="stylesheet" href="./compact-hud.css?v=2.11.3">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
@@ -224,13 +224,13 @@
     <button id="teleport-mitt-i-city" class="map-teleport" type="button">⚡ GÅ DIREKT IN I MITT I CITY</button>
     <p class="round-fine map-teleport-hint">Tar dig direkt till atriet på plan 0. Där finns butiker och rulltrappor upp till plan 1.</p>
     <div id="mapStatus" aria-label="Stadens läge"></div>
-    <div id="mapGoals"><button id="route-place-tingvalla" class="map-goal" type="button">Tingvallagymnasiet</button><button id="route-place-bilan" class="map-goal" type="button">Gamla fängelset · Bilan</button><button id="route-place-station" class="map-goal" type="button">Karlstad C</button><button id="route-place-lofbergs" class="map-goal" type="button">Löfbergs kaffeskrapa</button><button id="route-place-hamn" class="map-goal" type="button">Inre hamn · båtbuss</button><p class="round-fine">SNABBMÅL · VÄLJ EN PLATS SÅ VISAR KARTA, KOMPASS OCH CYANPILAR VÄGEN</p>
+    <div id="mapGoals"><button id="route-place-tingvalla" class="map-goal" type="button">Tingvallagymnasiet</button><button id="route-place-bilan" class="map-goal" type="button">Gamla fängelset · Bilan</button><button id="route-place-station" class="map-goal" type="button">Karlstad C</button><button id="route-place-lofbergs" class="map-goal" type="button">Löfbergs kaffeskrapa</button><button id="route-place-hamn" class="map-goal" type="button">Inre hamn · båtbuss</button><button id="route-place-willys" class="map-goal" type="button">Willys Bryggudden</button><button id="route-place-icahaga" class="map-goal" type="button">ICA Hagahallen · Haga</button><p class="round-fine">SNABBMÅL · VÄLJ EN PLATS SÅ VISAR KARTA, KOMPASS OCH CYANPILAR VÄGEN</p>
     <div class="map-choices"><button id="route-place-torget">Stora Torget</button><button id="route-place-mitticity">Väg till Mitt i City</button><button id="route-place-domkyrkan">Domkyrkan</button><button id="route-place-sandgrund">Sandgrund</button><button id="route-place-olearys">O’Learys</button><button id="route-place-museum">Värmlands museum</button><button id="route-place-duvan">Duvan</button><button id="route-place-ahlens">Åhléns</button><button id="route-place-stadshotellet">Stadshotellet</button><button id="route-place-udden">Sandgrundsudden</button><button id="route-place-biblioteket">Biblioteket</button><button id="route-place-residenset">Residenset</button><button id="route-place-biskopsgarden">Biskopsgården</button><button id="route-place-opera">Wermland Opera · över Västra bron</button></div>
     <p id="mapActivityTitle" class="round-fine">UPPDRAG OCH HÄNDELSER</p><div class="map-choices"><button id="route-event">Aktiv gatuhändelse</button><button id="route-bus">Buss 666</button><button id="route-sun">Följ solen</button><button id="route-sista-rundan">Sista rundan · O’Learys</button><button id="route-fikapanik">Fikapanik</button><button id="route-radda-fikat">Rädda fikat</button><button id="route-sandgrund">Dödens akvarell · Sandgrund</button></div>
     <p class="round-fine action-only">VAD VILL DU RÅKA UT FÖR?</p><div class="map-choices action-only"><button id="story-power">⚡ Tänd Karlstad</button><button id="story-news">NWT: Extra!</button><button id="story-bowling">Zombiebowling</button></div><p id="mapStoryHint" class="round-fine"></p></div>
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.11.2"></script>
+<script type="module" src="./app.js?v=2.11.3"></script>
 </body>
 </html>

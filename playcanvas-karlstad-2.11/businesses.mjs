@@ -1,4 +1,4 @@
-import {cityPoint} from './city-geography.mjs?v=2.11.2';
+import {cityPoint} from './city-geography.mjs?v=2.11.3';
 
 const FACE_YAW=Object.freeze({north:180,south:0,east:90,west:-90});
 const FACADE_OFFSET=.34; // comic-city panels sit at .25; real businesses must render in front.
@@ -13,7 +13,10 @@ const PALETTES=Object.freeze({
   sibylla:{bg:'#19538b',fg:'#ffffff',accent:'#e33333',kind:'food'},
   grekiska:{bg:'#244d72',fg:'#ffffff',accent:'#6badd0',kind:'restaurant'},
   leprechaun:{bg:'#174b35',fg:'#f3d27a',accent:'#d7aa44',kind:'pub'},
-  fratelli:{bg:'#43352c',fg:'#f7ead6',accent:'#b98257',kind:'hotel'}
+  fratelli:{bg:'#43352c',fg:'#f7ead6',accent:'#b98257',kind:'hotel'},
+  hm:{bg:'#f3efe7',fg:'#c51f36',accent:'#c51f36',kind:'retail'},
+  scandic:{bg:'#252a31',fg:'#ffffff',accent:'#d84b62',kind:'hotel'},
+  radhuscafe:{bg:'#654936',fg:'#fff0d5',accent:'#d49a56',kind:'cafe'}
 });
 const B=(id,name,address,osm,face,extra={})=>Object.freeze({id,name,address,osm,face,...PALETTES[id],...extra});
 
@@ -23,6 +26,9 @@ export const REAL_BUSINESSES=Object.freeze([
   B('musicpartner','MusicPartner','Kungsgatan 6D',119214077,'south',{lon:13.508280,lat:59.381016,width:11.5,door:.72}),
   B('synsam','Synsam','Östra Torggatan 11',100833292,'east',{lon:13.5040455,lat:59.380140,width:8.4}),
   B('normal','Normal','Drottninggatan 11',104778905,'north',{lon:13.5028741,lat:59.3792396,width:9.4,approximateBuilding:true,door:.60}),
+  B('hm','H&M','Drottninggatan 12',471365595,'south',{lon:13.502617,lat:59.379395,width:12.0,approximateBuilding:true,door:.50}),
+  B('scandic','Scandic Karlstad City','Drottninggatan 4',106864598,'south',{width:11.5,door:.55}),
+  B('radhuscafe','Rådhuscaféet','Tingvallagatan 8',101456563,'east',{width:8.8,door:.62}),
   B('fratelli','Hotel Fratelli','Drottninggatan 17',104529134,'north',{width:8.8}),
   B('hemkop','Hemköp','Drottninggatan 33',101257268,'north',{width:10.8,door:.52}),
   B('burgerking','Burger King','Östra Torggatan 9',101247031,'east',{width:9.6,door:.78}),

@@ -1,4 +1,4 @@
-import {WATER_ROWS,FERRY_PORTS,EXT_BUILDINGS} from './city-south-data.mjs?v=2.11.2';
+import {WATER_ROWS,FERRY_PORTS,EXT_BUILDINGS} from './city-south-data.mjs?v=2.11.3';
 export const SOUTH_IDS=new Set(EXT_BUILDINGS.map(b=>b.id));
 export const HARBOUR={...FERRY_PORTS.hamn,x:236,z:552,id:'hamn',name:'Inre hamn'};
 export const MARIEBERG={...FERRY_PORTS.marieberg,x:-778,z:1321,id:'marieberg',name:'Mariebergsskogen'};
@@ -7,7 +7,9 @@ export const SOUTH_PLACES=Object.freeze([
   {id:'bilan',label:'HOME HOTEL BILAN · GAMLA FÄNGELSET',x:318,z:162},
   {id:'station',label:'KARLSTAD C · JÄRNVÄGEN',x:-220,z:279},
   {id:'lofbergs',label:'LÖFBERGS · KAFFESKRAPAN',x:128,z:395},
-  {id:'hamn',label:'INRE HAMN · BÅTBUSSEN',x:HARBOUR.x,z:HARBOUR.z}
+  {id:'hamn',label:'INRE HAMN · BÅTBUSSEN',x:HARBOUR.x,z:HARBOUR.z},
+  {id:'willys',label:'WILLYS BRYGGUDDEN',x:271,z:413},
+  {id:'icahaga',label:'ICA SUPERMARKET HAGAHALLEN · HAGA',x:566,z:-129}
 ]);
 export const atMarieberg=p=>Math.hypot(p.x-MARIEBERG.x,p.z-MARIEBERG.z)<140;
 export function southWaterBlocked(x,z){

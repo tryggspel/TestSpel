@@ -1,7 +1,7 @@
-import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.2';
-import {MALL_ROOMS} from './mall-space.mjs?v=2.11.2';
-import {REAL_BUSINESSES,businessAnchor} from './businesses.mjs?v=2.11.2';
-import {createMallSigns} from './mall-architecture.js?v=2.11.2';
+import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.3';
+import {MALL_ROOMS} from './mall-space.mjs?v=2.11.3';
+import {REAL_BUSINESSES,businessAnchor} from './businesses.mjs?v=2.11.3';
+import {createMallSigns} from './mall-architecture.js?v=2.11.3';
 const ink='#263f46',paper='#f6ebd3';
 
 // Original comic drawings, baked once. Windows, masonry and print shading cost no geometry.
@@ -149,7 +149,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
         c.fillRect(w*.18,glassY+glassH*.30,28,112);c.fillRect(w*.18-42,glassY+glassH*.30+42,112,28);
       }else if(b.kind==='grocery'||b.kind==='retail'){
         for(let row=0;row<3;row++){c.fillStyle=row===1?b.accent:'#e5d5a9';c.fillRect(60,glassY+72+row*48,w-120,15);}
-      }else if(['food','restaurant','pub'].includes(b.kind)){
+      }else if(['food','restaurant','pub','cafe'].includes(b.kind)){
         c.fillStyle='#efd49a';for(const x of [w*.20,w*.42,w*.64,w*.82]){c.fillRect(x-34,glassY+glassH*.63,68,10);c.fillRect(x-4,glassY+glassH*.63,8,56);}
       }else if(b.kind==='hotel'){
         c.fillStyle='#ead8b5';c.fillRect(w*.39,glassY+35,w*.22,glassH-50);c.fillStyle='#4b3f36';c.fillRect(w*.485,glassY+55,12,glassH-90);
@@ -177,7 +177,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
         c.fillStyle=bg;c.fillRect(0,0,w,h);const fit=Math.min((w-44)/img.naturalWidth,(h-28)/img.naturalHeight),iw=img.naturalWidth*fit,ih=img.naturalHeight*fit;
         c.drawImage(img,(w-iw)/2,(h-ih)/2,iw,ih);c.strokeStyle=brand==='olearys'?'#d5cba6':'#263f46';c.lineWidth=4;c.strokeRect(4,4,w-8,h-8);t.setSource(canvas);logoStates[brand]='official';
       };
-      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.2',import.meta.url).href;
+      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.3',import.meta.url).href;
     }
     return t;
   }
