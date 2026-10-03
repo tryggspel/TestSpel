@@ -193,7 +193,7 @@ function addBuildingAddressSign(mesh,b){
   const repeats=named?1:face.span>58?2:1;
   const margin=2.4;
   for(let i=0;i<repeats;i++){
-    const t=named?.16:(repeats===1?.50:(i===0?.24:.76));
+    const t=named ? .16 : (repeats===1 ? .50 : (i===0 ? .24 : .76));
     let x=face.x,z=face.z;
     if(Math.abs(face.tangent[0])>.5){
       const lo=b.minx+margin,hi=b.maxx-margin;
