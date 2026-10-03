@@ -1,7 +1,7 @@
-import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.5';
-import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.5';
-import {IDENTITY_IDS,SHOP_IDS} from './city-geography.mjs?v=2.11.5';
-import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.5';
+import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.6';
+import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.6';
+import {IDENTITY_IDS,SHOP_IDS} from './city-geography.mjs?v=2.11.6';
+import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.6';
 const ink='#253d40',cream='#fff0c8';
 const palettes=[['#eeb985','#d88c67','#ae4e45'],['#a7c7b4','#789e91','#367c75'],['#dec5a0','#b29a7e','#70568a'],['#c4b6d7','#9886b7','#a85159']];
 export function drawComicFacade(c,w,h,variant=0,upperOnly=false){

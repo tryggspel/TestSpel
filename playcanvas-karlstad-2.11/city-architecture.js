@@ -1,10 +1,10 @@
-import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.5';
-import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade} from './innerstad-reference.mjs?v=2.11.5';
-import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.5';
+import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.6';
+import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade} from './innerstad-reference.mjs?v=2.11.6';
+import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.6';
 
-import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.5';
-import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.5';
-import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.5';
+import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.6';
+import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.6';
+import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.6';
 
 // Static, vertex-coloured geometry: one draw call per landmark, one for streets,
 // one for rooflines and storefront frames. No lights, shadows or per-frame work.
