@@ -126,24 +126,51 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
     }
     return best?.yaw??fallback;
   }
-  function autoStreetAnchor(name){
-    const key=streetKey(name);let best=null;
+  function streetExtent(name){
+    const key=streetKey(name);let minx=Infinity,maxx=-Infinity,minz=Infinity,maxz=-Infinity,found=false;
+    for(const s of signStreets){
+      if(streetKey(s.name)!==key)continue;
+      for(const [x,z] of s.points){minx=Math.min(minx,x);maxx=Math.max(maxx,x);minz=Math.min(minz,z);maxz=Math.max(maxz,z);found=true;}
+    }
+    return found?Math.hypot(maxx-minx,maxz-minz):0;
+  }
+  function streetCandidates(name){
+    const key=streetKey(name),out=[];
+    const blocked=(x,z)=>host.colliders.some(b=>x>b.minx-.25&&x<b.maxx+.25&&z>b.minz-.25&&z<b.maxz+.25);
     for(const s of signStreets){
       if(streetKey(s.name)!==key)continue;
       for(let i=1;i<s.points.length;i++){
-        const [ax,az]=s.points[i-1],[bx,bz]=s.points[i],dx=bx-ax,dz=bz-az,len=Math.hypot(dx,dz);if(len<7)continue;
-        const mx=(ax+bx)/2,mz=(az+bz)/2;
-        // Prefer a long, central segment so the one fallback sign is likely to be encountered in City Explore.
-        const score=Math.hypot(mx,mz)-Math.min(70,len)*1.35;
-        if(!best||score<best.score)best={s,ax,az,bx,bz,dx,dz,len,mx,mz,score};
+        const [ax,az]=s.points[i-1],[bx,bz]=s.points[i],dx=bx-ax,dz=bz-az,len=Math.hypot(dx,dz);if(len<8)continue;
+        const samples=Math.max(1,Math.ceil(len/52));
+        for(let j=1;j<=samples;j++){
+          const t=j/(samples+1),mx=ax+dx*t,mz=az+dz*t,nx=-dz/len,nz=dx/len,offset=(s.width||6)/2+1.45;
+          const a={x:mx+nx*offset,z:mz+nz*offset},b={x:mx-nx*offset,z:mz-nz*offset};
+          let p=!blocked(a.x,a.z)?a:!blocked(b.x,b.z)?b:null;if(!p)continue;
+          out.push({x:p.x,z:p.z,yaw:Math.atan2(-dz,dx)*180/Math.PI,mx,mz});
+        }
       }
     }
-    if(!best)return null;
-    const nx=-best.dz/best.len,nz=best.dx/best.len,offset=(best.s.width||6)/2+1.55;
-    const blocked=(x,z)=>host.colliders.some(b=>x>b.minx-.25&&x<b.maxx+.25&&z>b.minz-.25&&z<b.maxz+.25);
-    let x=best.mx+nx*offset,z=best.mz+nz*offset;
-    if(blocked(x,z)){x=best.mx-nx*offset;z=best.mz-nz*offset;}
-    return {x,z,yaw:Math.atan2(-best.dz,best.dx)*180/Math.PI};
+    return out.filter((p,i,a)=>a.findIndex(q=>Math.hypot(q.mx-p.mx,q.mz-p.mz)<24)===i);
+  }
+  function coverageStreetAnchors(name,existing=[]){
+    const candidates=streetCandidates(name);if(!candidates.length)return [];
+    const extent=streetExtent(name),maxGap=extent>300?72:extent>180?78:extent>100?86:96;
+    const refs=existing.map(([x,z])=>({x,z})),picked=[];
+    if(!refs.length){
+      let seed=0,best=Infinity;
+      for(let i=0;i<candidates.length;i++){const d=Math.hypot(candidates[i].mx,candidates[i].mz);if(d<best){best=d;seed=i;}}
+      const p=candidates.splice(seed,1)[0];picked.push(p);refs.push(p);
+    }
+    while(candidates.length&&picked.length<8){
+      let bestIndex=-1,bestDist=-1;
+      for(let i=0;i<candidates.length;i++){
+        const p=candidates[i],d=Math.min(...refs.map(q=>Math.hypot(q.x-p.x,q.z-p.z)));
+        if(d>bestDist){bestDist=d;bestIndex=i;}
+      }
+      if(bestIndex<0||bestDist<=maxGap)break;
+      const [p]=candidates.splice(bestIndex,1);picked.push(p);refs.push(p);
+    }
+    return picked;
   }
   for(const mark of LANDMARKS){
     const b=host.colliders.find(b=>b.osm===mark.osm);if(!b)continue;
@@ -279,22 +306,22 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
   for(const p of PLACE_SIGNS)mount(p.name+' · originalskylt',brandTexture(p.brand),p.w,p.w*160/512,p.x,p.y,p.z,p.yaw);
   createMallSigns({mount,texture,labelTex,brandTexture});
   for(const [x,z,text,yaw] of [[-59,-373,'MUSEUM ← · UDDEN ↑',0],[-182,-471,'SANDGRUNDSUDDEN ↑',0],[-227,-574,'KLARÄLVEN · BRYGGOR',90],[-221,-756,'SANDGRUNDSUDDEN',0]])mount(text,labelTex([text],'#315e59','#fff0cc'),5.5,1.2,x,2,z,yaw);
-  // Street names at important intersections use the same green/cream family as building names.
-  // Their yaw is derived from the actual OSM street segment, preventing a sign from pointing down the cross street.
-  const signs=STREET_SIGNS,signCache=new Map(),signedStreetNames=new Set();
+  // Street names use the same green/cream family as building names.
+  // Curated intersection signs stay, and long streets receive repeated coverage from beginning to end.
+  const signs=STREET_SIGNS,signCache=new Map(),signedStreetNames=new Set(),manualStreetPositions=new Map();
   const streetTexture=text=>{if(!signCache.has(text))signCache.set(text,labelTex([text],'#214b49','#f5e5bd'));return signCache.get(text);};
   for(const [x,z,text,yaw] of signs){
-    signedStreetNames.add(streetKey(text));
+    const key=streetKey(text);signedStreetNames.add(key);
+    if(!manualStreetPositions.has(key))manualStreetPositions.set(key,[]);
+    manualStreetPositions.get(key).push([x,z]);
     mount('Gatunamn · '+text,streetTexture(text),3.25,.56,x,2.52,z,streetYawAt(x,z,text,yaw),true);
   }
-  // One fallback sign for every real named street that has no curated sign at all.
-  // This keeps coverage complete without filling every block with duplicate signs.
-  const autoNames=[...new Set(signStreets.map(s=>s.name))].filter(name=>name&&streetKey(name)!=='RONDELL'&&!signedStreetNames.has(streetKey(name)));
-  for(const name of autoNames){
-    const p=autoStreetAnchor(name);if(!p)continue;
-    const text=name.toLocaleUpperCase('sv-SE');
-    mount('Gatunamn auto · '+text,streetTexture(text),3.25,.56,p.x,2.52,p.z,p.yaw,true);
-    signedStreetNames.add(streetKey(name));
+  const allStreetNames=[...new Set(signStreets.map(s=>s.name))].filter(name=>name&&streetKey(name)!=='RONDELL');
+  for(const name of allStreetNames){
+    const key=streetKey(name),text=name.toLocaleUpperCase('sv-SE'),existing=manualStreetPositions.get(key)||[];
+    const anchors=coverageStreetAnchors(name,existing);
+    for(const p of anchors)mount('Gatunamn täckning · '+text,streetTexture(text),3.25,.56,p.x,2.52,p.z,p.yaw,true);
+    if(existing.length||anchors.length)signedStreetNames.add(key);
   }
   return {snapshot:()=>({landmarks:LANDMARKS.map(m=>({id:m.id,name:m.name,present:host.colliders.some(b=>b.osm===m.osm)})),shops:shops.map(s=>({...s})),businesses:realBusinesses.map(s=>({...s})),streetSigns:[...signedStreetNames],logos:{...logoStates},staticCards:group.children.length})};
 }
