@@ -7,7 +7,9 @@ export const SOUTH_PLACES=Object.freeze([
   {id:'bilan',label:'HOME HOTEL BILAN · GAMLA FÄNGELSET',x:318,z:162},
   {id:'station',label:'KARLSTAD C · JÄRNVÄGEN',x:-220,z:279},
   {id:'lofbergs',label:'LÖFBERGS · KAFFESKRAPAN',x:128,z:395},
-  {id:'hamn',label:'INRE HAMN · BÅTBUSSEN',x:HARBOUR.x,z:HARBOUR.z}
+  {id:'hamn',label:'INRE HAMN · BÅTBUSSEN',x:HARBOUR.x,z:HARBOUR.z},
+  {id:'willys',label:'WILLYS BRYGGUDDEN',x:271,z:413},
+  {id:'icahaga',label:'ICA SUPERMARKET HAGAHALLEN · HAGA',x:566,z:-129}
 ]);
 export const atMarieberg=p=>Math.hypot(p.x-MARIEBERG.x,p.z-MARIEBERG.z)<140;
 export function southWaterBlocked(x,z){
