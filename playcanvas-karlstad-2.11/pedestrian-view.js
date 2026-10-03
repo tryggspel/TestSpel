@@ -1,5 +1,5 @@
 // 2.11: GÅGATA-skyltar (blå skylt med gående, egen teckning) där gågatorna börjar.
-import {GAGATA_SIGNS} from './pedestrian.mjs?v=2.11.1';
+import {GAGATA_SIGNS} from './pedestrian.mjs?v=2.11.2';
 export function createPedestrianSigns({card,texture,primitive,material}){
   const tex=texture((c,w,h)=>{
     c.fillStyle='#ffffff';c.fillRect(0,0,w,h);
