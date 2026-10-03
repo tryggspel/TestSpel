@@ -109,3 +109,12 @@ Continuation west along Drottninggatan and into Västra Torggatan. OSM remains a
 - **Kungsgatan 22 / OSM 102496100 · Elite Stadshotellet** remains the next Kungsgatan refinement anchor. Historical identification: https://commons.wikimedia.org/wiki/File:Karlstad,_V%C3%A4rmland,_Sweden_(6800042144).jpg ; current facade reference: https://www.hotelspecials.se/elite-stadshotellet-karlstad .
 
 Direct interactive Street View rendering is not available in this execution environment. Where a Google place listing is used, it is a location/business cross-check; exact visual details come only from public facade photographs that can be inspected directly.
+
+
+## Street View/reference pass · 2.11.7
+
+- **Drottninggatan 21 / OSM 103767827.** Primary visual reference: https://www.larande.se/om-oss/nyheter/har-startar-realgymnasiet-i-karlstad . The photograph clearly supports the red-brown brick facade, stacked projecting bay windows, dark retail/entrance band, large display glazing, benches and dark pedestrian-street lamps.
+- **Elite Stadshotellet / Kungsgatan 22 / OSM 102496100.** Primary current reference: https://www.elite.se/hotell/karlstad/elite-stadshotellet-karlstad/ . Google place/address cross-check: https://www.google.com/travel/hotels/entity/CgoInJn5jvOF5PpSEAE . The dedicated facade uses the documented yellow plaster, white pilaster rhythm, tall arched windows, balconies, green awnings and black ELITE entrance canopy.
+- **Västra Torggatan pedestrian furniture.** Visual rhythm cross-check: https://www.realadvice.se/objekt/vastra-torggatan-5-centrum/ . Benches and lamps are stylised placements inside the existing pedestrian corridor and are render-only.
+
+Google Street View was explicitly attempted as the preferred method. Interactive Street View itself is not exposed to the current execution environment, so no unverified panorama detail has been invented. Where direct Street View inspection is unavailable, only features supported by inspectable public facade photographs are modelled.
