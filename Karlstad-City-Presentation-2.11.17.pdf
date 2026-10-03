@@ -1,0 +1,876 @@
+%PDF-1.4
+%ASCII
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R 10 0 R 12 0 R 14 0 R 16 0 R 18 0 R 20 0 R 22 0 R 24 0 R 26 0 R 28 0 R 30 0 R] /Count 13 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Length 1165 >>
+stream
+0.055 0.094 0.145 rg
+0 0 1280 720 re f
+0.055 0.430 0.820 rg
+0 0 18 720 re f
+0.055 0.430 0.820 rg
+70 590 240 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 83 599 Td (PITCHDECK  |  2026-10-03) Tj ET
+BT /F2 52 Tf 1.000 1.000 1.000 rg 70 500 Td (Karlstad City) Tj ET
+BT /F1 25 Tf 0.820 0.880 0.940 rg 70 445 Td (Mobil webbl\344sarstad, stadsjakt och live city-data) Tj ET
+BT /F1 16 Tf 0.720 0.800 0.880 rg 70 330 Td (Pitchdeck  |  nul\344ge  |  API:er  |  live-data  |  plan till lansering) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+70 145 510 120 re B
+0.070 0.550 0.390 rg
+70 145 510 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 90 229 Td (Senaste spelbuild) Tj ET
+BT /F1 15 Tf 0.320 0.380 0.460 rg 90 197 Td (2.11.17 - webb f\366rst f\366r iPhone/Safari, Mac och desktop) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+610 145 570 120 re B
+0.055 0.430 0.820 rg
+610 145 570 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 630 229 Td (M\345let) Tj ET
+BT /F1 15 Tf 0.320 0.380 0.460 rg 630 197 Td (G\366ra Karlstad till en spelbar, igenk\344nnbar och delbar 3D-stad.) Tj ET
+BT /F1 12 Tf 0.650 0.740 0.830 rg 70 85 Td (GitHub Pages  |  PlayCanvas  |  mobile first) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 1865 >>
+stream
+BT /F2 30 Tf 0.055 0.094 0.145 rg 60 650 Td (Vad spelet \344r) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 612 Td (En lokal spelv\344rld d\344r verkliga Karlstad blir uppdrag, orientering och stadsmarknadsf\366ring.) Tj ET
+0.910 0.930 0.960 RG 1 w 60 45 m 1220 45 l S
+BT /F1 11 Tf 0.320 0.380 0.460 rg 60 22 Td (Karlstad City  |  webbl\344sarspel  |  v2.11.17) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1060 22 Td (2026-10-03   2) Tj ET
+0.055 0.430 0.820 rg
+60 545 110 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 73 554 Td (SPELID\311) Tj ET
+BT /F2 21 Tf 0.055 0.094 0.145 rg 60 500 Td (Spelaren r\366r sig i en tecknad 3D-version av Karlstad, samlar) Tj ET
+BT /F2 21 Tf 0.055 0.094 0.145 rg 60 471 Td (termosar, hittar st\344mplar, testar specialuppdrag och l\344r sig) Tj ET
+BT /F2 21 Tf 0.055 0.094 0.145 rg 60 442 Td (orientera mellan riktiga platser.) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+700 400 500 150 re B
+0.070 0.550 0.390 rg
+700 400 500 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 720 514 Td (City Explore) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 720 482 Td (Basl\344get: hitta, samla, hoppa, \345k RYDE och f\366lj kartan.) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+700 225 500 150 re B
+0.920 0.450 0.120 rg
+700 225 500 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 720 339 Td (Action och sponsorer) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 720 307 Td (Zombie/Chaos kan l\344ggas p\345 utan att f\366rst\366ra) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 720 287 Td (stadsvandringen. Sponsorer blir spelbara platser, objekt,) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 720 267 Td (uppdrag och bel\366ningar - inte bara banners.) Tj ET
+0.900 0.950 1.000 rg
+60 145 610 70 re f
+BT /F2 16 Tf 0.055 0.430 0.820 rg 82 181 Td (K\344rnl\366fte:) Tj ET
+BT /F2 17 Tf 0.055 0.094 0.145 rg 205 181 Td ("Jag k\344nner igen mig - och vill springa vidare.") Tj ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
+9 0 obj
+<< /Length 3015 >>
+stream
+BT /F2 30 Tf 0.055 0.094 0.145 rg 60 650 Td (Spelarloop och spell\344gen) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 612 Td (Spelet ska fungera b\345de som lugn stadsvandring och som snabbt actionl\344ge.) Tj ET
+0.910 0.930 0.960 RG 1 w 60 45 m 1220 45 l S
+BT /F1 11 Tf 0.320 0.380 0.460 rg 60 22 Td (Karlstad City  |  webbl\344sarspel  |  v2.11.17) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1060 22 Td (2026-10-03   3) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 360 208 135 re B
+0.055 0.430 0.820 rg
+60 360 208 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 80 459 Td (Utforska) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 427 Td (g\345 genom stan) Tj ET
+0.055 0.430 0.820 rg
+72 466 36 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 85 475 Td (1) Tj ET
+BT /F2 20 Tf 0.320 0.380 0.460 rg 274 418 Td (->) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+295 360 208 135 re B
+0.070 0.550 0.390 rg
+295 360 208 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 315 459 Td (Samla) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 315 427 Td (termosar / kaffe) Tj ET
+0.070 0.550 0.390 rg
+307 466 36 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 320 475 Td (2) Tj ET
+BT /F2 20 Tf 0.320 0.380 0.460 rg 509 418 Td (->) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+530 360 208 135 re B
+0.920 0.450 0.120 rg
+530 360 208 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 550 459 Td (Hitta) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 550 427 Td (st\344mplar & platser) Tj ET
+0.920 0.450 0.120 rg
+542 466 36 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 555 475 Td (3) Tj ET
+BT /F2 20 Tf 0.320 0.380 0.460 rg 744 418 Td (->) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+765 360 208 135 re B
+0.820 0.200 0.220 rg
+765 360 208 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 785 459 Td (Aktivera) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 785 427 Td (uppdrag / kaos) Tj ET
+0.820 0.200 0.220 rg
+777 466 36 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 790 475 Td (4) Tj ET
+BT /F2 20 Tf 0.320 0.380 0.460 rg 979 418 Td (->) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+1000 360 208 135 re B
+0.055 0.430 0.820 rg
+1000 360 208 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 1020 459 Td (Dela) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 1020 427 Td (po\344ng & vykort) Tj ET
+0.055 0.430 0.820 rg
+1012 466 36 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 1025 475 Td (5) Tj ET
+BT /F2 16 Tf 0.055 0.094 0.145 rg 60 300 Td (L\344gen i planen) Tj ET
+0.055 0.430 0.820 rg
+60 245 134 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 73 254 Td (City Explore) Tj ET
+0.320 0.380 0.460 rg
+206 245 107 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 219 254 Td (Stadsjakt) Tj ET
+0.320 0.380 0.460 rg
+325 245 152 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 338 254 Td (Zombie / Chaos) Tj ET
+0.320 0.380 0.460 rg
+489 245 95 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 502 254 Td (RYDE) Tj ET
+0.320 0.380 0.460 rg
+596 245 116 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 609 254 Td (Interi\366rer) Tj ET
+0.320 0.380 0.460 rg
+724 245 152 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 737 254 Td (Sponsoruppdrag) Tj ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 9 0 R >>
+endobj
+11 0 obj
+<< /Length 2109 >>
+stream
+BT /F2 30 Tf 0.055 0.094 0.145 rg 60 650 Td (V\344rlden: Karlstad som spelbar plats) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 612 Td (Igenk\344nning kommer fr\345n landm\344rken, fasader, skyltar, f\344rger och tydliga g\345ngbara ytor.) Tj ET
+0.910 0.930 0.960 RG 1 w 60 45 m 1220 45 l S
+BT /F1 11 Tf 0.320 0.380 0.460 rg 60 22 Td (Karlstad City  |  webbl\344sarspel  |  v2.11.17) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1060 22 Td (2026-10-03   4) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 390 540 115 re B
+0.055 0.430 0.820 rg
+60 390 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 80 469 Td (Stora Torget / citygrid) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 437 Td (start och orientering) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+640 390 540 115 re B
+0.070 0.550 0.390 rg
+640 390 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 660 469 Td (Domkyrkan) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 660 437 Td (stark landm\344rke-silhuett) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 245 540 115 re B
+0.055 0.430 0.820 rg
+60 245 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 80 324 Td (Tingvalla) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 292 Td (skolbyggnader och skyltning) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+640 245 540 115 re B
+0.070 0.550 0.390 rg
+640 245 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 660 324 Td (Stadshotellet) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 660 292 Td (klassisk fasad och hotellnamn) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 100 540 115 re B
+0.055 0.430 0.820 rg
+60 100 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 80 179 Td (Drottninggatan) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 147 Td (g\345ngstr\345k och butiker) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+640 100 540 115 re B
+0.070 0.550 0.390 rg
+640 100 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 660 179 Td (Sandgrund / museum) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 660 147 Td (kultur- och vattenriktning) Tj ET
+BT /F2 13 Tf 0.320 0.380 0.460 rg 60 82 Td (Nuvarande fokus: mindre generiska kvarter och b\344ttre l\344sbarhet per gata.) Tj ET
+endstream
+endobj
+12 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 11 0 R >>
+endobj
+13 0 obj
+<< /Length 2791 >>
+stream
+BT /F2 30 Tf 0.055 0.094 0.145 rg 60 650 Td (API:er och live-data: m\345lbild) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 612 Td (Live City 2.0 ska g\366ra staden mer levande utan att spr\344cka FPS-budgeten.) Tj ET
+0.910 0.930 0.960 RG 1 w 60 45 m 1220 45 l S
+BT /F1 11 Tf 0.320 0.380 0.460 rg 60 22 Td (Karlstad City  |  webbl\344sarspel  |  v2.11.17) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1060 22 Td (2026-10-03   5) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 385 350 150 re B
+0.055 0.430 0.820 rg
+60 385 350 7 re f
+BT /F2 16 Tf 0.055 0.094 0.145 rg 80 499 Td (Kartdata) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 80 467 Td (OpenStreetMap / Overpass) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 80 448 Td (byggnader, v\344gar, adresser, POI) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+450 385 350 150 re B
+0.070 0.550 0.390 rg
+450 385 350 7 re f
+BT /F2 16 Tf 0.055 0.094 0.145 rg 470 499 Td (Kollektivtrafik) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 470 467 Td (Trafiklab / GTFS-RT) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 470 448 Td (bussar, turer, st\366rningar, h\345llplatser) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+840 385 350 150 re B
+0.920 0.450 0.120 rg
+840 385 350 7 re f
+BT /F2 16 Tf 0.055 0.094 0.145 rg 860 499 Td (Trafikl\344get) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 860 467 Td (Trafikverket API) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 860 448 Td (incidenter, v\344garbeten, st\366rningar) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 200 350 150 re B
+0.055 0.430 0.820 rg
+60 200 350 7 re f
+BT /F2 16 Tf 0.055 0.094 0.145 rg 80 314 Td (V\344der) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 80 282 Td (SMHI Open Data) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 80 263 Td (v\344derl\344ge, varningar, ljus/st\344mning) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+450 200 350 150 re B
+0.070 0.550 0.390 rg
+450 200 350 7 re f
+BT /F2 16 Tf 0.055 0.094 0.145 rg 470 314 Td (Spelproxy) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 470 282 Td (server-cache) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 470 263 Td (normaliserar, skyddar nycklar, rate limit) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+840 200 350 150 re B
+0.920 0.450 0.120 rg
+840 200 350 7 re f
+BT /F2 16 Tf 0.055 0.094 0.145 rg 860 314 Td (Spelet) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 860 282 Td (PlayCanvas) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 860 263 Td (spawn, Chaos Director, karta, uppdrag) Tj ET
+1.000 0.950 0.880 rg
+60 80 1130 70 re f
+BT /F2 14 Tf 0.920 0.450 0.120 rg 80 122 Td (Viktigt:) Tj ET
+BT /F2 14 Tf 0.055 0.094 0.145 rg 150 122 Td (realtidsdata ska in via proxy/cache - inte direkt fr\345n klienten.) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 80 96 Td (OSM-snapshot anv\344nds idag. Trafiklab/Trafikverket/SMHI beh\366ver produktionss\344kras.) Tj ET
+endstream
+endobj
+14 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 13 0 R >>
+endobj
+15 0 obj
+<< /Length 4759 >>
+stream
+BT /F2 30 Tf 0.055 0.094 0.145 rg 60 650 Td (Live-data: vad som triggar spelv\344rlden) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 612 Td (Varje datak\344lla beh\366ver en tydlig spelnytta, cachepolicy och fallback.) Tj ET
+0.910 0.930 0.960 RG 1 w 60 45 m 1220 45 l S
+BT /F1 11 Tf 0.320 0.380 0.460 rg 60 22 Td (Karlstad City  |  webbl\344sarspel  |  v2.11.17) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1060 22 Td (2026-10-03   6) Tj ET
+0.055 0.094 0.145 rg
+60 530 210 44 re f
+BT /F2 13 Tf 1.000 1.000 1.000 rg 72 544 Td (K\344lla) Tj ET
+0.055 0.094 0.145 rg
+270 530 290 44 re f
+BT /F2 13 Tf 1.000 1.000 1.000 rg 282 544 Td (Data) Tj ET
+0.055 0.094 0.145 rg
+560 530 330 44 re f
+BT /F2 13 Tf 1.000 1.000 1.000 rg 572 544 Td (Spelnytta) Tj ET
+0.055 0.094 0.145 rg
+890 530 290 44 re f
+BT /F2 13 Tf 1.000 1.000 1.000 rg 902 544 Td (Kvar att s\344kra) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 0.7 w
+60 460 210 70 re B
+BT /F1 12 Tf 0.055 0.094 0.145 rg 70 505 Td (OSM / Overpass) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 0.7 w
+270 460 290 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 280 505 Td (byggnader, adresser, v\344gar) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 0.7 w
+560 460 330 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 570 505 Td (anv\344nds redan som stadssnapshot) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 0.7 w
+890 460 290 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 900 505 Td (attribution +) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 900 489 Td (uppdateringspipeline) Tj ET
+0.940 0.950 0.970 rg
+0.910 0.930 0.960 RG 0.7 w
+60 390 210 70 re B
+BT /F1 12 Tf 0.055 0.094 0.145 rg 70 435 Td (Trafiklab GTFS-RT) Tj ET
+0.940 0.950 0.970 rg
+0.910 0.930 0.960 RG 0.7 w
+270 390 290 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 280 435 Td (busspositioner, turer,) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 280 419 Td (st\366rningar) Tj ET
+0.940 0.950 0.970 rg
+0.910 0.930 0.960 RG 0.7 w
+560 390 330 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 570 435 Td (m\345l: bussar i spelv\344rlden) Tj ET
+0.940 0.950 0.970 rg
+0.910 0.930 0.960 RG 0.7 w
+890 390 290 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 900 435 Td (verifiera V\344rmlandstrafik-feed +) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 900 419 Td (proxy) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 0.7 w
+60 320 210 70 re B
+BT /F1 12 Tf 0.055 0.094 0.145 rg 70 365 Td (Trafikverket) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 0.7 w
+270 320 290 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 280 365 Td (v\344garbeten, olyckor, st\366rningar) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 0.7 w
+560 320 330 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 570 365 Td (m\345l: Chaos Director-triggers) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 0.7 w
+890 320 290 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 900 365 Td (filtrera geofence + frekvens) Tj ET
+0.940 0.950 0.970 rg
+0.910 0.930 0.960 RG 0.7 w
+60 250 210 70 re B
+BT /F1 12 Tf 0.055 0.094 0.145 rg 70 295 Td (SMHI) Tj ET
+0.940 0.950 0.970 rg
+0.910 0.930 0.960 RG 0.7 w
+270 250 290 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 280 295 Td (v\344der, varningar, tid/ljus) Tj ET
+0.940 0.950 0.970 rg
+0.910 0.930 0.960 RG 0.7 w
+560 250 330 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 570 295 Td (m\345l: st\344mning + events) Tj ET
+0.940 0.950 0.970 rg
+0.910 0.930 0.960 RG 0.7 w
+890 250 290 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 900 295 Td (byte till nya API:er under 2026) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 0.7 w
+60 180 210 70 re B
+BT /F1 12 Tf 0.055 0.094 0.145 rg 70 225 Td (Sponsor/POI-data) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 0.7 w
+270 180 290 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 280 225 Td (erbjudanden, objekt, uppdrag) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 0.7 w
+560 180 330 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 570 225 Td (delvis manuellt inlagt) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 0.7 w
+890 180 290 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 900 225 Td (r\344ttigheter, logotyper,) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 900 209 Td (godk\344nnande) Tj ET
+0.940 0.950 0.970 rg
+0.910 0.930 0.960 RG 0.7 w
+60 110 210 70 re B
+BT /F1 12 Tf 0.055 0.094 0.145 rg 70 155 Td (Analytics) Tj ET
+0.940 0.950 0.970 rg
+0.910 0.930 0.960 RG 0.7 w
+270 110 290 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 280 155 Td (FPS, sessions, m\345l, retention) Tj ET
+0.940 0.950 0.970 rg
+0.910 0.930 0.960 RG 0.7 w
+560 110 330 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 570 155 Td (beh\366vs inf\366r beta) Tj ET
+0.940 0.950 0.970 rg
+0.910 0.930 0.960 RG 0.7 w
+890 110 290 70 re B
+BT /F1 12 Tf 0.320 0.380 0.460 rg 900 155 Td (integritet/GDPR + sampling) Tj ET
+BT /F2 13 Tf 0.055 0.430 0.820 rg 60 72 Td (Princip: hellre f\345, f\344rska, spelbara signaler \344n m\345nga r\345a API-anrop i klienten.) Tj ET
+endstream
+endobj
+16 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 15 0 R >>
+endobj
+17 0 obj
+<< /Length 2311 >>
+stream
+BT /F2 30 Tf 0.055 0.094 0.145 rg 60 650 Td (Teknisk arkitektur) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 612 Td (Webb f\366rst: byggt f\366r snabb publicering, mobil testning och l\345g friktion.) Tj ET
+0.910 0.930 0.960 RG 1 w 60 45 m 1220 45 l S
+BT /F1 11 Tf 0.320 0.380 0.460 rg 60 22 Td (Karlstad City  |  webbl\344sarspel  |  v2.11.17) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1060 22 Td (2026-10-03   7) Tj ET
+0.055 0.430 0.820 rg
+60 500 180 52 re f
+BT /F2 14 Tf 1.000 1.000 1.000 rg 78 518 Td (Klient) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+240 500 940 52 re B
+BT /F1 14 Tf 0.055 0.094 0.145 rg 265 518 Td (PlayCanvas + WebGL + touchkontroller) Tj ET
+0.070 0.550 0.390 rg
+60 428 180 52 re f
+BT /F2 14 Tf 1.000 1.000 1.000 rg 78 446 Td (Statisk stad) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+240 428 940 52 re B
+BT /F1 14 Tf 0.055 0.094 0.145 rg 265 446 Td (OSM-snapshot, fasader, skyltar, batchad geometri) Tj ET
+0.920 0.450 0.120 rg
+60 356 180 52 re f
+BT /F2 14 Tf 1.000 1.000 1.000 rg 78 374 Td (Spellogik) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+240 356 940 52 re B
+BT /F1 14 Tf 0.055 0.094 0.145 rg 265 374 Td (st\344mplar, termosar, RYDE, uppdrag, zombie/chaos) Tj ET
+0.820 0.200 0.220 rg
+60 284 180 52 re f
+BT /F2 14 Tf 1.000 1.000 1.000 rg 78 302 Td (Proxy/API) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+240 284 940 52 re B
+BT /F1 14 Tf 0.055 0.094 0.145 rg 265 302 Td (framtida live-data, cache, API-nycklar, rate limits) Tj ET
+0.055 0.094 0.145 rg
+60 212 180 52 re f
+BT /F2 14 Tf 1.000 1.000 1.000 rg 78 230 Td (Hosting) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+240 212 940 52 re B
+BT /F1 14 Tf 0.055 0.094 0.145 rg 265 230 Td (GitHub Pages; snabb versionsl\344nk v=2.11.x) Tj ET
+BT /F2 15 Tf 0.055 0.430 0.820 rg 65 135 Td (*) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 88 135 Td (Statiska batches minskar draw calls och bevarar FPS p\345 iPhone 11/MacBook Air.) Tj ET
+BT /F2 15 Tf 0.055 0.430 0.820 rg 65 101 Td (*) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 88 101 Td (Versionerade cache-nycklar anv\344nds f\366r att Safari inte ska blanda gamla moduler.) Tj ET
+BT /F2 15 Tf 0.055 0.430 0.820 rg 65 67 Td (*) Tj ET
+BT /F1 13 Tf 0.320 0.380 0.460 rg 88 67 Td (API-proxy kr\344vs innan live-data kan g\345 in stabilt i publikt spel.) Tj ET
+endstream
+endobj
+18 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 17 0 R >>
+endobj
+19 0 obj
+<< /Length 2625 >>
+stream
+BT /F2 30 Tf 0.055 0.094 0.145 rg 60 650 Td (Utvecklingen hittills) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 612 Td (Projektet har bytt sp\345r flera g\345nger - nu \344r PlayCanvas huvudsp\345ret.) Tj ET
+0.910 0.930 0.960 RG 1 w 60 45 m 1220 45 l S
+BT /F1 11 Tf 0.320 0.380 0.460 rg 60 22 Td (Karlstad City  |  webbl\344sarspel  |  v2.11.17) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1060 22 Td (2026-10-03   8) Tj ET
+0.910 0.930 0.960 RG 8 w 95 340 m 1175 340 l S
+0.320 0.380 0.460 rg
+75 320 38 38 re f
+BT /F2 13 Tf 1.000 1.000 1.000 rg 87 332 Td (1) Tj ET
+BT /F2 13 Tf 0.055 0.094 0.145 rg 67 270 Td (iOS/Unity) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 67 225 Td (ambition: appkvalitet) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 67 160 Td (stopp: App) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 67 145 Td (Store/Xcode-friktion) Tj ET
+0.320 0.380 0.460 rg
+270 320 38 38 re f
+BT /F2 13 Tf 1.000 1.000 1.000 rg 282 332 Td (2) Tj ET
+BT /F2 13 Tf 0.055 0.094 0.145 rg 262 270 Td (EDuke32-WASM) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 262 225 Td (retro-FPS testades) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 262 160 Td (avvecklat:) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 262 145 Td (licens/startproblem) Tj ET
+0.055 0.430 0.820 rg
+465 320 38 38 re f
+BT /F2 13 Tf 1.000 1.000 1.000 rg 477 332 Td (3) Tj ET
+BT /F2 13 Tf 0.055 0.094 0.145 rg 457 270 Td (PlayCanvas 1.2.2) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 457 225 Td (smidig baseline) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 457 160 Td (k\344nslan prioriterades) Tj ET
+0.055 0.430 0.820 rg
+660 320 38 38 re f
+BT /F2 13 Tf 1.000 1.000 1.000 rg 672 332 Td (4) Tj ET
+BT /F2 13 Tf 0.055 0.094 0.145 rg 652 270 Td (2.1-2.3) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 652 225 Td (Chaos Director, panik) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 652 160 Td (spelmekanik v\344xte fram) Tj ET
+0.055 0.430 0.820 rg
+855 320 38 38 re f
+BT /F2 13 Tf 1.000 1.000 1.000 rg 867 332 Td (5) Tj ET
+BT /F2 13 Tf 0.055 0.094 0.145 rg 847 270 Td (2.7-2.10) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 847 225 Td (interi\366rer, kartor,) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 847 210 Td (genv\344gar) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 847 160 Td (flera UX-fixar) Tj ET
+0.055 0.430 0.820 rg
+1050 320 38 38 re f
+BT /F2 13 Tf 1.000 1.000 1.000 rg 1062 332 Td (6) Tj ET
+BT /F2 13 Tf 0.055 0.094 0.145 rg 1042 270 Td (2.11.x) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1042 225 Td (skyltar, fasader, City) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1042 210 Td (Explore) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1042 160 Td (orientering och) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1042 145 Td (igenk\344nning) Tj ET
+endstream
+endobj
+20 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 19 0 R >>
+endobj
+21 0 obj
+<< /Length 2074 >>
+stream
+BT /F2 30 Tf 0.055 0.094 0.145 rg 60 650 Td (Nul\344ge: vad som finns i senaste builden) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 612 Td (2.11.17 \344r inte "f\344rdig produkt", men inneh\345ller en spelbar och testbar grund.) Tj ET
+0.910 0.930 0.960 RG 1 w 60 45 m 1220 45 l S
+BT /F1 11 Tf 0.320 0.380 0.460 rg 60 22 Td (Karlstad City  |  webbl\344sarspel  |  v2.11.17) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1060 22 Td (2026-10-03   9) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 430 540 115 re B
+0.055 0.430 0.820 rg
+60 430 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 80 509 Td (K\344rnkontroller) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 477 Td (FPS-look, joystick, hoppa, mobil-/desktopst\366d) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+640 430 540 115 re B
+0.055 0.430 0.820 rg
+640 430 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 660 509 Td (City Explore) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 660 477 Td (termosar, kaffepo\344ng, st\344mplar, karta/radar) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 285 540 115 re B
+0.070 0.550 0.390 rg
+60 285 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 80 364 Td (Orientering) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 332 Td (gatunamn, byggnadsnamn, skyltar, landm\344rken) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+640 285 540 115 re B
+0.070 0.550 0.390 rg
+640 285 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 660 364 Td (Transport) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 660 332 Td (RYDE-l\344ge och m\345l f\366r verkliga bussar) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 140 540 115 re B
+0.920 0.450 0.120 rg
+60 140 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 80 219 Td (Action) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 187 Td (Chaos Director, panik, zombie/survival p\345 roadmap) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+640 140 540 115 re B
+0.920 0.450 0.120 rg
+640 140 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 660 219 Td (Stadsgrafik) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 660 187 Td (cel-shaded fasader, butiker, sponsorobjekt) Tj ET
+endstream
+endobj
+22 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 21 0 R >>
+endobj
+23 0 obj
+<< /Length 2786 >>
+stream
+BT /F2 30 Tf 0.055 0.094 0.145 rg 60 650 Td (Kvar att g\366ra f\366re lansering) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 612 Td (Det viktigaste \344r att frysa k\344rnspel, s\344kra live-data och f\345 igenk\344nningen att h\345lla \366ver hela) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 590 Td (kartan.) Tj ET
+0.910 0.930 0.960 RG 1 w 60 45 m 1220 45 l S
+BT /F1 11 Tf 0.320 0.380 0.460 rg 60 22 Td (Karlstad City  |  webbl\344sarspel  |  v2.11.17) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1060 22 Td (2026-10-03   10) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 365 350 150 re B
+0.055 0.430 0.820 rg
+60 365 350 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 80 479 Td (1. Visuell QA) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 447 Td (alla huvudgator, fasader, skyltar,) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 427 Td (landm\344rken, interi\366rer) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+440 365 350 150 re B
+0.070 0.550 0.390 rg
+440 365 350 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 460 479 Td (2. Prestanda) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 460 447 Td (samma eller b\344ttre FPS \344n 1.2.2 p\345 iPhone) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 460 427 Td (11 och MacBook Air) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+820 365 350 150 re B
+0.920 0.450 0.120 rg
+820 365 350 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 840 479 Td (3. Navigation) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 840 447 Td (karta, auto-walk, "visa v\344gen", tydliga) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 840 427 Td (ing\345ngar) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 180 350 150 re B
+0.055 0.430 0.820 rg
+60 180 350 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 80 294 Td (4. Live-data) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 262 Td (proxy, cache, API-nycklar, fallback,) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 242 Td (datakvalitet) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+440 180 350 150 re B
+0.070 0.550 0.390 rg
+440 180 350 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 460 294 Td (5. Inneh\345ll) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 460 262 Td (uppdrag, sponsorobjekt,) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 460 242 Td (O'Learys/L\366fbergs/Mitt i City) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+820 180 350 150 re B
+0.920 0.450 0.120 rg
+820 180 350 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 840 294 Td (6. Launch QA) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 840 262 Td (bugglista, browser-cache, ljud, deploy,) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 840 242 Td (analytics) Tj ET
+1.000 0.940 0.940 rg
+60 80 1130 70 re f
+BT /F2 14 Tf 0.820 0.200 0.220 rg 80 118 Td (M\345ste bort:) Tj ET
+BT /F2 13 Tf 0.055 0.094 0.145 rg 190 118 Td (vita blockerande fasadpartier, felv\344nda skyltar och oskyltade l\345nga str\345k.) Tj ET
+endstream
+endobj
+24 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 23 0 R >>
+endobj
+25 0 obj
+<< /Length 3129 >>
+stream
+BT /F2 30 Tf 0.055 0.094 0.145 rg 60 650 Td (Plan till lansering) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 612 Td (F\366reslagen ordning f\366r att g\345 fr\345n spelbar prototyp till publik beta.) Tj ET
+0.910 0.930 0.960 RG 1 w 60 45 m 1220 45 l S
+BT /F1 11 Tf 0.320 0.380 0.460 rg 60 22 Td (Karlstad City  |  webbl\344sarspel  |  v2.11.17) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1060 22 Td (2026-10-03   11) Tj ET
+0.055 0.430 0.820 rg
+45 515 205 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 58 524 Td (Vecka 1) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+45 260 205 235 re B
+0.055 0.430 0.820 rg
+45 260 205 7 re f
+BT /F2 16 Tf 0.055 0.094 0.145 rg 65 459 Td (Stabilisera) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 65 427 Td (frys core-kontroller,) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 65 409 Td (fixa stora visuella) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 65 391 Td (blockerare, g\366r) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 65 373 Td (testlista per gata) Tj ET
+0.055 0.430 0.820 rg
+290 515 205 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 303 524 Td (Vecka 2) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+290 260 205 235 re B
+0.055 0.430 0.820 rg
+290 260 205 7 re f
+BT /F2 16 Tf 0.055 0.094 0.145 rg 310 459 Td (Inneh\345ll) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 310 427 Td (st\344mplar, uppdrag,) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 310 409 Td (sponsorobjekt, skyltning) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 310 391 Td (och interi\366rer) Tj ET
+0.055 0.430 0.820 rg
+535 515 205 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 548 524 Td (Vecka 3) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+535 260 205 235 re B
+0.055 0.430 0.820 rg
+535 260 205 7 re f
+BT /F2 16 Tf 0.055 0.094 0.145 rg 555 459 Td (Live-data) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 555 427 Td (Trafiklab/Trafikverket/SMHI-proxy,) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 555 409 Td (fallback och cache) Tj ET
+0.055 0.430 0.820 rg
+780 515 205 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 793 524 Td (Vecka 4) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+780 260 205 235 re B
+0.055 0.430 0.820 rg
+780 260 205 7 re f
+BT /F2 16 Tf 0.055 0.094 0.145 rg 800 459 Td (Beta) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 800 427 Td (mobiltest, analytics,) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 800 409 Td (laddtid, ljud,) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 800 391 Td (releasekandidat) Tj ET
+0.070 0.550 0.390 rg
+1025 515 205 32 re f
+BT /F2 12 Tf 1.000 1.000 1.000 rg 1038 524 Td (Launch) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+1025 260 205 235 re B
+0.070 0.550 0.390 rg
+1025 260 205 7 re f
+BT /F2 16 Tf 0.055 0.094 0.145 rg 1045 459 Td (Event) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 1045 427 Td (Halloween/Zombie eller) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 1045 409 Td (Julklappsjakten som) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 1045 391 Td (tydlig kampanj) Tj ET
+0.900 0.950 1.000 rg
+60 115 1130 70 re f
+BT /F2 14 Tf 0.055 0.430 0.820 rg 80 151 Td (Lanseringsregel:) Tj ET
+BT /F2 14 Tf 0.055 0.094 0.145 rg 225 151 Td (k\344rnloopen m\345ste k\344nnas snabb och begriplig innan fler l\344gen l\344ggs p\345.) Tj ET
+endstream
+endobj
+26 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 25 0 R >>
+endobj
+27 0 obj
+<< /Length 2302 >>
+stream
+BT /F2 30 Tf 0.055 0.094 0.145 rg 60 650 Td (Sponsor- och kommunnytta) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 612 Td (Spelet kan bli en lokal upplevelseplattform, inte bara ett spel.) Tj ET
+0.910 0.930 0.960 RG 1 w 60 45 m 1220 45 l S
+BT /F1 11 Tf 0.320 0.380 0.460 rg 60 22 Td (Karlstad City  |  webbl\344sarspel  |  v2.11.17) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1060 22 Td (2026-10-03   12) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 430 540 115 re B
+0.055 0.430 0.820 rg
+60 430 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 80 509 Td (Karlstad kommun) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 477 Td (stadsorientering, evenemang, turism, trygg city-aktivering) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+640 430 540 115 re B
+0.055 0.430 0.820 rg
+640 430 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 660 509 Td (V\344rmlandstrafik) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 660 477 Td (riktiga bussar, h\345llplatser, kollektivtrafik som spelmekanik) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 285 540 115 re B
+0.070 0.550 0.390 rg
+60 285 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 80 364 Td (O'Learys / L\366fbergs) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 332 Td (safe place, energi, termosar, uppdrag, bel\366ningar) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+640 285 540 115 re B
+0.070 0.550 0.390 rg
+640 285 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 660 364 Td (Mitt i City / Duvan) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 660 332 Td (interi\366rer, jakt, genv\344gar, butikskampanjer) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+60 140 540 115 re B
+0.920 0.450 0.120 rg
+60 140 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 80 219 Td (Kultur) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 80 187 Td (Sandgrund, museum, Domkyrkan, Fr\366ding/Sola i Karlstad) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+640 140 540 115 re B
+0.920 0.450 0.120 rg
+640 140 540 7 re f
+BT /F2 17 Tf 0.055 0.094 0.145 rg 660 219 Td (Skolor / familjer) Tj ET
+BT /F1 14 Tf 0.320 0.380 0.460 rg 660 187 Td (Kids mode, stadsquiz, s\344kra uppdrag och delbara resultat) Tj ET
+0.055 0.094 0.145 rg
+60 80 1130 58 re f
+BT /F2 14 Tf 1.000 1.000 1.000 rg 80 101 Td (S\344ljpunkt: lokal igenk\344nning + spelbar data + sponsoruppdrag = m\344tbar citytrafik.) Tj ET
+endstream
+endobj
+28 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 27 0 R >>
+endobj
+29 0 obj
+<< /Length 2229 >>
+stream
+BT /F2 30 Tf 0.055 0.094 0.145 rg 60 650 Td (Beslut som \345terst\345r) Tj ET
+BT /F1 16 Tf 0.320 0.380 0.460 rg 60 612 Td (F\366r att g\345 fr\345n prototyp till beta beh\366ver scope och kvalitetsniv\345 l\345sas.) Tj ET
+0.910 0.930 0.960 RG 1 w 60 45 m 1220 45 l S
+BT /F1 11 Tf 0.320 0.380 0.460 rg 60 22 Td (Karlstad City  |  webbl\344sarspel  |  v2.11.17) Tj ET
+BT /F1 11 Tf 0.320 0.380 0.460 rg 1060 22 Td (2026-10-03   13) Tj ET
+0.055 0.094 0.145 rg
+60 495 260 62 re f
+BT /F2 14 Tf 1.000 1.000 1.000 rg 80 517 Td (Lanseringsm\345l) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+320 495 870 62 re B
+BT /F1 14 Tf 0.055 0.094 0.145 rg 345 517 Td (Halloween/Zombie eller 1 dec Julklappsjakten?) Tj ET
+0.055 0.094 0.145 rg
+60 413 260 62 re f
+BT /F2 14 Tf 1.000 1.000 1.000 rg 80 435 Td (Live-data scope) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+320 413 870 62 re B
+BT /F1 14 Tf 0.055 0.094 0.145 rg 345 435 Td (busspositioner f\366rst eller Trafikverket/SMHI parallellt?) Tj ET
+0.055 0.094 0.145 rg
+60 331 260 62 re f
+BT /F2 14 Tf 1.000 1.000 1.000 rg 80 353 Td (Sponsorlista) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+320 331 870 62 re B
+BT /F1 14 Tf 0.055 0.094 0.145 rg 345 353 Td (vilka 3-5 akt\366rer ska f\345 f\366rsta demon?) Tj ET
+0.055 0.094 0.145 rg
+60 249 260 62 re f
+BT /F2 14 Tf 1.000 1.000 1.000 rg 80 271 Td (QA-standard) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+320 249 870 62 re B
+BT /F1 14 Tf 0.055 0.094 0.145 rg 345 271 Td (minsta FPS, laddtid, kraschfri session, iPhone-test) Tj ET
+0.055 0.094 0.145 rg
+60 167 260 62 re f
+BT /F2 14 Tf 1.000 1.000 1.000 rg 80 189 Td (Stadens detaljniv\345) Tj ET
+1.000 1.000 1.000 rg
+0.910 0.930 0.960 RG 1 w
+320 167 870 62 re B
+BT /F1 14 Tf 0.055 0.094 0.145 rg 345 189 Td (hur m\345nga gator/landm\344rken m\345ste vara "good enough"?) Tj ET
+0.900 0.950 1.000 rg
+60 80 1130 78 re f
+BT /F2 16 Tf 0.055 0.430 0.820 rg 82 125 Td (N\344sta steg:) Tj ET
+BT /F2 14 Tf 0.055 0.094 0.145 rg 210 125 Td (l\345s en beta-scope, k\366r visuell QA p\345 hela City Explore och bygg f\366rsta live-data-proxyn.) Tj ET
+BT /F1 12 Tf 0.320 0.380 0.460 rg 82 98 Td (Spel: https://tryggspel.github.io/TestSpel/playcanvas-karlstad-next/?v=2.11.17) Tj ET
+endstream
+endobj
+30 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1280 720] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 29 0 R >>
+endobj
+xref
+0 31
+0000000000 65535 f 
+0000000016 00000 n 
+0000000065 00000 n 
+0000000206 00000 n 
+0000000303 00000 n 
+0000000405 00000 n 
+0000001621 00000 n 
+0000001758 00000 n 
+0000003674 00000 n 
+0000003811 00000 n 
+0000006877 00000 n 
+0000007015 00000 n 
+0000009176 00000 n 
+0000009315 00000 n 
+0000012158 00000 n 
+0000012297 00000 n 
+0000017108 00000 n 
+0000017247 00000 n 
+0000019610 00000 n 
+0000019749 00000 n 
+0000022426 00000 n 
+0000022565 00000 n 
+0000024691 00000 n 
+0000024830 00000 n 
+0000027668 00000 n 
+0000027807 00000 n 
+0000030988 00000 n 
+0000031127 00000 n 
+0000033481 00000 n 
+0000033620 00000 n 
+0000035901 00000 n 
+trailer
+<< /Size 31 /Root 1 0 R >>
+startxref
+36040
+%%EOF
