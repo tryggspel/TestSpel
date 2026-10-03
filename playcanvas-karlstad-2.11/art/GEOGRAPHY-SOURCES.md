@@ -96,3 +96,16 @@ First bound buildings:
 - Kungsgatan 20 / OSM 102590980 — orange-brick frontage with strong blue balcony identity. Public facade reference: https://hyresbostader.se/sok-ledigt/118602-0350/ .
 
 Direct interactive Google Street View rendering is not available in this build environment, so these five are an initial reference-photo pass. Exact panorama-by-panorama refinement should retain these OSM bindings and static-mesh limits.
+
+
+## Inner-city reference pass · 2.11.6
+
+Continuation west along Drottninggatan and into Västra Torggatan. OSM remains authoritative for footprint, address and building height; the sources below are visual references for hand-built facade interpretation only.
+
+- **Drottninggatan 17 / OSM 104529134 · Hotel Fratelli.** Current facade references: https://www.strawberry.se/hotell/sverige/karlstad/hotel-fratelli/ and https://www.krooktjader.se/projekt/hotel-fratelli . These support the warm brick facade, pale framed windows, dark street-level band and striped awnings.
+- **Drottninggatan 20 / OSM 110733723.** Address/building-age cross-check: https://www.hitta.se/v%C3%A4rmlands%2Bl%C3%A4n/karlstad/drottninggatan%2B20/omr%C3%A5de/59.379395%3A13.5004 . Storefront reference: https://www.hemnet.se/bostad/ovrigt-44m2-centrum-karlstads-kommun-drottninggatan-20-21274065 . The implementation keeps a red-brick upper facade and a light tiled retail base; current business names are intentionally not baked into geometry.
+- **Drottninggatan 26 / OSM 101935904.** Property reference: https://www.altra.se/sv/property/karlstad-bjornen-12/ and historical property data in Nyfosa/Altra material (Karlstad Björnen 12, built 1977). Exact facade details are deliberately conservative because the available public imagery is incomplete.
+- **Västra Torggatan 1 / OSM 106078942 · Hotel Savoy.** Current visual references: https://www.booking.com/hotel/se/best-western-savoy.html and Google Maps place listing for Västra Torggatan 1. The facade treatment uses a dark hotel/restaurant canopy, warm brick upper storeys and large ground-floor glazing.
+- **Kungsgatan 22 / OSM 102496100 · Elite Stadshotellet** remains the next Kungsgatan refinement anchor. Historical identification: https://commons.wikimedia.org/wiki/File:Karlstad,_V%C3%A4rmland,_Sweden_(6800042144).jpg ; current facade reference: https://www.hotelspecials.se/elite-stadshotellet-karlstad .
+
+Direct interactive Street View rendering is not available in this execution environment. Where a Google place listing is used, it is a location/business cross-check; exact visual details come only from public facade photographs that can be inspected directly.
