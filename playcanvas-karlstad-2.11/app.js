@@ -442,7 +442,7 @@ function addBuildings(osm,environment){
       addFacadePass12(b,hero,seed);
       if(hero)addHeroLandmarkPass14(b);
     }
-    colliders.push({precise:[77107220,100024120,100024325].includes(b.osm),polygon:b.polygon,osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
+    colliders.push({precise:INNERSTAD_REFERENCE_IDS.has(b.osm)||[77107220,100024120,100024325].includes(b.osm),polygon:b.polygon,osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
   }
   // 2.11: resten av kvarteren från OSM-utdraget (kollision mot exakt fotavtryck).
   const infill=infillBuildings(osm,admitted);
