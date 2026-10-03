@@ -1,5 +1,6 @@
 import {VASTRA_BRON} from './city-water.mjs?v=2.11.4';
 import {PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.4';
+import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.11.4';
 // One coordinate system for buildings, signs, the street mesh and the player map.
 export {CITY_STREETS} from './city-streets.mjs?v=2.11.4';
 import {CITY_STREETS} from './city-streets.mjs?v=2.11.4';
@@ -51,7 +52,7 @@ export const STREET_SIGNS=Object.freeze([
   [-51,-262,'VÄSTRA TORGGATAN',0],[-43,-375,'VÄSTRA TORGGATAN',0],
   [-66,164,'DROTTNINGGATAN',90]
 ]);
-const reserved=new Set([...IDENTITY_IDS,...SHOP_IDS,234271401,106078938,107041955,109895687,113506286,127873579]);
+const reserved=new Set([...IDENTITY_IDS,...SHOP_IDS,...INNERSTAD_REFERENCE_IDS,234271401,106078938,107041955,109895687,113506286,127873579]);
 function parseBuildings(osm,radius){
   const all=[],seen=new Set();
   for(const e of [...EXT_BUILDINGS,...(osm.elements||[]),MUSEUM_BUILDING]){
