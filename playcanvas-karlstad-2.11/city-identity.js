@@ -207,14 +207,15 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
   for(const shop of STOREFRONTS){
     const p=storefrontAnchor(shop,host.colliders);if(!p)continue;const out=shop.face==='north'?-1:1;
     mount(shop.brand==='olearys'?'OLearys readable sign':shop.name+' · '+shop.address,brandTexture(shop.brand),5.3,shop.id==='pressbyran14'?.72:1.656,p.x,shop.id==='pressbyran14'?2.45:3.38,p.z+out*.22,p.yaw);
-    mount(shop.address,labelTex([shop.address.toUpperCase()],'#254e65','#f8efcf'),3.3,.42,p.x-3,2.1,p.z+out*.23,p.yaw);
+    mount(shop.address,labelTex([shop.address.toUpperCase()],'#214b49','#f5e5bd'),2.65,.34,p.x-2.55,2.05,p.z+out*.23,p.yaw);
     shops.push({id:shop.id,name:shop.name,address:shop.address,...p});
   }
   for(const p of PLACE_SIGNS)mount(p.name+' · originalskylt',brandTexture(p.brand),p.w,p.w*160/512,p.x,p.y,p.z,p.yaw);
   createMallSigns({mount,texture,labelTex,brandTexture});
   for(const [x,z,text,yaw] of [[-59,-373,'MUSEUM ← · UDDEN ↑',0],[-182,-471,'SANDGRUNDSUDDEN ↑',0],[-227,-574,'KLARÄLVEN · BRYGGOR',90],[-221,-756,'SANDGRUNDSUDDEN',0]])mount(text,labelTex([text],'#315e59','#fff0cc'),5.5,1.2,x,2,z,yaw);
-  // Street names at the important real intersections. Signs are world-fixed, not camera billboards.
+  // Street names at important intersections use the same green/cream family as building names.
+  // Kept compact so they read as wayfinding, not facade branding.
   const signs=STREET_SIGNS;
-  const signCache=new Map();for(const [x,z,text,yaw] of signs){if(!signCache.has(text))signCache.set(text,texture((c,w,h)=>{c.fillStyle='#24516a';c.fillRect(0,0,w,h);c.strokeStyle='#f6efcf';c.lineWidth=5;c.strokeRect(5,5,w-10,h-10);c.fillStyle='#f6efcf';c.font='700 39px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(text,w/2,h/2,w-24);},512,96));mount('Gatunamn · '+text,signCache.get(text),4.5,.844,x,2.65,z,yaw);}
+  const signCache=new Map();for(const [x,z,text,yaw] of signs){if(!signCache.has(text))signCache.set(text,labelTex([text],'#214b49','#f5e5bd'));mount('Gatunamn · '+text,signCache.get(text),3.25,.56,x,2.52,z,yaw);}
   return {snapshot:()=>({landmarks:LANDMARKS.map(m=>({id:m.id,name:m.name,present:host.colliders.some(b=>b.osm===m.osm)})),shops:shops.map(s=>({...s})),businesses:realBusinesses.map(s=>({...s})),logos:{...logoStates},staticCards:group.children.length})};
 }
