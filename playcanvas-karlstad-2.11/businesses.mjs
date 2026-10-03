@@ -1,4 +1,4 @@
-import {cityPoint} from './city-geography.mjs?v=2.11.2';
+import {cityPoint} from './city-geography.mjs?v=2.11.1';
 
 const FACE_YAW=Object.freeze({north:180,south:0,east:90,west:-90});
 const PALETTES=Object.freeze({
