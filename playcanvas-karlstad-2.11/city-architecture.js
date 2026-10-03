@@ -186,6 +186,8 @@ function drawAddressPlate(mesh,b,face,label,x,z){
   });
 }
 function addBuildingAddressSign(mesh,b){
+  // Landmark/south buildings get curated name + street plaques from the identity layer.
+  if(IDENTITY_IDS.has(b.osm)||SOUTH_IDS.has(b.osm))return 0;
   const face=nearestStreetFacade(b,b.tags?.['addr:street']);if(!face)return 0;
   const label=addressText(b,face);if(!label)return 0;
   const named=!!String(b.name||'').trim()||IDENTITY_IDS.has(b.osm)||SOUTH_IDS.has(b.osm);
