@@ -1,5 +1,6 @@
 import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.1';
 import {MALL_ROOMS} from './mall-space.mjs?v=2.11.1';
+import {REAL_BUSINESSES,businessAnchor} from './businesses.mjs?v=2.11.1';
 import {createMallSigns} from './mall-architecture.js?v=2.11.1';
 const ink='#263f46',paper='#f6ebd3';
 
@@ -117,6 +118,53 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       for(const [x,z,w,yaw] of [[-94,-467,25,150],[-69,-470,24,45],[-57.9,-494,28,97]])mount('Museet · trä och glas',facade('museum-new'),w,6.8,x,0,z,yaw);
     }
   }
+  const businessTextures=new Map();
+  function businessTexture(b){
+    if(businessTextures.has(b.id))return businessTextures.get(b.id);
+    const t=texture((c,w,h)=>{
+      const signH=Math.round(h*.34),glassY=signH,glassH=h-signH;
+      c.fillStyle=b.bg;c.fillRect(0,0,w,h);
+      c.fillStyle=b.accent;c.fillRect(0,signH-8,w,8);
+      c.fillStyle=b.fg;c.textAlign='center';c.textBaseline='middle';
+      const fontSize=b.name.length>18?48:b.name.length>12?58:70;
+      c.font='900 '+fontSize+'px system-ui,sans-serif';c.fillText(b.name,w/2,signH*.50,w-54);
+      c.fillStyle='#28444a';c.fillRect(0,glassY,w,glassH);
+      const door=Math.max(.18,Math.min(.82,b.door??.5)),doorX=Math.round(w*door),doorW=Math.max(72,Math.round(w*.12));
+      c.fillStyle='#83b4b5';for(let i=0;i<4;i++){const x=18+i*w/4;c.fillRect(x,glassY+14,w/4-28,glassH-30);}
+      c.fillStyle='#dbe3ce';for(let i=1;i<4;i++)c.fillRect(i*w/4-4,glassY,8,glassH);
+      c.fillStyle='#1f343a';c.fillRect(doorX-doorW/2,glassY+9,doorW,glassH-18);
+      c.fillStyle='#9bc0ba';c.fillRect(doorX-doorW/2+10,glassY+22,doorW-20,glassH-54);
+      c.fillStyle='#ead5a1';c.beginPath();c.arc(doorX+doorW*.28,glassY+glassH*.58,6,0,Math.PI*2);c.fill();
+      c.fillStyle='#e7c16b';for(let i=0;i<5;i++){const x=70+i*(w-140)/4;c.beginPath();c.arc(x,glassY+35,9,0,Math.PI*2);c.fill();}
+      c.strokeStyle=b.accent;c.fillStyle=b.accent;c.lineWidth=8;
+      if(b.kind==='music-office'){
+        // MusicPartner is a music-service office, not a guitar shop: studio screens, equalizer and coffee bar.
+        c.fillStyle='#1f2d32';c.fillRect(w*.10,glassY+glassH*.43,w*.31,glassH*.31);c.fillRect(w*.55,glassY+glassH*.43,w*.29,glassH*.31);
+        c.fillStyle='#89cbc0';for(let i=0;i<8;i++){const bh=18+(i%4)*15;c.fillRect(w*.13+i*22,glassY+glassH*.64-bh,12,bh);}
+        c.fillStyle=b.accent;for(let i=0;i<7;i++){const bh=20+((i*17)%58);c.fillRect(w*.59+i*25,glassY+glassH*.68-bh,13,bh);}
+        c.fillStyle='#d8b273';c.fillRect(w*.08,glassY+glassH*.78,w*.30,10);c.fillStyle='#f1e4c5';c.fillRect(w*.13,glassY+glassH*.69,24,30);c.strokeRect(w*.13+19,glassY+glassH*.70,12,18);
+      }else if(b.kind==='optics'){
+        for(const x of [w*.25,w*.65]){c.beginPath();c.arc(x,glassY+glassH*.58,34,0,Math.PI*2);c.arc(x+78,glassY+glassH*.58,34,0,Math.PI*2);c.moveTo(x+34,glassY+glassH*.58);c.lineTo(x+44,glassY+glassH*.58);c.stroke();}
+      }else if(b.kind==='pharmacy'){
+        c.fillRect(w*.18,glassY+glassH*.30,28,112);c.fillRect(w*.18-42,glassY+glassH*.30+42,112,28);
+      }else if(b.kind==='grocery'||b.kind==='retail'){
+        for(let row=0;row<3;row++){c.fillStyle=row===1?b.accent:'#e5d5a9';c.fillRect(60,glassY+72+row*48,w-120,15);}
+      }else if(['food','restaurant','pub'].includes(b.kind)){
+        c.fillStyle='#efd49a';for(const x of [w*.20,w*.42,w*.64,w*.82]){c.fillRect(x-34,glassY+glassH*.63,68,10);c.fillRect(x-4,glassY+glassH*.63,8,56);}
+      }else if(b.kind==='hotel'){
+        c.fillStyle='#ead8b5';c.fillRect(w*.39,glassY+35,w*.22,glassH-50);c.fillStyle='#4b3f36';c.fillRect(w*.485,glassY+55,12,glassH-90);
+      }
+      if(['normal','hemkop','burgerking','sibylla','grekiska','leprechaun'].includes(b.id)){c.fillStyle=b.accent;c.fillRect(0,signH-17,w,17);for(let x=0;x<w;x+=64){c.fillStyle=(x/64)%2?b.fg:b.accent;c.fillRect(x,signH-17,34,17);}}
+      c.strokeStyle='#172e33';c.lineWidth=6;c.strokeRect(3,3,w-6,h-6);
+    },1024,360);
+    businessTextures.set(b.id,t);return t;
+  }
+  const realBusinesses=[];
+  for(const b of REAL_BUSINESSES){
+    const p=businessAnchor(b,host.colliders);if(!p)continue;
+    const panel=mount('Verklig verksamhet · '+b.name,businessTexture(b),p.width,3.65,p.x,.12,p.z,p.yaw);
+    realBusinesses.push({id:b.id,name:b.name,address:b.address,x:p.x,z:p.z,yaw:p.yaw,width:p.width,approximate:!!b.approximateBuilding});
+  }
   const brandTextures=new Map();
   function brandTexture(brand){
     if(brandTextures.has(brand))return brandTextures.get(brand);
@@ -145,5 +193,5 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
   // Street names at the important real intersections. Signs are world-fixed, not camera billboards.
   const signs=STREET_SIGNS;
   const signCache=new Map();for(const [x,z,text,yaw] of signs){if(!signCache.has(text))signCache.set(text,texture((c,w,h)=>{c.fillStyle='#24516a';c.fillRect(0,0,w,h);c.strokeStyle='#f6efcf';c.lineWidth=5;c.strokeRect(5,5,w-10,h-10);c.fillStyle='#f6efcf';c.font='700 39px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(text,w/2,h/2,w-24);},512,96));mount('Gatunamn · '+text,signCache.get(text),4.5,.844,x,2.65,z,yaw);}
-  return {snapshot:()=>({landmarks:LANDMARKS.map(m=>({id:m.id,name:m.name,present:host.colliders.some(b=>b.osm===m.osm)})),shops:shops.map(s=>({...s})),logos:{...logoStates},staticCards:group.children.length})};
+  return {snapshot:()=>({landmarks:LANDMARKS.map(m=>({id:m.id,name:m.name,present:host.colliders.some(b=>b.osm===m.osm)})),shops:shops.map(s=>({...s})),businesses:realBusinesses.map(s=>({...s})),logos:{...logoStates},staticCards:group.children.length})};
 }
