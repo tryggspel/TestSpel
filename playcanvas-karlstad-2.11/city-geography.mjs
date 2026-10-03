@@ -46,11 +46,24 @@ export const PLACE_SIGNS=Object.freeze([
   {brand:'museum',name:'Värmlands museum',x:-83,z:-457,y:2.8,yaw:0,w:6.2}
 ]);
 export const STREET_SIGNS=Object.freeze([
+  // Core around Stora Torget
   [-57,-36,'VÄSTRA TORGGATAN',0],[-57,-33,'KUNGSGATAN',90],
   [83,-26,'ÖSTRA TORGGATAN',0],[83,-23,'KUNGSGATAN',90],
   [-59,30,'TINGVALLAGATAN',90],[144,-28,'VÄSTRA KYRKOGATAN',0],
-  [-51,-262,'VÄSTRA TORGGATAN',0],[-43,-375,'VÄSTRA TORGGATAN',0],
-  [-66,164,'DROTTNINGGATAN',90]
+  [242,-27,'ÖSTRA KYRKOGATAN',0],
+  // North / river side
+  [-18,-254,'NORRA STRANDGATAN',90],[-51,-262,'VÄSTRA TORGGATAN',0],
+  [-43,-375,'VÄSTRA TORGGATAN',0],[-160,-95,'MUSEIGATAN',0],
+  // Shopping grid and station direction
+  [-66,164,'DROTTNINGGATAN',90],[116,181,'DROTTNINGGATAN',90],
+  [-204,111,'JÄRNVÄGSGATAN',0],[-151,-45,'KUNGSGATAN',90],
+  [190,-25,'KUNGSGATAN',90],[74,118,'ÖSTRA TORGGATAN',0],
+  [-74,222,'VÄSTRA TORGGATAN',0],[161,48,'TINGVALLAGATAN',90],
+  // South / City Explore expansion
+  [-75,289,'HAMNGATAN',90],[205,282,'HAMNGATAN',90],
+  [315,122,'KARLBERGSGATAN',90],[121,348,'TULLHUSGATAN',0],
+  [53,402,'TRÄDGÅRDSGATAN',90],[211,322,'TOLAGSGATAN',45],
+  [304,72,'ENESTRÖMSGATAN',0]
 ]);
 const reserved=new Set([...IDENTITY_IDS,...SHOP_IDS,...INNERSTAD_REFERENCE_IDS,234271401,106078938,107041955,109895687,113506286,127873579]);
 function parseBuildings(osm,radius){
