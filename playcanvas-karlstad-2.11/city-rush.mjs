@@ -1,7 +1,7 @@
-import {nearestByRoute} from './city-guidance.mjs?v=2.11.0';
-import {beginStory,storyAction,stepStory,STREET_STORIES} from './street-stories.mjs?v=2.11.0';
-import {seededRandom,saveDailyResult,dailyRecord} from './daily-challenge.mjs?v=2.11.0';
-import {CityEcology} from './city-ecology.mjs?v=2.11.0';
+import {nearestByRoute} from './city-guidance.mjs?v=2.11.1';
+import {beginStory,storyAction,stepStory,STREET_STORIES} from './street-stories.mjs?v=2.11.1';
+import {seededRandom,saveDailyResult,dailyRecord} from './daily-challenge.mjs?v=2.11.1';
+import {CityEcology} from './city-ecology.mjs?v=2.11.1';
 export const RUSH=Object.freeze({seconds:180,target:800,maxTime:210,maxEnemies:6});
 export const CHAOS=Object.freeze({minDelay:20,maxDelay:45,firstDelay:22,fallSeconds:24,blackoutSeconds:4,blackoutGap:150,firstBlackout:45});
 export const POSTCARDS=Object.freeze([
