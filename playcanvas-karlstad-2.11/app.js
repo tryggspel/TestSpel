@@ -4,6 +4,7 @@ import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=
 import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.11.4';
 import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.4';
 import {createCityEnvironment} from './city-environment.mjs?v=2.11.4';
+import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.11.4';
 import {ColliderGrid} from './collider-grid.mjs?v=2.11.4';
 import {onVastraBron} from './city-water.mjs?v=2.11.4';
 import {createRiverArchitecture} from './river-architecture.js?v=2.11.4';
@@ -434,7 +435,7 @@ function addBuildings(osm,environment){
       const cut=splitMallWall(b),colour=cityMats[seed%cityMats.length];
       for(const q of cut.pieces)addBox('Mitt i City · kvartersfasad',(q.minx+q.maxx)/2,b.h/2,(q.minz+q.maxz)/2,q.maxx-q.minx,b.h,q.maxz-q.minz,colour);
       for(const q of cut.openings)addBox('Mitt i City · entrévalv',(q.minx+q.maxx)/2,(b.h+3.4)/2,(q.minz+q.maxz)/2,q.maxx-q.minx,b.h-3.4,q.maxz-q.minz,colour);
-    }else if(!identity&&b.osm!==234271401&&!contourIds.has(b.osm)){
+    }else if(!identity&&b.osm!==234271401&&!contourIds.has(b.osm)&&!INNERSTAD_REFERENCE_IDS.has(b.osm)){
       addBox(b.name||'building',b.cx,b.h/2,b.cz,b.sx,b.h,b.sz,hero?M.hero:cityMats[seed%cityMats.length]);
       if(hero||b.dist<92)addBox((b.name||'building')+'-shopfront',b.cx,1.25,b.cz,b.sx*1.002,2.35,b.sz*1.002,hero?M.heroDark:M.glass);
       if(hero)addBox((b.name||'building')+'-roof',b.cx,b.h+.18,b.cz,b.sx*1.03,.32,b.sz*1.03,M.heroDark);
