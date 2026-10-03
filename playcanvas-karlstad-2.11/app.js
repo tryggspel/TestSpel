@@ -2,7 +2,8 @@ import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playca
 import {createLastRound} from './last-round.js?v=2.11.1';
 import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.11.1';
 import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.11.1';
-import {createCityArchitecture,createInfill} from './city-architecture.js?v=2.11.1';
+import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.1';
+import {createCityEnvironment} from './city-environment.mjs?v=2.11.1';
 import {ColliderGrid} from './collider-grid.mjs?v=2.11.1';
 import {onVastraBron} from './city-water.mjs?v=2.11.1';
 import {createRiverArchitecture} from './river-architecture.js?v=2.11.1';
@@ -421,8 +422,9 @@ function initScene(){
   // Mitt i City now uses its four real street entrances and a walkable interior.
 }
 
-function addBuildings(osm){
+function addBuildings(osm,environment){
   const admitted=cityBuildings(osm,CORE_LOCK.maxBuildings);
+  const contourIds=new Set(coreContourBuildings(admitted).map(b=>b.osm));
   const cityMats=[M.stone,M.plaster,M.brick,M.light,M.building];
   for(const b of admitted){
     const identity=IDENTITY_IDS.has(b.osm);
@@ -432,7 +434,7 @@ function addBuildings(osm){
       const cut=splitMallWall(b),colour=cityMats[seed%cityMats.length];
       for(const q of cut.pieces)addBox('Mitt i City · kvartersfasad',(q.minx+q.maxx)/2,b.h/2,(q.minz+q.maxz)/2,q.maxx-q.minx,b.h,q.maxz-q.minz,colour);
       for(const q of cut.openings)addBox('Mitt i City · entrévalv',(q.minx+q.maxx)/2,(b.h+3.4)/2,(q.minz+q.maxz)/2,q.maxx-q.minx,b.h-3.4,q.maxz-q.minz,colour);
-    }else if(!identity&&b.osm!==234271401){
+    }else if(!identity&&b.osm!==234271401&&!contourIds.has(b.osm)){
       addBox(b.name||'building',b.cx,b.h/2,b.cz,b.sx,b.h,b.sz,hero?M.hero:cityMats[seed%cityMats.length]);
       if(hero||b.dist<92)addBox((b.name||'building')+'-shopfront',b.cx,1.25,b.cz,b.sx*1.002,2.35,b.sz*1.002,hero?M.heroDark:M.glass);
       if(hero)addBox((b.name||'building')+'-roof',b.cx,b.h+.18,b.cz,b.sx*1.03,.32,b.sz*1.03,M.heroDark);
@@ -446,9 +448,9 @@ function addBuildings(osm){
   for(const b of infill)colliders.push({precise:true,infill:true,polygon:b.polygon,osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
   colliderGrid=new ColliderGrid(colliders);southGate=colliders.filter(b=>b.osm===80868525);
   const infillGraphics=createInfill(pc,app,infill),river=createRiverArchitecture(pc,app);
-  const geometry=createCityArchitecture(pc,app,admitted),south=createSouthCity(pc,app,admitted);
+  const geometry=createCityArchitecture(pc,app,admitted),environmentGraphics=createCityEnvironment(pc,app,environment),south=createSouthCity(pc,app,admitted);
   mallGraphics=createMallArchitecture(pc,app,admitted);const {update:animateMall,...mall}=mallGraphics,park=createParkArchitecture(pc,app);
-  window.KarlstadArchitecture=Object.freeze({...geometry,buildings:admitted.length,infill:infillGraphics,river,mall,park,south,staticDrawCalls:geometry.staticDrawCalls+mall.staticDrawCalls+park.staticDrawCalls+south.staticDrawCalls+infillGraphics.staticDrawCalls+river.staticDrawCalls});
+  window.KarlstadArchitecture=Object.freeze({...geometry,buildings:admitted.length,infill:infillGraphics,environment:environmentGraphics,river,mall,park,south,staticDrawCalls:geometry.staticDrawCalls+mall.staticDrawCalls+park.staticDrawCalls+south.staticDrawCalls+infillGraphics.staticDrawCalls+environmentGraphics.staticDrawCalls+river.staticDrawCalls});
   return admitted.length+infill.length;
 }
 
@@ -633,11 +635,11 @@ async function boot(){
 
     bootStage='Karlstad geodata';
     loadText.textContent='Läser Karlstads geodata…'; loadBar.style.width='55%';
-    const r=await fetch('./data/osm-buildings.json?v='+GAME_VERSION);
+    const [r,environmentResponse]=await Promise.all([fetch('./data/osm-buildings.json?v='+GAME_VERSION),fetch('./data/osm-environment.json?v='+GAME_VERSION)]);
     if(!r.ok) throw new Error('OSM '+r.status);
-    const osm=await r.json();
+    const osm=await r.json(),environment=environmentResponse.ok?await environmentResponse.json():{elements:[]};
     bootStage='Byggnader';
-    const n=addBuildings(osm);
+    const n=addBuildings(osm,environment);
     loadText.textContent='Bygger Karlstad… '+n+' byggnader'; loadBar.style.width='82%';
 
     bootStage='Kontroller';
