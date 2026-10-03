@@ -17,7 +17,10 @@ export const INNERSTAD_PROFILES=Object.freeze({
   103767827:Object.freeze({address:'Drottninggatan 21',front:'north',wall:'#a65d43',frame:'#c8aa8d',glass:'#4a6268',ground:'#3a312e',accent:'#d0aa58',kind:'d21bay'}),
   101485439:Object.freeze({address:'Drottninggatan 24',front:'south',wall:'#b79d92',frame:'#d7d2ca',glass:'#385d67',ground:'#6f655f',accent:'#456f85',kind:'stoneblue'}),
   104778900:Object.freeze({address:'Västra Torggatan 3',front:'east',wall:'#a9634d',frame:'#cdbca8',glass:'#4d676b',ground:'#51483f',accent:'#3d765e',kind:'v3brick'}),
-  106864602:Object.freeze({address:'Västra Torggatan 9',front:'east',wall:'#e6ded1',frame:'#f3ede2',glass:'#405c62',ground:'#7a6d61',accent:'#bca36c',kind:'heritage9'})
+  106864602:Object.freeze({address:'Västra Torggatan 9',front:'east',wall:'#e6ded1',frame:'#f3ede2',glass:'#405c62',ground:'#7a6d61',accent:'#bca36c',kind:'heritage9'}),
+  110733713:Object.freeze({address:'Västra Torggatan 2',front:'west',wall:'#b98258',frame:'#f0ece3',glass:'#435f66',ground:'#d8d1c7',accent:'#2a3133',kind:'homeplaza'}),
+  105746413:Object.freeze({address:'Västra Torggatan 8',front:'west',wall:'#ece9e1',frame:'#ffffff',glass:'#526b73',ground:'#e7e3da',accent:'#6f7e83',kind:'grand8'}),
+  104529128:Object.freeze({address:'Västra Torggatan 10',front:'west',wall:'#dfd5c5',frame:'#f3eadc',glass:'#536c70',ground:'#b8ad9f',accent:'#5e5b56',kind:'heritage10'})
 });
 export const INNERSTAD_REFERENCE_IDS=new Set(Object.keys(INNERSTAD_PROFILES).map(Number));
 export const referenceFaceYaw=osm=>YAW[INNERSTAD_PROFILES[osm]?.front]??null;
@@ -180,6 +183,68 @@ export function addInnerstadFacade(mesh,b){
     const dining=Math.max(2.8,length-entrance-1.45);
     panel(u+entrance+.35,.65,dining,1.98,'#536f73',.47);
     for(let x=u+entrance+.75;x<u+entrance+dining;x+=2.0)panel(x,.72,.07,1.82,'#222b2e',.50);
+  }else if(p.kind==='homeplaza'){
+    // Västra Torggatan 2 / Home Hotel Plaza: official exterior photo supports
+    // light brown brick, white stucco trim, arched lower windows, small iron balconies and a central pediment.
+    panel(.08,.34,length-.16,2.82,'#d4cec3',.19);
+    const bays=Math.max(5,Math.round(length/3.15)),bw=length/bays;
+    for(let col=0;col<=bays;col++)panel(Math.min(length-.10,col*bw),.18,.12,b.h-.44,p.frame,.28);
+    for(let row=0;row<floors;row++){
+      const y=upperY+row*rowH+.10,wh=Math.max(.74,rowH-.72);
+      for(let col=0;col<bays;col++){
+        const u=col*bw+.28,ww=Math.max(.42,bw-.56);
+        panel(u-.10,y-.10,ww+.20,wh+.20,p.frame,.30);
+        panel(u,y,ww,wh,p.glass,.33);
+        panel(u+ww*.47,y+.03,.055,wh-.06,'#dfe6dd',.35);
+        if((col===1||col===bays-2)&&row<Math.min(3,floors)){
+          panel(u-.18,y-.26,ww+.36,.10,p.accent,.40);
+          for(let x=u-.10;x<u+ww+.10;x+=.28)panel(x,y-.25,.035,.42,p.accent,.42);
+        }
+      }
+    }
+    const centre=length*.5,pw=Math.min(5.6,length*.22);
+    panel(centre-pw/2,2.72,pw,.34,p.frame,.39);
+    panel(centre-pw*.34,3.10,pw*.68,.36,p.frame,.41);
+    panel(centre-.52,.52,1.04,2.32,'#7b552f',.47);
+  }else if(p.kind==='grand8'){
+    // Västra Torggatan 8: current facade photo shows a bright classical plaster facade
+    // with decorative window surrounds, retail awnings and a dark glazed roof extension.
+    const bays=Math.max(4,Math.round(length/2.7)),bw=length/bays;
+    panel(.10,.42,length-.20,2.72,'#f4f1e9',.22);
+    for(let row=0;row<floors;row++){
+      const y=upperY+row*rowH+.10,wh=Math.max(.76,rowH-.72);
+      for(let col=0;col<bays;col++){
+        const u=col*bw+.24,ww=Math.max(.42,bw-.48);
+        panel(u-.12,y-.12,ww+.24,wh+.24,p.frame,.30);
+        panel(u,y,ww,wh,p.glass,.34);
+        panel(u-.16,y+wh+.14,ww+.32,.08,'#d7d2c7',.32);
+      }
+    }
+    for(let u=.34;u<length-.5;u+=2.75){
+      panel(u,2.48,1.95,.26,'#777a78',.42);
+      panel(u+.08,2.16,1.79,.18,'#efeee8',.44);
+    }
+    // Dark contemporary top-floor band visible above the preserved light facade.
+    panel(.20,b.h-1.55,length-.40,1.18,'#3f4b50',.36);
+    for(let u=.42;u<length-.4;u+=2.4)panel(u,b.h-1.42,1.72,.86,'#78979b',.39);
+  }else if(p.kind==='heritage10'){
+    // Västra Torggatan 10: Karlstad's local history project documents the largely preserved
+    // late-1860s appearance and the central carriage passage.
+    panel(.12,.40,length-.24,2.72,'#d8d0c2',.22);
+    const bays=Math.max(5,Math.round(length/3.0)),bw=length/bays;
+    for(let col=0;col<=bays;col++)panel(Math.min(length-.10,col*bw),.22,.11,b.h-.50,p.frame,.28);
+    for(let row=0;row<floors;row++){
+      const y=upperY+row*rowH+.10,wh=Math.max(.74,rowH-.70);
+      for(let col=0;col<bays;col++){
+        const u=col*bw+.28,ww=Math.max(.42,bw-.56);
+        panel(u-.10,y-.10,ww+.20,wh+.20,p.frame,.30);
+        panel(u,y,ww,wh,p.glass,.33);
+      }
+    }
+    const gateW=Math.min(3.4,length*.18),gu=(length-gateW)/2;
+    panel(gu,.38,gateW,2.58,'#4d4841',.46);
+    panel(gu+.28,.58,gateW-.56,2.10,'#756a5c',.49);
+    panel(.14,3.02,length-.28,.16,p.accent,.36);
   }
   return true;
 }
