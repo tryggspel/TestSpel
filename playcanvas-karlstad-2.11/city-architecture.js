@@ -80,9 +80,9 @@ function pickStreetFacade(x,z,rotation,buildings){
   return best;
 }
 function streetGlyph(ch){return STREET_GLYPHS[ch==='Ä'||ch==='Å'?'A':ch==='Ö'?'O':ch]||STREET_GLYPHS.E;}
-function addStreetPixel(mesh,cx,cy,cz,tangent,normal,size){
-  const hw=size*.41,hh=size*.41,tx=tangent[0]*hw,tz=tangent[1]*hw,nx=normal[0]*.066,nz=normal[1]*.066;
-  mesh.quad([cx+nx-tx,cy-hh,cz+nz-tz],[cx+nx+tx,cy-hh,cz+nz+tz],[cx+nx+tx,cy+hh,cz+nz+tz],[cx+nx-tx,cy+hh,cz+nz-tz],'#fff8de');
+function addStreetPixel(mesh,cx,cy,cz,tangent,normal,size,colour='#fff8de',depth=.066){
+  const hw=size*.41,hh=size*.41,tx=tangent[0]*hw,tz=tangent[1]*hw,nx=normal[0]*depth,nz=normal[1]*depth;
+  mesh.quad([cx+nx-tx,cy-hh,cz+nz-tz],[cx+nx+tx,cy-hh,cz+nz+tz],[cx+nx+tx,cy+hh,cz+nz+tz],[cx+nx-tx,cy+hh,cz+nz-tz],colour);
 }
 function addStreetNameSign(mesh,sign,buildings){
   const [sx,sz,label,rotation=0]=sign,face=pickStreetFacade(sx,sz,rotation,buildings);
@@ -158,42 +158,56 @@ function addressText(b,face){
   const number=String(b.tags?.['addr:housenumber']||'').trim();
   return (street+(number?' '+number:'')).toUpperCase().replace(/[^A-ZÅÄÖ0-9 -]/g,'').replace(/\s+/g,' ').trim();
 }
-function addBuildingAddressSign(mesh,b){
-  const face=nearestStreetFacade(b,b.tags?.['addr:street']);if(!face)return false;
-  const label=addressText(b,face);if(!label)return false;
+function drawAddressPlate(mesh,b,face,label,x,z){
   const widths=[...label].map(ch=>ch===' '?3:5),cells=widths.reduce((n,w,i)=>n+w+(i?1:0),0);
-  const available=Math.max(2.6,Math.min(5.4,face.span-.55));
-  const pixel=Math.max(.036,Math.min(.052,(available-.24)/Math.max(1,cells)));
-  const boardW=Math.max(2.45,cells*pixel+.24),boardH=Math.max(.48,7*pixel+.18);
-  const half=boardW/2;
-  if(Math.abs(face.tangent[0])>.5)face.x=signClamp(face.x,b.minx+half+.2,b.maxx-half-.2);
-  else face.z=signClamp(face.z,b.minz+half+.2,b.maxz-half-.2);
-  const y=Math.max(2.35,Math.min(3.15,b.h*.24));
-  addFlatSignQuad(mesh,face.x,y,face.z,face.tangent,face.normal,boardW+.12,boardH+.12,.020,'#20343b');
-  addFlatSignQuad(mesh,face.x,y,face.z,face.tangent,face.normal,boardW,boardH,.030,'#f5f0df');
+  // 2.11.12: high-contrast Karlstad-style facade plate. The old cream/white text
+  // disappeared against the generic beige facades in actual FPS view.
+  const pixel=Math.max(.050,Math.min(.068,6.05/Math.max(1,cells)));
+  const boardW=Math.max(3.05,cells*pixel+.34),boardH=Math.max(.66,7*pixel+.22);
+  const y=Math.max(2.85,Math.min(3.55,b.h*.29));
+  addFlatSignQuad(mesh,x,y,z,face.tangent,face.normal,boardW+.18,boardH+.18,.075,'#17252b');
+  addFlatSignQuad(mesh,x,y,z,face.tangent,face.normal,boardW,boardH,.095,'#f5f2e8');
   let cursor=-cells*pixel/2;
   [...label].forEach((ch,i)=>{
     if(i)cursor+=pixel;
     if(ch===' '){cursor+=3*pixel;return;}
     const glyph=streetGlyph(ch);if(!glyph){cursor+=5*pixel;return;}
     for(let row=0;row<7;row++)for(let col=0;col<5;col++)if(glyph[row][col]==='1'){
-      const along=cursor+(col+.5)*pixel,px=face.x+face.tangent[0]*along,pz=face.z+face.tangent[1]*along,py=y+(3-row)*pixel;
-      addStreetPixel(mesh,px,py,pz,face.tangent,face.normal,pixel*.86);
+      const along=cursor+(col+.5)*pixel,px=x+face.tangent[0]*along,pz=z+face.tangent[1]*along,py=y+(3-row)*pixel;
+      addStreetPixel(mesh,px,py,pz,face.tangent,face.normal,pixel*.90,'#17252b',.125);
     }
     if(ch==='Ä'||ch==='Ö'){
-      for(const d of [-1.2,1.2]){const along=cursor+(2+d)*pixel;addStreetPixel(mesh,face.x+face.tangent[0]*along,y+4.18*pixel,face.z+face.tangent[1]*along,face.tangent,face.normal,pixel*.62);}
+      for(const d of [-1.2,1.2]){const along=cursor+(2+d)*pixel;addStreetPixel(mesh,x+face.tangent[0]*along,y+4.18*pixel,z+face.tangent[1]*along,face.tangent,face.normal,pixel*.64,'#17252b',.125);}
     }else if(ch==='Å'){
-      const along=cursor+2*pixel;addStreetPixel(mesh,face.x+face.tangent[0]*along,y+4.18*pixel,face.z+face.tangent[1]*along,face.tangent,face.normal,pixel*.68);
+      const along=cursor+2*pixel;addStreetPixel(mesh,x+face.tangent[0]*along,y+4.18*pixel,z+face.tangent[1]*along,face.tangent,face.normal,pixel*.70,'#17252b',.125);
     }
     cursor+=5*pixel;
   });
-  return true;
+}
+function addBuildingAddressSign(mesh,b){
+  const face=nearestStreetFacade(b,b.tags?.['addr:street']);if(!face)return 0;
+  const label=addressText(b,face);if(!label)return 0;
+  const repeats=face.span>48?3:face.span>24?2:1;
+  const margin=3.7;
+  for(let i=0;i<repeats;i++){
+    const t=(i+1)/(repeats+1);
+    let x=face.x,z=face.z;
+    if(Math.abs(face.tangent[0])>.5){
+      const lo=b.minx+margin,hi=b.maxx-margin;
+      x=lo<hi?lo+(hi-lo)*t:(b.minx+b.maxx)/2;
+    }else{
+      const lo=b.minz+margin,hi=b.maxz-margin;
+      z=lo<hi?lo+(hi-lo)*t:(b.minz+b.maxz)/2;
+    }
+    drawAddressPlate(mesh,b,face,label,x,z);
+  }
+  return repeats;
 }
 function addAddressPlates(mesh,buildings){
   let count=0;
   for(const b of buildings){
     if(b.area<28||b.h<3.2)continue;
-    if(addBuildingAddressSign(mesh,b))count++;
+    count+=addBuildingAddressSign(mesh,b);
   }
   return count;
 }
