@@ -31,3 +31,8 @@ test('fictional storefront names are gone from generic facades',()=>{
   for(const fake of ['HERR GÅRMAN','PÅTÅR & PANIK','DEN SISTA BULLEN'])assert.equal(comic.includes(fake),false,fake);
   assert.equal(REAL_BUSINESSES.find(b=>b.id==='musicpartner')?.kind,'music-office');
 });
+
+
+test('every rendered business has a name and address',()=>{
+  assert.ok(REAL_BUSINESSES.every(b=>b.name&&b.address));
+});
