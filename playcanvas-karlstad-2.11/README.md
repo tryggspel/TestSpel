@@ -1,3 +1,13 @@
+# Karlstad City — 2.11.5 · Innerstadens referensfasader, pass 1
+
+Första fortsättningen på Kungsgatan-metoden från 2.11.4. Fem riktiga OSM-hus får egna handbyggda gatufasader i stället för generisk stadsdekor: **Drottninggatan 19**, **Västra Torggatan 5**, **Västra Torggatan 11**, **Kungsgatan 12** och **Kungsgatan 20**.
+
+Fotavtryck, adress, skala och höjd kommer fortsatt från OSM. Referensbilder styr färg, fönsterrytm, bottenvåning och karaktärsdetaljer. Drottninggatan 19 reserveras inom den befintliga 95-husbudgeten i stället för att höja budgeten. Alla fem fasader ligger i samma statiska stadsbatch som tidigare, och den generiska comic-fasaden stängs av endast på den sida som ersatts.
+
+Detta är början på stråket: Drottninggatan och Västra Torggatan fortsätter hus för hus, därefter fortsätter Kungsgatan utanför 14–18. Den här körmiljön kan inte rendera interaktiv Google Street View direkt, så första batchen bygger på spårbara offentliga fasadbilder och OSM. Exakta Street View-/panoramalänkar kan sedan användas för finjustering utan att ändra datastrukturen eller prestandabudgeten.
+
+## Föregående version
+
 # Karlstad City — 2.11.4 · Kungsgatan vid Stora Torget
 
 Första Street View-baserade fasadpasset för Kungsgatan 14, 16 och 18. Tre individuella färger och fönsterrytmer ersätter de generiska sydfasaderna. Fasadytorna följer OSM-polygonernas sneda gatukant. Kungsgatan 14 får grå paneler, smala fönsterposter och lägre Pressbyrån-skylt; grannhusen får ljus respektive rosatonad puts, med röda detaljer på det ljusa huset.
