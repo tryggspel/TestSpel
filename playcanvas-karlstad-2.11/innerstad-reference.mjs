@@ -14,7 +14,10 @@ export const INNERSTAD_PROFILES=Object.freeze({
   110733723:Object.freeze({address:'Drottninggatan 20',front:'south',wall:'#a85c45',frame:'#d7d0c3',glass:'#4b6368',ground:'#a7a49d',accent:'#6d6f6c',kind:'sixtiesbrick'}),
   101935904:Object.freeze({address:'Drottninggatan 26',front:'south',wall:'#9b5c45',frame:'#c9b59d',glass:'#52696c',ground:'#595b58',accent:'#66755f',kind:'office77'}),
   106078942:Object.freeze({address:'Västra Torggatan 1',front:'east',wall:'#7f5144',frame:'#b89d86',glass:'#394d53',ground:'#202628',accent:'#c94e37',kind:'savoy'}),
-  103767827:Object.freeze({address:'Drottninggatan 21',front:'north',wall:'#a65d43',frame:'#c8aa8d',glass:'#4a6268',ground:'#3a312e',accent:'#d0aa58',kind:'d21bay'})
+  103767827:Object.freeze({address:'Drottninggatan 21',front:'north',wall:'#a65d43',frame:'#c8aa8d',glass:'#4a6268',ground:'#3a312e',accent:'#d0aa58',kind:'d21bay'}),
+  101485439:Object.freeze({address:'Drottninggatan 24',front:'south',wall:'#b79d92',frame:'#d7d2ca',glass:'#385d67',ground:'#6f655f',accent:'#456f85',kind:'stoneblue'}),
+  104778900:Object.freeze({address:'Västra Torggatan 3',front:'east',wall:'#a9634d',frame:'#cdbca8',glass:'#4d676b',ground:'#51483f',accent:'#3d765e',kind:'v3brick'}),
+  106864602:Object.freeze({address:'Västra Torggatan 9',front:'east',wall:'#e6ded1',frame:'#f3ede2',glass:'#405c62',ground:'#7a6d61',accent:'#bca36c',kind:'heritage9'})
 });
 export const INNERSTAD_REFERENCE_IDS=new Set(Object.keys(INNERSTAD_PROFILES).map(Number));
 export const referenceFaceYaw=osm=>YAW[INNERSTAD_PROFILES[osm]?.front]??null;
@@ -130,6 +133,43 @@ export function addInnerstadFacade(mesh,b){
     }
     // The photographed arcade/entrance rhythm is kept darker than the upper brickwork.
     for(let u=.45;u<length-.8;u+=4.4)panel(u,.58,3.25,2.02,'#35474b',.27);
+  }else if(p.kind==='stoneblue'){
+    // Drottninggatan 24: pink-grey stone panels, tall blue glazing and blue horizontal awnings.
+    const bay=Math.max(3.2,length/7);
+    for(let u=.18;u<length-.3;u+=bay){
+      panel(u,.54,Math.max(.5,bay-.34),2.30,'#334f57',.27);
+      panel(u+.10,.70,Math.max(.3,bay-.54),1.95,'#6d9298',.30);
+      panel(u-.05,2.72,Math.max(.5,bay-.20),.24,p.accent,.42);
+    }
+    for(let row=0;row<floors;row++){
+      const y=upperY+row*rowH+.08;
+      panel(.12,y-.08,length-.24,.08,'#9e847d',.13);
+    }
+    for(let u=.5;u<length-.5;u+=Math.max(4.2,length/6))panel(u,3.38,.12,b.h-3.76,'#8f7770',.18);
+  }else if(p.kind==='v3brick'){
+    // Västra Torggatan 3: conservative continuation of the documented brick pedestrian-street row.
+    panel(.16,2.77,length-.32,.28,'#2f3330',.34);
+    for(let u=.35;u<length-.5;u+=3.0)panel(u,2.47,1.85,.25,p.accent,.40);
+    for(let row=0;row<floors;row++){
+      const y=upperY+row*rowH+.10;panel(.10,y-.10,length-.20,.06,'#8d4f3e',.12);
+    }
+  }else if(p.kind==='heritage9'){
+    // Västra Torggatan 9 / Druvan: preserved late-1800s light plaster with pilasters, garlands and portal rhythm.
+    panel(.10,.48,length-.20,2.65,'#d7cfc1',.20);
+    const bays=Math.max(4,Math.round(length/3.0)),bw=length/bays;
+    for(let col=0;col<=bays;col++)panel(Math.min(length-.10,col*bw),.22,.12,b.h-.48,'#f1eadf',.29);
+    for(let row=0;row<floors;row++){
+      const y=upperY+row*rowH+.08;
+      panel(.16,y-.14,length-.32,.10,p.accent,.22);
+      for(let col=0;col<bays;col++){
+        const u=col*bw+.30,ww=Math.max(.42,bw-.60),wh=Math.max(.75,rowH-.72);
+        panel(u-.11,y-.10,ww+.22,wh+.20,p.frame,.30);
+        panel(u,y,ww,wh,p.glass,.34);
+        // Simple relief blocks stand in for the documented garlands/balusters without adding texture assets.
+        if(row===0)panel(u+.08,y+wh+.18,Math.max(.22,ww-.16),.16,'#cab991',.36);
+      }
+    }
+    panel(.18,b.h-.72,length-.36,.18,'#343536',.24);
   }else if(p.kind==='savoy'){
     // Västra Torggatan 1: dark hotel/restaurant canopy beneath a warm brick upper facade.
     panel(.12,2.72,length-.24,.52,'#171d1f',.40);
@@ -165,4 +205,11 @@ export function addInnerstadStreetFurniture(mesh){
   // Short pale cobble thresholds beneath the benches, offset to avoid z-fighting with the base street mesh.
   mesh.box(-149,.018,169.9,37,.036,2.4,stone);
   mesh.box(-72.0,.018,146.0,2.4,.036,25,stone);
+  // Continue the same documented gågata language northward: hanging flower baskets, planters and benches.
+  const planter=(x,z)=>{mesh.box(x,.38,z,1.15,.72,1.15,'#777566');mesh.box(x,.78,z,.92,.18,.92,'#5f7d55');mesh.pyramid(x,1.20,z,1.18,1.18,.95,'#71915d');};
+  for(const z of [164,176,188,200])post(-73.8,z);
+  bench(-72.8,174,90);bench(-72.8,194,90);
+  for(const z of [166,186,204])planter(-77.0,z);
+  // Drottninggatan 24/26 edge: a restrained row of trees/planters suggested by current street photos.
+  for(const x of [-236,-218,-200])planter(x,169.4);
 }
