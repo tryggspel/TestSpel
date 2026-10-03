@@ -11,13 +11,13 @@ const buildings=cityBuildings(osm);
 const targets=buildings.filter(b=>INNERSTAD_REFERENCE_IDS.has(b.osm));
 const desired={north:[0,-1],south:[0,1],east:[1,0],west:[-1,0]};
 
-test('inner-city reference batches bind to ten real OSM address buildings',()=>{
-  assert.equal(targets.length,10);
+test('inner-city reference batches bind to thirteen real OSM address buildings',()=>{
+  assert.equal(targets.length,13);
   for(const b of targets){
     const p=INNERSTAD_PROFILES[b.osm];
     assert.equal(p.address,b.tags['addr:street']+' '+b.tags['addr:housenumber']);
   }
-  for(const id of [104396327,104529134,110733723,101935904,106078942,103767827])assert.ok(targets.some(b=>b.osm===id),'reference id '+id+' stays inside the 95-building detail budget');
+  for(const id of [104396327,104529134,110733723,101935904,106078942,103767827,101485439,104778900,106864602])assert.ok(targets.some(b=>b.osm===id),'reference id '+id+' stays inside the 95-building detail budget');
 });
 
 test('reference fronts face their real street side and generate bounded static geometry',()=>{
@@ -45,7 +45,7 @@ test('generic comic facades cannot cover hand-built street fronts',()=>{
 test('Street View pedestrian furniture stays render-only and inside a bounded static mesh budget',()=>{
   const mesh=new ComicMesh();addInnerstadStreetFurniture(mesh);
   assert.ok(mesh.positions.length>0);
-  assert.ok(mesh.indices.length/3<900);
+  assert.ok(mesh.indices.length/3<1300);
   for(let i=0;i<mesh.positions.length;i+=3){
     assert.ok(Number.isFinite(mesh.positions[i])&&Number.isFinite(mesh.positions[i+1])&&Number.isFinite(mesh.positions[i+2]));
     assert.ok(mesh.positions[i+1]>=0&&mesh.positions[i+1]<3.6);

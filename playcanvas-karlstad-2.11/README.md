@@ -1,3 +1,11 @@
+# Karlstad City — 2.11.8 · Drottninggatan 24 + Västra Torggatan 3/9
+
+Detta pass fortsätter den handbyggda innerstadslinjen med tre nya adressbundna OSM-fasader. **Drottninggatan 24** får sin karakteristiska rosa/grå stenbeklädnad, höga blå fönsterfält och blå horisontella skärmtak. **Västra Torggatan 9** får en ljus, historiserande fasad med pilastrar, markerade fönsteromfattningar och en tydlig butikssockel i linje med Karlstads kulturmiljöprogram. **Västra Torggatan 3** görs försiktigt som en tegelbaserad fortsättning av det dokumenterade gågatustråket, utan påhittade företagsnamn.
+
+Gågatan kompletteras samtidigt norrut med fler mörka lyktstolpar, bänkar, planteringar och en sammanhängande stenlagd rytm. All ny geometri ligger kvar i den statiska innerstadsbatchen. Västra Torggatan 7 lämnas fortsatt till Mitt i City-entrélogiken i stället för att få en separat fasad som riskerar att blockera eller visuellt konkurrera med galleriaentrén.
+
+## Föregående version
+
 # Karlstad City — 2.11.7 · Street View/referenspass, Drottninggatan + Stadshotellet
 
 Detta pass fortsätter den handbyggda innerstadsmetoden med fokus på igenkänning framför mängd. **Drottninggatan 21** får en egen rödbrun tegelfasad med staplade burspråk, mörkt entréband och stora butiksglas. **Elite Stadshotellet, Kungsgatan 22** får en särskild gul/vit fasad med höga bågfönster, vita pilastrar, gröna markiser, svarta balkongräcken och svart ELITE-entrétak i stället för den generiska hotellfasaden.

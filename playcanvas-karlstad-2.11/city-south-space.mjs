@@ -1,4 +1,4 @@
-import {WATER_ROWS,FERRY_PORTS,EXT_BUILDINGS} from './city-south-data.mjs?v=2.11.7';
+import {WATER_ROWS,FERRY_PORTS,EXT_BUILDINGS} from './city-south-data.mjs?v=2.11.8';
 export const SOUTH_IDS=new Set(EXT_BUILDINGS.map(b=>b.id));
 export const HARBOUR={...FERRY_PORTS.hamn,x:236,z:552,id:'hamn',name:'Inre hamn'};
 export const MARIEBERG={...FERRY_PORTS.marieberg,x:-778,z:1321,id:'marieberg',name:'Mariebergsskogen'};
