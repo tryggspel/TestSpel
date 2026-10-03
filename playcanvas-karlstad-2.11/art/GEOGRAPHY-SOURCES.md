@@ -83,3 +83,16 @@ Derived geometry in `city-south-data.mjs` is © OpenStreetMap contributors, ODbL
 
 User-provided Street View: https://maps.app.goo.gl/isAY5kcebe71yz1q9
 Panorama `w8KtpcPLB5AximYHC5oAcQ`, camera 59.3810358, 13.5030645, June 2026 imagery, visually inspected 2026-10-03. Kungsgatan 14/16/18 are bound to OSM ways 104778937/106078910/104529126. Colours, window rhythm and terrace construction are hand-built interpretations; no imagery is shipped. Roofs/heights retain the existing OSM interpretation. The foliage obscures parts of the facades, so unobserved details are simplified. This pass covers only the north facade row facing the square, not a complete survey of Stora Torget.
+
+## Inner-city reference pass · 2.11.5 (first batch)
+
+This pass continues the hand-built facade system from Kungsgatan 14–18. OSM supplies footprint, address and height; visual references only guide facade colour, window rhythm, storefront proportions and characteristic details. No third-party photograph is included in the game.
+
+First bound buildings:
+- Drottninggatan 19 / OSM 104396327 — yellow-brick Läkarhuset frontage. Public facade reference: Real Advice, “Stadsrum förvärvar Läkarhuset i Karlstad”; current address/business cross-check: Synsam Outlet Karlstad.
+- Västra Torggatan 5 / OSM 108352774 — brick pedestrian-street frontage with green awning/street-level rhythm. Public facade references: Real Advice and Wikimedia Commons.
+- Västra Torggatan 11 / OSM 105746401 — red four-storey corner frontage with pale window surrounds. Public facade reference: Lokalguiden.
+- Kungsgatan 12 / OSM 101170479 — pale 1960-era block with regular broad bays. Public facade reference: Objektvision.
+- Kungsgatan 20 / OSM 102590980 — orange-brick frontage with strong blue balcony identity. Public facade reference: Hyresbostäder.
+
+Direct interactive Google Street View rendering is not available in this build environment, so these five are an initial reference-photo pass. Exact panorama-by-panorama refinement should retain these OSM bindings and static-mesh limits.
