@@ -298,3 +298,11 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
 @media(prefers-reduced-motion:reduce){#game{transition:none}}
 
 .map-area{display:flex;align-items:center;justify-content:space-between;gap:8px;font:800 11px system-ui;color:#bfe5ce}.map-area button{min-height:40px;background:#2b6260;color:#fff1ce;border:1px solid #8bc6b7;border-radius:5px;font:800 11px system-ui;padding:7px 12px}
+
+/* Work recovery: on phones, pickup feedback is a 26px score ping — never a tall purple panel. */
+@media(max-width:850px){
+ .journey-playing #journeyPickupToast,.journey-playing.one-hand #journeyPickupToast{top:max(157px,calc(env(safe-area-inset-top) + 149px))!important;bottom:auto!important;left:max(12px,env(safe-area-inset-left))!important;right:129px!important;width:auto!important;max-width:none!important;height:26px!important;min-height:26px!important;box-sizing:border-box;padding:0 8px!important;border-width:1px!important;border-radius:4px!important;transform:none!important;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:9px!important;line-height:1!important;pointer-events:none}
+ .journey-playing #journeyPickupToast.visible,.journey-playing.one-hand #journeyPickupToast.visible{transform:none!important}
+}
+@media(max-width:370px) and (min-height:601px){.journey-playing #journeyPickupToast,.journey-playing.one-hand #journeyPickupToast{right:124px!important}}
+@media(max-height:600px){.journey-playing #journeyPickupToast,.journey-playing.one-hand #journeyPickupToast{top:77px!important;left:50%!important;right:auto!important;width:184px!important;transform:translateX(-50%)!important}.journey-playing #journeyPickupToast.visible,.journey-playing.one-hand #journeyPickupToast.visible{transform:translateX(-50%)!important}}
