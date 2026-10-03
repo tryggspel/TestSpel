@@ -156,7 +156,8 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       if(p){
         const name=mark.name.toUpperCase();
         mount(mark.name+' · namn',labelTex([name],'#214b49','#f5e5bd'),Math.max(4.4,Math.min(6.4,name.length*.34)),.62,p.x,2.72,p.z,p.yaw);
-        mount(mark.name+' · gata',labelTex([p.street.toUpperCase()],'#214b49','#f5e5bd'),3.0,.38,p.x,2.12,p.z,p.yaw);
+        const street=(mark.street||p.street).toUpperCase();
+        mount(mark.name+' · gata',labelTex([street],'#214b49','#f5e5bd'),3.0,.38,p.x,2.12,p.z,p.yaw);
       }
     }
   }
