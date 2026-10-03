@@ -3,6 +3,7 @@ import {MALL_ROOMS} from './mall-space.mjs?v=2.11.15';
 import {REAL_BUSINESSES,BUSINESS_OSM_IDS,businessAnchor} from './businesses.mjs?v=2.11.15';
 import {createMallSigns} from './mall-architecture.js?v=2.11.15';
 import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.15';
+import {SOUTH_STREETS} from './city-south-data.mjs?v=2.11.15';
 const ink='#263f46',paper='#f6ebd3';
 
 // Original comic drawings, baked once. Windows, masonry and print shading cost no geometry.
@@ -95,6 +96,7 @@ export function drawClock(c,w,h){
 export function createCityIdentity(pc,host,{card,texture,labelTex}){
   const group=new pc.Entity('Karlstad · platsidentitet');host.app.root.addChild(group);
   const facades=new Map(),logoStates={},shops=[];
+  const signStreets=[...CITY_STREETS,...SOUTH_STREETS];
   function mount(name,tex,w,h,x,y,z,yaw=0,twoSided=false){const e=card(name,tex,w,h,x,y,z,twoSided);e.reparent(group);e.setEulerAngles(0,yaw,0);return e;}
   function facade(kind,w=1024,h=512){if(!facades.has(kind))facades.set(kind,texture((c,cw,ch)=>drawLandmarkFacade(c,cw,ch,kind),w,h));return facades.get(kind);}
   function nearestStreetFace(b){
@@ -110,6 +112,38 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       const east=dx>0;return {street:best.s.name,x:east?b.maxx+.18:b.minx-.18,z:Math.max(b.minz+2,Math.min(b.maxz-2,best.qz)),yaw:east?90:-90};
     }
     const south=dz>0;return {street:best.s.name,x:Math.max(b.minx+2,Math.min(b.maxx-2,best.qx)),z:south?b.maxz+.18:b.minz-.18,yaw:south?0:180};
+  }
+  const streetKey=name=>String(name||'').toLocaleUpperCase('sv-SE');
+  function streetYawAt(x,z,name,fallback=0){
+    const key=streetKey(name);let best=null;
+    for(const s of signStreets){
+      if(streetKey(s.name)!==key)continue;
+      for(let i=1;i<s.points.length;i++){
+        const [ax,az]=s.points[i-1],[bx,bz]=s.points[i],dx=bx-ax,dz=bz-az,den=dx*dx+dz*dz||1;
+        const t=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/den)),qx=ax+t*dx,qz=az+t*dz,d2=(x-qx)**2+(z-qz)**2;
+        if(!best||d2<best.d2)best={d2,yaw:Math.atan2(-dz,dx)*180/Math.PI};
+      }
+    }
+    return best?.yaw??fallback;
+  }
+  function autoStreetAnchor(name){
+    const key=streetKey(name);let best=null;
+    for(const s of signStreets){
+      if(streetKey(s.name)!==key)continue;
+      for(let i=1;i<s.points.length;i++){
+        const [ax,az]=s.points[i-1],[bx,bz]=s.points[i],dx=bx-ax,dz=bz-az,len=Math.hypot(dx,dz);if(len<7)continue;
+        const mx=(ax+bx)/2,mz=(az+bz)/2;
+        // Prefer a long, central segment so the one fallback sign is likely to be encountered in City Explore.
+        const score=Math.hypot(mx,mz)-Math.min(70,len)*1.35;
+        if(!best||score<best.score)best={s,ax,az,bx,bz,dx,dz,len,mx,mz,score};
+      }
+    }
+    if(!best)return null;
+    const nx=-best.dz/best.len,nz=best.dx/best.len,offset=(best.s.width||6)/2+1.55;
+    const blocked=(x,z)=>host.colliders.some(b=>x>b.minx-.25&&x<b.maxx+.25&&z>b.minz-.25&&z<b.maxz+.25);
+    let x=best.mx+nx*offset,z=best.mz+nz*offset;
+    if(blocked(x,z)){x=best.mx-nx*offset;z=best.mz-nz*offset;}
+    return {x,z,yaw:Math.atan2(-best.dz,best.dx)*180/Math.PI};
   }
   for(const mark of LANDMARKS){
     const b=host.colliders.find(b=>b.osm===mark.osm);if(!b)continue;
@@ -246,8 +280,21 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
   createMallSigns({mount,texture,labelTex,brandTexture});
   for(const [x,z,text,yaw] of [[-59,-373,'MUSEUM ← · UDDEN ↑',0],[-182,-471,'SANDGRUNDSUDDEN ↑',0],[-227,-574,'KLARÄLVEN · BRYGGOR',90],[-221,-756,'SANDGRUNDSUDDEN',0]])mount(text,labelTex([text],'#315e59','#fff0cc'),5.5,1.2,x,2,z,yaw);
   // Street names at important intersections use the same green/cream family as building names.
-  // Kept compact so they read as wayfinding, not facade branding.
-  const signs=STREET_SIGNS;
-  const signCache=new Map();for(const [x,z,text,yaw] of signs){if(!signCache.has(text))signCache.set(text,labelTex([text],'#214b49','#f5e5bd'));mount('Gatunamn · '+text,signCache.get(text),3.25,.56,x,2.52,z,yaw,true);}
-  return {snapshot:()=>({landmarks:LANDMARKS.map(m=>({id:m.id,name:m.name,present:host.colliders.some(b=>b.osm===m.osm)})),shops:shops.map(s=>({...s})),businesses:realBusinesses.map(s=>({...s})),logos:{...logoStates},staticCards:group.children.length})};
+  // Their yaw is derived from the actual OSM street segment, preventing a sign from pointing down the cross street.
+  const signs=STREET_SIGNS,signCache=new Map(),signedStreetNames=new Set();
+  const streetTexture=text=>{if(!signCache.has(text))signCache.set(text,labelTex([text],'#214b49','#f5e5bd'));return signCache.get(text);};
+  for(const [x,z,text,yaw] of signs){
+    signedStreetNames.add(streetKey(text));
+    mount('Gatunamn · '+text,streetTexture(text),3.25,.56,x,2.52,z,streetYawAt(x,z,text,yaw),true);
+  }
+  // One fallback sign for every real named street that has no curated sign at all.
+  // This keeps coverage complete without filling every block with duplicate signs.
+  const autoNames=[...new Set(signStreets.map(s=>s.name))].filter(name=>name&&streetKey(name)!=='RONDELL'&&!signedStreetNames.has(streetKey(name)));
+  for(const name of autoNames){
+    const p=autoStreetAnchor(name);if(!p)continue;
+    const text=name.toLocaleUpperCase('sv-SE');
+    mount('Gatunamn auto · '+text,streetTexture(text),3.25,.56,p.x,2.52,p.z,p.yaw,true);
+    signedStreetNames.add(streetKey(name));
+  }
+  return {snapshot:()=>({landmarks:LANDMARKS.map(m=>({id:m.id,name:m.name,present:host.colliders.some(b=>b.osm===m.osm)})),shops:shops.map(s=>({...s})),businesses:realBusinesses.map(s=>({...s})),streetSigns:[...signedStreetNames],logos:{...logoStates},staticCards:group.children.length})};
 }
