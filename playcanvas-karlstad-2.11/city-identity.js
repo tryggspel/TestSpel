@@ -162,7 +162,11 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
   const realBusinesses=[];
   for(const b of REAL_BUSINESSES){
     const p=businessAnchor(b,host.colliders);if(!p)continue;
-    const panel=mount('Verklig verksamhet · '+b.name,businessTexture(b),p.width,3.65,p.x,.12,p.z,p.yaw);
+    if(b.signOnly){
+      mount('Verklig skylt · '+b.name,labelTex([b.name.toUpperCase()],b.bg,b.fg),Math.min(6.2,p.width*.78),.72,p.x,2.62,p.z,p.yaw);
+    }else{
+      mount('Verklig verksamhet · '+b.name,businessTexture(b),p.width,3.65,p.x,.12,p.z,p.yaw);
+    }
     realBusinesses.push({id:b.id,name:b.name,address:b.address,x:p.x,z:p.z,yaw:p.yaw,width:p.width,approximate:!!b.approximateBuilding});
   }
   const brandTextures=new Map();
