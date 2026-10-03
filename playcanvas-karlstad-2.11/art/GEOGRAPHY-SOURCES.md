@@ -118,3 +118,13 @@ Direct interactive Street View rendering is not available in this execution envi
 - **Västra Torggatan pedestrian furniture.** Visual rhythm cross-check: https://www.realadvice.se/objekt/vastra-torggatan-5-centrum/ . Benches and lamps are stylised placements inside the existing pedestrian corridor and are render-only.
 
 Google Street View was explicitly attempted as the preferred method. Interactive Street View itself is not exposed to the current execution environment, so no unverified panorama detail has been invented. Where direct Street View inspection is unavailable, only features supported by inspectable public facade photographs are modelled.
+
+
+## Inner-city reference pass · 2.11.8
+
+- **Drottninggatan 24 / OSM 101485439.** Address/property cross-check: https://www.altra.se/en/property/karlstad-bjornen-7/ and https://www.hitta.se/v%C3%A4rmlands%2Bl%C3%A4n/karlstad/drottninggatan%2B24/omr%C3%A5de/59.379402%3A13.498833 . Current streetscape reference includes the photographed pink-grey stone cladding, tall blue glazing and horizontal blue awnings visible in Karlstad street imagery.
+- **Västra Torggatan 9 / OSM 106864602.** Karlstad culture-environment reference: https://gi.karlstad.se/kulprog/visa.php?id=17&typ=byggnad . Historical location confirmation: https://preprod.digitaltmuseum.se/021019677134/fasad-av-byggnad-vid-torg-med-butikslokaler-i-bottenplanet-fotografens and the Värmlands Museum/DigitaltMuseum record for Bäckmans färghandel. The game uses the documented light plaster, pilasters/decorative rhythm, portal and shop-window character; it does not reproduce historical advertising.
+- **Västra Torggatan 3 / OSM 104778900.** Conservative streetscape interpretation based on the continuous pedestrian-street photo series around Västra Torggatan 5: https://www.realadvice.se/objekt/vastra-torggatan-5-centrum/ . Only brick tone, glazing rhythm and a restrained awning band are inferred; no exact business identity is asserted.
+- **Gågatan street furniture.** Benches, dark lamp posts, planters and hanging/greenery rhythm are based on repeated contemporary imagery of Västra Torggatan and Drottninggatan, including Real Advice/Objektvision street photos.
+
+Google Street View remains the preferred visual reference when an inspectable panorama is available. The execution environment still cannot drive the interactive Street View viewer directly, so every geometric detail in this pass is cross-checked against public still imagery and OSM instead of pretending that an uninspected panorama was used.
