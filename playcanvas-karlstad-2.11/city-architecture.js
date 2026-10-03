@@ -72,7 +72,7 @@ function addStreetNameSign(mesh,sign,buildings){
     if(rotation===90){x=face.edge+out*.075;z=signClamp(sz,face.b.minz+half+.12,face.b.maxz-half-.12);}
     else{z=face.edge+out*.075;x=signClamp(sx,face.b.minx+half+.12,face.b.maxx-half-.12);}
   }else{
-    mesh.box('street-sign-post',1.45,0,.07,2.9,.07,'#29444a');
+    mesh.box(x,1.45,z,.07,2.9,.07,'#29444a');
   }
   const normal=rotation===90?[out,0]:[0,out],tangent=rotation===90?[0,-out]:[out,0],y=2.78;
   if(rotation===90){
