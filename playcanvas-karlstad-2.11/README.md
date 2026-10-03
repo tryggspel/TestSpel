@@ -1,3 +1,13 @@
+# Karlstad City — 2.11.7 · Street View/referenspass, Drottninggatan + Stadshotellet
+
+Detta pass fortsätter den handbyggda innerstadsmetoden med fokus på igenkänning framför mängd. **Drottninggatan 21** får en egen rödbrun tegelfasad med staplade burspråk, mörkt entréband och stora butiksglas. **Elite Stadshotellet, Kungsgatan 22** får en särskild gul/vit fasad med höga bågfönster, vita pilastrar, gröna markiser, svarta balkongräcken och svart ELITE-entrétak i stället för den generiska hotellfasaden.
+
+Gågatorna får samtidigt ett första möbleringspass med bänkar, mörka lyktstolpar och smala stenlagda zoner vid Drottninggatan 21 och Västra Torggatan 5. Allt läggs i den befintliga statiska stadsbatchen: inga nya kollisionskroppar och inget extra arbete per bildruta.
+
+Google Street View har försökts som primär referensmetod. Den interaktiva Street View-renderingen är inte direkt styrbar i den här exekveringsmiljön, så visuella detaljer i denna release bygger på verifierade offentliga fasadbilder från Lärande/fastighetskällor och Elite Hotels, kompletterat med Google-adress/platsverifiering och OSM. Inga Street View- eller tredjepartsbilder distribueras med spelet.
+
+## Föregående version
+
 # Karlstad City — 2.11.6 · Drottninggatan västerut + Västra Torggatan
 
 Andra innerstadspasset fortsätter den handbyggda referensmetoden från 2.11.4–2.11.5. Fyra ytterligare OSM-hus får egna gatufasader: **Hotel Fratelli, Drottninggatan 17**, **Drottninggatan 20**, **Drottninggatan 26** och **Hotel Savoy, Västra Torggatan 1**.
