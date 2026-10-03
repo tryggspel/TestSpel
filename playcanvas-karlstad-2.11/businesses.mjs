@@ -16,7 +16,8 @@ const PALETTES=Object.freeze({
   fratelli:{bg:'#43352c',fg:'#f7ead6',accent:'#b98257',kind:'hotel'},
   hm:{bg:'#f3efe7',fg:'#c51f36',accent:'#c51f36',kind:'retail'},
   scandic:{bg:'#252a31',fg:'#ffffff',accent:'#d84b62',kind:'hotel'},
-  radhuscafe:{bg:'#654936',fg:'#fff0d5',accent:'#d49a56',kind:'cafe'}
+  radhuscafe:{bg:'#654936',fg:'#fff0d5',accent:'#d49a56',kind:'cafe'},
+  savoy:{bg:'#191f21',fg:'#f6efe3',accent:'#c94e37',kind:'hotel'}
 });
 const B=(id,name,address,osm,face,extra={})=>Object.freeze({id,name,address,osm,face,...PALETTES[id],...extra});
 
@@ -29,7 +30,8 @@ export const REAL_BUSINESSES=Object.freeze([
   B('hm','H&M','Drottninggatan 12',471365595,'south',{lon:13.502617,lat:59.379395,width:12.0,approximateBuilding:true,door:.50}),
   B('scandic','Scandic Karlstad City','Drottninggatan 4',106864598,'south',{width:11.5,door:.55}),
   B('radhuscafe','Rådhuscaféet','Tingvallagatan 8',101456563,'east',{width:8.8,door:.62}),
-  B('fratelli','Hotel Fratelli','Drottninggatan 17',104529134,'north',{width:8.8}),
+  B('savoy','Hotel Savoy','Västra Torggatan 1',106078942,'east',{width:10.6,door:.20,signOnly:true}),
+  B('fratelli','Hotel Fratelli','Drottninggatan 17',104529134,'north',{width:8.8,signOnly:true}),
   B('hemkop','Hemköp','Drottninggatan 33',101257268,'north',{width:10.8,door:.52}),
   B('burgerking','Burger King','Östra Torggatan 9',101247031,'east',{width:9.6,door:.78}),
   B('sibylla','Sibylla','Östra Torggatan 7',101588783,'east',{width:8.8,door:.30}),
