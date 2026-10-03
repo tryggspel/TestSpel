@@ -6,6 +6,7 @@ export const MALL_SHOPS=Object.freeze([
   {name:'CERVERA',floor:0,x:-144,z:124.5,yaw:180,w:8,color:'#674047'},
   {name:'RITUALS',floor:0,x:-99.5,z:101,yaw:-90,w:8,color:'#3c4846'},
   {name:'KARDEMUMMA',floor:0,x:-108,z:124.5,yaw:180,w:8,color:'#bf7852'},
+  {name:'APOTEKET',floor:0,x:-99.5,z:113,yaw:-90,w:8,color:'#258a43'},
   {name:'AKADEMIBOKHANDELN',floor:1,x:-107,z:83.5,yaw:0,w:10,color:'#ab4c41'},
   {name:'CLAS OHLSON',floor:1,x:-139,z:83.5,yaw:0,w:10,color:'#326b91'},
   {name:'KJELL & COMPANY',floor:1,x:-143,z:124.5,yaw:180,w:10,color:'#23553d'},
