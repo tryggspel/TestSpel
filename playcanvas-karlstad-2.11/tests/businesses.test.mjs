@@ -1,3 +1,4 @@
+// CI: storefront recovery branch verifies rendering data without changing gameplay collision.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {REAL_BUSINESSES,businessAnchor} from '../businesses.mjs';
