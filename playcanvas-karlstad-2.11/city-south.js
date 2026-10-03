@@ -4,11 +4,18 @@ import {WATER_TRIANGLES,WATER_POLYGONS,SOUTH_STREETS,RAIL_LINES,SCHOOL_YARD,FRED
 import {SOUTH_IDS,HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.11.1';
 import {splitMallWall} from './mall-space.mjs?v=2.11.1';
 
+// Verified address pins, rendered as complete stylised buildings rather than floating facade cards.
+const REMOTE_RETAIL=Object.freeze([
+  Object.freeze({id:'willys',name:'WILLYS BRYGGUDDEN',x:271,z:413,w:38,d:26,h:8,wall:'#d9d5c4',accent:'#2b7a48',front:'south'}),
+  Object.freeze({id:'icahaga',name:'ICA HAGAHALLEN',x:566,z:-129,w:44,d:30,h:8.5,wall:'#ddd8c8',accent:'#df2f35',front:'west'})
+]);
+
 export function createSouthCity(pc,app,buildings){
   const mat=new pc.StandardMaterial();mat.useLighting=false;mat.diffuse.set(0,0,0);mat.emissive.set(1,1,1);mat.emissiveVertexColor=true;mat.update();
   const water=new ComicMesh(true),streets=new ComicMesh(true),town=new ComicMesh(true),square=new ComicMesh(true),arrival=new ComicMesh(true);
-  for(const t of WATER_TRIANGLES)water.polygon(t,.006,'#338d9e');
-  for(const rings of WATER_POLYGONS)for(const p of rings)water.strip(p,1,.032,'#b4c5b2');
+  for(const t of WATER_TRIANGLES)water.polygon(t,.006,'#2f91a5');
+  // Klarälven gets a broad light bank edge plus a thin bright waterline: much easier to read while moving.
+  for(const rings of WATER_POLYGONS)for(const p of rings){water.strip(p,2.4,.030,'#8fc7c8');water.strip(p,.62,.039,'#e0eee4');}
   for(const s of SOUTH_STREETS){streets.strip(s.points,s.width+4,.012,'#c0bca5');streets.strip(s.points,s.width,.027,'#677e7d');}
   for(const line of RAIL_LINES){streets.strip(line,3.4,.030,'#657575');streets.strip(line,1.65,.040,'#343e45');streets.strip(line,1.35,.050,'#b5bcb2');streets.strip(line,1.10,.056,'#4b5557');}
   streets.polygon(SCHOOL_YARD,.031,'#c6bd9d');
@@ -74,6 +81,13 @@ export function createSouthCity(pc,app,buildings){
   square.box(x,2.05,z,1.1,1.3,.70,'#527264');square.pyramid(x,1.55,z,1.65,.95,2.25,'#58796a');square.box(x,3.25,z,1.05,1.05,.62,'#58796a');square.box(x,4.15,z,.60,.72,.59,'#638370');
   square.box(x-.78,3.35,z,.30,1.2,.32,'#526f63');square.box(x+.76,3.25,z,.25,1.2,.32,'#526f63');square.box(x-.9,3.99,z,.11,.65,.12,'#adbaa4');square.box(x-.9,3.63,z,.45,.09,.15,'#adbaa4');
   for(const [bx,bz] of [[-47,-18],[-47,17],[56,-18],[56,17]]){square.box(bx,.6,bz,3.6,.3,.8,'#e3ddc5');square.box(bx,.28,bz,2.8,.55,.5,'#788c82');}
+  // Karlstad Sightseeing: yellow/blue train parked by Rådhuset at Stora torget.
+  // Static geometry only; it adds no update loop and does not alter collision.
+  {const tx=-42,tz=-19;const car=(x,z,w=8)=>{square.box(x,1.05,z,w,2.1,3.4,'#f1c735');square.box(x,2.22,z,w-.8,.55,3.1,'#315b86');square.box(x,1.45,z-1.73,w-.9,.7,.08,'#8dc1c3');for(const dx of [-w*.30,w*.30])square.box(x+dx,.34,z-1.55,1.2,.65,.5,'#26383d');};
+    car(tx,tz,8.6);square.box(tx+2.8,2.55,tz,2.6,2.5,3.0,'#f1c735');square.box(tx+2.8,3.82,tz,3.0,.28,3.35,'#315b86');square.box(tx-3.3,2.0,tz,.55,2.2,.55,'#26383d');square.box(tx-3.3,3.1,tz,.9,.45,.9,'#315b86');
+    car(tx+10.5,tz,7.6);car(tx+19.5,tz,7.6);for(const x of [tx+5.5,tx+15])square.box(x,.78,tz,1.4,.22,.35,'#394f54');}
+  // Kungsgatan: two low glass-walled outdoor seating areas, kept off the central crossing.
+  for(const [cx,cz] of [[-24,-38],[18,-38]]){square.box(cx,.06,cz,9,.10,4.8,'#b7aa8b');for(const sx of [-4.45,4.45]){square.box(cx+sx,1.0,cz,.12,1.9,4.6,'#31494f');square.box(cx+sx,1.0,cz,.07,1.55,4.2,'#86afb4');}for(const sz of [-2.25,2.25]){square.box(cx,1.0,cz+sz,8.8,1.9,.12,'#31494f');square.box(cx,1.0,cz+sz,8.3,1.55,.07,'#86afb4');}for(const dx of [-2.3,2.3]){square.box(cx+dx,.72,cz,2.8,.14,1.4,'#b5865c');square.box(cx+dx,.34,cz,.18,.68,.18,'#394d4f');}}
   // A small market table and striped awnings keep the central crossing open.
   for(const [bx,bz,col] of [[28,-20,'#a75a55'],[40,-20,'#4d817b']]){
     square.box(bx,.8,bz,5.4,1.4,2,'#b48a62');square.box(bx,2.9,bz,6,.16,3.2,col);
@@ -85,6 +99,13 @@ export function createSouthCity(pc,app,buildings){
   streets.box(238,.0,550,24,.09,30,'#c2b898');
   for(let zz=538;zz<=563;zz+=6)town.box(249,.48,zz,.4,.96,.4,'#354e54');
   town.box(236,2.8,546,5,.25,3,'#ffbd08');for(const dx of [-2.2,2.2])town.box(236+dx,1.4,546,.16,2.8,.16,'#3c4d51');
+  // Real outer-city grocery destinations. Address positions are verified; forms are deliberately simple comic volumes.
+  for(const r of REMOTE_RETAIL){
+    arrival.box(r.x,r.h/2,r.z,r.w,r.h,r.d,r.wall,'#b7ad9a');arrival.box(r.x,r.h+.12,r.z,r.w+.5,.24,r.d+.5,'#31494f');
+    if(r.front==='south'){arrival.box(r.x,2.0,r.z+r.d/2+.08,r.w*.78,3.2,.12,r.accent);for(let x=r.x-r.w*.32;x<=r.x+r.w*.32;x+=5.6)window(arrival,x,1.8,r.z+r.d/2+.16,2.5,2.7);}
+    else{arrival.box(r.x-r.w/2-.08,2.0,r.z,.12,3.2,r.d*.78,r.accent);for(let z=r.z-r.d*.30;z<=r.z+r.d*.30;z+=5.6)window(arrival,r.x-r.w/2-.16,1.8,z,2.5,2.7,-90);}
+    arrival.box(r.x,.03,r.z+r.d/2+5,r.w*.9,.08,8,'#9a927d');
+  }
   // Mariebergsskogen landing: real-world position, small walkable park forecourt.
   arrival.box(-802,-.08,1321,68,.12,70,'#7c9e6a');arrival.box(-767,-.13,1321,7,.12,24,'#2f8899');
   arrival.box(-778,.02,1321,15,.08,10,'#c69a64');arrival.strip([[-778,1321],[-809,1321],[-816,1300]],4,.04,'#e0d0a5');
@@ -109,8 +130,11 @@ export function createSouthSigns({card,labelTex},buildings){
   sign('KIL STATION',KIL.x,KIL.z-7.75,5.5,9);sign('RETUR · KARLSTAD C',KIL.x,KIL.z+8,2.6,6,180);
   sign('RETUR · INRE HAMN',MARIEBERG.x,1325,2.2,5,180);
   sign('BÅTBUSS → INRE HAMN',8,26,2.6,7,0);sign('SANDGRUND ↑',-58,-57,2.7,5,180);
+  sign('KARLSTAD SIGHTSEEING',-42,-17.15,2.9,9,0);
+  sign('WILLYS BRYGGUDDEN',271,426.2,3.2,14,0);
+  sign('ICA HAGAHALLEN',543.8,-129,3.2,13,-90);
 }
 
 export function drawSouthWater(c,point){
-  c.save();c.fillStyle='#2c8190';for(const rings of WATER_POLYGONS){c.beginPath();for(const p of rings){p.forEach((q,i)=>i?c.lineTo(...point(...q)):c.moveTo(...point(...q)));c.closePath();}c.fill('evenodd');}c.restore();
+  c.save();c.fillStyle='#2f91a5';for(const rings of WATER_POLYGONS){c.beginPath();for(const p of rings){p.forEach((q,i)=>i?c.lineTo(...point(...q)):c.moveTo(...point(...q)));c.closePath();}c.fill('evenodd');}c.restore();
 }
