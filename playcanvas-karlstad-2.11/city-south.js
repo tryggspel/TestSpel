@@ -1,8 +1,8 @@
-import {KIL} from './scenic-transit.js?v=2.11.0';
-import {ComicMesh} from './city-architecture.js?v=2.11.0';
-import {WATER_TRIANGLES,WATER_POLYGONS,SOUTH_STREETS,RAIL_LINES,SCHOOL_YARD,FREDSMONUMENT} from './city-south-data.mjs?v=2.11.0';
-import {SOUTH_IDS,HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.11.0';
-import {splitMallWall} from './mall-space.mjs?v=2.11.0';
+import {KIL} from './scenic-transit.js?v=2.11.1';
+import {ComicMesh} from './city-architecture.js?v=2.11.1';
+import {WATER_TRIANGLES,WATER_POLYGONS,SOUTH_STREETS,RAIL_LINES,SCHOOL_YARD,FREDSMONUMENT} from './city-south-data.mjs?v=2.11.1';
+import {SOUTH_IDS,HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.11.1';
+import {splitMallWall} from './mall-space.mjs?v=2.11.1';
 
 export function createSouthCity(pc,app,buildings){
   const mat=new pc.StandardMaterial();mat.useLighting=false;mat.diffuse.set(0,0,0);mat.emissive.set(1,1,1);mat.emissiveVertexColor=true;mat.update();
