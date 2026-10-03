@@ -474,7 +474,8 @@ export function infillMesh(buildings,mesh=new ComicMesh()){
 }
 export function createInfill(pc,app,buildings){
   const material=new pc.StandardMaterial();material.useLighting=false;material.diffuse.set(0,0,0);material.emissive.set(1,1,1);material.emissiveVertexColor=true;material.update();
-  const mesh=infillMesh(buildings);if(!mesh.indices.length)return {buildings:0,staticDrawCalls:0};
-  mesh.finish(pc,app,'Karlstad · kvartersfyllnad',material);
-  return {buildings:buildings.length,triangles:mesh.indices.length/3,staticDrawCalls:1};
+  const mesh=infillMesh(buildings);if(!mesh.indices.length)return {buildings:0,addressPlates:0,staticDrawCalls:0};
+  const addressPlates=addAddressPlates(mesh,buildings);
+  mesh.finish(pc,app,'Karlstad · kvartersfyllnad med adresskyltar',material);
+  return {buildings:buildings.length,addressPlates,triangles:mesh.indices.length/3,staticDrawCalls:1};
 }
