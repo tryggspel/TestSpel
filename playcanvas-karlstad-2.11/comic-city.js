@@ -2,7 +2,6 @@ import {IDENTITY_IDS,SHOP_IDS} from './city-geography.mjs?v=2.11.1';
 import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.1';
 const ink='#253d40',cream='#fff0c8';
 const palettes=[['#eeb985','#d88c67','#ae4e45'],['#a7c7b4','#789e91','#367c75'],['#dec5a0','#b29a7e','#70568a'],['#c4b6d7','#9886b7','#a85159']];
-const shops=[['PÅTÅR & PANIK','ÖPPET TILLS VIDARE'],['KARLSTAD LEVER','KAFFE • KULTUR • KAOS'],['HERR GÅRMAN','GÅ. GÄRNA FORT.'],['DEN SISTA BULLEN','EN PER ÖVERLEVANDE']];
 export function drawComicFacade(c,w,h,variant=0,upperOnly=false){
   c.save();c.scale(w/640,h/768);c.lineJoin='round';const [wall,shade,accent]=palettes[variant%4];
   const box=(x,y,w,h,fill,line=3)=>{c.fillStyle=fill;c.fillRect(x,y,w,h);if(line){c.strokeStyle=ink;c.lineWidth=line;c.strokeRect(x,y,w,h);}};
@@ -18,12 +17,13 @@ export function drawComicFacade(c,w,h,variant=0,upperOnly=false){
     if((row+col+variant)%3===0){box(x+6,y+106,85,18,accent,3);c.fillStyle='#357665';for(let leaf=0;leaf<6;leaf++){c.beginPath();c.ellipse(x+15+leaf*13,y+100-(leaf%2)*7,10,12,leaf*.5,0,Math.PI*2);c.fill();}c.fillStyle='#ffe0aa';for(let j=0;j<3;j++){c.beginPath();c.arc(x+20+j*26,y+92,5,0,Math.PI*2);c.fill();}}
   }
   box(14,587,612,181,ink,0);box(22,626,271,135,'#487e82',3);box(349,626,269,135,'#3a696d',3);box(297,626,48,142,'#303c3c',3);box(305,637,31,74,'#b9cbb0',2);box(331,722,5,12,cream,0);
-  // Illustrated shop displays: lamp, cups, pastry, plant, hand-lettered humour.
+  // Illustrated but deliberately unbranded shop displays. Real businesses are layered by city-identity.js.
   for(const x of [82,403]){c.strokeStyle=ink;c.lineWidth=4;c.beginPath();c.moveTo(x,625);c.lineTo(x,649);c.stroke();c.fillStyle='#f5d28d';c.beginPath();c.moveTo(x-22,665);c.lineTo(x,644);c.lineTo(x+22,665);c.fill();box(x-25,713,117,8,'#e1b98b',3);for(let j=0;j<3;j++){box(x-10+j*32,690,20,21,cream,2);c.strokeStyle=cream;c.lineWidth=4;c.strokeRect(x+10+j*32,695,7,9);}}
-  c.save();c.translate(520,690);c.rotate(-.07);box(-44,-27,91,58,'#ffe4a4',3);c.fillStyle=ink;c.textAlign='center';c.font='900 15px sans-serif';c.fillText('INGEN',0,-4);c.fillText('ÅTERBÄRING',0,17,83);c.restore();
-  box(12,548,616,52,accent,4);c.fillStyle=cream;c.font='900 29px sans-serif';c.textAlign='center';c.fillText(shops[variant%4][0],320,585,570);
+  c.save();c.translate(520,690);c.rotate(-.04);box(-44,-27,91,58,'#ffe4a4',3);c.fillStyle=ink;c.textAlign='center';c.font='900 13px sans-serif';c.fillText('ÖPPET',0,-2);c.fillText('VÄLKOMMEN',0,17,83);c.restore();
+  box(12,548,616,52,accent,4);
+  // No invented chain name here: leaving the fascia blank prevents repeated fake businesses across Karlstad.
   for(let i=0;i<14;i++){box(12+i*44,601,44,25,i%2?cream:accent,1);c.fillStyle=i%2?cream:accent;c.beginPath();c.arc(34+i*44,626,22,0,Math.PI);c.fill();c.strokeStyle=ink;c.lineWidth=2;c.stroke();}
-  box(29,743,248,18,cream,1);c.fillStyle=ink;c.font='900 10px sans-serif';c.fillText(shops[variant%4][1],153,756,237);
+  box(29,743,248,18,cream,1);
   box(0,758,640,10,ink,0);
   if(upperOnly)c.clearRect(0,548,640,220); // Real businesses supply their own ground-floor artwork and logo.
   c.restore();
