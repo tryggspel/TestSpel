@@ -9,7 +9,11 @@ export const INNERSTAD_PROFILES=Object.freeze({
   108352774:Object.freeze({address:'Västra Torggatan 5',front:'east',wall:'#a96549',frame:'#cdbca1',glass:'#506d70',ground:'#585149',accent:'#2f6a54',kind:'brickawning'}),
   105746401:Object.freeze({address:'Västra Torggatan 11',front:'east',wall:'#a64e3e',frame:'#e1d5c5',glass:'#536e72',ground:'#69685f',accent:'#2e5573',kind:'redclassic'}),
   101170479:Object.freeze({address:'Kungsgatan 12',front:'south',wall:'#cec7b9',frame:'#eee8dc',glass:'#4f676d',ground:'#4a4742',accent:'#788e94',kind:'midcentury'}),
-  102590980:Object.freeze({address:'Kungsgatan 20',front:'south',wall:'#c7784e',frame:'#d7ae8f',glass:'#556d73',ground:'#9a8c7e',accent:'#31577d',kind:'orangebalcony'})
+  102590980:Object.freeze({address:'Kungsgatan 20',front:'south',wall:'#c7784e',frame:'#d7ae8f',glass:'#556d73',ground:'#9a8c7e',accent:'#31577d',kind:'orangebalcony'}),
+  104529134:Object.freeze({address:'Drottninggatan 17',front:'north',wall:'#c88355',frame:'#e1c4a3',glass:'#3f5358',ground:'#2e302e',accent:'#c7a052',kind:'fratelli'}),
+  110733723:Object.freeze({address:'Drottninggatan 20',front:'south',wall:'#a85c45',frame:'#d7d0c3',glass:'#4b6368',ground:'#a7a49d',accent:'#6d6f6c',kind:'sixtiesbrick'}),
+  101935904:Object.freeze({address:'Drottninggatan 26',front:'south',wall:'#9b5c45',frame:'#c9b59d',glass:'#52696c',ground:'#595b58',accent:'#66755f',kind:'office77'}),
+  106078942:Object.freeze({address:'Västra Torggatan 1',front:'east',wall:'#7f5144',frame:'#b89d86',glass:'#394d53',ground:'#202628',accent:'#c94e37',kind:'savoy'})
 });
 export const INNERSTAD_REFERENCE_IDS=new Set(Object.keys(INNERSTAD_PROFILES).map(Number));
 export const referenceFaceYaw=osm=>YAW[INNERSTAD_PROFILES[osm]?.front]??null;
@@ -86,6 +90,40 @@ export function addInnerstadFacade(mesh,b){
       panel(u,y+.02,bw,1.12,p.accent,.36);
       for(let x=u+.45;x<u+bw-.2;x+=1.0)panel(x,y+.06,.055,1.02,'#203e5b',.39);
     }
+  }else if(p.kind==='fratelli'){
+    // Drottninggatan 17: restored warm brick, pale stone window frames and striped awnings.
+    for(let row=0;row<floors;row++){
+      const y=upperY+row*rowH+.12;
+      panel(.18,y-.10,length-.36,.08,'#aa6d4a',.12);
+    }
+    panel(.18,2.86,length-.36,.36,'#272b2b',.31);
+    for(let u=.45;u<length-.5;u+=2.35){
+      panel(u,2.55,1.05,.18,'#e8ece6',.42);
+      panel(u+1.05,2.55,1.05,.18,'#6b8f86',.42);
+    }
+  }else if(p.kind==='sixtiesbrick'){
+    // Drottninggatan 20: 1960s red brick over a light tiled retail base and long metal canopy.
+    panel(.12,.46,length-.24,2.68,'#d7d4cc',.20);
+    for(let u=.18;u<length-.2;u+=2.45)panel(u,.66,2.05,2.05,p.glass,.23);
+    panel(.10,2.82,length-.20,.18,'#8c8f8b',.43);
+    for(let row=0;row<floors;row++){
+      const y=upperY+row*rowH+.14;panel(.10,y-.13,length-.20,.06,'#7f4939',.11);
+    }
+  }else if(p.kind==='office77'){
+    // Drottninggatan 26: 1977 brick office/retail block, regular grid and heavier cornice.
+    for(let u=0;u<length;u+=Math.max(3.6,length/10))panel(u,3.35,.10,b.h-3.7,'#705244',.18);
+    panel(.10,2.86,length-.20,.24,'#4b4e4a',.34);
+    panel(.14,b.h-.78,length-.28,.26,'#6f795f',.20);
+  }else if(p.kind==='savoy'){
+    // Västra Torggatan 1: dark hotel/restaurant canopy beneath a warm brick upper facade.
+    panel(.12,2.72,length-.24,.52,'#171d1f',.40);
+    panel(.16,3.28,length-.32,.12,'#9b806d',.23);
+    const entrance=Math.min(3.2,length*.28),u=.55;
+    panel(u,.55,entrance,2.15,'#1d2528',.46);
+    panel(u+.18,.72,entrance-.36,1.78,'#698486',.49);
+    const dining=Math.max(2.8,length-entrance-1.45);
+    panel(u+entrance+.35,.65,dining,1.98,'#536f73',.47);
+    for(let x=u+entrance+.75;x<u+entrance+dining;x+=2.0)panel(x,.72,.07,1.82,'#222b2e',.50);
   }
   return true;
 }
