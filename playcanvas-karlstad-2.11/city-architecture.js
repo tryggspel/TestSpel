@@ -1,5 +1,5 @@
 import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.6';
-import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade} from './innerstad-reference.mjs?v=2.11.6';
+import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture} from './innerstad-reference.mjs?v=2.11.6';
 import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.6';
 
 import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.6';
@@ -162,7 +162,8 @@ export function createCityArchitecture(pc,app,buildings){
     town.box(p.x+1.7,1.15,p.z+out*.18,.08,.38,.09,'#f4daa1');
   }
   for(const [x,z] of STREET_SIGNS)town.box(x,1.73,z,.09,3.46,.09,'#29444a');
-  town.finish(pc,app,'Karlstad · taklinjer och butiksfasader',material);
+  addInnerstadStreetFurniture(town);
+  town.finish(pc,app,'Karlstad · taklinjer, referensfasader och gågatumöbler',material);
   for(const b of buildings.filter(b=>IDENTITY_IDS.has(b.osm)&&!SOUTH_IDS.has(b.osm))){
     const m=new ComicMesh(),x=b.cx,z=b.cz,w=b.sx,d=b.sz;
     if(b.osm===75070676){
