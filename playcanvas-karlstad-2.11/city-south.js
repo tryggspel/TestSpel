@@ -106,19 +106,22 @@ export function createSouthCity(pc,app,buildings){
 }
 
 export function createSouthSigns({card,labelTex},buildings){
-  const sign=(text,x,z,y=3,w=6,yaw=0)=>{const e=card(text,labelTex([text],'#214b49','#f5e5bd'),w,.85,x,y,z);e.setEulerAngles(0,yaw,0);};
-  const schoolFace=(a,b,c,d,col)=>{town.quad(a,b,c,d,col);town.quad(d,c,b,a,col);};
+  // Same navigational sign family everywhere: dark green, cream border/text.
+  // Landmark names are primary, but no longer span most of a facade.
+  const sign=(text,x,z,y=3,w=6,yaw=0,h=.62)=>{const e=card(text,labelTex([text],'#214b49','#f5e5bd'),w,h,x,y,z);e.setEulerAngles(0,yaw,0);};
   for(const b of buildings.filter(b=>SOUTH_IDS.has(b.osm))){const x=(b.minx+b.maxx)/2;
     const text=b.osm===80278038?'LÖFBERGS':b.osm===356121937?'KARLSTAD CENTRAL':b.osm===77107220?'TINGVALLAGYMNASIET':b.osm===80868525?'HOME HOTEL BILAN':b.name.toUpperCase();
-    sign(text,x,b.maxz+.24,b.osm===80278038?42:3.2,b.osm===80278038?14:Math.min(18,b.maxx-b.minx-2));
-    if(b.osm===77107220)sign('TINGVALLAGYMNASIET',b.minx-.25,b.cz,3.2,18,-90);
-    if(b.osm===80278038)sign('LÖFBERGS',b.minx-.25,b.cz,34,16,-90);
-    if(b.osm===80868525)sign('UTGÅNG · FRIHET INGÅR',x,b.maxz-9.7,2.5,5,0);
+    const w=b.osm===80278038?14:b.osm===356121937?8.2:b.osm===77107220?8.8:b.osm===100024120?7.4:b.osm===100024325?7.4:b.osm===80868525?8.0:Math.max(4.8,Math.min(8.2,b.maxx-b.minx-3));
+    const y=b.osm===80278038?42:3.05;
+    sign(text,x,b.maxz+.24,y,w);
+    if(b.osm===77107220)sign('TINGVALLAGYMNASIET',b.minx-.25,b.cz,3.05,8.4,-90);
+    if(b.osm===80278038)sign('LÖFBERGS',b.minx-.25,b.cz,34,16,-90,.72);
+    if(b.osm===80868525)sign('UTGÅNG · FRIHET INGÅR',x,b.maxz-9.7,2.45,4.6,0,.52);
   }
-  sign('BÅTBUSS · MARIEBERGSSKOGEN',236,545.8,3.1,8);sign('MARIEBERGSSKOGEN',-789,1315.2,3.8,8);
-  sign('KIL STATION',KIL.x,KIL.z-7.75,5.5,9);sign('RETUR · KARLSTAD C',KIL.x,KIL.z+8,2.6,6,180);
-  sign('RETUR · INRE HAMN',MARIEBERG.x,1325,2.2,5,180);
-  sign('BÅTBUSS → INRE HAMN',8,26,2.6,7,0);sign('SANDGRUND ↑',-58,-57,2.7,5,180);sign('KARLSTAD SIGHTSEEING',-42,-17.15,2.9,9,0);sign('WILLYS BRYGGUDDEN',271,426.2,3.2,14,0);sign('ICA HAGAHALLEN',543.8,-129,3.2,13,-90);
+  sign('BÅTBUSS · MARIEBERGSSKOGEN',236,545.8,3.1,7);sign('MARIEBERGSSKOGEN',-789,1315.2,3.8,7);
+  sign('KIL STATION',KIL.x,KIL.z-7.75,5.5,7.5);sign('RETUR · KARLSTAD C',KIL.x,KIL.z+8,2.6,5.4,180);
+  sign('RETUR · INRE HAMN',MARIEBERG.x,1325,2.2,4.8,180);
+  sign('BÅTBUSS → INRE HAMN',8,26,2.6,6,0);sign('SANDGRUND ↑',-58,-57,2.7,4.5,180);sign('KARLSTAD SIGHTSEEING',-42,-17.15,2.9,7.2,0);sign('WILLYS BRYGGUDDEN',271,426.2,3.2,9.2,0);sign('ICA HAGAHALLEN',543.8,-129,3.2,8.8,-90);
 }
 
 export function drawSouthWater(c,point){
