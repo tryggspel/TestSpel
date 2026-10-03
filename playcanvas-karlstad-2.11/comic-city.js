@@ -16,15 +16,33 @@ export function drawComicFacade(c,w,h,variant=0,upperOnly=false){
     box(x+44,y,8,117,cream,2);box(x,y+48,97,7,cream,2);box(x-12,y+123,121,10,ink,0);box(x-14,y+118,123,9,cream,2);
     if((row+col+variant)%3===0){box(x+6,y+106,85,18,accent,3);c.fillStyle='#357665';for(let leaf=0;leaf<6;leaf++){c.beginPath();c.ellipse(x+15+leaf*13,y+100-(leaf%2)*7,10,12,leaf*.5,0,Math.PI*2);c.fill();}c.fillStyle='#ffe0aa';for(let j=0;j<3;j++){c.beginPath();c.arc(x+20+j*26,y+92,5,0,Math.PI*2);c.fill();}}
   }
-  box(14,587,612,181,ink,0);box(22,626,271,135,'#487e82',3);box(349,626,269,135,'#3a696d',3);box(297,626,48,142,'#303c3c',3);box(305,637,31,74,'#b9cbb0',2);box(331,722,5,12,cream,0);
-  // Illustrated but deliberately unbranded shop displays. Real businesses are layered by city-identity.js.
-  for(const x of [82,403]){c.strokeStyle=ink;c.lineWidth=4;c.beginPath();c.moveTo(x,625);c.lineTo(x,649);c.stroke();c.fillStyle='#f5d28d';c.beginPath();c.moveTo(x-22,665);c.lineTo(x,644);c.lineTo(x+22,665);c.fill();box(x-25,713,117,8,'#e1b98b',3);for(let j=0;j<3;j++){box(x-10+j*32,690,20,21,cream,2);c.strokeStyle=cream;c.lineWidth=4;c.strokeRect(x+10+j*32,695,7,9);}}
+  // Four different unbranded ground-floor types share the same texture budget.
+  // Real businesses are layered on top by city-identity.js.
+  const ground=variant%4;box(14,587,612,181,ink,0);
+  if(ground===0){
+    // Traditional city-centre retail: two large display bays, central recessed door, striped awning.
+    box(22,626,271,135,'#487e82',3);box(349,626,269,135,'#3a696d',3);box(297,626,48,142,'#303c3c',3);box(305,637,31,74,'#b9cbb0',2);box(331,722,5,12,cream,0);
+    for(const x of [82,403]){c.strokeStyle=ink;c.lineWidth=4;c.beginPath();c.moveTo(x,625);c.lineTo(x,649);c.stroke();c.fillStyle='#f5d28d';c.beginPath();c.moveTo(x-22,665);c.lineTo(x,644);c.lineTo(x+22,665);c.fill();box(x-25,713,117,8,'#e1b98b',3);for(let j=0;j<3;j++){box(x-10+j*32,690,20,21,cream,2);c.strokeStyle=cream;c.lineWidth=4;c.strokeRect(x+10+j*32,695,7,9);}}
+    box(12,548,616,52,accent,4);for(let i=0;i<14;i++){box(12+i*44,601,44,25,i%2?cream:accent,1);c.fillStyle=i%2?cream:accent;c.beginPath();c.arc(34+i*44,626,22,0,Math.PI);c.fill();c.strokeStyle=ink;c.lineWidth=2;c.stroke();}
+  }else if(ground===1){
+    // Cafe / restaurant: three warm glazed bays, side entrance and visible table rhythm.
+    box(20,617,600,144,'#355e62',3);for(const x of [34,211,388])box(x,632,150,111,'#629396',3);box(550,621,52,137,'#2f3e3e',3);box(559,637,34,76,'#b8c9ae',2);
+    c.fillStyle='#efc66f';for(const x of [88,265,442]){c.beginPath();c.arc(x,653,10,0,Math.PI*2);c.fill();box(x-34,704,68,7,'#d6b07f',2);box(x-3,708,6,31,ink,0);}
+    box(12,553,616,47,accent,4);for(let x=20;x<626;x+=72){c.fillStyle=(x/72)%2?cream:accent;c.beginPath();c.moveTo(x,600);c.lineTo(x+36,600);c.lineTo(x+26,620);c.lineTo(x+10,620);c.closePath();c.fill();}
+  }else if(ground===2){
+    // Office / service frontage: calmer stone base, broad glazing and a clear lobby.
+    box(19,607,602,154,'#415f62',3);box(32,622,210,118,'#759fa0',3);box(250,622,210,118,'#759fa0',3);box(468,612,132,146,'#2d3b3d',3);box(492,632,84,99,'#9ab8ad',2);
+    for(const y of [656,690]){box(52,y,166,7,'#d7cba8',0);box(270,y,166,7,'#d7cba8',0);}box(12,553,616,45,shade,4);box(430,562,158,25,accent,2);
+  }else{
+    // Small-shop row: three narrower units with separate doors and window displays.
+    const bays=[[22,188,'#4b7c80'],[224,188,'#426e73'],[426,192,'#355e65']];
+    for(const [x,bw,col] of bays){box(x,617,bw,143,col,3);box(x+14,632,bw-72,106,'#79a6a7',2);box(x+bw-48,626,35,129,'#2d3a3c',2);box(x+bw-41,644,22,68,'#aebfa8',1);}
+    for(const x of [63,265,467]){box(x,696,76,8,'#d8b17d',2);for(let j=0;j<2;j++)box(x+8+j*31,674,22,20,cream,2);}
+    box(12,553,616,45,accent,4);for(let x=18;x<626;x+=102)box(x,560,82,27,ground%2?shade:cream,2);
+  }
+  // Small generic open/welcome card only; never invent a chain name.
   c.save();c.translate(520,690);c.rotate(-.04);box(-44,-27,91,58,'#ffe4a4',3);c.fillStyle=ink;c.textAlign='center';c.font='900 13px sans-serif';c.fillText('ÖPPET',0,-2);c.fillText('VÄLKOMMEN',0,17,83);c.restore();
-  box(12,548,616,52,accent,4);
-  // No invented chain name here: leaving the fascia blank prevents repeated fake businesses across Karlstad.
-  for(let i=0;i<14;i++){box(12+i*44,601,44,25,i%2?cream:accent,1);c.fillStyle=i%2?cream:accent;c.beginPath();c.arc(34+i*44,626,22,0,Math.PI);c.fill();c.strokeStyle=ink;c.lineWidth=2;c.stroke();}
-  box(29,743,248,18,cream,1);
-  box(0,758,640,10,ink,0);
+  box(29,743,248,18,cream,1);box(0,758,640,10,ink,0);
   if(upperOnly)c.clearRect(0,548,640,220); // Real businesses supply their own ground-floor artwork and logo.
   c.restore();
 }
