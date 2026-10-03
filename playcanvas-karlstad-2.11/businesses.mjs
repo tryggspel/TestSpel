@@ -6,6 +6,7 @@ const PALETTES=Object.freeze({
   synsam:{bg:'#232729',fg:'#f36a32',accent:'#f36a32',kind:'optics'},
   apoteket:{bg:'#258a43',fg:'#ffffff',accent:'#72bd44',kind:'pharmacy'},
   normal:{bg:'#1d2425',fg:'#ffffff',accent:'#31bea9',kind:'retail'},
+  gobanana:{bg:'#214a36',fg:'#ffd74f',accent:'#ffd74f',kind:'retail'},
   hemkop:{bg:'#292929',fg:'#ed4242',accent:'#ed4242',kind:'grocery'},
   burgerking:{bg:'#2b2520',fg:'#f6e5bd',accent:'#e34d2d',kind:'food'},
   sibylla:{bg:'#19538b',fg:'#ffffff',accent:'#e33333',kind:'food'},
@@ -15,8 +16,8 @@ const PALETTES=Object.freeze({
 });
 const B=(id,name,address,osm,face,extra={})=>Object.freeze({id,name,address,osm,face,...PALETTES[id],...extra});
 
-// Current real-world tenants used only as lightweight facade identity.
-// Coordinates are address pins where the OSM building lacks the exact sub-address.
+// Real Karlstad businesses used only as lightweight facade identity.
+// Coordinates are address pins where the OSM building lacks the exact sub-address; approximate anchors are flagged.
 export const REAL_BUSINESSES=Object.freeze([
   B('musicpartner','MusicPartner','Kungsgatan 6D',119214077,'south',{lon:13.508280,lat:59.381016,width:11.5,door:.72}),
   B('synsam','Synsam','Östra Torggatan 11',100833292,'east',{lon:13.5040455,lat:59.380140,width:8.4}),
