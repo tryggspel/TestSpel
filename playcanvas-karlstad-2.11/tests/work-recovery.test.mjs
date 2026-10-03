@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {coreContourBuildings} from '../city-architecture.js';
 import {mappedGreenAreas} from '../city-environment.mjs';
+import {SOUTH_PLACES} from '../city-south-space.mjs';
 
 test('city pass batches at most 64 ordinary OSM contours',()=>{
   const buildings=Array.from({length:80},(_,i)=>({osm:900000+i,dist:20+i,area:120,sx:12,sz:10,tags:{}}));
@@ -24,3 +25,8 @@ test('mobile pickup feedback has fixed 26px height and clears bottom positioning
   assert.match(css,/height:26px!important/);
   assert.match(css,/bottom:auto!important/);
 });
+
+
+test('Haga and Bryggudden are selectable city destinations',()=>{const places=Object.fromEntries(SOUTH_PLACES.map(p=>[p.id,p]));assert.deepEqual([places.willys.x,places.willys.z],[271,413]);assert.deepEqual([places.icahaga.x,places.icahaga.z],[566,-129]);const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');assert.match(html,/route-place-willys/);assert.match(html,/route-place-icahaga/);});
+
+test('Klaralven and sightseeing train stay in the static city pass',()=>{const south=fs.readFileSync(new URL('../city-south.js',import.meta.url),'utf8');assert.match(south,/#2f91a5/);assert.match(south,/KARLSTAD SIGHTSEEING/);assert.match(south,/Kungsgatan: two low glass-walled outdoor seating areas/);});
