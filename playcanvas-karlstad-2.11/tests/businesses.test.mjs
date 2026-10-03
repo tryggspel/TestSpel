@@ -1,12 +1,15 @@
 // CI: storefront recovery branch verifies rendering data without changing gameplay collision.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {REAL_BUSINESSES,businessAnchor} from '../businesses.mjs';
+import {REAL_BUSINESSES,UNMAPPED_BUSINESSES,businessAnchor} from '../businesses.mjs';
+import {MALL_SHOPS} from '../mall-architecture.js';
 
 test('real facade list contains the requested Karlstad examples',()=>{
   const ids=new Set(REAL_BUSINESSES.map(b=>b.id));
-  for(const id of ['musicpartner','synsam','apoteket','normal','hemkop','burgerking','sibylla','grekiska','leprechaun','fratelli'])assert.ok(ids.has(id),id);
+  for(const id of ['musicpartner','synsam','normal','hemkop','burgerking','sibylla','grekiska','leprechaun','fratelli'])assert.ok(ids.has(id),id);
   assert.equal(ids.size,REAL_BUSINESSES.length);
+  assert.ok(MALL_SHOPS.some(s=>s.name==='APOTEKET'&&s.floor===0),'Apoteket belongs inside Mitt i City');
+  assert.ok(UNMAPPED_BUSINESSES.some(b=>b.id==='gobanana'&&/37B/.test(b.address)),'Go Banana stays staged until west OSM buildings are mapped');
 });
 
 test('MusicPartner stays on the south face of its mapped building',()=>{
