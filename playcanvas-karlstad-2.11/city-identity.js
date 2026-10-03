@@ -1,7 +1,7 @@
-import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.6';
-import {MALL_ROOMS} from './mall-space.mjs?v=2.11.6';
-import {REAL_BUSINESSES,businessAnchor} from './businesses.mjs?v=2.11.6';
-import {createMallSigns} from './mall-architecture.js?v=2.11.6';
+import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.7';
+import {MALL_ROOMS} from './mall-space.mjs?v=2.11.7';
+import {REAL_BUSINESSES,businessAnchor} from './businesses.mjs?v=2.11.7';
+import {createMallSigns} from './mall-architecture.js?v=2.11.7';
 const ink='#263f46',paper='#f6ebd3';
 
 // Original comic drawings, baked once. Windows, masonry and print shading cost no geometry.
@@ -40,6 +40,24 @@ export function drawLandmarkFacade(c,w,h,kind){
     box(0,0,1024,512,'#b59a74');box(0,0,1024,45,ink);
     for(const y of [82,288])for(let col=0;col<14;col++)window(18+col*72,y,55,147);
     box(0,448,1024,64,'#655f50');box(297,245,430,54,paper,3);c.fillStyle=ink;c.font='900 35px sans-serif';c.textAlign='center';c.fillText('STADSBIBLIOTEKET',512,282,405);
+  }else if(kind==='stadshotellet'){
+    // Elite Stadshotellet: official facade reference — yellow plaster, white pilasters,
+    // tall arched windows, black entrance canopy, balconies and green awnings.
+    box(0,0,1024,512,'#ddb44e');box(0,365,1024,147,'#d6a94a');
+    for(const y of [18,171,332]){box(0,y,1024,9,'#c99a3f');box(0,y-6,1024,8,'#f0e8d8');}
+    for(const x of [18,238,505,770,1000])box(x,0,18,512,'#f1e9d8');
+    const cols=[44,132,278,366,590,678,824,912];
+    for(const x of cols){
+      window(x,38,58,112,true);window(x,194,58,118,true);window(x,350,58,118,true);
+    }
+    // Central entrance composition and ELITE canopy.
+    box(418,350,188,137,'#23282a');box(432,369,160,107,'#33474a');
+    box(378,329,268,35,'#1f2426');c.fillStyle='#f2ead9';c.font='700 20px Georgia,serif';c.textAlign='center';c.fillText('ELITE STADSHOTELLET',512,353,246);
+    // Green river-side awnings and black balcony rails.
+    for(const [x,wid] of [[36,150],[220,128],[666,132],[842,146]]){box(x,332,wid,20,'#2d6a5b');for(let s=x+10;s<x+wid-8;s+=20)box(s,332,9,20,'#e5e1c9');}
+    for(const x of [178,706]){box(x,286,112,8,'#283638');for(let i=0;i<11;i++)box(x+5+i*10,246,4,40,'#283638');box(x,244,112,5,'#283638');}
+    // Slightly taller central crown seen in the riverside facade.
+    box(407,0,210,18,'#f1e9d8');box(444,0,136,10,'#d7ab4b');
   }else if(kind==='hotel'){
     box(0,0,1024,512,'#dfba7a');box(0,369,1024,143,'#b9a281');
     for(const y of [12,176,337]){box(0,y+7,1024,12,'#b3986b');box(0,y,1024,9,paper);}
@@ -101,11 +119,12 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       mount('Sandgrund · orange takskylt',sign,22,3.4,x+6,3.92,b.maxz+3.86);
       mount('Sandgrund · Lars Lerin',labelTex(['LARS LERIN'],'#ede8d7','#263f46'),5.1,.67,x-8,3,b.maxz+3.90);
     }else if(mark.id==='stadshotellet'||mark.id==='hotel-wing'){
-      mount(mark.name+' · söder',facade('hotel',1024,384),w,13.3,x,0,b.maxz+.05);
-      mount(mark.name+' · älven',facade('hotel',1024,384),d,13.3,b.minx-.05,0,z,-90);
-      mount(mark.name+' · norr',facade('hotel'),w,13.3,x,0,b.minz-.08,180);
-      mount(mark.name+' · öster',facade('hotel'),d,13.3,b.maxx+.08,0,z,90);
-      if(mark.id==='stadshotellet')mount('Elite Stadshotellet · entré',labelTex(['ELITE','STADSHOTELLET'],'#294e50',paper),5.4,1.69,x,3.0,b.maxz+.82);
+      const hotelKind=mark.id==='stadshotellet'?'stadshotellet':'hotel';
+      mount(mark.name+' · söder',facade(hotelKind,1024,384),w,13.3,x,0,b.maxz+.05);
+      mount(mark.name+' · älven',facade(hotelKind,1024,384),d,13.3,b.minx-.05,0,z,-90);
+      mount(mark.name+' · norr',facade(hotelKind),w,13.3,x,0,b.minz-.08,180);
+      mount(mark.name+' · öster',facade(hotelKind),d,13.3,b.maxx+.08,0,z,90);
+      if(mark.id==='stadshotellet')mount('Elite Stadshotellet · entré',labelTex(['ELITE','STADSHOTELLET'],'#202628',paper),6.4,1.05,x,3.18,b.maxz+.82);
     }else if(mark.id==='duvan'||mark.id==='ahlens'){
       mount(mark.name+' · butiksfasad',facade(mark.id,1024,384),d,mark.id==='duvan'?15.8:9.7,mark.id==='duvan'?b.minx-.06:b.maxx+.10,0,z,mark.id==='duvan'?-90:90);
       const side=mark.id==='duvan'?'duvan':'ahlens',height=mark.id==='duvan'?15.8:9.7;
@@ -181,7 +200,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
         c.fillStyle=bg;c.fillRect(0,0,w,h);const fit=Math.min((w-44)/img.naturalWidth,(h-28)/img.naturalHeight),iw=img.naturalWidth*fit,ih=img.naturalHeight*fit;
         c.drawImage(img,(w-iw)/2,(h-ih)/2,iw,ih);c.strokeStyle=brand==='olearys'?'#d5cba6':'#263f46';c.lineWidth=4;c.strokeRect(4,4,w-8,h-8);t.setSource(canvas);logoStates[brand]='official';
       };
-      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.6',import.meta.url).href;
+      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.7',import.meta.url).href;
     }
     return t;
   }

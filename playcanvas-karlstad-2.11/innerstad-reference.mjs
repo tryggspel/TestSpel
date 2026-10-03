@@ -13,7 +13,8 @@ export const INNERSTAD_PROFILES=Object.freeze({
   104529134:Object.freeze({address:'Drottninggatan 17',front:'north',wall:'#c88355',frame:'#e1c4a3',glass:'#3f5358',ground:'#2e302e',accent:'#c7a052',kind:'fratelli'}),
   110733723:Object.freeze({address:'Drottninggatan 20',front:'south',wall:'#a85c45',frame:'#d7d0c3',glass:'#4b6368',ground:'#a7a49d',accent:'#6d6f6c',kind:'sixtiesbrick'}),
   101935904:Object.freeze({address:'Drottninggatan 26',front:'south',wall:'#9b5c45',frame:'#c9b59d',glass:'#52696c',ground:'#595b58',accent:'#66755f',kind:'office77'}),
-  106078942:Object.freeze({address:'Västra Torggatan 1',front:'east',wall:'#7f5144',frame:'#b89d86',glass:'#394d53',ground:'#202628',accent:'#c94e37',kind:'savoy'})
+  106078942:Object.freeze({address:'Västra Torggatan 1',front:'east',wall:'#7f5144',frame:'#b89d86',glass:'#394d53',ground:'#202628',accent:'#c94e37',kind:'savoy'}),
+  103767827:Object.freeze({address:'Drottninggatan 21',front:'north',wall:'#a65d43',frame:'#c8aa8d',glass:'#4a6268',ground:'#3a312e',accent:'#d0aa58',kind:'d21bay'})
 });
 export const INNERSTAD_REFERENCE_IDS=new Set(Object.keys(INNERSTAD_PROFILES).map(Number));
 export const referenceFaceYaw=osm=>YAW[INNERSTAD_PROFILES[osm]?.front]??null;
@@ -114,6 +115,21 @@ export function addInnerstadFacade(mesh,b){
     for(let u=0;u<length;u+=Math.max(3.6,length/10))panel(u,3.35,.10,b.h-3.7,'#705244',.18);
     panel(.10,2.86,length-.20,.24,'#4b4e4a',.34);
     panel(.14,b.h-.78,length-.28,.26,'#6f795f',.20);
+  }else if(p.kind==='d21bay'){
+    // Drottninggatan 21: red-brown commercial block with stacked projecting bay windows and a dark entrance band.
+    panel(.10,2.82,length-.20,.30,'#2d2a28',.36);
+    const bayW=Math.min(4.6,length*.18),centres=[length*.24,length*.63];
+    for(const centre of centres){
+      for(let row=0;row<floors;row++){
+        const y=upperY+row*rowH+.08,u=Math.max(.2,centre-bayW/2);
+        panel(u-.18,y-.12,bayW+.36,Math.max(.9,rowH-.35),'#92513e',.30);
+        panel(u,y,bayW,Math.max(.75,rowH-.60),p.glass,.42);
+        panel(u+bayW*.46,y+.05,.08,Math.max(.62,rowH-.70),p.frame,.45);
+        panel(u-.08,y+Math.max(.72,rowH-.55),bayW+.16,.10,p.frame,.44);
+      }
+    }
+    // The photographed arcade/entrance rhythm is kept darker than the upper brickwork.
+    for(let u=.45;u<length-.8;u+=4.4)panel(u,.58,3.25,2.02,'#35474b',.27);
   }else if(p.kind==='savoy'){
     // Västra Torggatan 1: dark hotel/restaurant canopy beneath a warm brick upper facade.
     panel(.12,2.72,length-.24,.52,'#171d1f',.40);
@@ -126,4 +142,27 @@ export function addInnerstadFacade(mesh,b){
     for(let x=u+entrance+.75;x<u+entrance+dining;x+=2.0)panel(x,.72,.07,1.82,'#222b2e',.50);
   }
   return true;
+}
+
+
+// Static pedestrian-street details read from recurring Drottninggatan/Västra Torggatan references.
+// Render-only: no collision bodies and no per-frame update.
+export function addInnerstadStreetFurniture(mesh){
+  const ink='#34484b',wood='#94795b',stone='#9e9888',lamp='#d8d7c0';
+  const bench=(x,z,yaw=0)=>{
+    const side=Math.abs(yaw)===90;
+    mesh.box(x,.48,z,side?.16:2.6,.12,side?2.6:.16,wood);
+    mesh.box(x,.82,z+(side?0:.34),side?.12:2.6,.64,side?2.6:.12,wood);
+    for(const d of [-.9,.9])mesh.box(x+(side?0:d),.24,z+(side?d:0),.10,.48,.10,ink);
+  };
+  const post=(x,z)=>{mesh.box(x,1.45,z,.10,2.9,.10,ink);mesh.box(x,2.92,z,.34,.18,.34,ink);mesh.box(x,3.13,z,.46,.34,.46,lamp);mesh.box(x,3.34,z,.30,.08,.30,ink);};
+  // Drottninggatan 21 block: furniture stays on the pedestrian side of the building.
+  for(const x of [-166,-148,-132])post(x,171.8);
+  bench(-158.5,170.8);bench(-139.5,170.8);
+  // Västra Torggatan 5: repeated lamps/benches from the photographed pedestrian-street rhythm.
+  for(const z of [135,146,156])post(-73.8,z);
+  bench(-72.8,140,90);bench(-72.8,151.5,90);
+  // Short pale cobble thresholds beneath the benches, offset to avoid z-fighting with the base street mesh.
+  mesh.box(-149,.018,169.9,37,.036,2.4,stone);
+  mesh.box(-72.0,.018,146.0,2.4,.036,25,stone);
 }
