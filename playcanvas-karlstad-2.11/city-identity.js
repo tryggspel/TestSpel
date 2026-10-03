@@ -149,7 +149,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
         c.fillRect(w*.18,glassY+glassH*.30,28,112);c.fillRect(w*.18-42,glassY+glassH*.30+42,112,28);
       }else if(b.kind==='grocery'||b.kind==='retail'){
         for(let row=0;row<3;row++){c.fillStyle=row===1?b.accent:'#e5d5a9';c.fillRect(60,glassY+72+row*48,w-120,15);}
-      }else if(['food','restaurant','pub'].includes(b.kind)){
+      }else if(['food','restaurant','pub','cafe'].includes(b.kind)){
         c.fillStyle='#efd49a';for(const x of [w*.20,w*.42,w*.64,w*.82]){c.fillRect(x-34,glassY+glassH*.63,68,10);c.fillRect(x-4,glassY+glassH*.63,8,56);}
       }else if(b.kind==='hotel'){
         c.fillStyle='#ead8b5';c.fillRect(w*.39,glassY+35,w*.22,glassH-50);c.fillStyle='#4b3f36';c.fillRect(w*.485,glassY+55,12,glassH-90);
