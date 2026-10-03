@@ -34,7 +34,7 @@ test('reference fronts face their real street side and generate bounded static g
 
 test('generic comic facades cannot cover the five hand-built street fronts',()=>{
   for(const b of targets){
-    const yaw=referenceFaceYaw(b.osm),ps=facadePanels([{...b,height:b.h}]);
+    const p=INNERSTAD_PROFILES[b.osm],yaw=referenceFaceYaw(b.osm),ps=facadePanels([{...b,height:b.h}]);
     const normal=yaw===0?[0,1]:yaw===180?[0,-1]:yaw===90?[1,0]:[-1,0];
     assert.ok(ps.length>0,p.address);
     assert.ok(ps.every(q=>q.nx*normal[0]+q.nz*normal[1]<.9),INNERSTAD_PROFILES[b.osm].address);
