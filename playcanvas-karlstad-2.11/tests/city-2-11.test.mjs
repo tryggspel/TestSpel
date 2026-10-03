@@ -11,11 +11,12 @@ import {ColliderGrid} from '../collider-grid.mjs';
 import {CityNavigation} from '../city-missions.mjs';
 import {CityJourney,GAGATA_BONUS} from '../journey-rules.mjs';
 import {infillMesh} from '../city-architecture.js';
+import {INNERSTAD_REFERENCE_IDS} from '../innerstad-reference.mjs';
 
 const osm=JSON.parse(fs.readFileSync(new URL('../data/osm-buildings.json',import.meta.url)));
 const admitted=cityBuildings(osm,95),infill=infillBuildings(osm,admitted);
-// Samma kollisionsregler som app.js: detaljerade hus = AABB, kvartersfyllnad = exakt polygon.
-const colliders=[...admitted.map(b=>({...b,precise:false,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15})),...infill.map(b=>({...b,precise:true,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15}))];
+// Samma kollisionsregler som app.js: referenshus och kvartersfyllnad = exakt OSM-polygon; övriga detaljhus = AABB.
+const colliders=[...admitted.map(b=>({...b,precise:INNERSTAD_REFERENCE_IDS.has(b.osm),minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15})),...infill.map(b=>({...b,precise:true,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15}))];
 const grid=new ColliderGrid(colliders);
 const inBuilding=(x,z)=>{for(const c of grid.near(x,z,.5)){if(x<c.minx||x>c.maxx||z<c.minz||z>c.maxz)continue;if(!c.precise||footprintContains(x,z,c.polygon))return true;}return false;};
 const blocked=(x,z)=>waterBlocked(x,z)||(southWaterBlocked(x,z)&&!onVastraBron(x,z))||inBuilding(x,z);

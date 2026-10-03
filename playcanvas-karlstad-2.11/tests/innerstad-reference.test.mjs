@@ -11,13 +11,13 @@ const buildings=cityBuildings(osm);
 const targets=buildings.filter(b=>INNERSTAD_REFERENCE_IDS.has(b.osm));
 const desired={north:[0,-1],south:[0,1],east:[1,0],west:[-1,0]};
 
-test('first inner-city reference batch binds to five real OSM address buildings',()=>{
-  assert.equal(targets.length,5);
+test('inner-city reference batches bind to nine real OSM address buildings',()=>{
+  assert.equal(targets.length,9);
   for(const b of targets){
     const p=INNERSTAD_PROFILES[b.osm];
     assert.equal(p.address,b.tags['addr:street']+' '+b.tags['addr:housenumber']);
   }
-  assert.ok(targets.some(b=>b.osm===104396327),'Drottninggatan 19 must stay inside the 95-building detail budget');
+  for(const id of [104396327,104529134,110733723,101935904,106078942])assert.ok(targets.some(b=>b.osm===id),'reference id '+id+' stays inside the 95-building detail budget');
 });
 
 test('reference fronts face their real street side and generate bounded static geometry',()=>{
@@ -32,7 +32,7 @@ test('reference fronts face their real street side and generate bounded static g
   }
 });
 
-test('generic comic facades cannot cover the five hand-built street fronts',()=>{
+test('generic comic facades cannot cover hand-built street fronts',()=>{
   for(const b of targets){
     const p=INNERSTAD_PROFILES[b.osm],yaw=referenceFaceYaw(b.osm),ps=facadePanels([{...b,height:b.h}]);
     const normal=yaw===0?[0,1]:yaw===180?[0,-1]:yaw===90?[1,0]:[-1,0];

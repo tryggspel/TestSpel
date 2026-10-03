@@ -7,7 +7,7 @@ import {MALL_SHOPS} from '../mall-architecture.js';
 
 test('real facade list contains the requested Karlstad examples',()=>{
   const ids=new Set(REAL_BUSINESSES.map(b=>b.id));
-  for(const id of ['musicpartner','synsam','normal','hm','scandic','radhuscafe','hemkop','burgerking','sibylla','grekiska','leprechaun','fratelli'])assert.ok(ids.has(id),id);
+  for(const id of ['musicpartner','synsam','normal','hm','scandic','radhuscafe','savoy','hemkop','burgerking','sibylla','grekiska','leprechaun','fratelli'])assert.ok(ids.has(id),id);
   assert.equal(ids.size,REAL_BUSINESSES.length);
   assert.ok(MALL_SHOPS.some(s=>s.name==='APOTEKET'&&s.floor===0),'Apoteket belongs inside Mitt i City');
   assert.ok(UNMAPPED_BUSINESSES.some(b=>b.id==='gobanana'&&/37B/.test(b.address)),'Go Banana stays staged until west OSM buildings are mapped');
@@ -33,6 +33,9 @@ test('fictional storefront names are gone from generic facades',()=>{
   assert.equal(REAL_BUSINESSES.find(b=>b.id==='hm')?.address,'Drottninggatan 12');
   assert.equal(REAL_BUSINESSES.find(b=>b.id==='scandic')?.osm,106864598);
   assert.equal(REAL_BUSINESSES.find(b=>b.id==='radhuscafe')?.osm,101456563);
+  assert.equal(REAL_BUSINESSES.find(b=>b.id==='savoy')?.osm,106078942);
+  assert.equal(REAL_BUSINESSES.find(b=>b.id==='savoy')?.signOnly,true);
+  assert.equal(REAL_BUSINESSES.find(b=>b.id==='fratelli')?.signOnly,true);
 });
 
 

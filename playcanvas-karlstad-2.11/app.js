@@ -1,23 +1,23 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.11.5';
-import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.11.5';
-import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.11.5';
-import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.5';
-import {createCityEnvironment} from './city-environment.mjs?v=2.11.5';
-import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.11.5';
-import {ColliderGrid} from './collider-grid.mjs?v=2.11.5';
-import {onVastraBron} from './city-water.mjs?v=2.11.5';
-import {createRiverArchitecture} from './river-architecture.js?v=2.11.5';
-import {createMallArchitecture} from './mall-architecture.js?v=2.11.5';
-import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.11.5';
-import {createParkArchitecture} from './park-architecture.js?v=2.11.5';
-import {atKil,KIL} from './scenic-transit.js?v=2.11.5';
-import {createSouthCity} from './city-south.js?v=2.11.5';
-import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage} from './city-south-space.mjs?v=2.11.5';
-import {waterBlocked} from './park-space.mjs?v=2.11.5';
-import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.11.5';
-import {createAudioEngine} from './audio-engine.mjs?v=2.11.5';
-import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.11.5';
+import {createLastRound} from './last-round.js?v=2.11.6';
+import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.11.6';
+import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.11.6';
+import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.6';
+import {createCityEnvironment} from './city-environment.mjs?v=2.11.6';
+import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.11.6';
+import {ColliderGrid} from './collider-grid.mjs?v=2.11.6';
+import {onVastraBron} from './city-water.mjs?v=2.11.6';
+import {createRiverArchitecture} from './river-architecture.js?v=2.11.6';
+import {createMallArchitecture} from './mall-architecture.js?v=2.11.6';
+import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.11.6';
+import {createParkArchitecture} from './park-architecture.js?v=2.11.6';
+import {atKil,KIL} from './scenic-transit.js?v=2.11.6';
+import {createSouthCity} from './city-south.js?v=2.11.6';
+import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage} from './city-south-space.mjs?v=2.11.6';
+import {waterBlocked} from './park-space.mjs?v=2.11.6';
+import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.11.6';
+import {createAudioEngine} from './audio-engine.mjs?v=2.11.6';
+import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.11.6';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -442,7 +442,7 @@ function addBuildings(osm,environment){
       addFacadePass12(b,hero,seed);
       if(hero)addHeroLandmarkPass14(b);
     }
-    colliders.push({precise:[77107220,100024120,100024325].includes(b.osm),polygon:b.polygon,osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
+    colliders.push({precise:INNERSTAD_REFERENCE_IDS.has(b.osm)||[77107220,100024120,100024325].includes(b.osm),polygon:b.polygon,osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
   }
   // 2.11: resten av kvarteren från OSM-utdraget (kollision mot exakt fotavtryck).
   const infill=infillBuildings(osm,admitted);

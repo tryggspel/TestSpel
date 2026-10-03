@@ -1,11 +1,11 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.11.5';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.11.5';
-import {CityMission} from './city-missions.mjs?v=2.11.5';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.11.5';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.11.5';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.11.5';
-import {CITY_STREETS} from './city-streets.mjs?v=2.11.5';
-import {pedestrianAt} from './pedestrian.mjs?v=2.11.5';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.11.6';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.11.6';
+import {CityMission} from './city-missions.mjs?v=2.11.6';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.11.6';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.11.6';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.11.6';
+import {CITY_STREETS} from './city-streets.mjs?v=2.11.6';
+import {pedestrianAt} from './pedestrian.mjs?v=2.11.6';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
