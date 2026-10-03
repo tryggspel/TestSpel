@@ -1,6 +1,7 @@
 // CI: storefront recovery branch verifies rendering data without changing gameplay collision.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {REAL_BUSINESSES,UNMAPPED_BUSINESSES,businessAnchor} from '../businesses.mjs';
 import {MALL_SHOPS} from '../mall-architecture.js';
 
@@ -22,4 +23,11 @@ test('east and west shopfronts rotate onto street-facing walls',()=>{
   const east=businessAnchor({face:'east',osm:1,width:8},[{osm:1,minx:10,maxx:20,minz:30,maxz:50}]);
   const west=businessAnchor({face:'west',osm:2,width:8},[{osm:2,minx:70,maxx:90,minz:30,maxz:50}]);
   assert.equal(east.yaw,90);assert.equal(east.x,20.34);assert.equal(west.yaw,-90);assert.equal(west.x,69.66);
+});
+
+
+test('fictional storefront names are gone from generic facades',()=>{
+  const comic=fs.readFileSync(new URL('../comic-city.js',import.meta.url),'utf8');
+  for(const fake of ['HERR GÅRMAN','PÅTÅR & PANIK','DEN SISTA BULLEN'])assert.equal(comic.includes(fake),false,fake);
+  assert.equal(REAL_BUSINESSES.find(b=>b.id==='musicpartner')?.kind,'music-office');
 });
