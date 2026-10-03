@@ -129,13 +129,20 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       const fontSize=b.name.length>18?48:b.name.length>12?58:70;
       c.font='900 '+fontSize+'px system-ui,sans-serif';c.fillText(b.name,w/2,signH*.50,w-54);
       c.fillStyle='#28444a';c.fillRect(0,glassY,w,glassH);
+      const door=Math.max(.18,Math.min(.82,b.door??.5)),doorX=Math.round(w*door),doorW=Math.max(72,Math.round(w*.12));
       c.fillStyle='#83b4b5';for(let i=0;i<4;i++){const x=18+i*w/4;c.fillRect(x,glassY+14,w/4-28,glassH-30);}
       c.fillStyle='#dbe3ce';for(let i=1;i<4;i++)c.fillRect(i*w/4-4,glassY,8,glassH);
-      c.fillStyle='#20373d';c.fillRect(w*.47,glassY,12,glassH);
+      c.fillStyle='#1f343a';c.fillRect(doorX-doorW/2,glassY+9,doorW,glassH-18);
+      c.fillStyle='#9bc0ba';c.fillRect(doorX-doorW/2+10,glassY+22,doorW-20,glassH-54);
+      c.fillStyle='#ead5a1';c.beginPath();c.arc(doorX+doorW*.28,glassY+glassH*.58,6,0,Math.PI*2);c.fill();
       c.fillStyle='#e7c16b';for(let i=0;i<5;i++){const x=70+i*(w-140)/4;c.beginPath();c.arc(x,glassY+35,9,0,Math.PI*2);c.fill();}
       c.strokeStyle=b.accent;c.fillStyle=b.accent;c.lineWidth=8;
-      if(b.kind==='music'){
-        for(const x of [w*.22,w*.36,w*.63,w*.77]){c.beginPath();c.arc(x,glassY+glassH*.66,25,0,Math.PI*2);c.stroke();c.beginPath();c.moveTo(x+22,glassY+glassH*.64);c.lineTo(x+22,glassY+glassH*.28);c.stroke();}
+      if(b.kind==='music-office'){
+        // MusicPartner is a music-service office, not a guitar shop: studio screens, equalizer and coffee bar.
+        c.fillStyle='#1f2d32';c.fillRect(w*.10,glassY+glassH*.43,w*.31,glassH*.31);c.fillRect(w*.55,glassY+glassH*.43,w*.29,glassH*.31);
+        c.fillStyle='#89cbc0';for(let i=0;i<8;i++){const bh=18+(i%4)*15;c.fillRect(w*.13+i*22,glassY+glassH*.64-bh,12,bh);}
+        c.fillStyle=b.accent;for(let i=0;i<7;i++){const bh=20+((i*17)%58);c.fillRect(w*.59+i*25,glassY+glassH*.68-bh,13,bh);}
+        c.fillStyle='#d8b273';c.fillRect(w*.08,glassY+glassH*.78,w*.30,10);c.fillStyle='#f1e4c5';c.fillRect(w*.13,glassY+glassH*.69,24,30);c.strokeRect(w*.13+19,glassY+glassH*.70,12,18);
       }else if(b.kind==='optics'){
         for(const x of [w*.25,w*.65]){c.beginPath();c.arc(x,glassY+glassH*.58,34,0,Math.PI*2);c.arc(x+78,glassY+glassH*.58,34,0,Math.PI*2);c.moveTo(x+34,glassY+glassH*.58);c.lineTo(x+44,glassY+glassH*.58);c.stroke();}
       }else if(b.kind==='pharmacy'){
@@ -147,6 +154,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       }else if(b.kind==='hotel'){
         c.fillStyle='#ead8b5';c.fillRect(w*.39,glassY+35,w*.22,glassH-50);c.fillStyle='#4b3f36';c.fillRect(w*.485,glassY+55,12,glassH-90);
       }
+      if(['normal','hemkop','burgerking','sibylla','grekiska','leprechaun'].includes(b.id)){c.fillStyle=b.accent;c.fillRect(0,signH-17,w,17);for(let x=0;x<w;x+=64){c.fillStyle=(x/64)%2?b.fg:b.accent;c.fillRect(x,signH-17,34,17);}}
       c.strokeStyle='#172e33';c.lineWidth=6;c.strokeRect(3,3,w-6,h-6);
     },1024,360);
     businessTextures.set(b.id,t);return t;
