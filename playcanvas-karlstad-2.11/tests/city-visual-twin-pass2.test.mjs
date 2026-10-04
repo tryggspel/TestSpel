@@ -28,7 +28,6 @@ test('multiple brands on the same Duvan facade get separate anchors',()=>{
 
 test('shopping spine gets broad static sign and corner coverage',()=>{
   const mesh=new ComicMesh(),stats=addCityWowPass(mesh,detailed);
-  console.log('PASS2_STATS',JSON.stringify(stats));
   assert.ok(stats.shoppingFronts>=20,'major shopping streets should dominate the centre pass');
   assert.ok(stats.corners>=5);
   assert.ok(mesh.positions.length>0&&mesh.positions.every(Number.isFinite));
