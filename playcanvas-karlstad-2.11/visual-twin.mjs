@@ -1,4 +1,4 @@
-import {CITY_STREETS} from './city-streets.mjs?v=2.11.17';
+import {VISUAL_STREETS as CITY_STREETS} from './city-streets.mjs?v=2.11.17';
 import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.17';
 import {INNERSTAD_PROFILES} from './innerstad-reference.mjs?v=2.11.17';
 
@@ -72,6 +72,33 @@ export function visualTwinFront(b){
   return candidates.sort((a,b)=>a.streetD-b.streetD||b.facing-a.facing||b.length-a.length)[0]||null;
 }
 
+function edgeStreetExposure(b,maxDistance=18){
+  if(!b||!Array.isArray(b.polygon)||b.polygon.length<3)return [];
+  let area=0;for(let i=0;i<b.polygon.length;i++){const a=b.polygon[i],q=b.polygon[(i+1)%b.polygon.length];area+=a[0]*q[1]-q[0]*a[1];}
+  const ccw=area>0,out=[];
+  for(let i=0;i<b.polygon.length;i++){
+    let a=b.polygon[i],q=b.polygon[(i+1)%b.polygon.length],dx=q[0]-a[0],dz=q[1]-a[1],length=Math.hypot(dx,dz);if(length<5.2)continue;
+    let tx=dx/length,tz=dz/length,nx=ccw?tz:-tz,nz=ccw?-tx:tx;
+    const mx=(a[0]+q[0])/2,mz=(a[1]+q[1])/2;let best=null;
+    for(const street of CITY_STREETS)for(let j=1;j<street.points.length;j++){
+      const [sx,sz]=street.points[j-1],[ex,ez]=street.points[j],sdx=ex-sx,sdz=ez-sz,den=sdx*sdx+sdz*sdz||1;
+      const t=Math.max(0,Math.min(1,((mx-sx)*sdx+(mz-sz)*sdz)/den)),qx=sx+t*sdx,qz=sz+t*sdz,vx=qx-mx,vz=qz-mz,d2=vx*vx+vz*vz;
+      if(d2>maxDistance*maxDistance)continue;const vl=Math.hypot(vx,vz)||1,facing=(nx*vx+nz*vz)/vl;
+      if(facing<.22)continue;
+      if(!best||d2<best.d2)best={street,qx,qz,d2,facing};
+    }
+    if(best)out.push({a,q,length,tx,tz,nx,nz,street:best.street.name,streetD:Math.sqrt(best.d2),facing:best.facing});
+  }
+  return out.sort((a,b)=>a.streetD-b.streetD||b.length-a.length);
+}
+function sameEdge(a,b){
+  if(!a||!b)return false;
+  const d1=Math.hypot(a.a[0]-b.a[0],a.a[1]-b.a[1])+Math.hypot(a.q[0]-b.q[0],a.q[1]-b.q[1]);
+  const d2=Math.hypot(a.a[0]-b.q[0],a.a[1]-b.q[1])+Math.hypot(a.q[0]-b.a[0],a.q[1]-b.a[1]);
+  return Math.min(d1,d2)<1.2;
+}
+export function visualTwinStreetEdges(b,maxDistance=18){return edgeStreetExposure(b,maxDistance);}
+
 export function visualTwinFaceYaw(b){
   const e=visualTwinFront(b);if(!e)return null;
   if(Math.abs(e.nx)>Math.abs(e.nz))return e.nx>0?90:-90;
@@ -134,6 +161,29 @@ export function addVisualTwinFacade(mesh,b,options={}){
   if(p.pilasters){
     const step=Math.max(5.5,length/5);
     for(let u=.12;u<length-.12;u+=step)panel(u,.22,.10,Math.max(.5,h-.55),p.frame,.21);
+  }
+
+  // Secondary street-exposed walls must never remain as giant blank fields. These are
+  // intentionally simpler than the primary frontage, but still carry window rhythm,
+  // corner lines and a ground-floor datum. Only edges that actually face a named street
+  // within 18 m are decorated, so party walls stay quiet.
+  const secondary=edgeStreetExposure(b,18).filter(e=>!sameEdge(e,edge)).slice(0,low?1:2);
+  for(const e of secondary){
+    const ep=(u,y,out)=>[e.a[0]+e.tx*u+e.nx*out,y,e.a[1]+e.tz*u+e.nz*out];
+    const eq=(u,y,w,ph,colour,out=.11)=>{if(w<=.08||ph<=.08)return;mesh.quad(ep(u,y,out),ep(u+w,y,out),ep(u+w,y+ph,out),ep(u,y+ph,out),colour);};
+    eq(.08,.10,Math.max(.3,e.length-.16),.34,p.ground,.12);
+    eq(.10,3.02,Math.max(.3,e.length-.20),.11,p.frame,.13);
+    const floors=Math.max(1,Math.min(low?3:5,Math.round(h/3.2)-1)),rowH=Math.max(2.5,(h-3.45)/floors);
+    const cols=Math.max(2,Math.min(low?7:12,Math.round(e.length/(low?4.2:3.25)))),cw=e.length/cols;
+    for(let row=0;row<floors;row++){
+      const y=3.58+row*rowH+.14,wh=Math.max(.65,Math.min(1.45,rowH-.62));
+      for(let col=0;col<cols;col++){
+        const inset=Math.min(.34,cw*.20),u=col*cw+inset,ww=Math.max(.36,cw-inset*2);
+        eq(u-.05,y-.05,ww+.10,wh+.10,p.frame,.14);eq(u,y,ww,wh,p.glass,.17);
+      }
+    }
+    eq(.06,.14,.10,Math.max(.6,h-.42),p.frame,.18);
+    eq(Math.max(.12,e.length-.16),.14,.10,Math.max(.6,h-.42),p.frame,.18);
   }
   return true;
 }
