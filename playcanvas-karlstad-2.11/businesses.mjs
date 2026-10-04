@@ -19,7 +19,11 @@ const PALETTES=Object.freeze({
   radhuscafe:{bg:'#654936',fg:'#fff0d5',accent:'#d49a56',kind:'cafe'},
   savoy:{bg:'#191f21',fg:'#f6efe3',accent:'#c94e37',kind:'hotel'},
   homeplaza:{bg:'#302b27',fg:'#f5eee3',accent:'#b98258',kind:'hotel'},
-  gossip:{bg:'#241f28',fg:'#fff2df',accent:'#d8a64e',kind:'restaurant'}
+  gossip:{bg:'#241f28',fg:'#fff2df',accent:'#d8a64e',kind:'restaurant'},
+  lindex:{bg:'#f1eee7',fg:'#1f2527',accent:'#d7a04b',kind:'retail'},
+  kjell:{bg:'#1f2529',fg:'#f8df4d',accent:'#f8df4d',kind:'electronics'},
+  kicks:{bg:'#141719',fg:'#ffffff',accent:'#e7b7cb',kind:'beauty'},
+  apoteket:{bg:'#258a43',fg:'#ffffff',accent:'#72bd44',kind:'pharmacy'}
 });
 const B=(id,name,address,osm,face,extra={})=>Object.freeze({id,name,address,osm,face,...PALETTES[id],...extra});
 
@@ -40,7 +44,11 @@ export const REAL_BUSINESSES=Object.freeze([
   B('sibylla','Sibylla','Östra Torggatan 7',101588783,'east',{width:8.8,door:.30}),
   B('grekiska','Grekiska Grill & Bar','Tingvallagatan 15',101608925,'north',{width:10.8,door:.72}),
   B('leprechaun','The Leprechaun','Östra Torggatan 4',101217187,'west',{width:9.0,door:.28}),
-  B('gossip','Gossip & Bubbels','Älvgatan 2',101202579,'south',{width:11.8,door:.56})
+  B('gossip','Gossip & Bubbels','Älvgatan 2',101202579,'south',{width:11.8,door:.56}),
+  B('lindex','Lindex','Drottninggatan 15',106078946,'north',{width:8.2,shift:4.2,signOnly:true}),
+  B('kjell','Kjell & Company','Drottninggatan 18',109895687,'south',{width:9.4,shift:-3.4}),
+  B('kicks','KICKS','Järnvägsgatan 2',102190062,'west',{width:7.4,shift:-5.2,signOnly:true}),
+  B('apoteket','Apoteket Örnen','Järnvägsgatan 2',102190062,'west',{width:7.4,shift:5.2,signOnly:true})
 ]);
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -62,10 +70,10 @@ export function businessAnchor(business,colliders=[]){
   const margin=1.6,p=pin||{x:(b.minx+b.maxx)/2,z:(b.minz+b.maxz)/2};
   if(face==='north'||face==='south'){
     const span=Math.max(3,b.maxx-b.minx-2*margin),width=Math.min(business.width||10,span);
-    return Object.freeze({x:clamp(p.x,b.minx+margin,b.maxx-margin),z:(face==='north'?b.minz-FACADE_OFFSET:b.maxz+FACADE_OFFSET),yaw,width,direct:false});
+    return Object.freeze({x:clamp(p.x+(business.shift||0),b.minx+margin,b.maxx-margin),z:(face==='north'?b.minz-FACADE_OFFSET:b.maxz+FACADE_OFFSET),yaw,width,direct:false});
   }
   const span=Math.max(3,b.maxz-b.minz-2*margin),width=Math.min(business.width||10,span);
-  return Object.freeze({x:(face==='west'?b.minx-FACADE_OFFSET:b.maxx+FACADE_OFFSET),z:clamp(p.z,b.minz+margin,b.maxz-margin),yaw,width,direct:false});
+  return Object.freeze({x:(face==='west'?b.minx-FACADE_OFFSET:b.maxx+FACADE_OFFSET),z:clamp(p.z+(business.shift||0),b.minz+margin,b.maxz-margin),yaw,width,direct:false});
 }
 
 // Known real businesses just outside the current OSM building snapshot. They are kept as
