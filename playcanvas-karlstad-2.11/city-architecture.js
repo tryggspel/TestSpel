@@ -1,5 +1,6 @@
 import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.17';
 import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit} from './visual-twin.mjs?v=2.11.17';
+import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.17';
 import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture} from './innerstad-reference.mjs?v=2.11.17';
 import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.17';
 
@@ -367,6 +368,7 @@ export function createCityArchitecture(pc,app,buildings){
   }
   for(const [x,z] of STREET_SIGNS)town.box(x,1.58,z,.07,3.16,.07,'#29444a');
   addInnerstadStreetFurniture(town);
+  const wow=addCityWowPass(town,buildings);
   const addressPlates=addAddressPlates(town,buildings);
   town.finish(pc,app,'Karlstad · taklinjer, referensfasader, adresskyltar och gågatumöbler',material);
   for(const b of buildings.filter(b=>IDENTITY_IDS.has(b.osm)&&!SOUTH_IDS.has(b.osm))){
@@ -479,7 +481,7 @@ export function createCityArchitecture(pc,app,buildings){
     batches.push(m.finish(pc,app,'Karlstad · '+(b.name||b.osm),material));
   }
   const visualTwin=visualTwinAudit(buildings);
-  return {streetWays:CITY_STREETS.length,landmarks:batches.length,contours:contours.length,addressPlates,visualTwin,contourIds:Object.freeze([...contourIds]),staticDrawCalls:2+batches.length};
+  return {streetWays:CITY_STREETS.length,landmarks:batches.length,contours:contours.length,addressPlates,visualTwin,wow,contourIds:Object.freeze([...contourIds]),staticDrawCalls:2+batches.length};
 }
 
 // 2.11: kvartersfyllnad — stadens övriga OSM-byggnader i samma tecknade stil (färgade väggar,
