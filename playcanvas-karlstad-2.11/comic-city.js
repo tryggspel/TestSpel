@@ -136,6 +136,7 @@ export function facadePanels(buildings,blocked=()=>false){
   return panels;
 }
 
+export const COMIC_FACE_BIAS=.16;
 export function createComicCity(pc,host,{texture}){
   const textures=Array.from({length:4},(_,i)=>texture((c,w,h)=>drawComicFacade(c,w,h,i),1024,1024));
   const materials=textures.map(t=>{t.anisotropy=Math.min(4,host.app.graphicsDevice.maxAnisotropy||1);const m=new pc.StandardMaterial();m.useLighting=false;m.diffuse.set(0,0,0);m.emissive.set(1,1,1);m.emissiveMap=t;m.update();return m;});
