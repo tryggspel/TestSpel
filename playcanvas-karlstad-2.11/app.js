@@ -1,5 +1,5 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.11.21&build=frimurare-card4';
+import {createLastRound} from './last-round.js?v=2.11.21&build=hero-centre1';
 import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.11.21';
 import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.11.21';
 import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.21&build=frimurare-hero3';
