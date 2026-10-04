@@ -27,7 +27,10 @@ const DNA=Object.freeze({
 });
 const FALLBACK=Object.freeze({archetype:'karlstad-mixed',wall:['#ddcbae','#c78d6b','#e4d9c5','#d0b58e'],frame:'#eee3cf',glass:'#4d696e',ground:'#555950',accent:'#687f76'});
 const normalName=s=>String(s||'').trim().toLocaleUpperCase('sv-SE');
-const curated=b=>!!(KUNGSGATAN_PROFILES[b.osm]||INNERSTAD_PROFILES[b.osm]||PHOTO_REFERENCE_PROFILES[b.osm]);
+const hardCurated=b=>!!(KUNGSGATAN_PROFILES[b.osm]||INNERSTAD_PROFILES[b.osm]);
+const hasPhotoReference=b=>!!PHOTO_REFERENCE_PROFILES[b.osm];
+const curated=(b,{allowPhotoReference=false}={})=>!!(hardCurated(b)||(!allowPhotoReference&&hasPhotoReference(b)));
+const PHOTO_FACE_NORMALS=Object.freeze({north:[0,-1],south:[0,1],east:[1,0],west:[-1,0]});
 const hash=id=>Math.abs(((Number(id)||0)*2654435761)>>>0);
 
 function nearestStreet(b){
@@ -49,15 +52,15 @@ function nearestStreet(b){
   return best;
 }
 
-export function visualTwinProfile(b){
-  if(!b||curated(b))return null;
+export function visualTwinProfile(b,options={}){
+  if(!b||curated(b,options))return null;
   const street=normalName(b.tags?.['addr:street']||nearestStreet(b)?.street?.name);
   const base=DNA[street]||FALLBACK,seed=hash(b.osm),walls=base.wall;
   return Object.freeze({...base,street:street||'KARLSTAD',wall:walls[seed%walls.length],surveyStatus:'inferred',variant:seed%7});
 }
 
-export function visualTwinFront(b){
-  if(!b||curated(b)||!Array.isArray(b.polygon)||b.polygon.length<3)return null;
+export function visualTwinFront(b,options={}){
+  if(!b||curated(b,options)||!Array.isArray(b.polygon)||b.polygon.length<3)return null;
   const target=nearestStreet(b);if(!target||target.d2>75*75)return null;
   const vx=target.qx-b.cx,vz=target.qz-b.cz,vlen=Math.hypot(vx,vz)||1,desired=[vx/vlen,vz/vlen],candidates=[];
   let area=0;for(let i=0;i<b.polygon.length;i++){const a=b.polygon[i],q=b.polygon[(i+1)%b.polygon.length];area+=a[0]*q[1]-q[0]*a[1];}
@@ -97,6 +100,12 @@ function sameEdge(a,b){
   const d1=Math.hypot(a.a[0]-b.a[0],a.a[1]-b.a[1])+Math.hypot(a.q[0]-b.q[0],a.q[1]-b.q[1]);
   const d2=Math.hypot(a.a[0]-b.q[0],a.a[1]-b.q[1])+Math.hypot(a.q[0]-b.a[0],a.q[1]-b.a[1]);
   return Math.min(d1,d2)<1.2;
+}
+function photoReferenceProtectedEdge(b,e){
+  const p=PHOTO_REFERENCE_PROFILES[b?.osm];if(!p||!e)return false;
+  return [p.front,...(p.extraFaces||[])].some(face=>{
+    const n=PHOTO_FACE_NORMALS[face];return !!n&&(e.nx*n[0]+e.nz*n[1])>.78;
+  });
 }
 export function visualTwinStreetEdges(b,maxDistance=18){return edgeStreetExposure(b,maxDistance);}
 
@@ -140,8 +149,8 @@ export function visualTwinExposedEdges(b,neighbours=[]){
   return polygonEdges(b,6.5).filter(e=>!edgeBlockedByNeighbour(e,b,neighbours));
 }
 
-export function visualTwinGroundMode(b){
-  const p=visualTwinProfile(b);if(!p)return 'none';
+export function visualTwinGroundMode(b,options={}){
+  const p=visualTwinProfile(b,options);if(!p)return 'none';
   const a=p.archetype||'',v=p.variant||0;
   if(p.retail){
     if(/heritage|classic/.test(a))return v%2?'heritage-retail':'cafe';
@@ -160,8 +169,19 @@ export function visualTwinFaceYaw(b){
 }
 
 export function addVisualTwinFacade(mesh,b,options={}){
-  const p=visualTwinProfile(b),edge=visualTwinFront(b);if(!p||!edge)return false;
-  const {a,length,tx,tz,nx,nz}=edge,h=Math.max(3.2,b.h),low=options.lod==='low',groundMode=visualTwinGroundMode(b);
+  const photo=PHOTO_REFERENCE_PROFILES[b?.osm]||null;
+  const profileOptions=photo?{allowPhotoReference:true}:{};
+  const inferred=visualTwinProfile(b,profileOptions);
+  const p=photo&&inferred?Object.freeze({...inferred,wall:photo.wall,frame:photo.frame,glass:photo.glass,ground:photo.ground,accent:photo.accent}):inferred;
+  let edge=photo?null:visualTwinFront(b,profileOptions);
+  if(photo&&p){
+    const street=edgeStreetExposure(b,18).filter(e=>!photoReferenceProtectedEdge(b,e));
+    const exposed=visualTwinExposedEdges(b,options.neighbours||[])
+      .filter(e=>!photoReferenceProtectedEdge(b,e)&&!street.some(s=>sameEdge(s,e)));
+    edge=[...street,...exposed].sort((a,b)=>(a.streetD??Infinity)-(b.streetD??Infinity)||b.length-a.length)[0]||null;
+  }
+  if(!p||!edge)return false;
+  const {a,length,tx,tz,nx,nz}=edge,h=Math.max(3.2,b.h),low=options.lod==='low',groundMode=visualTwinGroundMode(b,profileOptions);
   // The solid OSM wall is already rendered in this profile's wall colour. Bias only
   // the detail layer outward so large facade sheets never compete in the depth buffer.
   const FACE_BIAS=.07;
@@ -273,9 +293,9 @@ export function addVisualTwinFacade(mesh,b,options={}){
     }
   }
 
-  const streetSecondary=edgeStreetExposure(b,18).filter(e=>!sameEdge(e,edge));
+  const streetSecondary=edgeStreetExposure(b,18).filter(e=>!sameEdge(e,edge)&&!photoReferenceProtectedEdge(b,e));
   const exposedFallback=visualTwinExposedEdges(b,options.neighbours||[])
-    .filter(e=>!sameEdge(e,edge)&&!streetSecondary.some(s=>sameEdge(s,e)))
+    .filter(e=>!sameEdge(e,edge)&&!photoReferenceProtectedEdge(b,e)&&!streetSecondary.some(s=>sameEdge(s,e)))
     .sort((a,b)=>b.length-a.length);
   const secondary=[...streetSecondary,...exposedFallback].slice(0,low?2:3);
 
