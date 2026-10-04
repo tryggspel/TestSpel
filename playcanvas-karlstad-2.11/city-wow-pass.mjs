@@ -6,6 +6,7 @@ import {visualTwinProfile,visualTwinFront} from './visual-twin.mjs?v=2.11.17';
 
 const TORGET={minx:-118,maxx:142,minz:-112,maxz:112};
 const OPERA_ID=75896103;
+const SHOPPING_STREETS=new Set(['DROTTNINGGATAN','KUNGSGATAN','VÄSTRA TORGGATAN','ÖSTRA TORGGATAN','TINGVALLAGATAN','JÄRNVÄGSGATAN']);
 const key=s=>String(s||'').trim().toLocaleUpperCase('sv-SE');
 
 function nearestTargets(b){
@@ -55,8 +56,16 @@ function panel(mesh,e,u,y,w,h,colour,out=.22){
   const p=(along,yy,o)=>[e.a[0]+e.tx*along+e.nx*o,yy,e.a[1]+e.tz*along+e.nz*o];
   mesh.quad(p(u,y,out),p(u+w,y,out),p(u+w,y+h,out),p(u,y+h,out),colour);
 }
+function bladeSign(mesh,e,u,colour){
+  const y0=2.36,y1=3.38,depth=.86,half=.12;
+  const bx=e.a[0]+e.tx*u,bz=e.a[1]+e.tz*u;
+  const a=[bx-e.tx*half+e.nx*.34,y0,bz-e.tz*half+e.nz*.34],b=[bx+e.tx*half+e.nx*.34,y0,bz+e.tz*half+e.nz*.34];
+  const c=[bx+e.tx*half+e.nx*(.34+depth),y1,bz+e.tz*half+e.nz*(.34+depth)],d=[bx-e.tx*half+e.nx*(.34+depth),y1,bz-e.tz*half+e.nz*(.34+depth)];
+  mesh.quad(a,b,c,d,colour);mesh.quad(d,c,b,a,colour);
+}
 function richGround(mesh,b,e,p,{secondary=false}={}){
   const len=e.length,variant=p.variant||0,square=b.cx>TORGET.minx&&b.cx<TORGET.maxx&&b.cz>TORGET.minz&&b.cz<TORGET.maxz;
+  const shopping=SHOPPING_STREETS.has(key(e.street));
   const bays=Math.max(2,Math.min(9,Math.round(len/(secondary?4.1:3.45)))),bw=len/bays;
   // Strong continuous retail datum makes the eye read a real street instead of a stack of windows.
   panel(mesh,e,.08,2.76,Math.max(.3,len-.16),.31,square?'#f2d59a':p.accent,.29);
@@ -76,6 +85,15 @@ function richGround(mesh,b,e,p,{secondary=false}={}){
     // Cheap warm window-card accents: baked quads, not light sources.
     if(!secondary&&(i+variant)%3===0)panel(mesh,e,u+w*.22,2.29,Math.max(.10,w*.54),.12,'#f3c96e',.35);
   }
+  if(shopping&&!secondary){
+    // City-centre shopping streets get much denser first-floor identity without extra entities.
+    panel(mesh,e,.16,3.18,Math.max(.3,len-.32),.11,'#f3e2bc',.30);
+    for(let i=0;i<bays;i+=2){
+      const u=i*bw+.18,w=Math.min(len-u-.18,bw*1.25);
+      if(w>.45)panel(mesh,e,u,2.54,w,.16,(i+variant)%4===0?'#bc704b':(i+variant)%3===0?'#355f66':p.accent,.43);
+    }
+    if(len>9.5)bladeSign(mesh,e,Math.max(1.0,Math.min(len-1.0,bw*(1+(variant%(Math.max(1,bays-1))))))),(variant%2)?p.accent:'#d4a24f');
+  }
   if(square&&!secondary){
     // Torget gets a stronger awning rhythm and cream shop headers along its edges.
     for(let i=0;i<bays;i+=2){const u=i*bw+.15,w=Math.min(len-u-.15,bw*1.55);if(w>.5)panel(mesh,e,u,2.57,w,.18,(i+variant)%4?'#8f4c48':'#315f58',.42);}
@@ -86,9 +104,14 @@ export function addStreetfrontWow(mesh,b){
   const p=visualTwinProfile(b),front=visualTwinFront(b);if(!p||!front)return {front:false,corner:false,square:false};
   richGround(mesh,b,front,p);
   const corner=visualTwinCornerFront(b);
-  if(corner)richGround(mesh,b,corner,p,{secondary:true});
+  if(corner){
+    richGround(mesh,b,corner,p,{secondary:true});
+    // Strong corner marker: readable at a distance and cheap enough to batch.
+    panel(mesh,corner,.10,.62,Math.min(.55,corner.length*.12),3.18,p.accent,.34);
+    if(corner.length>8)bladeSign(mesh,corner,Math.min(1.15,corner.length*.22),(p.variant%2)?'#d3a14e':p.accent);
+  }
   const square=b.cx>TORGET.minx&&b.cx<TORGET.maxx&&b.cz>TORGET.minz&&b.cz<TORGET.maxz;
-  return {front:true,corner:!!corner,square};
+  return {front:true,corner:!!corner,square,shopping:SHOPPING_STREETS.has(key(front.street))};
 }
 function addTorgetFurniture(mesh){
   // Low static furniture along the edges; the centre remains open for gameplay and events.
@@ -120,11 +143,11 @@ function addOperaScene(mesh,buildings){
   return n;
 }
 export function addCityWowPass(mesh,buildings=[]){
-  let fronts=0,corners=0,squareEdges=0;
+  let fronts=0,corners=0,squareEdges=0,shoppingFronts=0;
   for(const b of buildings){
     if(b.dist>225)continue;
-    const s=addStreetfrontWow(mesh,b);fronts+=Number(s.front);corners+=Number(s.corner);squareEdges+=Number(s.square&&s.front);
+    const s=addStreetfrontWow(mesh,b);fronts+=Number(s.front);corners+=Number(s.corner);squareEdges+=Number(s.square&&s.front);shoppingFronts+=Number(s.shopping);
   }
   const torgetProps=addTorgetFurniture(mesh),operaProps=addOperaScene(mesh,buildings);
-  return Object.freeze({fronts,corners,squareEdges,torgetProps,operaProps});
+  return Object.freeze({fronts,corners,squareEdges,shoppingFronts,torgetProps,operaProps});
 }
