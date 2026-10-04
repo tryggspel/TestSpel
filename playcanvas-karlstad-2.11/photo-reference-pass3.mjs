@@ -125,6 +125,25 @@ export const photoReferenceFaceYaws=osm=>{
   return [p.front,...(p.extraFaces||[])].map(face=>YAW[face]).filter(Number.isFinite);
 };
 
+export function photoReferenceFrontSegments(b,faceOverride=null,maxSetback=8){
+  const p=PHOTO_REFERENCE_PROFILES[b.osm];if(!p||!Array.isArray(b.polygon)||b.polygon.length<3)return [];
+  const face=faceOverride||p.front,desired=DIR[face];if(!desired)return [];
+  const candidates=[];
+  for(let i=0;i<b.polygon.length;i++){
+    let a=b.polygon[i],q=b.polygon[(i+1)%b.polygon.length],dx=q[0]-a[0],dz=q[1]-a[1],length=Math.hypot(dx,dz);
+    if(length<1.0)continue;
+    let tx=dx/length,tz=dz/length,nx=-tz,nz=tx;
+    if(Math.abs(tx*desired[0]+tz*desired[1])>.70)continue;
+    if(nx*desired[0]+nz*desired[1]<0){[a,q]=[q,a];tx=-tx;tz=-tz;nx=-nx;nz=-nz;}
+    const mx=(a[0]+q[0])/2,mz=(a[1]+q[1])/2,normalDot=nx*desired[0]+nz*desired[1];
+    if(normalDot<.92)continue;
+    candidates.push({a,q,length,tx,tz,nx,nz,side:mx*desired[0]+mz*desired[1],normalDot});
+  }
+  if(!candidates.length)return [];
+  const maxSide=Math.max(...candidates.map(c=>c.side));
+  return candidates.filter(c=>maxSide-c.side<=maxSetback).sort((a,b)=>b.side-a.side||b.length-a.length);
+}
+
 export function photoReferenceFront(b,faceOverride=null){
   const p=PHOTO_REFERENCE_PROFILES[b.osm];if(!p||!Array.isArray(b.polygon)||b.polygon.length<3)return null;
   const face=faceOverride||p.front,desired=DIR[face];if(!desired)return null;
@@ -163,8 +182,39 @@ export function photoReferenceFront(b,faceOverride=null){
 }
 
 export function addPhotoReferenceFacade(mesh,b){
-  const p=PHOTO_REFERENCE_PROFILES[b.osm],e=photoReferenceFront(b);if(!p||!e)return false;
-  const {a,length,tx,tz,nx,nz}=e,h=Math.max(4.0,b.h);
+  const p=PHOTO_REFERENCE_PROFILES[b.osm];if(!p)return false;
+  const h=Math.max(4.0,b.h);
+
+  if(p.kind==='tingvalla-school'){
+    const faces=photoReferenceFrontSegments(b,'north',8).filter(e=>e.length>=5);
+    if(!faces.length)return false;
+    for(const e of faces){
+      const {a,length,tx,tz,nx,nz}=e,FACE_BIAS=.10;
+      const point=(u,y,out)=>[a[0]+tx*u+nx*(out+FACE_BIAS),y,a[1]+tz*u+nz*(out+FACE_BIAS)];
+      const panel=(u,y,w,ph,colour,out=.11)=>{if(w<=.08||ph<=.08)return;mesh.quad(point(u,y,out),point(u+w,y,out),point(u+w,y+ph,out),point(u,y+ph,out),colour);};
+      panel(0,.05,length,.72,p.ground,.13);
+      const cols=Math.max(3,Math.min(12,Math.round(length/4.2))),cw=length/cols;
+      const floors=Math.max(2,Math.min(3,Math.round((h-1.0)/3.1)));
+      for(let r=0;r<floors;r++){
+        const y=.98+r*2.78,wh=r===floors-1?1.78:1.62;
+        for(let c=0;c<cols;c++){
+          const u=c*cw+.50,w=Math.max(.58,cw-1.0);
+          panel(u-.14,y-.12,w+.28,wh+.24,p.frame,.17);
+          panel(u,y,w,wh,p.glass,.21);
+          panel(u-.05,y+wh-.04,w+.10,.28,p.frame,.24);
+          panel(u+w*.47,y+.05,.055,Math.max(.8,wh-.10),'#d7d8ce',.23);
+        }
+        panel(.08,y+wh+.38,Math.max(.3,length-.16),.11,p.accent,.15);
+      }
+      for(let u=.10;u<length;u+=Math.max(4.0,cw*2))panel(u,.62,.18,Math.max(.8,h-1.02),p.accent,.19);
+      panel(.04,h-.44,Math.max(.3,length-.08),.32,p.accent,.18);
+      panel(.18,h-.14,Math.max(.3,length-.36),.16,'#5c594f',.20);
+    }
+    return true;
+  }
+
+  const e=photoReferenceFront(b);if(!e)return false;
+  const {a,length,tx,tz,nx,nz}=e;
   // Older Safari/Intel GPUs lose depth precision on long, nearly parallel facade quads.
   // The OSM wall below already uses p.wall, so keep one solid wall and bias only details.
   const FACE_BIAS=.10;
