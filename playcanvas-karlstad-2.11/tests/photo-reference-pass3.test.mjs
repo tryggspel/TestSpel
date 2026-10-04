@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {cityBuildings,infillBuildings} from '../city-geography.mjs';
 import {ComicMesh} from '../city-architecture.js';
-import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,photoReferenceFront,photoReferenceFaceYaws,addPhotoReferenceFacade} from '../photo-reference-pass3.mjs';
+import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,photoReferenceFront,photoReferenceFrontSegments,photoReferenceFaceYaws,addPhotoReferenceFacade} from '../photo-reference-pass3.mjs';
 import {visualTwinProfile} from '../visual-twin.mjs';
 
 const osm=JSON.parse(fs.readFileSync(new URL('../data/osm-buildings.json',import.meta.url)));
@@ -116,7 +116,10 @@ test('Tingvallagymnasiet is a real yellow-brick hero facade, not generic office 
   assert.equal(p?.kind,'tingvalla-school');
   assert.equal(p?.front,'north');
   const b=all.find(x=>x.osm===77107220);assert.ok(b);
-  const front=photoReferenceFront(b);assert.ok(front&&front.length>75,'school north frontage '+(front?.length||0));
+  const fronts=photoReferenceFrontSegments(b,'north',8).filter(e=>e.length>=5);
+  const total=fronts.reduce((sum,e)=>sum+e.length,0);
+  assert.ok(fronts.length>=2,'school should use multiple north-facing OSM segments');
+  assert.ok(total>80,'school north frontage total '+total);
   const mesh=new ComicMesh();assert.equal(addPhotoReferenceFacade(mesh,b),true);
   assert.ok(mesh.positions.length/3>180);
 });
