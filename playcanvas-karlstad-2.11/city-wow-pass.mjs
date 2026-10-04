@@ -1,5 +1,5 @@
 import {CITY_STREETS,IDENTITY_IDS} from './city-geography.mjs?v=2.11.17';
-import {visualTwinProfile,visualTwinFront} from './visual-twin.mjs?v=2.11.17';
+import {visualTwinProfile,visualTwinFront,visualTwinGroundMode} from './visual-twin.mjs?v=2.11.17';
 
 // High-impact city pass: richer ground floors, corner identity and two focal public spaces.
 // Everything is static vertex geometry: no new lights, shadows, entities or per-frame work.
@@ -65,25 +65,52 @@ function bladeSign(mesh,e,u,colour){
 }
 function richGround(mesh,b,e,p,{secondary=false}={}){
   const len=e.length,variant=p.variant||0,square=b.cx>TORGET.minx&&b.cx<TORGET.maxx&&b.cz>TORGET.minz&&b.cz<TORGET.maxz;
-  const shopping=SHOPPING_STREETS.has(key(e.street));
-  const bays=Math.max(2,Math.min(9,Math.round(len/(secondary?4.1:3.45)))),bw=len/bays;
-  // Strong continuous retail datum makes the eye read a real street instead of a stack of windows.
-  panel(mesh,e,.08,2.76,Math.max(.3,len-.16),.31,square?'#f2d59a':p.accent,.29);
-  panel(mesh,e,.10,.43,Math.max(.3,len-.20),.10,p.frame,.25);
-  for(let i=0;i<bays;i++){
-    const u=i*bw+.13,w=Math.max(.35,bw-.26),door=i===((variant+1)%bays);
-    panel(mesh,e,u,.62,w,1.96,door?p.ground:p.glass,.27);
-    if(!door){
-      panel(mesh,e,u+.07,.70,Math.max(.20,w*.46),1.75,'#73979a',.30);
-      if((i+variant)%2===0)panel(mesh,e,u+w*.55,.70,Math.max(.16,w*.34),1.75,'#405f66',.30);
-    }else{
-      const dw=Math.max(.34,Math.min(.92,w*.58)),du=u+(w-dw)/2;
-      panel(mesh,e,du-.07,.55,dw+.14,2.15,p.frame,.31);
-      panel(mesh,e,du,.64,dw,1.95,'#263b40',.34);
-      panel(mesh,e,du+dw*.12,.79,dw*.76,1.50,'#789b9b',.36);
+  const shopping=SHOPPING_STREETS.has(key(e.street)),mode=visualTwinGroundMode(b);
+  const bays=Math.max(2,Math.min(9,Math.round(len/(secondary?4.1:(mode==='residential'?4.3:3.45))))),bw=len/bays;
+  // Keep the wow layer consistent with the underlying Visual Twin ground-floor DNA.
+  panel(mesh,e,.10,.43,Math.max(.3,len-.20),.10,(mode==='heritage'||mode==='residential')?'#aaa493':p.frame,.25);
+
+  if((mode==='residential'||mode==='heritage')&&!shopping){
+    const door=Math.max(0,Math.min(bays-1,(variant+1)%bays));
+    for(let i=0;i<bays;i++){
+      const u=i*bw+.16,w=Math.max(.34,bw-.32);
+      if(i===door){
+        const dw=Math.min(.90,w*.72),du=u+(w-dw)/2;
+        panel(mesh,e,du-.06,.54,dw+.12,2.04,p.frame,.29);
+        panel(mesh,e,du,.63,dw,1.86,'#354548',.32);
+      }else{
+        panel(mesh,e,u,.72,w,1.52,p.frame,.27);
+        panel(mesh,e,u+.08,.80,Math.max(.20,w-.16),1.35,p.glass,.31);
+      }
     }
-    // Cheap warm window-card accents: baked quads, not light sources.
-    if(!secondary&&(i+variant)%3===0)panel(mesh,e,u+w*.22,2.29,Math.max(.10,w*.54),.12,'#f3c96e',.35);
+    panel(mesh,e,.12,2.73,Math.max(.3,len-.24),.18,mode==='heritage'?p.frame:p.accent,.29);
+  }else if(mode==='office'&&!shopping){
+    for(let i=0;i<bays;i++){
+      const u=i*bw+.10,w=Math.max(.35,bw-.20);
+      panel(mesh,e,u,.59,w,2.02,'#34474b',.27);
+      panel(mesh,e,u+.08,.69,Math.max(.20,w-.16),1.82,p.glass,.31);
+      if(i%2===0)panel(mesh,e,u+w*.47,.69,.06,1.82,p.frame,.33);
+    }
+    panel(mesh,e,.12,2.68,Math.max(.3,len-.24),.16,p.frame,.30);
+  }else{
+    panel(mesh,e,.08,2.76,Math.max(.3,len-.16),.31,square?'#f2d59a':p.accent,.29);
+    for(let i=0;i<bays;i++){
+      const u=i*bw+.13,w=Math.max(.35,bw-.26),door=i===((variant+1)%bays),solid=mode==='mixed'&&((i+variant)%4===0);
+      if(door){
+        const dw=Math.max(.34,Math.min(.92,w*.58)),du=u+(w-dw)/2;
+        panel(mesh,e,du-.07,.55,dw+.14,2.15,p.frame,.31);
+        panel(mesh,e,du,.64,dw,1.95,'#263b40',.34);
+        panel(mesh,e,du+dw*.12,.79,dw*.76,1.50,'#789b9b',.36);
+      }else if(solid){
+        panel(mesh,e,u,.60,w,1.96,p.wall,.27);
+        panel(mesh,e,u+.15,.90,Math.max(.18,w-.30),1.20,p.glass,.31);
+      }else{
+        panel(mesh,e,u,.62,w,1.96,p.glass,.27);
+        panel(mesh,e,u+.07,.70,Math.max(.20,w*.46),1.75,'#73979a',.30);
+        if((i+variant)%2===0)panel(mesh,e,u+w*.55,.70,Math.max(.16,w*.34),1.75,'#405f66',.30);
+      }
+      if(!secondary&&(i+variant)%3===0)panel(mesh,e,u+w*.22,2.29,Math.max(.10,w*.54),.12,'#f3c96e',.35);
+    }
   }
   if(shopping&&!secondary){
     // City-centre shopping streets get much denser first-floor identity without extra entities.
