@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {cityBuildings,infillBuildings} from '../city-geography.mjs';
 import {ComicMesh} from '../city-architecture.js';
-import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,photoReferenceFront,addPhotoReferenceFacade} from '../photo-reference-pass3.mjs';
+import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,photoReferenceFront,photoReferenceFaceYaws,addPhotoReferenceFacade} from '../photo-reference-pass3.mjs';
 import {visualTwinProfile} from '../visual-twin.mjs';
 
 const osm=JSON.parse(fs.readFileSync(new URL('../data/osm-buildings.json',import.meta.url)));
@@ -30,7 +30,9 @@ test('reference pass 3 binds only to exact photographed Karlstad addresses',()=>
     [100833292,'Tingvallagatan 9'],
     [100839528,'Tingvallagatan 11'],
     [101430152,'Tingvallagatan 13'],
-    [101608925,'Tingvallagatan 15']
+    [101608925,'Tingvallagatan 15'],
+    [77107220,'Stora Torget / Kungsgatan'],
+    [106078938,'Tingvallagatan 19,21,23']
   ]);
   assert.equal(PHOTO_REFERENCE_IDS.size,expected.size);
   for(const [id,address] of expected){
@@ -106,4 +108,34 @@ test('Torget hero facades span the full split OSM frontage like Kungsgatan',()=>
     assert.ok(front.length>=minLength,PHOTO_REFERENCE_PROFILES[id].address+' frontage '+front.length.toFixed(1)+'m < '+minLength+'m');
     assert.ok((front.segments||1)>=2,PHOTO_REFERENCE_PROFILES[id].address+' should merge split OSM segments');
   }
+});
+
+
+test('Tingvallagymnasiet is a real yellow-brick hero facade, not generic office DNA',()=>{
+  const p=PHOTO_REFERENCE_PROFILES[77107220];
+  assert.equal(p?.kind,'tingvalla-school');
+  assert.equal(p?.front,'west');
+  const b=all.find(x=>x.osm===77107220);assert.ok(b);
+  const front=photoReferenceFront(b);assert.ok(front&&front.length>35);
+  const mesh=new ComicMesh();assert.equal(addPhotoReferenceFacade(mesh,b),true);
+  assert.ok(mesh.positions.length/3>180);
+});
+
+test('Tingvallagatan 19-23 gets a reference-driven active retail ground floor',()=>{
+  const p=PHOTO_REFERENCE_PROFILES[106078938];
+  assert.equal(p?.kind,'ting19shops');
+  const b=all.find(x=>x.osm===106078938);assert.ok(b);
+  const front=photoReferenceFront(b);assert.ok(front&&front.length>45);
+  const mesh=new ComicMesh();assert.equal(addPhotoReferenceFacade(mesh,b),true);
+  assert.ok(mesh.positions.length/3>180);
+});
+
+test('Frimurarelogen protects and renders both verified north and west facades',()=>{
+  assert.deepEqual(photoReferenceFaceYaws(101608925).sort((a,b)=>a-b),[-90,180]);
+  const b=all.find(x=>x.osm===101608925);assert.ok(b);
+  const north=photoReferenceFront(b,'north'),west=photoReferenceFront(b,'west');
+  assert.ok(north&&north.length>35,'north bookshop frontage');
+  assert.ok(west&&west.length>20,'west arched side frontage');
+  const mesh=new ComicMesh();assert.equal(addPhotoReferenceFacade(mesh,b),true);
+  assert.ok(mesh.positions.length/3>260,'multi-face geometry should include the west side');
 });
