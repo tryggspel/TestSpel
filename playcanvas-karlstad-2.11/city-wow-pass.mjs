@@ -92,7 +92,7 @@ function richGround(mesh,b,e,p,{secondary=false}={}){
       const u=i*bw+.18,w=Math.min(len-u-.18,bw*1.25);
       if(w>.45)panel(mesh,e,u,2.54,w,.16,(i+variant)%4===0?'#bc704b':(i+variant)%3===0?'#355f66':p.accent,.43);
     }
-    if(len>9.5)bladeSign(mesh,e,Math.max(1.0,Math.min(len-1.0,bw*(1+(variant%(Math.max(1,bays-1))))))),(variant%2)?p.accent:'#d4a24f');
+    if(len>9.5){const bladeU=Math.max(1.0,Math.min(len-1.0,bw*(1+(variant%Math.max(1,bays-1)))));bladeSign(mesh,e,bladeU,(variant%2)?p.accent:'#d4a24f');}
   }
   if(square&&!secondary){
     // Torget gets a stronger awning rhythm and cream shop headers along its edges.
