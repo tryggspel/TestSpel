@@ -165,7 +165,7 @@ export function addVisualTwinFacade(mesh,b,options={}){
   const panel=(u,y,w,ph,colour,out=.10)=>{if(w<=.08||ph<=.08)return;mesh.quad(point(u,y,out),point(u+w,y,out),point(u+w,y+ph,out),point(u,y+ph,out),colour);};
   const drawGroundFloor=(compact=false)=>{
     const len=length,v=p.variant||0,stone=['#a7a496','#bbb4a3','#8e938c','#c3b7a2'][v%4];
-    const bays=Math.max(2,Math.min(compact?7:10,Math.round(len/(groundMode==='residential'?4.1:3.35)))),bw=len/bays;
+    const bays=Math.max(2,Math.min(compact?4:10,Math.round(len/(groundMode==='residential'?4.1:3.35)))),bw=len/bays;
     // Every building gets a distinct plinth + cornice so the lower facade does not read as
     // the same generic strip repeated across Karlstad.
     panel(.04,.05,Math.max(.3,len-.08),.34,groundMode==='heritage'?stone:p.ground,.12);
@@ -284,14 +284,28 @@ export function addVisualTwinFacade(mesh,b,options={}){
     eq(.10,3.02,Math.max(.3,e.length-.20),.12,p.frame,.13);
     eq(.10,h-.36,Math.max(.3,e.length-.20),.18,p.frame,.13);
     const floors=Math.max(1,Math.min(low?3:5,Math.round(h/3.2)-1)),rowH=Math.max(2.5,(h-3.45)/floors);
-    const cols=Math.max(2,Math.min(low?8:12,Math.round(e.length/(low?3.8:3.15)))),cw=e.length/cols;
-    for(let row=0;row<floors;row++){
-      const y=3.58+row*rowH+.14,wh=Math.max(.65,Math.min(1.45,rowH-.62));
-      for(let col=0;col<cols;col++){
-        // Slightly sparse blind-window rhythm on non-street gables avoids a fake shopfront wall.
-        if(!e.street&&((col+row+(p.variant||0))%5===0))continue;
-        const inset=Math.min(.34,cw*.20),u=col*cw+inset,ww=Math.max(.36,cw-inset*2);
-        eq(u-.05,y-.05,ww+.10,wh+.10,p.frame,.14);eq(u,y,ww,wh,p.glass,.17);
+    if(low){
+      // Mobile LOD: broad ribbons + sparse mullions keep a readable facade at a fraction
+      // of the vertices required by individual framed windows.
+      for(let row=0;row<floors;row++){
+        const y=3.68+row*rowH+.12,wh=Math.max(.58,Math.min(.92,rowH-.78));
+        eq(.28,y,Math.max(.35,e.length-.56),wh,p.glass,.16);
+        eq(.22,y-.08,Math.max(.35,e.length-.44),.065,p.frame,.18);
+        const mullions=Math.max(1,Math.min(4,Math.round(e.length/6.5)));
+        for(let m=1;m<=mullions;m++){
+          const u=e.length*m/(mullions+1);
+          eq(u-.035,y,.07,wh,p.frame,.19);
+        }
+      }
+    }else{
+      const cols=Math.max(2,Math.min(12,Math.round(e.length/3.15))),cw=e.length/cols;
+      for(let row=0;row<floors;row++){
+        const y=3.58+row*rowH+.14,wh=Math.max(.65,Math.min(1.45,rowH-.62));
+        for(let col=0;col<cols;col++){
+          if(!e.street&&((col+row+(p.variant||0))%5===0))continue;
+          const inset=Math.min(.34,cw*.20),u=col*cw+inset,ww=Math.max(.36,cw-inset*2);
+          eq(u-.05,y-.05,ww+.10,wh+.10,p.frame,.14);eq(u,y,ww,wh,p.glass,.17);
+        }
       }
     }
     eq(.06,.14,.10,Math.max(.6,h-.42),p.frame,.18);
