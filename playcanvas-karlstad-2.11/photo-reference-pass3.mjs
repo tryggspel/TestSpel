@@ -116,14 +116,35 @@ export function photoReferenceFront(b){
   const desired=DIR[p.front],candidates=[];
   for(let i=0;i<b.polygon.length;i++){
     let a=b.polygon[i],q=b.polygon[(i+1)%b.polygon.length],dx=q[0]-a[0],dz=q[1]-a[1],length=Math.hypot(dx,dz);
-    if(length<4.5)continue;
+    if(length<1.0)continue;
     let tx=dx/length,tz=dz/length,nx=-tz,nz=tx;
+    // Street frontage runs across the desired outward direction, not along it.
     if(Math.abs(tx*desired[0]+tz*desired[1])>.70)continue;
     if(nx*desired[0]+nz*desired[1]<0){[a,q]=[q,a];tx=-tx;tz=-tz;nx=-nx;nz=-nz;}
-    const mx=(a[0]+q[0])/2,mz=(a[1]+q[1])/2;
-    candidates.push({a,q,length,tx,tz,nx,nz,side:mx*desired[0]+mz*desired[1]});
+    const mx=(a[0]+q[0])/2,mz=(a[1]+q[1])/2,normalDot=nx*desired[0]+nz*desired[1];
+    if(normalDot<.70)continue;
+    candidates.push({a,q,length,tx,tz,nx,nz,side:mx*desired[0]+mz*desired[1],normalDot});
   }
-  return candidates.sort((a,b)=>b.side-a.side||b.length-a.length)[0]||null;
+  if(!candidates.length)return null;
+
+  // OSM often splits one real facade into several almost-collinear way segments.
+  // Picking the single segment closest to the street produced tiny 1–9 m "hero" strips
+  // on Tingvallagatan while 25–40 m of the same building stayed generic. Merge all
+  // parallel segments within ~1.5 m of the exposed facade plane into one true frontage.
+  const maxSide=Math.max(...candidates.map(c=>c.side));
+  const near=candidates.filter(c=>maxSide-c.side<=1.5&&c.normalDot>.92);
+  const anchor=near.slice().sort((a,b)=>b.length-a.length)[0]||candidates.slice().sort((a,b)=>b.side-a.side||b.length-a.length)[0];
+  const ax=anchor.tx,az=anchor.tz;
+  const points=[];
+  for(const c of near.length?near:[anchor]){points.push(c.a,c.q);}
+  const projection=v=>v[0]*ax+v[1]*az;
+  let a=points.reduce((best,v)=>projection(v)<projection(best)?v:best,points[0]);
+  let q=points.reduce((best,v)=>projection(v)>projection(best)?v:best,points[0]);
+  let dx=q[0]-a[0],dz=q[1]-a[1],length=Math.hypot(dx,dz);
+  if(length<1)return anchor;
+  let tx=dx/length,tz=dz/length,nx=-tz,nz=tx;
+  if(nx*desired[0]+nz*desired[1]<0){[a,q]=[q,a];tx=-tx;tz=-tz;nx=-nx;nz=-nz;}
+  return {a,q,length,tx,tz,nx,nz,side:maxSide,segments:(near.length||1)};
 }
 
 export function addPhotoReferenceFacade(mesh,b){
