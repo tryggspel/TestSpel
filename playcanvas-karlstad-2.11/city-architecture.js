@@ -320,6 +320,100 @@ export class ComicMesh {
     return parent;
   }
 }
+
+const FRIMURARE_OSM=101608925;
+
+// Explicit hero facade for Frimurarelogen / Tingvallagatan 15.
+// This intentionally bypasses generic photoReferenceFront() face detection: the north facade
+// is known from OSM and the current Grekiska storefront already anchors to this exact building.
+// The reference skin sits just outside the structural wall but behind the business overlay.
+export function addFrimurareExplicitHero(mesh,b){
+  if(!b||b.osm!==FRIMURARE_OSM)return false;
+  const h=Math.max(9.6,b.h),minx=b.minx,maxx=b.maxx,minz=b.minz,maxz=b.maxz;
+  const wall='#c7a353',frame='#eadfc4',glass='#506a70',stone='#8f8577',ink='#5c5448',roof='#405b55';
+  const nz=minz-.22,sz=maxz+.22,wx=minx-.22,ex=maxx+.22;
+
+  const qN=(x0,y0,x1,y1,col,z=nz)=>mesh.quad([x0,y0,z],[x1,y0,z],[x1,y1,z],[x0,y1,z],col);
+  const qS=(x0,y0,x1,y1,col,z=sz)=>mesh.quad([x1,y0,z],[x0,y0,z],[x0,y1,z],[x1,y1,z],col);
+  const qW=(z0,y0,z1,y1,col,x=wx)=>mesh.quad([x,y0,z1],[x,y0,z0],[x,y1,z0],[x,y1,z1],col);
+  const qE=(z0,y0,z1,y1,col,x=ex)=>mesh.quad([x,y0,z0],[x,y0,z1],[x,y1,z1],[x,y1,z0],col);
+
+  const drawNorth=()=>{
+    const width=maxx-minx,bays=9,bw=width/bays;
+    qN(minx,.03,maxx,h-.03,wall);
+    qN(minx,.03,maxx,3.08,stone);
+    for(const y of [.55,1.12,1.69,2.26])qN(minx+.04,y,maxx-.04,y+.055,ink,nz-.015);
+    // Strong classical string courses.
+    qN(minx,3.02,maxx,3.24,frame,nz-.02);
+    qN(minx,6.38,maxx,6.62,frame,nz-.02);
+    qN(minx,h-.52,maxx,h-.25,roof,nz-.02);
+
+    const center=Math.floor(bays/2);
+    for(let i=0;i<bays;i++){
+      const x0=minx+i*bw,x1=x0+bw,mid=(x0+x1)/2;
+      // Ground level — Grekiska overlay remains in front because it sits at minz-.34.
+      if(i!==center){
+        qN(x0+bw*.20,.78,x1-bw*.20,2.72,frame,nz-.035);
+        qN(x0+bw*.25,.88,x1-bw*.25,2.57,glass,nz-.05);
+      }else{
+        qN(x0+bw*.15,.48,x1-bw*.15,2.90,frame,nz-.04);
+        qN(x0+bw*.22,.62,x1-bw*.22,2.78,'#344247',nz-.055);
+      }
+      // Piano nobile.
+      qN(x0+bw*.19,3.66,x1-bw*.19,5.98,frame,nz-.04);
+      qN(x0+bw*.25,3.78,x1-bw*.25,5.78,glass,nz-.055);
+      qN(mid-.035,3.80,mid+.035,5.76,'#e7e0cf',nz-.065);
+      qN(x0+bw*.17,5.72,x1-bw*.17,6.02,frame,nz-.065);
+      // Upper floor / attic rhythm.
+      qN(x0+bw*.25,6.92,x1-bw*.25,8.25,frame,nz-.04);
+      qN(x0+bw*.31,7.02,x1-bw*.31,8.08,glass,nz-.055);
+      // Paired pilasters are a defining feature of the real facade.
+      if(i<bays-1)qN(x1-.12,3.20,x1+.12,h-.58,frame,nz-.075);
+    }
+    // Central risalit and crest.
+    const cx=(minx+maxx)/2,rw=Math.min(7.2,width*.18);
+    qN(cx-rw/2,3.18,cx+rw/2,h-.55,'#cfad62',nz-.018);
+    qN(cx-rw*.46,3.66,cx+rw*.46,5.98,frame,nz-.085);
+    qN(cx-rw*.39,3.79,cx+rw*.39,5.78,glass,nz-.10);
+    qN(cx-1.25,8.38,cx+1.25,h-.62,frame,nz-.09);
+    qN(cx-.48,8.62,cx+.48,9.06,'#986b50',nz-.11);
+  };
+
+  const drawSide=(face)=>{
+    const z0=minz,z1=maxz,depth=z1-z0,bays=Math.max(4,Math.min(7,Math.round(depth/4.6))),bw=depth/bays;
+    const q=face==='west'?qW:qE;
+    q(z0,.03,z1,h-.03,wall);
+    q(z0,.03,z1,3.08,stone);
+    q(z0,3.02,z1,3.24,frame);
+    q(z0,6.38,z1,6.62,frame);
+    q(z0,h-.52,z1,h-.25,roof);
+    for(let i=0;i<bays;i++){
+      const a=z0+i*bw,e=a+bw;
+      for(const [y0,y1] of [[.84,2.58],[3.72,5.74],[6.98,8.08]]){
+        q(a+bw*.22,y0,e-bw*.22,y1,frame);
+        q(a+bw*.29,y0+.10,e-bw*.29,y1-.12,glass);
+      }
+      if(i<bays-1)q(e-.10,3.18,e+.10,h-.58,frame);
+    }
+  };
+
+  const drawSouth=()=>{
+    const width=maxx-minx,bays=8,bw=width/bays;
+    qS(minx,.03,maxx,h-.03,wall);qS(minx,.03,maxx,3.08,stone);
+    qS(minx,3.02,maxx,3.24,frame);qS(minx,6.38,maxx,6.62,frame);qS(minx,h-.52,maxx,h-.25,roof);
+    for(let i=0;i<bays;i++){
+      const x0=minx+i*bw,x1=x0+bw;
+      for(const [y0,y1] of [[.86,2.58],[3.74,5.72],[6.98,8.08]]){
+        qS(x0+bw*.22,y0,x1-bw*.22,y1,frame);
+        qS(x0+bw*.29,y0+.10,x1-bw*.29,y1-.12,glass);
+      }
+    }
+  };
+
+  drawNorth();drawSide('west');drawSide('east');drawSouth();
+  return true;
+}
+
 export const ROAD_RENDER_LEVELS=Object.freeze({
   sidewalkBase:.045,
   sidewalk:.065,
@@ -370,7 +464,8 @@ export function createCityArchitecture(pc,app,buildings){
     town.polygon(b.polygon,h+.015,'#3b5155');
     addKungsgatanFacade(town,b);
     addInnerstadFacade(town,b);
-    addPhotoReferenceFacade(reference,b);
+    if(b.osm===FRIMURARE_OSM)addFrimurareExplicitHero(reference,b);
+    else addPhotoReferenceFacade(reference,b);
     addVisualTwinFacade(town,b,{neighbours:buildings});
     if(b.tags['roof:shape']==='hipped')town.hip(b.cx,h+.02,b.cz,b.sx*.96,b.sz*.96,Math.min(3.8,Math.min(b.sx,b.sz)*.24),'#425a56','#314744');
     else if(b.tags['roof:shape']==='gabled'||(b.area<260&&b.sx<26&&b.sz<26))town.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');

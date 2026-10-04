@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {coreContourBuildings} from '../city-architecture.js';
+import {coreContourBuildings,ComicMesh,addFrimurareExplicitHero} from '../city-architecture.js';
 import {mappedGreenAreas} from '../city-environment.mjs';
 import {SOUTH_PLACES} from '../city-south-space.mjs';
 
@@ -10,6 +10,17 @@ test('real-centre pass batches all 95 admitted ordinary OSM contours across the 
   const result=coreContourBuildings(buildings);
   assert.equal(result.length,95);
   assert.ok(result.every(b=>b.dist<260));
+});
+
+
+test('Frimurarelogen explicit hero creates a full four-face reference shell',()=>{
+  const b={osm:101608925,minx:-65,maxx:-20,minz:43,maxz:82,h:9.6};
+  const mesh=new ComicMesh();
+  assert.equal(addFrimurareExplicitHero(mesh,b),true);
+  assert.ok(mesh.positions.length/3>700,'hero facade should contain substantial window/pilaster geometry');
+  const zs=[];for(let i=2;i<mesh.positions.length;i+=3)zs.push(mesh.positions[i]);
+  assert.ok(Math.min(...zs)<b.minz-.20,'north hero skin must sit visibly in front of the OSM wall');
+  assert.ok(Math.max(...zs)>b.maxz+.20,'south reference side must also exist');
 });
 
 test('green map pass is capped to 31 nearest mapped areas',()=>{
