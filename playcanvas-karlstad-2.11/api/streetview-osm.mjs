@@ -42,6 +42,8 @@ function bearing(lat1,lon1,lat2,lon2){
 }
 
 export default async function handler(req,res){
+  // Development/reference tool only. Never expose Google reference imagery from the live game.
+  if(process.env.VERCEL_ENV==='production')return json(res,404,{error:'Not available in production'});
   if(req.method!=='GET')return json(res,405,{error:'GET only'});
   const key=process.env.GOOGLE_STREETVIEW_API_KEY;
   if(!key)return json(res,503,{error:'Street View key is not configured'});
