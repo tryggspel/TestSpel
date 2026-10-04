@@ -140,5 +140,8 @@ test('Frimurarelogen protects and renders both verified north and west facades',
   assert.ok(north&&north.length>35,'north bookshop frontage');
   assert.ok(west&&west.length>20,'west arched side frontage');
   const mesh=new ComicMesh();assert.equal(addPhotoReferenceFacade(mesh,b),true);
-  assert.ok(mesh.positions.length/3>260,'multi-face geometry should include the west side');
+  assert.ok(mesh.positions.length/3>500,'3D hero geometry should be substantial on both faces');
+  const xs=[],zs=[];for(let i=0;i<mesh.positions.length;i+=3){xs.push(mesh.positions[i]);zs.push(mesh.positions[i+2]);}
+  assert.ok(Math.min(...zs)<b.minz-.50,'north hero details must project visibly in front of the wall');
+  assert.ok(Math.min(...xs)<b.minx-.50,'west hero details must project visibly in front of the wall');
 });
