@@ -100,8 +100,8 @@ function richGround(mesh,b,e,p,{secondary=false}={}){
   }
 }
 export function addStreetfrontWow(mesh,b){
-  if(!b||IDENTITY_IDS.has(b.osm))return {front:false,corner:false,square:false};
-  const p=visualTwinProfile(b),front=visualTwinFront(b);if(!p||!front)return {front:false,corner:false,square:false};
+  if(!b||IDENTITY_IDS.has(b.osm))return {front:false,corner:false,square:false,shopping:false};
+  const p=visualTwinProfile(b),front=visualTwinFront(b);if(!p||!front)return {front:false,corner:false,square:false,shopping:false};
   richGround(mesh,b,front,p);
   const corner=visualTwinCornerFront(b);
   if(corner){
@@ -146,7 +146,7 @@ export function addCityWowPass(mesh,buildings=[]){
   let fronts=0,corners=0,squareEdges=0,shoppingFronts=0;
   for(const b of buildings){
     if(b.dist>225)continue;
-    const s=addStreetfrontWow(mesh,b);fronts+=Number(s.front);corners+=Number(s.corner);squareEdges+=Number(s.square&&s.front);shoppingFronts+=Number(s.shopping);
+    const s=addStreetfrontWow(mesh,b);fronts+=Number(s.front);corners+=Number(s.corner);squareEdges+=Number(s.square&&s.front);shoppingFronts+=Number(!!s.shopping);
   }
   const torgetProps=addTorgetFurniture(mesh),operaProps=addOperaScene(mesh,buildings);
   return Object.freeze({fronts,corners,squareEdges,shoppingFronts,torgetProps,operaProps});
