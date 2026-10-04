@@ -1,7 +1,7 @@
 import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.17';
 import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.17';
 import {visualTwinFaceYaw} from './visual-twin.mjs?v=2.11.17';
-import {PHOTO_REFERENCE_PROFILES,photoReferenceFaceYaw} from './photo-reference-pass3.mjs?v=2.11.17';
+import {PHOTO_REFERENCE_PROFILES,photoReferenceFaceYaw,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.17';
 import {IDENTITY_IDS,SHOP_IDS,LANDMARKS} from './city-geography.mjs?v=2.11.17';
 import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.17';
 const ink='#253d40',cream='#fff0c8';
@@ -101,7 +101,7 @@ export function facadePanels(buildings,blocked=()=>false){
       // still receive fallback architecture so a whole block never becomes a blank plane.
       if(KUNGSGATAN_PROFILES[b.osm]&&sameDirection(face.yaw,0))continue;
       if(INNERSTAD_PROFILES[b.osm]&&sameDirection(face.yaw,referenceFaceYaw(b.osm)))continue;
-      if(PHOTO_REFERENCE_PROFILES[b.osm]&&sameDirection(face.yaw,photoReferenceFaceYaw(b.osm)))continue;
+      if(PHOTO_REFERENCE_PROFILES[b.osm]&&photoReferenceFaceYaws(b.osm).some(y=>sameDirection(face.yaw,y)))continue;
       if(!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_PROFILES[b.osm]&&!PHOTO_REFERENCE_PROFILES[b.osm]&&sameDirection(face.yaw,visualTwinFaceYaw(b)))continue;
       if(IDENTITY_IDS.has(b.osm)&&sameDirection(face.yaw,markYaw))continue;
 
