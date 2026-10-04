@@ -1,9 +1,9 @@
-import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.17';
-import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.17';
-import {visualTwinFaceYaw} from './visual-twin.mjs?v=2.11.17';
-import {PHOTO_REFERENCE_PROFILES,photoReferenceFaceYaw,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.17';
-import {IDENTITY_IDS,SHOP_IDS,LANDMARKS} from './city-geography.mjs?v=2.11.17';
-import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.17';
+import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.18';
+import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.18';
+import {visualTwinFaceYaw} from './visual-twin.mjs?v=2.11.18';
+import {PHOTO_REFERENCE_PROFILES,photoReferenceFaceYaw,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.18';
+import {IDENTITY_IDS,SHOP_IDS,LANDMARKS} from './city-geography.mjs?v=2.11.18';
+import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.18';
 const ink='#253d40',cream='#fff0c8';
 const palettes=[['#eeb985','#d88c67','#ae4e45'],['#a7c7b4','#789e91','#367c75'],['#dec5a0','#b29a7e','#70568a'],['#c4b6d7','#9886b7','#a85159']];
 export function drawComicFacade(c,w,h,variant=0,upperOnly=false){
