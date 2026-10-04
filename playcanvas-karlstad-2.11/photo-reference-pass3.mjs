@@ -584,7 +584,6 @@ export function addPhotoReferenceFacade(mesh,b){
     // Rustication/cornice lines make the long facade read as masonry rather than a flat fill.
     for(let y=.38;y<3.1;y+=.55)panel(.04,y,length-.08,.045,'#806f67',.16);
     panel(.04,h-.40,length-.08,.30,p.accent,.18);
-  }
   }else if(p.kind==='tingvalla-school'){
     // Tingvallagymnasiet: real yellow-brick institutional facade with deep dark plinth,
     // repeated tall arched windows and strong brick pilasters/cornice bands.
@@ -634,6 +633,7 @@ export function addPhotoReferenceFacade(mesh,b){
       }
     }
     panel(.05,h-.36,length-.10,.26,'#8f918b',.17);
+  }
 
   if(p.extraFaces?.includes('west')){
     const side=photoReferenceFront(b,'west');
