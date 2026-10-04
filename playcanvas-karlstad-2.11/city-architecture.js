@@ -333,10 +333,12 @@ export function addFrimurareExplicitHero(mesh,b){
   const wall='#c7a353',frame='#eadfc4',glass='#506a70',stone='#8f8577',ink='#5c5448',roof='#405b55';
   const nz=minz-.22,sz=maxz+.22,wx=minx-.22,ex=maxx+.22;
 
-  const qN=(x0,y0,x1,y1,col,z=nz)=>mesh.quad([x0,y0,z],[x1,y0,z],[x1,y1,z],[x0,y1,z],col);
-  const qS=(x0,y0,x1,y1,col,z=sz)=>mesh.quad([x1,y0,z],[x0,y0,z],[x0,y1,z],[x1,y1,z],col);
-  const qW=(z0,y0,z1,y1,col,x=wx)=>mesh.quad([x,y0,z1],[x,y0,z0],[x,y1,z0],[x,y1,z1],col);
-  const qE=(z0,y0,z1,y1,col,x=ex)=>mesh.quad([x,y0,z0],[x,y0,z1],[x,y1,z1],[x,y1,z0],col);
+  // Outward winding is deliberate: north=-Z, south=+Z, west=-X, east=+X.
+  // hero2 had the north face reversed, so WebGL backface culling could hide the entire facade.
+  const qN=(x0,y0,x1,y1,col,z=nz)=>mesh.quad([x1,y0,z],[x0,y0,z],[x0,y1,z],[x1,y1,z],col);
+  const qS=(x0,y0,x1,y1,col,z=sz)=>mesh.quad([x0,y0,z],[x1,y0,z],[x1,y1,z],[x0,y1,z],col);
+  const qW=(z0,y0,z1,y1,col,x=wx)=>mesh.quad([x,y0,z0],[x,y0,z1],[x,y1,z1],[x,y1,z0],col);
+  const qE=(z0,y0,z1,y1,col,x=ex)=>mesh.quad([x,y0,z1],[x,y0,z0],[x,y1,z0],[x,y1,z1],col);
 
   const drawNorth=()=>{
     const width=maxx-minx,bays=9,bw=width/bays;
@@ -457,6 +459,19 @@ export function createCityArchitecture(pc,app,buildings){
   const contours=coreContourBuildings(buildings),contourIds=new Set(contours.map(b=>b.osm));
   for(const b of contours){
     const seed=Math.abs((b.osm*2654435761)>>>0),twin=visualTwinProfile(b),wall=PHOTO_REFERENCE_PROFILES[b.osm]?.wall||INNERSTAD_PROFILES[b.osm]?.wall||KUNGSGATAN_PROFILES[b.osm]?.wall||twin?.wall||CORE_WALLS[seed%CORE_WALLS.length],h=Math.max(3.2,b.h);
+
+    // Frimurarelogen is a deterministic hero building. Do not route it through a separate
+    // reference mesh: build the structural shell and all facade detail in the same known-good
+    // town mesh so Safari/iPhone cannot lose it through a second material/render path.
+    if(b.osm===FRIMURARE_OSM){
+      town.walls(b.polygon,0,h,'#c7a353');
+      town.walls(b.polygon,.04,.72,'#8f8577',.035);
+      town.polygon(b.polygon,h+.015,'#405b55');
+      addFrimurareExplicitHero(town,b);
+      town.hip(b.cx,h+.02,b.cz,b.sx*.96,b.sz*.96,Math.min(3.8,Math.min(b.sx,b.sz)*.24),'#405b55','#314744');
+      continue;
+    }
+
     town.walls(b.polygon,0,h,wall);
     town.walls(b.polygon,.04,.72,'#788a80',.035);
     const floors=Math.max(1,Math.min(5,Math.round(h/3.2)));
@@ -464,8 +479,7 @@ export function createCityArchitecture(pc,app,buildings){
     town.polygon(b.polygon,h+.015,'#3b5155');
     addKungsgatanFacade(town,b);
     addInnerstadFacade(town,b);
-    if(b.osm===FRIMURARE_OSM)addFrimurareExplicitHero(reference,b);
-    else addPhotoReferenceFacade(reference,b);
+    addPhotoReferenceFacade(reference,b);
     addVisualTwinFacade(town,b,{neighbours:buildings});
     if(b.tags['roof:shape']==='hipped')town.hip(b.cx,h+.02,b.cz,b.sx*.96,b.sz*.96,Math.min(3.8,Math.min(b.sx,b.sz)*.24),'#425a56','#314744');
     else if(b.tags['roof:shape']==='gabled'||(b.area<260&&b.sx<26&&b.sz<26))town.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');

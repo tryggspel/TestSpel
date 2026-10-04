@@ -21,6 +21,7 @@ test('Frimurarelogen explicit hero creates a full four-face reference shell',()=
   const zs=[];for(let i=2;i<mesh.positions.length;i+=3)zs.push(mesh.positions[i]);
   assert.ok(Math.min(...zs)<b.minz-.20,'north hero skin must sit visibly in front of the OSM wall');
   assert.ok(Math.max(...zs)>b.maxz+.20,'south reference side must also exist');
+  assert.ok(mesh.normals[2]<-.9,'first north-face triangle must point outward toward Tingvallagatan (-Z)');
 });
 
 test('green map pass is capped to 31 nearest mapped areas',()=>{
