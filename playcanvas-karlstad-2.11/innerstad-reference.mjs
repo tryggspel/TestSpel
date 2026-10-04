@@ -44,11 +44,11 @@ export function referenceFront(b){
 export function addInnerstadFacade(mesh,b){
   const p=INNERSTAD_PROFILES[b.osm],edge=referenceFront(b);if(!p||!edge)return false;
   const {a,length,tx,tz,nx,nz}=edge;
-  const point=(u,y,out)=>[a[0]+tx*u+nx*out,y,a[1]+tz*u+nz*out];
+  // Base colour comes from the OSM wall; avoid a second full-size facade sheet.
+  const FACE_BIAS=.08;
+  const point=(u,y,out)=>[a[0]+tx*u+nx*(out+FACE_BIAS),y,a[1]+tz*u+nz*(out+FACE_BIAS)];
   const panel=(u,y,w,h,colour,out=.10)=>mesh.quad(point(u,y,out),point(u+w,y,out),point(u+w,y+h,out),point(u,y+h,out),colour);
   const floors=Math.max(1,Math.round(b.h/3.2)-1),upperY=3.65,rowH=(b.h-upperY-.28)/floors;
-
-  panel(0,.04,length,b.h-.04,p.wall,.07);
   panel(0,.04,length,.48,p.ground,.11);
   panel(0,3.18,length,.18,p.frame,.12);
   panel(0,b.h-.34,length,.30,p.frame,.12);
