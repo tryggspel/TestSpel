@@ -114,9 +114,9 @@ test('Torget hero facades span the full split OSM frontage like Kungsgatan',()=>
 test('Tingvallagymnasiet is a real yellow-brick hero facade, not generic office DNA',()=>{
   const p=PHOTO_REFERENCE_PROFILES[77107220];
   assert.equal(p?.kind,'tingvalla-school');
-  assert.equal(p?.front,'west');
+  assert.equal(p?.front,'north');
   const b=all.find(x=>x.osm===77107220);assert.ok(b);
-  const front=photoReferenceFront(b);assert.ok(front&&front.length>35);
+  const front=photoReferenceFront(b);assert.ok(front&&front.length>75,'school north frontage '+(front?.length||0));
   const mesh=new ComicMesh();assert.equal(addPhotoReferenceFacade(mesh,b),true);
   assert.ok(mesh.positions.length/3>180);
 });
