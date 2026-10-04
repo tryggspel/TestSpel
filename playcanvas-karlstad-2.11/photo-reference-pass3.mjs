@@ -102,18 +102,33 @@ export const PHOTO_REFERENCE_PROFILES=Object.freeze({
     source:'Google Street View 2017-05 + Riksantikvarieämbetet'
   }),
   101608925:Object.freeze({
-    address:'Tingvallagatan 15',name:'Frimurarelogen / Herman Anderssons bokhandel',front:'north',kind:'frimurarebok',
+    address:'Tingvallagatan 15',name:'Frimurarelogen / Herman Anderssons bokhandel',front:'north',extraFaces:['west'],kind:'frimurarebok',
     wall:'#9c8274',frame:'#d1c2ad',glass:'#4f676c',ground:'#756a61',accent:'#e1d6bd',
     source:'Google Street View 2017-05 + Karlstad i förändring'
+  }),
+  77107220:Object.freeze({
+    address:'Stora Torget / Kungsgatan',name:'Tingvallagymnasiet',front:'west',kind:'tingvalla-school',
+    wall:'#c8ad6d',frame:'#d9c79e',glass:'#304f5b',ground:'#5f5b55',accent:'#8d7448',
+    source:'Google Street View 2022-06'
+  }),
+  106078938:Object.freeze({
+    address:'Tingvallagatan 19,21,23',front:'north',kind:'ting19shops',
+    wall:'#d7d7d1',frame:'#eeeeea',glass:'#586f75',ground:'#676864',accent:'#8b8f88',
+    source:'Google Street View 2017-05'
   })
 });
 
 export const PHOTO_REFERENCE_IDS=new Set(Object.keys(PHOTO_REFERENCE_PROFILES).map(Number));
 export const photoReferenceFaceYaw=osm=>YAW[PHOTO_REFERENCE_PROFILES[osm]?.front]??null;
+export const photoReferenceFaceYaws=osm=>{
+  const p=PHOTO_REFERENCE_PROFILES[osm];if(!p)return [];
+  return [p.front,...(p.extraFaces||[])].map(face=>YAW[face]).filter(Number.isFinite);
+};
 
-export function photoReferenceFront(b){
+export function photoReferenceFront(b,faceOverride=null){
   const p=PHOTO_REFERENCE_PROFILES[b.osm];if(!p||!Array.isArray(b.polygon)||b.polygon.length<3)return null;
-  const desired=DIR[p.front],candidates=[];
+  const face=faceOverride||p.front,desired=DIR[face];if(!desired)return null;
+  const candidates=[];
   for(let i=0;i<b.polygon.length;i++){
     let a=b.polygon[i],q=b.polygon[(i+1)%b.polygon.length],dx=q[0]-a[0],dz=q[1]-a[1],length=Math.hypot(dx,dz);
     if(length<1.0)continue;
@@ -569,6 +584,84 @@ export function addPhotoReferenceFacade(mesh,b){
     // Rustication/cornice lines make the long facade read as masonry rather than a flat fill.
     for(let y=.38;y<3.1;y+=.55)panel(.04,y,length-.08,.045,'#806f67',.16);
     panel(.04,h-.40,length-.08,.30,p.accent,.18);
+  }
+  }else if(p.kind==='tingvalla-school'){
+    // Tingvallagymnasiet: real yellow-brick institutional facade with deep dark plinth,
+    // repeated tall arched windows and strong brick pilasters/cornice bands.
+    panel(0,.05,length,.72,p.ground,.13);
+    const cols=Math.max(7,Math.min(18,Math.round(length/4.2))),cw=length/cols;
+    const floors=Math.max(2,Math.min(3,Math.round((h-1.0)/3.1)));
+    for(let r=0;r<floors;r++){
+      const y=.98+r*2.78,wh=r===floors-1?1.78:1.62;
+      for(let c=0;c<cols;c++){
+        const u=c*cw+.58,w=Math.max(.62,cw-1.16);
+        panel(u-.16,y-.14,w+.32,wh+.24,p.frame,.17);
+        panel(u,y,w,wh,p.glass,.21);
+        // Arch crown translated to a stepped cap that reads cleanly in low-poly.
+        panel(u-.06,y+wh-.04,w+.12,.28,p.frame,.24);
+        panel(u+w*.47,y+.05,.06,Math.max(.8,wh-.10),'#d7d8ce',.23);
+      }
+      panel(.08,y+wh+.38,length-.16,.11,p.accent,.15);
+    }
+    for(let u=.10;u<length;u+=Math.max(4.0,cw*2))panel(u,.62,.18,Math.max(.8,h-1.02),p.accent,.19);
+    panel(.04,h-.44,length-.08,.32,p.accent,.18);
+    panel(.18,h-.14,length-.36,.16,'#5c594f',.20);
+  }else if(p.kind==='ting19shops'){
+    // Tingvallagatan 19-23: restrained pale city block with a genuinely active ground floor:
+    // large shop windows, individual entrances and a calmer upper residential/office grid.
+    panel(0,.05,length,.46,p.ground,.12);
+    const bays=Math.max(6,Math.min(14,Math.round(length/4.8))),bw=length/bays;
+    for(let c=0;c<bays;c++){
+      const u=c*bw+.12,w=Math.max(.56,bw-.24);
+      panel(u,.46,w,2.34,'#565b59',.18);
+      panel(u+.10,.61,Math.max(.34,w-.20),1.96,p.glass,.22);
+      if(c%3===1){
+        const dw=Math.min(.92,w*.45),du=u+(w-dw)/2;
+        panel(du-.06,.54,dw+.12,2.10,p.frame,.24);
+        panel(du,.64,dw,1.90,'#3d4a4b',.27);
+      }
+      if(c%2===0)panel(u+.08,2.48,Math.max(.34,w-.16),.20,['#63a58d','#8c8d87','#c9a063'][c%3],.29);
+    }
+    panel(.06,2.92,length-.12,.18,p.frame,.20);
+    const floors=Math.max(2,Math.min(4,Math.round((h-3.2)/2.6))),cols=Math.max(8,Math.min(20,Math.round(length/3.45))),cw=length/cols;
+    for(let r=0;r<floors;r++){
+      const y=3.38+r*2.40;
+      for(let c=0;c<cols;c++){
+        const u=c*cw+.46,w=Math.max(.44,cw-.92);
+        panel(u-.07,y-.07,w+.14,1.28,p.frame,.16);
+        panel(u,y,w,1.14,p.glass,.19);
+        panel(u+w*.47,y+.04,.055,1.04,'#d9ddd8',.21);
+      }
+    }
+    panel(.05,h-.36,length-.10,.26,'#8f918b',.17);
+
+  if(p.extraFaces?.includes('west')){
+    const side=photoReferenceFront(b,'west');
+    if(side){
+      const {a:sa,length:sl,tx:stx,tz:stz,nx:snx,nz:snz}=side;
+      const sp=(u,y,out)=>[sa[0]+stx*u+snx*(out+.10),y,sa[1]+stz*u+snz*(out+.10)];
+      const sq=(u,y,w,ph,col,out=.11)=>{if(w<=.08||ph<=.08)return;mesh.quad(sp(u,y,out),sp(u+w,y,out),sp(u+w,y+ph,out),sp(u,y+ph,out),col);};
+      // Street View west facade: rusticated stone/plaster with tall arched openings.
+      sq(0,.05,sl,.56,p.ground,.13);
+      const bays=Math.max(5,Math.min(11,Math.round(sl/3.45))),bw=sl/bays;
+      for(let c=0;c<bays;c++){
+        const u=c*bw+.25,w=Math.max(.56,bw-.50);
+        sq(u-.14,.66,w+.28,2.62,p.frame,.18);
+        sq(u,.83,w,2.16,p.glass,.22);
+        sq(u-.05,2.72,w+.10,.31,p.frame,.25);
+        sq(u+w*.47,.92,.06,1.76,'#d7d5cb',.24);
+      }
+      for(let y=.42;y<3.18;y+=.57)sq(.04,y,sl-.08,.045,'#7f6f67',.16);
+      const floors=Math.max(1,Math.min(3,Math.round((h-4.0)/2.45))),cols=Math.max(5,Math.min(11,Math.round(sl/3.55))),cw=sl/cols;
+      for(let r=0;r<floors;r++){
+        const y=4.18+r*2.30;
+        for(let c=0;c<cols;c++){
+          const u=c*cw+.42,w=Math.max(.44,cw-.84);
+          sq(u-.08,y-.08,w+.16,1.24,p.frame,.17);sq(u,y,w,1.08,p.glass,.20);
+        }
+      }
+      sq(.04,h-.40,sl-.08,.30,p.accent,.18);
+    }
   }
   return true;
 }
