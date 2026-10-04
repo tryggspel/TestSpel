@@ -150,10 +150,11 @@ export function photoReferenceFront(b){
 export function addPhotoReferenceFacade(mesh,b){
   const p=PHOTO_REFERENCE_PROFILES[b.osm],e=photoReferenceFront(b);if(!p||!e)return false;
   const {a,length,tx,tz,nx,nz}=e,h=Math.max(4.0,b.h);
-  const point=(u,y,out)=>[a[0]+tx*u+nx*out,y,a[1]+tz*u+nz*out];
+  // Older Safari/Intel GPUs lose depth precision on long, nearly parallel facade quads.
+  // The OSM wall below already uses p.wall, so keep one solid wall and bias only details.
+  const FACE_BIAS=.10;
+  const point=(u,y,out)=>[a[0]+tx*u+nx*(out+FACE_BIAS),y,a[1]+tz*u+nz*(out+FACE_BIAS)];
   const panel=(u,y,w,ph,colour,out=.11)=>{if(w<=.08||ph<=.08)return;mesh.quad(point(u,y,out),point(u+w,y,out),point(u+w,y+ph,out),point(u,y+ph,out),colour);};
-
-  panel(0,.04,length,h-.04,p.wall,.07);
 
   if(p.kind==='bilan'){
     // Symmetrical pale prison/hotel facade: dark metal cornice, small arched upper
