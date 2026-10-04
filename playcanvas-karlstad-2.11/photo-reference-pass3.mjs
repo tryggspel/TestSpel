@@ -85,6 +85,26 @@ export const PHOTO_REFERENCE_PROFILES=Object.freeze({
     address:'Karlbergsgatan 7',front:'north',kind:'karlberg7garages',
     wall:'#aaa089',frame:'#e7e3da',glass:'#65797b',ground:'#77776f',accent:'#b9b7ad',
     source:'Google Street View 2023-04'
+  }),
+  100833292:Object.freeze({
+    address:'Tingvallagatan 9',name:"O'Learys / Bergqvisthuset",front:'north',kind:'ting9bergqvist',
+    wall:'#a44d43',frame:'#eee1bf',glass:'#4d686d',ground:'#453c38',accent:'#176347',
+    source:'Google Street View 2017-05 + Karlstad i förändring'
+  }),
+  100839528:Object.freeze({
+    address:'Tingvallagatan 11',name:'Nygren & Åhlin-huset',front:'north',kind:'ting11merchant',
+    wall:'#d4a05f',frame:'#efe4c9',glass:'#60787b',ground:'#8d7357',accent:'#5b6e58',
+    source:'Karlstad i förändring / reconstructed 1867 facade'
+  }),
+  101430152:Object.freeze({
+    address:'Tingvallagatan 13',name:'Wermlandsbanken',front:'north',kind:'wermlandsbanken',
+    wall:'#7f4a3a',frame:'#b9b0a4',glass:'#425c62',ground:'#77736d',accent:'#436956',
+    source:'Google Street View 2017-05 + Riksantikvarieämbetet'
+  }),
+  101608925:Object.freeze({
+    address:'Tingvallagatan 15',name:'Frimurarelogen / Herman Anderssons bokhandel',front:'north',kind:'frimurarebok',
+    wall:'#9c8274',frame:'#d1c2ad',glass:'#4f676c',ground:'#756a61',accent:'#e1d6bd',
+    source:'Google Street View 2017-05 + Karlstad i förändring'
   })
 });
 
@@ -393,6 +413,141 @@ export function addPhotoReferenceFacade(mesh,b){
     repeatWindows(cols,floors,{y0:3.40,row:2.55,side:.48,wh:1.18});
     const du=Math.max(.2,length-.80);
     panel(du-.08,.48,.72,2.32,'#8f8d85',.25);panel(du,.60,.56,2.08,'#455052',.28);
+  }
+  }else if(p.kind==='ting9bergqvist'){
+    // Bergqvisthuset/Falkgården: red 19th-century city facade with pale trim and
+    // the two characteristic tower-like end accents added in 1906. O'Learys now
+    // occupies the ground floor, so the green identity lives inside the real facade.
+    panel(0,.05,length,.48,'#76635b',.12);
+    const cols=Math.max(5,Math.min(10,Math.round(length/3.2))),cw=length/cols;
+    const floors=Math.max(2,Math.min(4,Math.round((h-3.0)/2.6)));
+    for(let r=0;r<floors;r++){
+      const y=3.15+r*2.45;
+      panel(.06,y+1.48,length-.12,.10,p.frame,.15);
+      for(let c=0;c<cols;c++){
+        const u=c*cw+.34,w=Math.max(.44,cw-.68);
+        panel(u-.09,y-.10,w+.18,1.48,p.frame,.18);
+        panel(u,y,w,1.28,p.glass,.21);
+        panel(u+w*.48,y+.04,.055,1.20,'#e8e8dd',.23);
+        panel(u,y+.60,w,.055,'#e8e8dd',.23);
+      }
+    }
+    // Ground-floor restaurant/storefront sequence, integrated instead of a floating green cube.
+    const bays=Math.max(5,Math.min(9,Math.round(length/3.6))),bw=length/bays;
+    for(let c=0;c<bays;c++){
+      const u=c*bw+.10,w=Math.max(.46,bw-.20);
+      panel(u,.48,w,2.30,c===Math.floor(bays/2)?'#24453e':p.ground,.20);
+      panel(u+.09,.62,Math.max(.26,w-.18),1.98,p.glass,.23);
+      if(c%2===0)panel(u-.02,2.45,w+.04,.26,p.accent,.31);
+    }
+    const signW=Math.min(8.6,length*.38),su=(length-signW)/2;
+    panel(su,2.76,signW,.58,p.accent,.35);
+    for(let x=su+.40;x<su+signW-.34;x+=.42)panel(x,2.91,.12,.24,'#f2ead5',.38);
+    // Twin tower accents visible from Stora Torget.
+    for(const u of [.20,Math.max(.20,length-2.65)]){
+      panel(u,h-2.25,2.35,2.08,'#7d4038',.18);
+      panel(u+.18,h-.42,1.99,.30,'#263e42',.21);
+      panel(u+.66,h-.06,1.03,.46,'#263e42',.21);
+    }
+    panel(.05,h-.38,length-.10,.24,'#34474a',.16);
+  }else if(p.kind==='ting11merchant'){
+    // Nygren & Åhlin's reconstructed 1867 merchant facade: warm ochre, pale trim,
+    // restrained two-storey rhythm and shop openings instead of a modern blank slab.
+    panel(0,.05,length,.52,'#89765f',.12);
+    const cols=Math.max(4,Math.min(8,Math.round(length/3.35))),cw=length/cols;
+    const upperY=3.35;
+    for(let c=0;c<cols;c++){
+      const u=c*cw+.42,w=Math.max(.46,cw-.84);
+      panel(u-.09,upperY-.09,w+.18,1.46,p.frame,.17);
+      panel(u,upperY,w,1.28,p.glass,.20);
+      panel(u+w*.48,upperY+.04,.055,1.18,'#eee9dc',.22);
+    }
+    panel(.06,5.03,length-.12,.15,p.frame,.16);
+    if(h>6.2){
+      for(let c=0;c<cols;c+=2){
+        const u=c*cw+.46,w=Math.max(.42,cw-.92),y=5.55;
+        panel(u-.07,y-.07,w+.14,1.12,p.frame,.17);panel(u,y,w,.98,p.glass,.20);
+      }
+    }
+    const bays=Math.max(4,Math.min(7,Math.round(length/3.8))),bw=length/bays;
+    for(let c=0;c<bays;c++){
+      const u=c*bw+.13,w=Math.max(.44,bw-.26);
+      panel(u,.52,w,2.34,p.ground,.20);
+      panel(u+.09,.66,Math.max(.24,w-.18),1.98,p.glass,.23);
+      if(c===Math.floor(bays*.58))panel(u+.22,.66,Math.max(.28,w-.44),1.98,'#3b4747',.25);
+    }
+    panel(.10,2.78,length-.20,.20,p.frame,.27);
+    panel(.08,h-.32,length-.16,.24,'#504f49',.16);
+  }else if(p.kind==='wermlandsbanken'){
+    // Wermlandsbanken, 1906-08: granite plinth, hand-made red brick above, monumental
+    // central portal and a green-roof/copper reading. The proportions follow the real
+    // south side of Stora Torget rather than a generic retail facade.
+    const baseH=Math.min(3.45,Math.max(2.8,h*.30));
+    panel(0,.05,length,baseH,p.ground,.14);
+    // Granite courses.
+    for(let y=.52;y<baseH-.18;y+=.62)panel(.05,y,length-.10,.065,'#938e86',.17);
+    const cols=Math.max(5,Math.min(9,Math.round(length/3.15))),cw=length/cols;
+    const portal=Math.floor(cols/2);
+    for(let c=0;c<cols;c++){
+      const u=c*cw+.38,w=Math.max(.48,cw-.76);
+      if(c===portal){
+        const dw=Math.min(2.15,w*1.18),du=c*cw+(cw-dw)/2;
+        panel(du-.18,.48,dw+.36,baseH-.64,'#aaa39a',.24);
+        panel(du,.70,dw,baseH-.92,'#283538',.28);
+        panel(du+.12,baseH-.28,dw-.24,.24,'#d3c4a1',.31);
+      }else{
+        panel(u-.10,1.02,w+.20,1.40,'#a9a39a',.20);
+        panel(u,1.12,w,1.20,'#273d42',.23);
+      }
+    }
+    const upperFloors=Math.max(2,Math.min(4,Math.round((h-baseH-.65)/2.45)));
+    for(let r=0;r<upperFloors;r++){
+      const y=baseH+.48+r*2.30;
+      for(let c=0;c<cols;c++){
+        const u=c*cw+.43,w=Math.max(.42,cw-.86);
+        panel(u-.08,y-.08,w+.16,1.28,'#a0765f',.18);
+        panel(u,y,w,1.12,p.glass,.21);
+        panel(u+w*.47,y+.03,.055,1.05,'#d4d2c4',.23);
+      }
+      panel(.08,y+1.43,length-.16,.08,'#6a4337',.15);
+    }
+    panel(.04,baseH-.08,length-.08,.20,'#5f453c',.18);
+    panel(.03,h-.44,length-.06,.34,'#3e6755',.20);
+    panel(.34,h-.12,length-.68,.24,'#284c43',.23);
+    // Strong central bank-palace emphasis.
+    const mid=length/2,emW=Math.min(5.2,length*.22);
+    panel(mid-emW/2,h-2.05,emW,1.82,'#744437',.20);
+    panel(mid-emW*.33,h-.45,emW*.66,.58,'#456c58',.23);
+  }else if(p.kind==='frimurarebok'){
+    // Frimurarelogen / Herman Anderssons old bookshop: rusticated taupe stone,
+    // tall arched shop windows at ground level and a dignified classical upper facade.
+    panel(0,.05,length,.58,p.ground,.13);
+    const bays=Math.max(5,Math.min(10,Math.round(length/3.55))),bw=length/bays;
+    for(let c=0;c<bays;c++){
+      const u=c*bw+.22,w=Math.max(.58,bw-.44);
+      // Heavy reveal + tall glass; cap bar gives a readable arch silhouette in simple quads.
+      panel(u-.14,.62,w+.28,2.55,p.frame,.20);
+      panel(u,.78,w,2.18,p.glass,.24);
+      panel(u-.04,2.73,w+.08,.28,p.frame,.27);
+      panel(u+.07,1.55,.055,1.25,'#dad8cd',.26);
+    }
+    // Old bookstore sign datum across the shopfront.
+    const signW=Math.min(length*.55,12.0),su=(length-signW)/2;
+    panel(su,3.20,signW,.32,p.accent,.29);
+    for(let x=su+.34;x<su+signW-.30;x+=.46)panel(x,3.28,.13,.14,'#4d413a',.32);
+    const upperFloors=Math.max(1,Math.min(3,Math.round((h-4.0)/2.45))),cols=Math.max(5,Math.min(10,Math.round(length/3.6))),cw=length/cols;
+    for(let r=0;r<upperFloors;r++){
+      const y=4.15+r*2.30;
+      for(let c=0;c<cols;c++){
+        const u=c*cw+.42,w=Math.max(.44,cw-.84);
+        panel(u-.08,y-.08,w+.16,1.25,p.frame,.18);
+        panel(u,y,w,1.10,p.glass,.21);
+      }
+      panel(.08,y+1.38,length-.16,.09,'#7e6a60',.16);
+    }
+    // Rustication/cornice lines make the long facade read as masonry rather than a flat fill.
+    for(let y=.38;y<3.1;y+=.55)panel(.04,y,length-.08,.045,'#806f67',.16);
+    panel(.04,h-.40,length-.08,.30,p.accent,.18);
   }
   return true;
 }
