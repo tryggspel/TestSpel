@@ -1,4 +1,5 @@
 const TARGET=Object.freeze({label:'Kungsgatan 14',lat:59.38134151,lon:13.50336136});
+const CAMERA=Object.freeze({lat:59.3810358,lon:13.5030645});
 
 function bearing(lat1,lon1,lat2,lon2){
   const r=Math.PI/180,a=lat1*r,b=lat2*r,dLon=(lon2-lon1)*r;
@@ -9,8 +10,8 @@ export default async function handler(req,res){
   const key=process.env.GOOGLE_STREETVIEW_API_KEY;
   if(!key)return res.status(503).json({error:'missing key'});
   const metaUrl=new URL('https://maps.googleapis.com/maps/api/streetview/metadata');
-  metaUrl.searchParams.set('location',TARGET.lat+','+TARGET.lon);
-  metaUrl.searchParams.set('radius','50');metaUrl.searchParams.set('source','outdoor');metaUrl.searchParams.set('key',key);
+  metaUrl.searchParams.set('location',CAMERA.lat+','+CAMERA.lon);
+  metaUrl.searchParams.set('radius','24');metaUrl.searchParams.set('source','outdoor');metaUrl.searchParams.set('key',key);
   const meta=await (await fetch(metaUrl,{cache:'no-store'})).json();
   if(meta.status!=='OK'||!meta.pano_id||!meta.location)return res.status(502).json({error:'metadata',status:meta.status});
   const heading=bearing(Number(meta.location.lat),Number(meta.location.lng),TARGET.lat,TARGET.lon);
