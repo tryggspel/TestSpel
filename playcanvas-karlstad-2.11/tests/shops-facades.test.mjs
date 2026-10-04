@@ -17,7 +17,10 @@ test('long generic walls are fully covered by proportional facade modules, witho
   const b={osm:123456,minx:-40,maxx:40,minz:200,maxz:220,height:12},ps=facadePanels([b]);
   assert.ok(ps.length>=16);assert.ok(ps.every(p=>p.w<=13));
   const south=ps.filter(p=>p.nz===1);assert.ok(Math.abs(south.reduce((n,p)=>n+p.hi-p.lo,0)-80)<.001);
-  const real=facadePanels(buildings.map(b=>({...b,height:b.h})),blocked);assert.ok(new Set(real.map(p=>p.osm)).size>30);assert.ok(real.every(p=>!IDENTITY_IDS.has(p.osm)));
+  const real=facadePanels(buildings.map(b=>({...b,height:b.h})),blocked);assert.ok(new Set(real.map(p=>p.osm)).size>30);
+  const protectedIcons=new Set([75070676,101456563,1151016,101186411,106864586,75896103,95639598]);
+  assert.ok(real.every(p=>!protectedIcons.has(p.osm)),'iconic landmarks keep their hand-built art');
+  assert.ok(real.some(p=>[102190062,102026709,102496100,103695866,75360972].includes(p.osm)),'large commercial/civic landmark side walls may receive fallback coverage');
 });
 test('facade modules leave the mall street entrance open from floor to lintel',()=>{
   const ps=facadePanels([{osm:106078938,minx:-153,maxx:-90,minz:36,maxz:52,height:12}]);

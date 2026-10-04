@@ -28,8 +28,8 @@ test('reference facades bind to all three actual address contours and face the s
 test('generic artwork cannot cover the reference front, but still covers other sides',()=>{
   for(const b of targets){
     const ps=facadePanels([{...b,height:b.h}]);
-    assert.ok(ps.length>0);assert.ok(ps.every(p=>p.nz!==1));
-    assert.ok(ps.some(p=>p.nz===-1));
+    assert.ok(ps.length>0);assert.ok(ps.every(p=>p.nz<.9),'generic artwork must stay off the south reference front');
+    assert.ok(ps.some(p=>p.nz<-.55),'north/side walls still receive fallback artwork');
   }
 });
 
