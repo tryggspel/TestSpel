@@ -465,11 +465,11 @@ function addBuildings(osm,environment){
       addFacadePass12(b,hero,seed);
       if(hero)addHeroLandmarkPass14(b);
     }
-    colliders.push({precise:INNERSTAD_REFERENCE_IDS.has(b.osm)||[77107220,100024120,100024325].includes(b.osm),polygon:b.polygon,osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
+    colliders.push({precise:INNERSTAD_REFERENCE_IDS.has(b.osm)||[77107220,100024120,100024325].includes(b.osm),polygon:b.polygon,osm:b.osm,name:b.name,tags:b.tags,cx:b.cx,cz:b.cz,dist:b.dist,area:b.area,sx:b.sx,sz:b.sz,h:b.h,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
   }
   // 2.11: resten av kvarteren från OSM-utdraget (kollision mot exakt fotavtryck).
   const infill=infillBuildings(osm,admitted);
-  for(const b of infill)colliders.push({precise:true,infill:true,polygon:b.polygon,osm:b.osm,name:b.name,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
+  for(const b of infill)colliders.push({precise:true,infill:true,polygon:b.polygon,osm:b.osm,name:b.name,tags:b.tags,cx:b.cx,cz:b.cz,dist:b.dist,area:b.area,sx:b.sx,sz:b.sz,h:b.h,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
   colliderGrid=new ColliderGrid(colliders);southGate=colliders.filter(b=>b.osm===80868525);
   const infillGraphics=createInfill(pc,app,infill),river=createRiverArchitecture(pc,app);
   const geometry=createCityArchitecture(pc,app,admitted),environmentGraphics=createCityEnvironment(pc,app,environment),south=createSouthCity(pc,app,admitted);
