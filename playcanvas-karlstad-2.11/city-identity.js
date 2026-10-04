@@ -303,7 +303,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
     },1024,360);
     businessTextures.set(b.id,t);return t;
   }
-  const neonTextures=new Map(),neonIds=new Set(['musicpartner','synsam','normal','hm','radhuscafe','burgerking','sibylla','grekiska','leprechaun','gossip','lindex','kjell','kicks','apoteket']);
+  const neonTextures=new Map(),neonIds=new Set(['musicpartner','synsam','normal','hm','radhuscafe','burgerking','sibylla','grekiska','leprechaun','gossip','lindex','kjell','kicks','apoteket','synsamoutlet']);
   function neonTexture(b){
     if(neonTextures.has(b.id))return neonTextures.get(b.id);
     const t=texture((c,w,h)=>{
