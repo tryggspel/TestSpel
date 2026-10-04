@@ -24,6 +24,13 @@ test('Frimurarelogen explicit hero creates a full four-face reference shell',()=
   assert.ok(mesh.normals[2]<-.9,'first north-face triangle must point outward toward Tingvallagatan (-Z)');
 });
 
+test('Frimurarelogen hero4 card pipeline is present',()=>{
+  const src=fs.readFileSync(new URL('../city-identity.js',import.meta.url),'utf8');
+  assert.match(src,/Frimurarelogen · HERO4 · Tingvallagatan/);
+  assert.match(src,/kind==='frimurare'/);
+  assert.match(src,/101608925/);
+});
+
 test('green map pass is capped to 31 nearest mapped areas',()=>{
   const origin={lat:59.380767,lon:13.50295};
   const elements=Array.from({length:40},(_,i)=>{const d=.00003*(i+1),lat=origin.lat+d,lon=origin.lon;return {id:700000+i,type:'way',tags:{landuse:'grass'},geometry:[{lat,lon},{lat,lon:lon+.00012},{lat:lat+.00012,lon:lon+.00012},{lat:lat+.00012,lon},{lat,lon}]};});
