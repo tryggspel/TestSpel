@@ -495,7 +495,7 @@ export function infillMesh(buildings,mesh=new ComicMesh()){
     const floors=Math.max(1,Math.round(h/3.2));
     if(!twin)for(let f=0;f<floors;f++){const y=f*3.2+1.25;if(y+1.1<h-.5)mesh.walls(poly,y,y+1.1,'#5d7a7c',.05);}
     mesh.polygon(poly,h+.01,'#3e5357');
-    addVisualTwinFacade(mesh,b);
+    addVisualTwinFacade(mesh,b,{lod:'low'});
     if(b.area<260&&b.sx<26&&b.sz<26)mesh.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
   return mesh;
