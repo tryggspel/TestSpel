@@ -25,10 +25,10 @@ export function kungsgatanFront(b){
 export function addKungsgatanFacade(mesh,b){
   const p=KUNGSGATAN_PROFILES[b.osm],edge=kungsgatanFront(b);if(!p||!edge)return false;
   const {a,length,tx,tz,nx,nz}=edge;
-  const point=(u,y,out)=>[a[0]+tx*u+nx*out,y,a[1]+tz*u+nz*out];
+  // Base colour comes from the OSM wall; only details need a separate depth layer.
+  const FACE_BIAS=.08;
+  const point=(u,y,out)=>[a[0]+tx*u+nx*(out+FACE_BIAS),y,a[1]+tz*u+nz*(out+FACE_BIAS)];
   const panel=(u,y,w,h,colour,out=.10)=>mesh.quad(point(u,y,out),point(u+w,y,out),point(u+w,y+h,out),point(u,y+h,out),colour);
-  // Small offsets separate wall, frames and glass without adding per-window entities.
-  panel(0,.05,length,b.h-.05,p.wall,.07);
   panel(0,.05,length,.45,'#7d8078',.11);
   panel(0,3.15,length,.20,p.frame,.12);
   panel(0,b.h-.35,length,.35,'#454b49',.12);
