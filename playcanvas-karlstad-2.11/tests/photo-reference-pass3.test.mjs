@@ -13,8 +13,20 @@ test('reference pass 3 binds only to exact photographed Karlstad addresses',()=>
   const expected=new Map([
     [80868525,'Karlbergsgatan 3'],
     [113214352,'Karlbergsgatan 4'],
+    [107041950,'Karlbergsgatan 2'],
+    [105746440,'Karlbergsgatan 5'],
+    [386222434,'Karlbergsgatan 6'],
+    [104778921,'Karlbergsgatan 7'],
+    [110733732,'Östra Kyrkogatan 4'],
+    [110733736,'Östra Kyrkogatan 4D'],
+    [105746438,'Östra Kyrkogatan 6'],
+    [102583814,'Södra Kyrkogatan 1'],
+    [101935916,'Södra Kyrkogatan 3'],
+    [103767833,'Södra Kyrkogatan 4'],
+    [103767825,'Södra Kyrkogatan 6'],
     [106078949,'Södra Kyrkogatan 7'],
-    [105746439,'Södra Kyrkogatan 10']
+    [105746439,'Södra Kyrkogatan 10'],
+    [103695891,'Södra Kyrkogatan 11']
   ]);
   assert.equal(PHOTO_REFERENCE_IDS.size,expected.size);
   for(const [id,address] of expected){
@@ -39,4 +51,12 @@ test('all pass 3 reference facades produce bounded static geometry',()=>{
     assert.ok(mesh.positions.every(Number.isFinite));
     assert.ok(mesh.positions.length/3<2400,'bounded geometry '+PHOTO_REFERENCE_PROFILES[id].address);
   }
+});
+
+
+test('Street View reference batch is materially varied rather than one generic facade',()=>{
+  const kinds=new Set(Object.values(PHOTO_REFERENCE_PROFILES).map(p=>p.kind));
+  assert.ok(kinds.size>=12,'expected many distinct reference kinds');
+  const streetView=Object.values(PHOTO_REFERENCE_PROFILES).filter(p=>String(p.source).includes('Google Street View'));
+  assert.ok(streetView.length>=12,'first automated Street View batch should be present');
 });
