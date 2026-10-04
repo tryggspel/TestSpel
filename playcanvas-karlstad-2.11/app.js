@@ -62,6 +62,9 @@ let cityPower=0;
 let barkTimer=0;
 let lowFpsSeconds=0;
 let bootStage='module';
+let bootComplete=false;
+const runtimeErrors=[];
+window.KarlstadRuntimeErrors=runtimeErrors;
 let lastRound=null;
 let perf=null;
 let resetTouch=()=>{};
@@ -141,8 +144,28 @@ function fail(e){
   loadBar.style.width='100%';
   loading.classList.add('failed');
 }
-window.addEventListener('error',e=>fail(e.error||e.message));
-window.addEventListener('unhandledrejection',e=>fail(e.reason||e));
+function runtimeIssue(kind,value,event){
+  const raw=String(value&&value.stack?value.stack:value||'Unknown runtime issue');
+  const opaque=!value||raw==='Script error.'||raw==='Script error';
+  console.error('[Karlstad runtime]',kind,value||event);
+  runtimeErrors.push(Object.freeze({kind,message:raw.slice(0,500),opaque,time:Date.now()}));
+  if(runtimeErrors.length>12)runtimeErrors.shift();
+  // Safari/iOS can surface opaque cross-origin/WebGL "Script error." events after a
+  // successful boot. They are diagnostic signals, not a reason to cover a running game.
+  if(DEBUG&&!opaque){
+    errorEl.textContent='RUNTIME · '+kind+'\n'+raw;
+    errorEl.classList.add('show');
+  }
+}
+window.addEventListener('error',e=>{
+  const value=e.error||e.message;
+  if(bootComplete)return runtimeIssue('error',value,e);
+  fail(value||e);
+});
+window.addEventListener('unhandledrejection',e=>{
+  if(bootComplete)return runtimeIssue('promise',e.reason||e,e);
+  fail(e.reason||e);
+});
 
 function localXY(lon,lat){
   const lat0=ORIGIN.lat*Math.PI/180;
@@ -669,6 +692,7 @@ async function boot(){
     app.start();
     addEventListener('resize',()=>app.resizeCanvas());
     bootStage='Klar';
+    bootComplete=true;
     setTimeout(()=>{loadBar.style.width='100%';loading.classList.add('hide');},350);
   }catch(e){fail(e);}
 }
