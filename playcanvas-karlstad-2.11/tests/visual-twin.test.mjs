@@ -6,6 +6,7 @@ import {ComicMesh,coreContourBuildings} from '../city-architecture.js';
 import {facadePanels} from '../comic-city.js';
 import {KUNGSGATAN_PROFILES} from '../kungsgatan-reference.mjs';
 import {INNERSTAD_REFERENCE_IDS} from '../innerstad-reference.mjs';
+import {PHOTO_REFERENCE_IDS} from '../photo-reference-pass3.mjs';
 import {visualTwinProfile,visualTwinFront,visualTwinFaceYaw,addVisualTwinFacade,visualTwinAudit} from '../visual-twin.mjs';
 
 const osm=JSON.parse(fs.readFileSync(new URL('../data/osm-buildings.json',import.meta.url)));
@@ -13,7 +14,7 @@ const buildings=cityBuildings(osm);
 const infill=infillBuildings(osm,buildings);
 
 test('Visual Twin never replaces curated Street View/reference facades',()=>{
-  for(const b of buildings.filter(b=>KUNGSGATAN_PROFILES[b.osm]||INNERSTAD_REFERENCE_IDS.has(b.osm))){
+  for(const b of buildings.filter(b=>KUNGSGATAN_PROFILES[b.osm]||INNERSTAD_REFERENCE_IDS.has(b.osm)||PHOTO_REFERENCE_IDS.has(b.osm))){
     assert.equal(visualTwinProfile(b),null);
     assert.equal(visualTwinFront(b),null);
     const mesh=new ComicMesh();assert.equal(addVisualTwinFacade(mesh,b),false);
@@ -21,7 +22,7 @@ test('Visual Twin never replaces curated Street View/reference facades',()=>{
 });
 
 test('ordinary centre buildings receive deterministic street DNA and bounded facade geometry',()=>{
-  const ordinary=coreContourBuildings(buildings).filter(b=>!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_REFERENCE_IDS.has(b.osm));
+  const ordinary=coreContourBuildings(buildings).filter(b=>!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_REFERENCE_IDS.has(b.osm)&&!PHOTO_REFERENCE_IDS.has(b.osm));
   let generated=0;
   for(const b of ordinary){
     const p=visualTwinProfile(b),edge=visualTwinFront(b);assert.ok(p);assert.equal(p.surveyStatus,'inferred');
@@ -34,7 +35,7 @@ test('ordinary centre buildings receive deterministic street DNA and bounded fac
 });
 
 test('generic comic texture cannot cover the generated primary street facade',()=>{
-  const sample=coreContourBuildings(buildings).find(b=>!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_REFERENCE_IDS.has(b.osm)&&visualTwinFaceYaw(b)!==null);
+  const sample=coreContourBuildings(buildings).find(b=>!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_REFERENCE_IDS.has(b.osm)&&!PHOTO_REFERENCE_IDS.has(b.osm)&&visualTwinFaceYaw(b)!==null);
   assert.ok(sample);
   const yaw=visualTwinFaceYaw(sample),panels=facadePanels([{...sample,height:sample.h}]);
   assert.ok(panels.length>0);
