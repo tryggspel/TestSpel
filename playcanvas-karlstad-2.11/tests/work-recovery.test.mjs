@@ -5,11 +5,11 @@ import {coreContourBuildings} from '../city-architecture.js';
 import {mappedGreenAreas} from '../city-environment.mjs';
 import {SOUTH_PLACES} from '../city-south-space.mjs';
 
-test('city pass batches at most 64 ordinary OSM contours',()=>{
-  const buildings=Array.from({length:80},(_,i)=>({osm:900000+i,dist:20+i,area:120,sx:12,sz:10,tags:{}}));
+test('real-centre pass batches all 95 admitted ordinary OSM contours across the 260 m core',()=>{
+  const buildings=Array.from({length:110},(_,i)=>({osm:900000+i,dist:20+i*2,area:120,sx:12,sz:10,tags:{}}));
   const result=coreContourBuildings(buildings);
-  assert.equal(result.length,64);
-  assert.ok(result.every(b=>b.dist<195));
+  assert.equal(result.length,95);
+  assert.ok(result.every(b=>b.dist<260));
 });
 
 test('green map pass is capped to 31 nearest mapped areas',()=>{

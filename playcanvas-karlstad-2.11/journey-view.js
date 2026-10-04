@@ -1,5 +1,5 @@
 import {createBusModel} from './transit-art.js?v=2.11.19';
-import {createComicCity} from './comic-city.js?v=2.11.19';
+import {createComicCity} from './comic-city.js?v=2.11.20';
 import {SUN} from './city-ecology.mjs?v=2.11.19';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;

@@ -1,6 +1,6 @@
 import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.19';
-import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit} from './visual-twin.mjs?v=2.11.19';
-import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade} from './photo-reference-pass3.mjs?v=2.11.19';
+import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit} from './visual-twin.mjs?v=2.11.20';
+import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade} from './photo-reference-pass3.mjs?v=2.11.20';
 import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.19';
 import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture} from './innerstad-reference.mjs?v=2.11.19';
 import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.19';
@@ -11,8 +11,8 @@ import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.19';
 
 // Static, vertex-coloured geometry: one draw call per landmark, one for streets,
 // one for rooflines and storefront frames. No lights, shadows or per-frame work.
-const CORE_CONTOUR_RADIUS=195;
-const CORE_CONTOUR_LIMIT=64;
+const CORE_CONTOUR_RADIUS=260;
+const CORE_CONTOUR_LIMIT=95;
 const CORE_WALLS=['#e4d2ae','#d9b991','#c8906d','#e8ddc6','#bca98d','#d8c49c','#c8a17b','#eadab8'];
 export function coreContourBuildings(buildings,max=CORE_CONTOUR_LIMIT){
   return buildings.filter(b=>b.dist<CORE_CONTOUR_RADIUS&&!IDENTITY_IDS.has(b.osm)&&!MALL_BUILDING_IDS.has(b.osm)).sort((a,b)=>a.dist-b.dist||a.osm-b.osm).slice(0,max);
@@ -357,7 +357,7 @@ export function createCityArchitecture(pc,app,buildings){
   road.finish(pc,app,'Karlstad · verkliga gatustråk',material);
 
   const batches=[];const town=new ComicMesh();
-  // Work recovery: 64 ordinary centre buildings use their real OSM footprints in one batch.
+  // 2.11.20 real-centre pass: all 95 admitted ordinary centre buildings use their real OSM footprints in one static batch.
   // Mitt i City stays separate so its four entrances and walkable interior are untouched.
   const contours=coreContourBuildings(buildings),contourIds=new Set(contours.map(b=>b.osm));
   for(const b of contours){

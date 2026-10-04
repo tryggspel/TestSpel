@@ -1,8 +1,8 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.11.19';
+import {createLastRound} from './last-round.js?v=2.11.20';
 import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.11.19';
 import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.11.19';
-import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.19';
+import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.20';
 import {createCityEnvironment} from './city-environment.mjs?v=2.11.19';
 import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.11.19';
 import {ColliderGrid} from './collider-grid.mjs?v=2.11.19';
@@ -15,7 +15,7 @@ import {atKil,KIL} from './scenic-transit.js?v=2.11.19';
 import {createSouthCity} from './city-south.js?v=2.11.19';
 import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage} from './city-south-space.mjs?v=2.11.19';
 import {waterBlocked} from './park-space.mjs?v=2.11.19';
-import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.11.19';
+import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.11.20';
 import {createAudioEngine} from './audio-engine.mjs?v=2.11.19';
 import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.11.19';
 

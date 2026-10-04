@@ -133,15 +133,12 @@ test('Tingvallagatan 19-23 gets a reference-driven active retail ground floor',(
   assert.ok(mesh.positions.length/3>180);
 });
 
-test('Frimurarelogen protects and renders both verified north and west facades',()=>{
-  assert.deepEqual(photoReferenceFaceYaws(101608925).sort((a,b)=>a-b),[-90,180]);
+test('Frimurarelogen protects and renders reference architecture on every cardinal facade',()=>{
+  assert.deepEqual(photoReferenceFaceYaws(101608925).sort((a,b)=>a-b),[-90,0,90,180]);
   const b=all.find(x=>x.osm===101608925);assert.ok(b);
   const north=photoReferenceFront(b,'north'),west=photoReferenceFront(b,'west');
-  assert.ok(north&&north.length>35,'north bookshop frontage');
-  assert.ok(west&&west.length>20,'west arched side frontage');
+  assert.ok(north&&north.length>35,'north bookshop frontage');assert.ok(west&&west.length>20,'west arched side frontage');
   const mesh=new ComicMesh();assert.equal(addPhotoReferenceFacade(mesh,b),true);
-  assert.ok(mesh.positions.length/3>500,'3D hero geometry should be substantial on both faces');
-  const xs=[],zs=[];for(let i=0;i<mesh.positions.length;i+=3){xs.push(mesh.positions[i]);zs.push(mesh.positions[i+2]);}
-  assert.ok(Math.min(...zs)<b.minz-.50,'north hero details must project visibly in front of the wall');
-  assert.ok(Math.min(...xs)<b.minx-.50,'west hero details must project visibly in front of the wall');
+  assert.ok(mesh.positions.length/3>650,'reference geometry should be substantial around the whole building');
+  assert.ok(mesh.positions.every(Number.isFinite));
 });

@@ -1,4 +1,4 @@
-import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.11.19';
+import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.11.20';
 import {createSouthSigns} from './city-south.js?v=2.11.19';
 import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.11.19';
 import {createZombieAtlases} from './zombie-art.js?v=2.11.19';
@@ -8,7 +8,7 @@ import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs
 import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.11.19';
 import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.11.19';
 import {CityJourney} from './journey-rules.mjs?v=2.11.19';
-import {createJourneyView} from './journey-view.js?v=2.11.19';
+import {createJourneyView} from './journey-view.js?v=2.11.20';
 import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.11.19';
 import {createBoatRide} from './boat-ride.js?v=2.11.19';
 import {createBusRide} from './bus-ride.js?v=2.11.19';
@@ -23,7 +23,7 @@ import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.11.19';
 import {pedestrianAt} from './pedestrian.mjs?v=2.11.19';
 import {createPedestrianSigns} from './pedestrian-view.js?v=2.11.19';
 import {drawMapLabels} from './city-geography.mjs?v=2.11.19';
-import {createCityIdentity} from './city-identity.js?v=2.11.19';
+import {createCityIdentity} from './city-identity.js?v=2.11.20';
 import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.11.19';
 
 import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.11.19';

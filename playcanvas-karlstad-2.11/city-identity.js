@@ -38,6 +38,31 @@ export function drawLandmarkFacade(c,w,h,kind){
     }
     for(const x of [349,661]){box(x+9,26,20,478,'#a7af9b');box(x,25,14,482,paper,2);}
     box(382,5,258,34,paper);c.fillStyle=ink;c.font='700 28px Georgia,serif';c.textAlign='center';c.fillText('RÅDHUSET',512,30);
+  }else if(kind==='residenset'){
+    // Residenset — SFV reference: ochre/yellow plaster, grey rusticated base,
+    // round-arched ground-floor openings, sash windows above and a strong central pavilion.
+    box(0,0,1024,512,'#d8aa55');box(0,360,1024,152,'#aaa79c');
+    box(0,0,1024,18,'#3f4b49');box(0,24,1024,12,'#eee4cb');
+    for(const y of [174,344]){box(0,y,1024,8,'#b88745');box(0,y-7,1024,7,'#eee1c3');}
+    box(392,18,240,494,'#deb765',0);
+    for(const x of [18,374,392,616,634,994])box(x,34,12,470,'#ead9b9',0);
+    for(const y of [52,205])for(let col=0;col<10;col++)window(37+col*97,y,54,100,false);
+    for(let col=0;col<10;col++)window(37+col*97,382,54,105,true);
+    box(458,374,108,138,'#817d72',2);box(472,391,80,112,'#32494d',3);box(445,342,134,24,'#e7d7b7',2);
+    c.fillStyle='#eef0dd';c.fillRect(505,2,6,48);c.fillStyle='#2d6b92';c.fillRect(511,10,45,16);
+  }else if(kind==='biskopsgarden'){
+    // Biskopsgården — 1770s timber house: light-yellow lockpanel, grey details,
+    // English-red window frames and a dark slate mansard roof.
+    box(0,0,1024,512,'#dfcf91');
+    c.fillStyle='#485658';c.beginPath();c.moveTo(0,0);c.lineTo(1024,0);c.lineTo(918,112);c.lineTo(106,112);c.closePath();c.fill();
+    box(0,108,1024,12,'#9a998d',0);box(0,286,1024,10,'#9a998d',0);box(0,494,1024,18,'#827d71',0);
+    for(let x=18;x<1024;x+=34)box(x,120,3,372,'#c4b774',0);
+    const red='#974f43',glass='#6d8d91';
+    for(const y of [150,324])for(let col=0;col<9;col++){
+      const x=42+col*108;box(x-7,y-8,66,119,'#d6c88e',2);box(x,y,52,101,red,2);box(x+7,y+8,38,85,glass,1);
+      box(x+24,y+8,4,85,'#e8dfc4',0);box(x+7,y+47,38,4,'#e8dfc4',0);
+    }
+    box(452,352,120,142,'#8e5a48',2);box(471,373,82,113,'#33484b',2);box(430,292,164,22,'#9a998d',0);
   }else if(kind==='library'){
     box(0,0,1024,512,'#b59a74');box(0,0,1024,45,ink);
     for(const y of [82,288])for(let col=0;col<14;col++)window(18+col*72,y,55,147);
@@ -208,11 +233,21 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       for(const side of [-1,1]){mount('Domkyrkan · långhus',facade('church'),w*.44,12.5,x+w*.26,0,z+side*9.035,side===1?0:180);mount('Domkyrkan · tvärskepp',facade('church'),17.8,12.5,x+5,0,z+side*(d/2+.04),side===1?0:180);}
       mount('Domkyrkan · platsnamn',labelTex(['DOMKYRKAN'],'#244b60','#ffefcb'),4.7,.62,b.minx-1,2.2,z-10,-90);
     }else if(mark.id==='radhuset'){
-      mount('Rådhuset · torgfasad',facade('radhuset',1024,256),d,11.6,b.maxx+.90,0,z,90);
-      mount('Rådhuset · västfasad',facade('radhuset',1024,256),d,11.6,b.minx-.02,0,z,-90);
+      const rt=facade('radhuset',1024,256);
+      mount('Rådhuset · torgfasad',rt,d,11.6,b.maxx+.90,0,z,90);mount('Rådhuset · västfasad',rt,d,11.6,b.minx-.02,0,z,-90);
+      mount('Rådhuset · nordfasad',rt,w,11.6,x,0,b.minz-.08,180);mount('Rådhuset · sydfasad',rt,w,11.6,x,0,b.maxz+.08,0);
     }else if(mark.id==='biblioteket'){
-      mount('Biblioteket · Västra Torggatan',facade('library',1024,256),d,10,b.minx-.05,0,z,-90);
-      mount('Biblioteket · sydfasad',facade('library',1024,256),w,10,x,0,b.maxz+.05);
+      const lt=facade('library',1024,256);
+      mount('Biblioteket · Västra Torggatan',lt,d,10,b.minx-.05,0,z,-90);mount('Biblioteket · östfasad',lt,d,10,b.maxx+.08,0,z,90);
+      mount('Biblioteket · sydfasad',lt,w,10,x,0,b.maxz+.05,0);mount('Biblioteket · nordfasad',lt,w,10,x,0,b.minz-.08,180);
+    }else if(mark.id==='residenset'){
+      const t=facade('residenset',1024,512),rh=Math.max(12.4,Math.min(14.6,b.h+2.2));
+      mount('Residenset · östfasad',t,d,rh,b.maxx+.10,0,z,90);mount('Residenset · västfasad',t,d,rh,b.minx-.10,0,z,-90);
+      mount('Residenset · nordfasad',t,w,rh,x,0,b.minz-.10,180);mount('Residenset · sydfasad',t,w,rh,x,0,b.maxz+.10,0);
+    }else if(mark.id==='biskopsgarden'){
+      const t=facade('biskopsgarden',1024,512),bh=Math.max(9.6,Math.min(11.2,b.h+1.2));
+      mount('Biskopsgården · östfasad',t,d,bh,b.maxx+.10,0,z,90);mount('Biskopsgården · västfasad',t,d,bh,b.minx-.10,0,z,-90);
+      mount('Biskopsgården · nordfasad',t,w,bh,x,0,b.minz-.10,180);mount('Biskopsgården · sydfasad',t,w,bh,x,0,b.maxz+.10,0);
     }else if(mark.id==='sandgrund'){
       const glass=facade('glass',1024,256);mount('Sandgrund · panoramafönster',glass,w-2,2.6,x,.8,b.maxz+.10);
       const sign=texture((c,sw,sh)=>{c.clearRect(0,0,sw,sh);c.textAlign='center';c.textBaseline='middle';c.font='italic 900 124px Georgia,serif';c.strokeStyle='#7a321b';c.lineWidth=6;c.strokeText('Sandgrund',sw/2,sh*.51,sw-36);c.fillStyle='#f4a329';c.fillText('Sandgrund',sw/2,sh*.51,sw-36);},1024,160);

@@ -102,7 +102,7 @@ export const PHOTO_REFERENCE_PROFILES=Object.freeze({
     source:'Google Street View 2017-05 + Riksantikvarieämbetet'
   }),
   101608925:Object.freeze({
-    address:'Tingvallagatan 15',name:'Frimurarelogen / Herman Anderssons bokhandel',front:'north',extraFaces:['west'],kind:'frimurarebok',
+    address:'Tingvallagatan 15',name:'Frimurarelogen / Herman Anderssons bokhandel',front:'north',extraFaces:['west','east','south'],kind:'frimurarebok',
     wall:'#9c8274',frame:'#d1c2ad',glass:'#4f676c',ground:'#756a61',accent:'#e1d6bd',
     source:'Google Street View 2017-05 + Karlstad i förändring'
   }),
@@ -605,58 +605,60 @@ export function addPhotoReferenceFacade(mesh,b){
     panel(mid-emW/2,h-2.05,emW,1.82,'#744437',.20);
     panel(mid-emW*.33,h-.45,emW*.66,.58,'#456c58',.23);
   }else if(p.kind==='frimurarebok'){
-    // Frimurarelogen / Herman Anderssons gamla bokhandel.
-    // Use sparse but physical 3D relief so Intel/Safari cannot lose the facade as a
-    // coplanar panel, while staying inside the existing mobile geometry budget.
-    const northZ=b.minz-.48,northX=(b.minx+b.maxx)/2,northW=Math.max(10,b.maxx-b.minx-.8);
-    const relief=.18;
-    mesh.box(northX,.34,northZ,northW,.68,relief,p.ground);
-    mesh.box(northX,3.35,northZ-.02,northW-.25,.18,relief+.04,p.frame);
-    mesh.box(northX,h-.42,northZ-.03,northW-.18,.34,relief+.05,p.accent);
-    mesh.box(northX,h-.10,northZ-.04,northW-.70,.14,relief+.07,'#5d514b');
-
-    const ncols=7,ncw=northW/ncols,upperRows=2;
-    for(let r=0;r<upperRows;r++){
-      const cy=4.72+r*2.28;if(cy+1.0>h-.55)continue;
-      for(let c=0;c<ncols;c++){
-        const cx=b.minx+.60+c*ncw+ncw/2,ww=Math.max(2.0,Math.min(3.35,ncw*.62));
-        mesh.box(cx,cy,northZ-.05,ww+.42,1.86,relief+.10,p.frame);
-        mesh.box(cx,cy,northZ-.18,ww,1.48,relief+.12,p.glass);
+    // Frimurarelogen / Herman Anderssons bokhandel — reference geometry follows the real OSM polygon.
+    // Real facade cues: rose/stone rusticated base, tall rounded piano-nobile windows,
+    // paired pale pilasters, ornamental attic openings, central crest and green metal roof line.
+    const drawFrimurareFace=(face,{primary=false,shops=false}={})=>{
+      const f=photoReferenceFront(b,face);if(!f)return false;
+      const {a,length,tx,tz,nx,nz}=f,FACE_BIAS=.16;
+      const point=(u,y,out)=>[a[0]+tx*u+nx*(out+FACE_BIAS),y,a[1]+tz*u+nz*(out+FACE_BIAS)];
+      const q=(u,y,w,ph,col,out=.11)=>{if(w<=.08||ph<=.08)return;mesh.quad(point(u,y,out),point(u+w,y,out),point(u+w,y+ph,out),point(u,y+ph,out),col);};
+      const baseH=Math.min(3.35,Math.max(2.95,h*.31));
+      q(0,.05,length,baseH,p.ground,.14);
+      for(let y=.48;y<baseH-.18;y+=.58)q(.04,y,Math.max(.3,length-.08),.045,'#7f6f67',.17);
+      const bays=Math.max(4,Math.min(primary?9:8,Math.round(length/4.0))),bw=length/bays,entrance=primary?Math.floor(bays/2):-1;
+      for(let c=0;c<bays;c++){
+        const u=c*bw+.24,w=Math.max(.48,bw-.48);
+        if(c===entrance){
+          const dw=Math.min(2.0,w*.92),du=c*bw+(bw-dw)/2;
+          q(du-.15,.48,dw+.30,baseH-.56,p.frame,.23);q(du,.70,dw,baseH-.88,'#2c393b',.29);
+          q(du+.12,baseH-.30,dw-.24,.22,'#c8b894',.33);
+        }else if(shops){
+          q(u-.08,.62,w+.16,baseH-.82,p.frame,.20);q(u,.76,w,baseH-1.08,p.glass,.25);
+          q(u+.05,baseH-.40,w-.10,.18,'#e6d7b6',.30);
+        }else{
+          q(u-.08,.90,w+.16,baseH-1.12,p.frame,.19);q(u,1.03,w,baseH-1.38,p.glass,.23);
+        }
       }
-    }
-    // Four strong classical piers make the long wall read as architecture, not a slab.
-    for(let i=1;i<=4;i++){
-      const x=b.minx+(b.maxx-b.minx)*i/5;
-      mesh.box(x,(h+3.35)/2,northZ-.03,.18,Math.max(1.0,h-3.35),relief+.07,'#b6a390');
-    }
-
-    // Keep the current tenant readable but integrate it into the historic facade.
-    const shopW=Math.min(12.8,northW*.36),shopX=northX+Math.min(2.0,northW*.06);
-    mesh.box(shopX,2.84,northZ-.13,shopW+.90,.20,relief+.15,p.frame);
-    mesh.box(shopX-shopW*.47,1.88,northZ-.10,.16,2.10,relief+.11,p.frame);
-    mesh.box(shopX+shopW*.47,1.88,northZ-.10,.16,2.10,relief+.11,p.frame);
-
-    // West facade towards Västra Torggatan, based on the Street View reference:
-    // tall masonry openings and a heavy classical cornice.
-    const westX=b.minx-.48,westZ=(b.minz+b.maxz)/2,westD=Math.max(10,b.maxz-b.minz-.9);
-    mesh.box(westX,.34,westZ,relief,.68,westD,p.ground);
-    mesh.box(westX-.02,3.34,westZ,relief+.05,.18,westD-.2,p.frame);
-    mesh.box(westX-.03,h-.42,westZ,relief+.07,.34,westD-.18,p.accent);
-    const wcols=6,wd=westD/wcols;
-    for(let r=0;r<upperRows;r++){
-      const cy=4.72+r*2.28;if(cy+1.0>h-.55)continue;
-      for(let c=0;c<wcols;c++){
-        const cz=b.minz+.62+c*wd+wd/2,wh=Math.max(1.9,Math.min(3.2,wd*.62));
-        mesh.box(westX-.05,cy,cz,relief+.10,1.86,wh+.42,p.frame);
-        mesh.box(westX-.18,cy,cz,relief+.12,1.48,wh,p.glass);
+      q(.04,baseH-.08,Math.max(.3,length-.08),.22,'#65544b',.19);
+      const mainY=baseH+.48,mainH=Math.max(2.35,Math.min(3.15,h-baseH-2.15));
+      for(let c=0;c<bays;c++){
+        const u=c*bw+.34,w=Math.max(.46,bw-.68);
+        q(u-.13,mainY-.14,w+.26,mainH+.18,p.frame,.20);q(u,mainY,w,mainH-.16,p.glass,.25);
+        q(u-.06,mainY+mainH-.28,w+.12,.28,p.frame,.29);q(u+w*.47,mainY+.12,.055,Math.max(.8,mainH-.46),'#d7d4c9',.28);
+        if(c<bays-1)q((c+1)*bw-.045,baseH+.14,.09,Math.max(1.0,mainH+.66),'#b7aa99',.24);
       }
-    }
-    const groundBays=5,gb=westD/groundBays;
-    for(let c=0;c<groundBays;c++){
-      const cz=b.minz+.60+c*gb+gb/2,gw=Math.max(2.1,Math.min(3.7,gb*.60));
-      mesh.box(westX-.05,1.82,cz,relief+.10,2.68,gw+.38,p.frame);
-      mesh.box(westX-.18,1.79,cz,relief+.12,2.26,gw,p.glass);
-    }
+      q(.03,mainY+mainH+.18,Math.max(.3,length-.06),.30,p.accent,.20);
+      const atticY=mainY+mainH+.62,atticH=Math.max(.62,Math.min(1.05,h-atticY-.58));
+      if(atticH>.58){
+        const acols=Math.max(4,Math.min(10,bays)),aw=length/acols;
+        for(let c=0;c<acols;c++){
+          const u=c*aw+aw*.31,w=Math.max(.34,aw*.38);
+          q(u-.10,atticY-.08,w+.20,atticH+.16,p.frame,.21);q(u,atticY,w,atticH,p.glass,.27);
+        }
+      }
+      q(.02,h-.48,Math.max(.3,length-.04),.34,'#7d8072',.20);q(.16,h-.16,Math.max(.3,length-.32),.18,'#405b55',.25);
+      if(primary){
+        const mid=length/2,crestW=Math.min(4.5,length*.18);
+        q(mid-crestW/2,atticY-.18,crestW,Math.min(1.35,Math.max(.72,h-atticY-.48)),'#d9cdb8',.32);
+        q(mid-.42,atticY+.18,.84,.42,'#9b675f',.36);
+      }
+      return true;
+    };
+    drawFrimurareFace('north',{primary:true,shops:true});
+    drawFrimurareFace('west',{shops:true});
+    drawFrimurareFace('east');
+    drawFrimurareFace('south');
   }else if(p.kind==='tingvalla-school'){
     // Tingvallagymnasiet: real yellow-brick institutional facade with deep dark plinth,
     // repeated tall arched windows and strong brick pilasters/cornice bands.
