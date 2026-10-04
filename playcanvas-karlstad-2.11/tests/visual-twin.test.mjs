@@ -13,11 +13,24 @@ const osm=JSON.parse(fs.readFileSync(new URL('../data/osm-buildings.json',import
 const buildings=cityBuildings(osm);
 const infill=infillBuildings(osm,buildings);
 
-test('Visual Twin never replaces curated Street View/reference facades',()=>{
-  for(const b of buildings.filter(b=>KUNGSGATAN_PROFILES[b.osm]||INNERSTAD_REFERENCE_IDS.has(b.osm)||PHOTO_REFERENCE_IDS.has(b.osm))){
+test('Visual Twin never replaces curated Kungsgatan or innerstad facades',()=>{
+  for(const b of buildings.filter(b=>KUNGSGATAN_PROFILES[b.osm]||INNERSTAD_REFERENCE_IDS.has(b.osm))){
     assert.equal(visualTwinProfile(b),null);
     assert.equal(visualTwinFront(b),null);
     const mesh=new ComicMesh();assert.equal(addVisualTwinFacade(mesh,b),false);
+  }
+});
+
+test('photo-reference buildings keep verified fronts while Visual Twin rescues other exposed walls',()=>{
+  const all=[...buildings,...infill];
+  for(const id of [101935916,100833292,101608925]){
+    const b=all.find(x=>x.osm===id);assert.ok(b,'photo building '+id);
+    assert.equal(visualTwinProfile(b),null,'public inferred profile must stay hidden for '+id);
+    assert.equal(visualTwinFront(b),null,'verified primary front must stay reference-owned for '+id);
+    const mesh=new ComicMesh();
+    assert.equal(addVisualTwinFacade(mesh,b,{neighbours:all}),true,'secondary rescue facade '+id);
+    assert.ok(mesh.positions.length>0,'secondary rescue geometry '+id);
+    assert.ok(mesh.positions.every(Number.isFinite),'finite rescue geometry '+id);
   }
 });
 
