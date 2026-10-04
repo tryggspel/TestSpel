@@ -2,7 +2,7 @@ import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.17';
 import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.17';
 import {visualTwinFaceYaw} from './visual-twin.mjs?v=2.11.17';
 import {PHOTO_REFERENCE_PROFILES,photoReferenceFaceYaw} from './photo-reference-pass3.mjs?v=2.11.17';
-import {IDENTITY_IDS,SHOP_IDS} from './city-geography.mjs?v=2.11.17';
+import {IDENTITY_IDS,SHOP_IDS,LANDMARKS} from './city-geography.mjs?v=2.11.17';
 import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.17';
 const ink='#253d40',cream='#fff0c8';
 const palettes=[['#eeb985','#d88c67','#ae4e45'],['#a7c7b4','#789e91','#367c75'],['#dec5a0','#b29a7e','#70568a'],['#c4b6d7','#9886b7','#a85159']];
@@ -52,19 +52,65 @@ export function drawComicFacade(c,w,h,variant=0,upperOnly=false){
 }
 // Full-width modules keep windows at a readable scale even on long OSM blocks.
 // Four baked textures, spatial batches, no per-window entities or frame-time canvas work.
+const CARDINAL_YAW=Object.freeze({south:0,east:90,north:180,west:-90});
+const angleDiff=(a,b)=>Math.abs((((a-b)+540)%360)-180);
+const sameDirection=(a,b,tolerance=34)=>Number.isFinite(a)&&Number.isFinite(b)&&angleDiff(a,b)<=tolerance;
+const identityFrontYaw=osm=>{
+  const mark=LANDMARKS.find(x=>x.osm===osm);
+  return mark?CARDINAL_YAW[mark.front]??null:null;
+};
+const identityCanUseFallback=b=>{
+  if(!IDENTITY_IDS.has(b.osm))return true;
+  const t=b.tags||{};
+  // Preserve hand-built iconic architecture. Large commercial/civic/hotel volumes,
+  // on the other hand, need secondary wall coverage or they become giant blank slabs.
+  if(t.historic||t.amenity==='place_of_worship'||t.amenity==='theatre'||t.tourism==='museum')return false;
+  if(['church','government','detached'].includes(String(t.building||'')))return false;
+  return true;
+};
+function polygonFacadeFaces(b){
+  const poly=Array.isArray(b.polygon)?b.polygon:null;
+  if(!poly||poly.length<3){
+    const cx=(b.minx+b.maxx)/2,cz=(b.minz+b.maxz)/2;
+    return [
+      {x:cx,z:b.minz-.25,yaw:180,w:b.maxx-b.minx,tx:-1,tz:0,nx:0,nz:-1},
+      {x:cx,z:b.maxz+.25,yaw:0,w:b.maxx-b.minx,tx:1,tz:0,nx:0,nz:1},
+      {x:b.minx-.25,z:cz,yaw:-90,w:b.maxz-b.minz,tx:0,tz:1,nx:-1,nz:0},
+      {x:b.maxx+.25,z:cz,yaw:90,w:b.maxz-b.minz,tx:0,tz:-1,nx:1,nz:0}
+    ];
+  }
+  let area=0;
+  for(let i=0;i<poly.length;i++){const a=poly[i],q=poly[(i+1)%poly.length];area+=a[0]*q[1]-q[0]*a[1];}
+  const ccw=area>0,out=[];
+  for(let i=0;i<poly.length;i++){
+    const a=poly[i],q=poly[(i+1)%poly.length],dx=q[0]-a[0],dz=q[1]-a[1],w=Math.hypot(dx,dz);
+    if(w<2)continue;
+    const tx=dx/w,tz=dz/w,nx=ccw?tz:-tz,nz=ccw?-tx:tx;
+    const x=(a[0]+q[0])/2,z=(a[1]+q[1])/2,yaw=Math.atan2(nx,nz)*180/Math.PI;
+    out.push({x,z,yaw,w,tx,tz,nx,nz,a,q});
+  }
+  return out;
+}
+
 export function facadePanels(buildings,blocked=()=>false){
   const panels=[];
   for(const b of buildings){
-    if(b.height<5||IDENTITY_IDS.has(b.osm)||b.osm===234271401)continue;
-    const cx=(b.minx+b.maxx)/2,cz=(b.minz+b.maxz)/2,h=b.height-.08;
-    const faces=[{x:cx,z:b.minz-.25,yaw:180,w:b.maxx-b.minx},{x:cx,z:b.maxz+.25,yaw:0,w:b.maxx-b.minx},{x:b.minx-.25,z:cz,yaw:-90,w:b.maxz-b.minz},{x:b.maxx+.25,z:cz,yaw:90,w:b.maxz-b.minz}];
+    if(b.height<5||!identityCanUseFallback(b))continue;
+    const h=b.height-.08,faces=polygonFacadeFaces(b),markYaw=identityFrontYaw(b.osm);
     for(const face of faces){
-      if(KUNGSGATAN_PROFILES[b.osm]&&face.yaw===0)continue; // Reference geometry follows the actual south polygon edge.
-      if(INNERSTAD_PROFILES[b.osm]&&face.yaw===referenceFaceYaw(b.osm))continue; // Do not paint a generic facade over a hand-built reference front.
-      if(PHOTO_REFERENCE_PROFILES[b.osm]&&face.yaw===photoReferenceFaceYaw(b.osm))continue; // Pass 3 real-photo frontage owns this face.
-      if(!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_PROFILES[b.osm]&&face.yaw===visualTwinFaceYaw(b))continue; // Visual Twin owns the ordinary building's primary street face.
-      const a=face.yaw*Math.PI/180,tx=Math.cos(a),tz=-Math.sin(a),nx=Math.sin(a),nz=Math.cos(a);
+      // Curated or hand-built primary fronts keep ownership; secondary/exposed sides
+      // still receive fallback architecture so a whole block never becomes a blank plane.
+      if(KUNGSGATAN_PROFILES[b.osm]&&sameDirection(face.yaw,0))continue;
+      if(INNERSTAD_PROFILES[b.osm]&&sameDirection(face.yaw,referenceFaceYaw(b.osm)))continue;
+      if(PHOTO_REFERENCE_PROFILES[b.osm]&&sameDirection(face.yaw,photoReferenceFaceYaw(b.osm)))continue;
+      if(!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_PROFILES[b.osm]&&!PHOTO_REFERENCE_PROFILES[b.osm]&&sameDirection(face.yaw,visualTwinFaceYaw(b)))continue;
+      if(IDENTITY_IDS.has(b.osm)&&sameDirection(face.yaw,markYaw))continue;
+
+      const {tx,tz,nx,nz}=face;
+      // Test on the real polygon's exterior normal, not on an AABB side. This is the key
+      // to keeping slanted/L-shaped OSM blocks from silently losing their facade layer.
       if(face.w<2||[-.35,0,.35].every(t=>blocked(face.x+tx*face.w*t+nx*1.2,face.z+tz*face.w*t+nz*1.2)))continue;
+
       const count=Math.max(1,Math.ceil(face.w/13)),w=face.w/count;
       for(let i=0;i<count;i++){
         const offset=-face.w/2+(i+.5)*w,x=face.x+tx*offset,z=face.z+tz*offset;
@@ -74,17 +120,23 @@ export function facadePanels(buildings,blocked=()=>false){
           const alongX=Math.abs(tx)>.5,fixed=alongX?z:x;
           if(fixed<(alongX?cut.minz:cut.minx)-.6||fixed>(alongX?cut.maxz:cut.maxx)+.6)continue;
           const sign=alongX?tx:tz,origin=alongX?x:z;
-          const a=((alongX?cut.minx:cut.minz)-origin)/sign,b=((alongX?cut.maxx:cut.maxz)-origin)/sign,lo=Math.min(a,b),hi=Math.max(a,b),next=[];
-          for(const q of parts){const l=Math.max(q.lo,lo),r=Math.min(q.hi,hi);if(r<=l||q.y>=3.4){next.push(q);continue;}
-            if(q.lo<l)next.push({...q,hi:l});if(r<q.hi)next.push({...q,lo:r});next.push({...q,lo:l,hi:r,y:3.4});}
+          const aa=((alongX?cut.minx:cut.minz)-origin)/(sign||1e-9),bb=((alongX?cut.maxx:cut.maxz)-origin)/(sign||1e-9),lo=Math.min(aa,bb),hi=Math.max(aa,bb),next=[];
+          for(const q of parts){
+            const l=Math.max(q.lo,lo),r=Math.min(q.hi,hi);
+            if(r<=l||q.y>=3.4){next.push(q);continue;}
+            if(q.lo<l)next.push({...q,hi:l});
+            if(r<q.hi)next.push({...q,lo:r});
+            next.push({...q,lo:l,hi:r,y:3.4});
+          }
           parts=next;
         }
-        for(const q of parts)if(q.top>q.y)panels.push({osm:b.osm,x,z,tx,tz,nx,nz,w,h,...q,variant:Math.abs(b.osm)%4});
+        for(const q of parts)if(q.top>q.y)panels.push({osm:b.osm,x,z,tx,tz,nx,nz,w,h,...q,variant:Math.abs(b.osm)%4,edgeYaw:face.yaw});
       }
     }
   }
   return panels;
 }
+
 export function createComicCity(pc,host,{texture}){
   const textures=Array.from({length:4},(_,i)=>texture((c,w,h)=>drawComicFacade(c,w,h,i),1024,1024));
   const materials=textures.map(t=>{t.anisotropy=Math.min(4,host.app.graphicsDevice.maxAnisotropy||1);const m=new pc.StandardMaterial();m.useLighting=false;m.diffuse.set(0,0,0);m.emissive.set(1,1,1);m.emissiveMap=t;m.update();return m;});
