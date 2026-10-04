@@ -368,7 +368,7 @@ export function createCityArchitecture(pc,app,buildings){
     town.polygon(b.polygon,h+.015,'#3b5155');
     addKungsgatanFacade(town,b);
     addInnerstadFacade(town,b);
-    addVisualTwinFacade(town,b);
+    addVisualTwinFacade(town,b,{neighbours:buildings});
     if(b.tags['roof:shape']==='gabled'||(b.area<260&&b.sx<26&&b.sz<26))town.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
   // Reference houses outside the 64-house core still join the same static town batch.
@@ -532,7 +532,7 @@ export function infillMesh(buildings,mesh=new ComicMesh()){
     const floors=Math.max(1,Math.round(h/3.2));
     if(!twin)for(let f=0;f<floors;f++){const y=f*3.2+1.25;if(y+1.1<h-.5)mesh.walls(poly,y,y+1.1,'#5d7a7c',.05);}
     mesh.polygon(poly,h+.01,'#3e5357');
-    addVisualTwinFacade(mesh,b,{lod:'low'});
+    addVisualTwinFacade(mesh,b,{lod:'low',neighbours:buildings});
     if(b.area<260&&b.sx<26&&b.sz<26)mesh.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
   return mesh;
