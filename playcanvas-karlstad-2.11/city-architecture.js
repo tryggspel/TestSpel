@@ -319,27 +319,40 @@ export class ComicMesh {
     return parent;
   }
 }
+export const ROAD_RENDER_LEVELS=Object.freeze({
+  sidewalkBase:.045,
+  sidewalk:.065,
+  edge:.085,
+  road:.105,
+  pedestrian:.125,
+  pedestrianMid:.145,
+  seam:.165,
+  square:.125,
+  squareBase:.055,
+  squareLine:.165
+});
+
 export function createCityArchitecture(pc,app,buildings){
   const material=new pc.StandardMaterial();material.useLighting=false;material.diffuse.set(0,0,0);material.emissive.set(1,1,1);material.emissiveVertexColor=true;material.update();
   const road=new ComicMesh();
   // Sidewalks and their dark ink edges follow the same OSM polylines as the map.
-  for(const s of CITY_STREETS)road.strip(s.points,s.width+4.7,.009,'#637a72');
-  for(const s of CITY_STREETS)road.strip(s.points,s.width+4.1,.014,'#c0bda2');
-  for(const s of CITY_STREETS)road.strip(s.points,s.width+.4,.020,'#33494c');
-  for(const s of CITY_STREETS)if(!s.pedestrian)road.strip(s.points,s.width,.027,'#667b7d');
+  for(const s of CITY_STREETS)road.strip(s.points,s.width+4.7,ROAD_RENDER_LEVELS.sidewalkBase,'#637a72');
+  for(const s of CITY_STREETS)road.strip(s.points,s.width+4.1,ROAD_RENDER_LEVELS.sidewalk,'#c0bda2');
+  for(const s of CITY_STREETS)road.strip(s.points,s.width+.4,ROAD_RENDER_LEVELS.edge,'#33494c');
+  for(const s of CITY_STREETS)if(!s.pedestrian)road.strip(s.points,s.width,ROAD_RENDER_LEVELS.road,'#667b7d');
   // 2.11: gågator syns tydligt — rosa stenläggning hela vägen mellan husen (som stadskartans
   // gågatufärg), mörka kantstenar bort, tvärgående fogar och en ljus mittlinje av plattor.
   for(const s of PEDESTRIAN_STREETS){
-    road.strip(s.points,s.width+4.3,.028,'#d6a39a');
-    road.strip(s.points,s.width*.34,.031,'#ead1c4');
+    road.strip(s.points,s.width+4.3,ROAD_RENDER_LEVELS.pedestrian,'#d6a39a');
+    road.strip(s.points,s.width*.34,ROAD_RENDER_LEVELS.pedestrianMid,'#ead1c4');
     for(let i=1;i<s.points.length;i++){const [x,z]=s.points[i-1],[ex,ez]=s.points[i],d=Math.hypot(ex-x,ez-z);if(d<1)continue;const ux=(ex-x)/d,uz=(ez-z)/d,hw=(s.width+4.3)/2;
-      for(let t=1.5;t<d;t+=3)road.strip([[x+ux*t-uz*hw,z+uz*t+ux*hw],[x+ux*t+uz*hw,z+uz*t-ux*hw]],.09,.034,'#b98a82');}
+      for(let t=1.5;t<d;t+=3)road.strip([[x+ux*t-uz*hw,z+uz*t+ux*hw],[x+ux*t+uz*hw,z+uz*t-ux*hw]],.09,ROAD_RENDER_LEVELS.seam,'#b98a82');}
   }
-  road.polygon(PEDESTRIAN_SQUARE.points,.026,'#d6a39a');
+  road.polygon(PEDESTRIAN_SQUARE.points,ROAD_RENDER_LEVELS.square,'#d6a39a');
   // The open paved square reaches the two Torggatan streets, not a fictitious central road.
-  road.box(5,.009,3,128,.012,61,'#c9bc99');
-  for(let x=-54;x<65;x+=8)road.strip([[x,-26],[x,32]],.035,.032,'#ada68e');
-  for(let z=-22;z<32;z+=8)road.strip([[-58,z],[67,z]],.035,.033,'#ada68e');
+  road.box(5,ROAD_RENDER_LEVELS.squareBase,3,128,.05,61,'#c9bc99');
+  for(let x=-54;x<65;x+=8)road.strip([[x,-26],[x,32]],.035,ROAD_RENDER_LEVELS.squareLine,'#ada68e');
+  for(let z=-22;z<32;z+=8)road.strip([[-58,z],[67,z]],.035,ROAD_RENDER_LEVELS.squareLine,'#ada68e');
   road.finish(pc,app,'Karlstad · verkliga gatustråk',material);
 
   const batches=[];const town=new ComicMesh();
