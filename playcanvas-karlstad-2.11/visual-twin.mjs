@@ -78,11 +78,26 @@ export function visualTwinFaceYaw(b){
   return e.nz>0?0:180;
 }
 
-export function addVisualTwinFacade(mesh,b){
+export function addVisualTwinFacade(mesh,b,options={}){
   const p=visualTwinProfile(b),edge=visualTwinFront(b);if(!p||!edge)return false;
-  const {a,length,tx,tz,nx,nz}=edge,h=Math.max(3.2,b.h);
+  const {a,length,tx,tz,nx,nz}=edge,h=Math.max(3.2,b.h),low=options.lod==='low';
   const point=(u,y,out)=>[a[0]+tx*u+nx*out,y,a[1]+tz*u+nz*out];
   const panel=(u,y,w,ph,colour,out=.10)=>{if(w<=.08||ph<=.08)return;mesh.quad(point(u,y,out),point(u+w,y,out),point(u+w,y+ph,out),point(u,y+ph,out),colour);};
+
+  // Infill stays inside the existing 16-bit static-mesh budget: one glazed ground band
+  // plus broad upper window ribbons. Near-centre buildings use the detailed variant below.
+  if(low){
+    panel(.08,.56,Math.max(.3,length-.16),2.30,p.ground,.14);
+    panel(.20,.72,Math.max(.3,length-.40),1.88,p.glass,.17);
+    if(p.awning)panel(.22,2.73,Math.max(.3,length-.44),.22,p.accent,.25);
+    const floors=Math.max(1,Math.min(4,Math.round(h/3.2)-1)),rowH=Math.max(2.5,(h-3.55)/floors);
+    for(let row=0;row<floors;row++){
+      const y=3.72+row*rowH;
+      panel(.26,y,Math.max(.3,length-.52),Math.max(.58,Math.min(.92,rowH-.7)),p.glass,.15);
+      panel(.20,y-.10,Math.max(.3,length-.40),.07,p.frame,.17);
+    }
+    return true;
+  }
 
   panel(0,.04,length,h-.04,p.wall,.07);
   panel(0,.05,length,.46,p.ground,.11);
