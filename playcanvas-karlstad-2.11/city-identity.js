@@ -38,6 +38,55 @@ export function drawLandmarkFacade(c,w,h,kind){
     }
     for(const x of [349,661]){box(x+9,26,20,478,'#a7af9b');box(x,25,14,482,paper,2);}
     box(382,5,258,34,paper);c.fillStyle=ink;c.font='700 28px Georgia,serif';c.textAlign='center';c.fillText('RÅDHUSET',512,30);
+  }else if(kind==='frimurare'){
+    // Frimurarelogen, Tingvallagatan 15 — explicit illustrated facade for the trusted card pipeline.
+    // Dark yellow classicist plaster, rusticated base, paired pilasters, tall piano-nobile windows,
+    // attic windows, central risalit and dark green/black roof line.
+    box(0,0,1024,512,'#c8a655');
+    box(0,350,1024,162,'#8f8779');
+    for(let y=362;y<505;y+=31)box(0,y,1024,3,'#6f685f');
+    box(0,0,1024,18,'#405b55');
+    box(0,26,1024,10,'#efe3c8');
+    box(0,174,1024,10,'#b88e47');
+    box(0,184,1024,8,'#efe3c8');
+    box(0,332,1024,12,'#b88e47');
+    box(0,344,1024,9,'#efe3c8');
+
+    // Central risalit.
+    box(397,18,230,488,'#d4b263');
+    box(390,18,12,488,'#eadfc4');
+    box(627,18,12,488,'#eadfc4');
+
+    const bays=9,bw=1024/bays;
+    for(let i=0;i<bays;i++){
+      const x=i*bw+bw*.24;
+      // Ground-floor openings.
+      window(x,367,bw*.50,105,false);
+      // Tall piano-nobile windows.
+      window(x,205,bw*.50,112,true);
+      // Upper/attic rhythm.
+      window(x+bw*.06,67,bw*.38,77,false);
+      if(i<bays-1){
+        box((i+1)*bw-8,50,16,294,'#eadfc4');
+        box((i+1)*bw-13,48,26,10,'#b69f79');
+      }
+    }
+
+    // Main portal and crest.
+    box(455,365,114,143,'#7d766d',2);
+    box(470,384,84,116,'#30464c',3);
+    box(438,340,148,22,'#eadfc4',2);
+    box(448,126,128,44,'#eadfc4',2);
+    c.fillStyle='#986b50';c.beginPath();c.arc(512,148,18,0,Math.PI*2);c.fill();
+
+    // Strong classical roof/cornice silhouette.
+    box(0,38,1024,13,'#6e765f');
+    box(0,18,1024,18,'#405b55');
+    c.fillStyle='#334943';c.beginPath();c.moveTo(0,18);c.lineTo(1024,18);c.lineTo(950,0);c.lineTo(74,0);c.closePath();c.fill();
+
+    // Readable identity integrated into the architecture, not a floating billboard.
+    c.fillStyle='#4f4b43';c.font='700 22px Georgia,serif';c.textAlign='center';
+    c.fillText('FRIMURARELOGEN · TINGVALLAGATAN 15',512,328,480);
   }else if(kind==='residenset'){
     // Residenset — SFV reference: ochre/yellow plaster, grey rusticated base,
     // round-arched ground-floor openings, sash windows above and a strong central pavilion.
@@ -287,6 +336,20 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       }
     }
   }
+  // HERO4: guarantee Frimurarelogen through the same card/texture path that renders Grekiska.
+  // This bypasses ComicMesh entirely and therefore cannot disappear through mesh chunking/culling.
+  const frim=host.colliders.find(b=>b.osm===101608925);
+  if(frim){
+    const fx=(frim.minx+frim.maxx)/2,fz=(frim.minz+frim.maxz)/2;
+    const fw=Math.max(36,frim.maxx-frim.minx-.30),fd=Math.max(32,frim.maxz-frim.minz-.30);
+    const fh=Math.max(9.6,frim.h||frim.height||9.6),ft=facade('frimurare',1536,768);
+    // Grekiska sits at minz-.34; these cards sit behind it but clearly in front of the structural wall.
+    mount('Frimurarelogen · HERO4 · Tingvallagatan',ft,fw,fh,fx,.03,frim.minz-.18,180,true);
+    mount('Frimurarelogen · HERO4 · gårdssida',ft,fw,fh,fx,.03,frim.maxz+.18,0,true);
+    mount('Frimurarelogen · HERO4 · västsida',ft,fd,fh,frim.minx-.18,.03,fz,-90,true);
+    mount('Frimurarelogen · HERO4 · östsida',ft,fd,fh,frim.maxx+.18,.03,fz,90,true);
+  }
+
   const landmarkIds=new Set(LANDMARKS.map(m=>m.osm)),shopIds=new Set(STOREFRONTS.map(s=>s.osm));
   for(const b of host.colliders){
     if(!b.name||landmarkIds.has(b.osm)||shopIds.has(b.osm)||SOUTH_IDS.has(b.osm)||BUSINESS_OSM_IDS.has(b.osm)||/PARKERING|PRESSBYRÅN/i.test(b.name))continue;
