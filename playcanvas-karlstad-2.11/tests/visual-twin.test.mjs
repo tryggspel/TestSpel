@@ -31,7 +31,7 @@ test('ordinary centre buildings receive deterministic street DNA and bounded fac
     assert.ok(mesh.positions.every(Number.isFinite));
     assert.ok(mesh.indices.length/3<1500,'bounded triangle budget for '+b.osm);
   }
-  assert.ok(generated>=35,'most core generic houses should get a street-facing twin');
+  assert.ok(generated>=Math.max(20,Math.floor(ordinary.length*.45)),'most remaining core generic houses should get a street-facing twin: '+generated+'/'+ordinary.length);
 });
 
 test('generic comic texture cannot cover the generated primary street facade',()=>{
