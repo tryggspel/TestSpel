@@ -162,7 +162,10 @@ export function visualTwinFaceYaw(b){
 export function addVisualTwinFacade(mesh,b,options={}){
   const p=visualTwinProfile(b),edge=visualTwinFront(b);if(!p||!edge)return false;
   const {a,length,tx,tz,nx,nz}=edge,h=Math.max(3.2,b.h),low=options.lod==='low',groundMode=visualTwinGroundMode(b);
-  const point=(u,y,out)=>[a[0]+tx*u+nx*out,y,a[1]+tz*u+nz*out];
+  // The solid OSM wall is already rendered in this profile's wall colour. Bias only
+  // the detail layer outward so large facade sheets never compete in the depth buffer.
+  const FACE_BIAS=.07;
+  const point=(u,y,out)=>[a[0]+tx*u+nx*(out+FACE_BIAS),y,a[1]+tz*u+nz*(out+FACE_BIAS)];
   const panel=(u,y,w,ph,colour,out=.10)=>{if(w<=.08||ph<=.08)return;mesh.quad(point(u,y,out),point(u+w,y,out),point(u+w,y+ph,out),point(u,y+ph,out),colour);};
   const drawGroundFloor=(compact=false)=>{
     const len=length,v=p.variant||0,stone=['#a7a496','#bbb4a3','#8e938c','#c3b7a2'][v%4];
@@ -243,7 +246,6 @@ export function addVisualTwinFacade(mesh,b,options={}){
       panel(.20,y-.10,Math.max(.3,length-.40),.07,p.frame,.17);
     }
   }else{
-    panel(0,.04,length,h-.04,p.wall,.07);
     drawGroundFloor(false);
     panel(0,h-.34,length,.28,p.frame,.13);
 
