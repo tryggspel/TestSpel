@@ -91,3 +91,19 @@ test('Wermlandsbanken and Frimurarelogen have distinct architectural signatures'
   assert.notEqual(bank.wall,book.wall);
   assert.notEqual(olearys.kind,bank.kind);
 });
+
+
+test('Torget hero facades span the full split OSM frontage like Kungsgatan',()=>{
+  const expectedMin=new Map([
+    [100833292,30],
+    [100839528,24],
+    [101430152,24],
+    [101608925,38]
+  ]);
+  for(const [id,minLength] of expectedMin){
+    const b=all.find(x=>x.osm===id);assert.ok(b,'OSM building '+id);
+    const front=photoReferenceFront(b);assert.ok(front,'front '+id);
+    assert.ok(front.length>=minLength,PHOTO_REFERENCE_PROFILES[id].address+' frontage '+front.length.toFixed(1)+'m < '+minLength+'m');
+    assert.ok((front.segments||1)>=2,PHOTO_REFERENCE_PROFILES[id].address+' should merge split OSM segments');
+  }
+});
