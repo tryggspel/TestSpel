@@ -1,4 +1,5 @@
 import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.17';
+import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit} from './visual-twin.mjs?v=2.11.17';
 import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture} from './innerstad-reference.mjs?v=2.11.17';
 import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.17';
 
@@ -323,14 +324,15 @@ export function createCityArchitecture(pc,app,buildings){
   // Mitt i City stays separate so its four entrances and walkable interior are untouched.
   const contours=coreContourBuildings(buildings),contourIds=new Set(contours.map(b=>b.osm));
   for(const b of contours){
-    const seed=Math.abs((b.osm*2654435761)>>>0),wall=INNERSTAD_PROFILES[b.osm]?.wall||KUNGSGATAN_PROFILES[b.osm]?.wall||CORE_WALLS[seed%CORE_WALLS.length],h=Math.max(3.2,b.h);
+    const seed=Math.abs((b.osm*2654435761)>>>0),twin=visualTwinProfile(b),wall=INNERSTAD_PROFILES[b.osm]?.wall||KUNGSGATAN_PROFILES[b.osm]?.wall||twin?.wall||CORE_WALLS[seed%CORE_WALLS.length],h=Math.max(3.2,b.h);
     town.walls(b.polygon,0,h,wall);
     town.walls(b.polygon,.04,.72,'#788a80',.035);
     const floors=Math.max(1,Math.min(5,Math.round(h/3.2)));
-    for(let f=0;f<floors&&!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_PROFILES[b.osm];f++){const y=f*3.2+1.28;if(y+1.0<h-.55)town.walls(b.polygon,y,y+1.0,'#5d7a7c',.05);}
+    for(let f=0;f<floors&&!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_PROFILES[b.osm]&&!twin;f++){const y=f*3.2+1.28;if(y+1.0<h-.55)town.walls(b.polygon,y,y+1.0,'#5d7a7c',.05);}
     town.polygon(b.polygon,h+.015,'#3b5155');
     addKungsgatanFacade(town,b);
     addInnerstadFacade(town,b);
+    addVisualTwinFacade(town,b);
     if(b.tags['roof:shape']==='gabled'||(b.area<260&&b.sx<26&&b.sz<26))town.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
   // Reference houses outside the 64-house core still join the same static town batch.
@@ -476,7 +478,8 @@ export function createCityArchitecture(pc,app,buildings){
     }
     batches.push(m.finish(pc,app,'Karlstad · '+(b.name||b.osm),material));
   }
-  return {streetWays:CITY_STREETS.length,landmarks:batches.length,contours:contours.length,addressPlates,contourIds:Object.freeze([...contourIds]),staticDrawCalls:2+batches.length};
+  const visualTwin=visualTwinAudit(buildings);
+  return {streetWays:CITY_STREETS.length,landmarks:batches.length,contours:contours.length,addressPlates,visualTwin,contourIds:Object.freeze([...contourIds]),staticDrawCalls:2+batches.length};
 }
 
 // 2.11: kvartersfyllnad — stadens övriga OSM-byggnader i samma tecknade stil (färgade väggar,
@@ -484,14 +487,15 @@ export function createCityArchitecture(pc,app,buildings){
 const INFILL_WALLS=['#e2cfa7','#d8b48b','#c98f6a','#e6dcc4','#b9a68a','#d7c39b','#c7a07a','#e9d9b6'];
 export function infillMesh(buildings,mesh=new ComicMesh()){
   for(const b of buildings){
-    const seed=Math.abs((b.osm*2654435761)>>>0),wall=INFILL_WALLS[seed%INFILL_WALLS.length];
+    const seed=Math.abs((b.osm*2654435761)>>>0),twin=visualTwinProfile(b),wall=twin?.wall||INFILL_WALLS[seed%INFILL_WALLS.length];
     const h=Math.max(3.2,b.h),poly=b.polygon;
     mesh.walls(poly,0,h,wall);
     mesh.walls(poly,h-.45,h,'#2b4448',.06);
     mesh.walls(poly,.02,.75,'#7d8c84',.04);
     const floors=Math.max(1,Math.round(h/3.2));
-    for(let f=0;f<floors;f++){const y=f*3.2+1.25;if(y+1.1<h-.5)mesh.walls(poly,y,y+1.1,'#5d7a7c',.05);}
+    if(!twin)for(let f=0;f<floors;f++){const y=f*3.2+1.25;if(y+1.1<h-.5)mesh.walls(poly,y,y+1.1,'#5d7a7c',.05);}
     mesh.polygon(poly,h+.01,'#3e5357');
+    addVisualTwinFacade(mesh,b);
     if(b.area<260&&b.sx<26&&b.sz<26)mesh.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
   return mesh;
@@ -501,5 +505,5 @@ export function createInfill(pc,app,buildings){
   const mesh=infillMesh(buildings);if(!mesh.indices.length)return {buildings:0,addressPlates:0,staticDrawCalls:0};
   const addressPlates=addAddressPlates(mesh,buildings);
   mesh.finish(pc,app,'Karlstad · kvartersfyllnad med adresskyltar',material);
-  return {buildings:buildings.length,addressPlates,triangles:mesh.indices.length/3,staticDrawCalls:1};
+  return {buildings:buildings.length,addressPlates,visualTwin:visualTwinAudit(buildings),triangles:mesh.indices.length/3,staticDrawCalls:1};
 }
