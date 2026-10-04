@@ -1,6 +1,7 @@
 import {VISUAL_STREETS as CITY_STREETS} from './city-streets.mjs?v=2.11.17';
 import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.17';
 import {INNERSTAD_PROFILES} from './innerstad-reference.mjs?v=2.11.17';
+import {PHOTO_REFERENCE_PROFILES} from './photo-reference-pass3.mjs?v=2.11.17';
 
 // Karlstad Visual Twin: one data-driven facade system for ordinary city buildings.
 // Curated Street View/reference facades always win. Generated profiles are deliberately
@@ -26,7 +27,7 @@ const DNA=Object.freeze({
 });
 const FALLBACK=Object.freeze({archetype:'karlstad-mixed',wall:['#ddcbae','#c78d6b','#e4d9c5','#d0b58e'],frame:'#eee3cf',glass:'#4d696e',ground:'#555950',accent:'#687f76'});
 const normalName=s=>String(s||'').trim().toLocaleUpperCase('sv-SE');
-const curated=b=>!!(KUNGSGATAN_PROFILES[b.osm]||INNERSTAD_PROFILES[b.osm]);
+const curated=b=>!!(KUNGSGATAN_PROFILES[b.osm]||INNERSTAD_PROFILES[b.osm]||PHOTO_REFERENCE_PROFILES[b.osm]);
 const hash=id=>Math.abs(((Number(id)||0)*2654435761)>>>0);
 
 function nearestStreet(b){
