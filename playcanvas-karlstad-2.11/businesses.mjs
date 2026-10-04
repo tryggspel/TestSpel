@@ -18,7 +18,8 @@ const PALETTES=Object.freeze({
   scandic:{bg:'#252a31',fg:'#ffffff',accent:'#d84b62',kind:'hotel'},
   radhuscafe:{bg:'#654936',fg:'#fff0d5',accent:'#d49a56',kind:'cafe'},
   savoy:{bg:'#191f21',fg:'#f6efe3',accent:'#c94e37',kind:'hotel'},
-  homeplaza:{bg:'#302b27',fg:'#f5eee3',accent:'#b98258',kind:'hotel'}
+  homeplaza:{bg:'#302b27',fg:'#f5eee3',accent:'#b98258',kind:'hotel'},
+  gossip:{bg:'#241f28',fg:'#fff2df',accent:'#d8a64e',kind:'restaurant'}
 });
 const B=(id,name,address,osm,face,extra={})=>Object.freeze({id,name,address,osm,face,...PALETTES[id],...extra});
 
@@ -38,7 +39,8 @@ export const REAL_BUSINESSES=Object.freeze([
   B('burgerking','Burger King','Östra Torggatan 9',101247031,'east',{width:9.6,door:.78}),
   B('sibylla','Sibylla','Östra Torggatan 7',101588783,'east',{width:8.8,door:.30}),
   B('grekiska','Grekiska Grill & Bar','Tingvallagatan 15',101608925,'north',{width:10.8,door:.72}),
-  B('leprechaun','The Leprechaun','Östra Torggatan 4',101217187,'west',{width:9.0,door:.28})
+  B('leprechaun','The Leprechaun','Östra Torggatan 4',101217187,'west',{width:9.0,door:.28}),
+  B('gossip','Gossip & Bubbels','Älvgatan 2',101202579,'south',{width:11.8,door:.56})
 ]);
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
