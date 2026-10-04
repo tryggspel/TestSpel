@@ -60,6 +60,30 @@ export function drawLandmarkFacade(c,w,h,kind){
     for(const x of [178,706]){box(x,286,112,8,'#283638');for(let i=0;i<11;i++)box(x+5+i*10,246,4,40,'#283638');box(x,244,112,5,'#283638');}
     // Slightly taller central crown seen in the riverside facade.
     box(407,0,210,18,'#f1e9d8');box(444,0,136,10,'#d7ab4b');
+  }else if(kind==='opera'){
+    // Wermland Opera / Karlstads teater: white neoclassical front with green ornament,
+    // pediment, round attic windows and a dark glass entrance canopy.
+    box(0,0,1024,512,'#eee9dd');box(0,438,1024,74,'#d7d5c9');
+    for(const y of [18,214,424]){box(0,y,1024,8,'#c4cbbd');box(0,y-6,1024,7,'#fbf6e9');}
+    for(const x of [18,252,508,764,1000])box(x,0,16,512,'#fbf6e9');
+    // Three central tall windows and quieter side bays.
+    for(const x of [305,455,605])window(x,236,86,174,false);
+    for(const x of [76,824])window(x,258,72,150,false);
+    // Round upper windows + stylised green wreaths.
+    for(const x of [348,512,676]){
+      c.fillStyle='#426f61';c.beginPath();c.arc(x,126,46,0,Math.PI*2);c.fill();
+      c.fillStyle='#eee9dd';c.beginPath();c.arc(x,126,34,0,Math.PI*2);c.fill();
+      c.fillStyle='#365664';c.beginPath();c.arc(x,126,23,0,Math.PI*2);c.fill();
+      c.strokeStyle='#5c8a70';c.lineWidth=7;c.beginPath();c.arc(x,126,52,.18*Math.PI,.82*Math.PI);c.stroke();
+    }
+    // Central pediment and 1893-like relief treatment, stylised rather than photographic.
+    c.fillStyle='#fbf6e9';c.beginPath();c.moveTo(236,72);c.lineTo(512,0);c.lineTo(788,72);c.closePath();c.fill();
+    c.strokeStyle='#aeb9aa';c.lineWidth=8;c.stroke();
+    c.fillStyle='#4d7e68';c.font='italic 900 34px Georgia,serif';c.textAlign='center';c.fillText('WERMLAND OPERA',512,58,360);
+    // Dark entrance + curved-canopy impression.
+    box(384,401,256,111,'#263538');box(410,414,204,85,'#55767a');
+    box(350,384,324,18,'#253033');box(374,372,276,12,'#4d7e68');
+    for(const x of [402,512,622])box(x,405,9,92,'#e9e2d2');
   }else if(kind==='hotel'){
     box(0,0,1024,512,'#dfba7a');box(0,369,1024,143,'#b9a281');
     for(const y of [12,176,337]){box(0,y+7,1024,12,'#b3986b');box(0,y,1024,9,paper);}
@@ -207,6 +231,12 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       mount(mark.name+' · nordfasad',facade(side),w,height,x,0,b.minz-.08,180);
       mount(mark.name+' · sydfasad',facade(side),w,height,x,0,b.maxz+.08,0);
       mount(mark.name+' · baksida',facade(side),d,height,mark.id==='duvan'?b.maxx+.08:b.minx-.08,0,z,mark.id==='duvan'?90:-90);
+    }else if(mark.id==='opera'){
+      const oh=Math.max(13.5,Math.min(18,b.h+5.5));
+      mount('Wermland Opera · huvudfasad',facade('opera',1024,512),d,oh,b.maxx+.12,0,z,90);
+      mount('Wermland Opera · sidofasad',facade('opera',1024,512),w,oh,x,0,b.minz-.10,180);
+      mount('Wermland Opera · Stora scenen',labelTex(['STORA SCENEN'],'#243235','#f4e8c9'),5.0,.62,b.maxx+.22,3.12,z,90);
+      mount('Wermland Opera · Operacafé',labelTex(['OPERACAFÉ'],'#153e37','#f3d37f'),3.55,.50,b.maxx+.24,2.36,z+5.0,90);
     }else if(mark.id==='museum'){
       mount('Cyrillushuset · tegel',facade('museum-old'),28.8,6.8,-146,0,-478.95);
       mount('Cyrillushuset · älven',facade('museum-old'),35.8,6.8,-160.54,0,-497,-90);
@@ -271,6 +301,19 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
     },1024,360);
     businessTextures.set(b.id,t);return t;
   }
+  const neonTextures=new Map(),neonIds=new Set(['musicpartner','synsam','normal','hm','radhuscafe','burgerking','sibylla','grekiska','leprechaun','gossip']);
+  function neonTexture(b){
+    if(neonTextures.has(b.id))return neonTextures.get(b.id);
+    const t=texture((c,w,h)=>{
+      c.clearRect(0,0,w,h);c.fillStyle='#10191b';c.fillRect(0,0,w,h);
+      c.strokeStyle=b.accent;c.lineWidth=5;c.shadowColor=b.accent;c.shadowBlur=26;c.strokeRect(10,10,w-20,h-20);
+      const fs=b.name.length>18?38:b.name.length>12?46:56;
+      c.textAlign='center';c.textBaseline='middle';c.font='900 '+fs+'px system-ui,sans-serif';
+      c.strokeStyle=b.accent;c.lineWidth=7;c.shadowBlur=30;c.strokeText(b.name.toUpperCase(),w/2,h*.52,w-44);
+      c.shadowBlur=0;c.fillStyle=b.fg;c.fillText(b.name.toUpperCase(),w/2,h*.52,w-44);
+    },768,150);
+    neonTextures.set(b.id,t);return t;
+  }
   const realBusinesses=[];
   for(const b of REAL_BUSINESSES){
     const p=businessAnchor(b,host.colliders);if(!p)continue;
@@ -278,6 +321,12 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       mount('Verklig skylt · '+b.name,labelTex([b.name.toUpperCase()],b.bg,b.fg),Math.min(6.2,p.width*.78),.72,p.x,2.62,p.z,p.yaw);
     }else{
       mount('Verklig verksamhet · '+b.name,businessTexture(b),p.width,3.65,p.x,.12,p.z,p.yaw);
+    }
+    if(neonIds.has(b.id)){
+      const a=p.yaw*Math.PI/180,nx=Math.sin(a),nz=Math.cos(a),tx=Math.cos(a),tz=-Math.sin(a);
+      const nw=Math.max(2.7,Math.min(5.4,p.width*.58));
+      mount('Neonskylt · '+b.name,neonTexture(b),nw,.62,p.x+nx*.18,3.46,p.z+nz*.18,p.yaw);
+      mount('Hängskylt · '+b.name,neonTexture(b),1.42,.54,p.x+tx*Math.min(3.2,p.width*.34)+nx*.38,2.88,p.z+tz*Math.min(3.2,p.width*.34)+nz*.38,p.yaw+90,true);
     }
     realBusinesses.push({id:b.id,name:b.name,address:b.address,x:p.x,z:p.z,yaw:p.yaw,width:p.width,approximate:!!b.approximateBuilding});
   }
