@@ -145,7 +145,7 @@ export function createComicCity(pc,host,{texture}){
     if(!groups.has(key))groups.set(key,{positions:[],normals:[],uv:[],indices:[],variant:p.variant,minx:Infinity,maxx:-Infinity,minz:Infinity,maxz:-Infinity});
     const g=groups.get(key),k=g.positions.length/3;
     for(const [t,y] of [[p.lo,p.y],[p.hi,p.y],[p.hi,p.top],[p.lo,p.top]]){
-      const x=p.x+p.tx*t,z=p.z+p.tz*t;g.positions.push(x,y,z);g.normals.push(p.nx,0,p.nz);g.uv.push(t/p.w+.5,y/p.h);
+      const x=p.x+p.tx*t+p.nx*COMIC_FACE_BIAS,z=p.z+p.tz*t+p.nz*COMIC_FACE_BIAS;g.positions.push(x,y,z);g.normals.push(p.nx,0,p.nz);g.uv.push(t/p.w+.5,y/p.h);
       g.minx=Math.min(g.minx,x);g.maxx=Math.max(g.maxx,x);g.minz=Math.min(g.minz,z);g.maxz=Math.max(g.maxz,z);
     }
     g.indices.push(k,k+1,k+2,k,k+2,k+3);
