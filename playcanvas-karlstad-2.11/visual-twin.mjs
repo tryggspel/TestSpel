@@ -99,6 +99,46 @@ function sameEdge(a,b){
 }
 export function visualTwinStreetEdges(b,maxDistance=18){return edgeStreetExposure(b,maxDistance);}
 
+function polygonEdges(b,minLength=5.2){
+  if(!b||!Array.isArray(b.polygon)||b.polygon.length<3)return [];
+  let area=0;for(let i=0;i<b.polygon.length;i++){const a=b.polygon[i],q=b.polygon[(i+1)%b.polygon.length];area+=a[0]*q[1]-q[0]*a[1];}
+  const ccw=area>0,out=[];
+  for(let i=0;i<b.polygon.length;i++){
+    let a=b.polygon[i],q=b.polygon[(i+1)%b.polygon.length],dx=q[0]-a[0],dz=q[1]-a[1],length=Math.hypot(dx,dz);if(length<minLength)continue;
+    let tx=dx/length,tz=dz/length,nx=ccw?tz:-tz,nz=ccw?-tx:tx;
+    out.push({a,q,length,tx,tz,nx,nz,street:'',streetD:Infinity,facing:1});
+  }
+  return out;
+}
+function pointInPoly(x,z,poly){
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const xi=poly[i][0],zi=poly[i][1],xj=poly[j][0],zj=poly[j][1];
+    const hit=((zi>z)!==(zj>z))&&(x<(xj-xi)*(z-zi)/(zj-zi||1e-9)+xi);
+    if(hit)inside=!inside;
+  }
+  return inside;
+}
+function edgeBlockedByNeighbour(edge,b,neighbours=[]){
+  if(!Array.isArray(neighbours)||!neighbours.length)return false;
+  let hits=0,total=0;
+  for(const t of [.22,.5,.78]){
+    const x=edge.a[0]+(edge.q[0]-edge.a[0])*t+edge.nx*1.05;
+    const z=edge.a[1]+(edge.q[1]-edge.a[1])*t+edge.nz*1.05; total++;
+    let blocked=false;
+    for(const n of neighbours){
+      if(!n||n.osm===b.osm||!Array.isArray(n.polygon)||n.polygon.length<3)continue;
+      if(x<n.minx-1.4||x>n.maxx+1.4||z<n.minz-1.4||z>n.maxz+1.4)continue;
+      if(pointInPoly(x,z,n.polygon)){blocked=true;break;}
+    }
+    if(blocked)hits++;
+  }
+  return hits>=2;
+}
+export function visualTwinExposedEdges(b,neighbours=[]){
+  return polygonEdges(b,6.5).filter(e=>!edgeBlockedByNeighbour(e,b,neighbours));
+}
+
 export function visualTwinFaceYaw(b){
   const e=visualTwinFront(b);if(!e)return null;
   if(Math.abs(e.nx)>Math.abs(e.nz))return e.nx>0?90:-90;
@@ -111,8 +151,6 @@ export function addVisualTwinFacade(mesh,b,options={}){
   const point=(u,y,out)=>[a[0]+tx*u+nx*out,y,a[1]+tz*u+nz*out];
   const panel=(u,y,w,ph,colour,out=.10)=>{if(w<=.08||ph<=.08)return;mesh.quad(point(u,y,out),point(u+w,y,out),point(u+w,y+ph,out),point(u,y+ph,out),colour);};
 
-  // Infill stays inside the existing 16-bit static-mesh budget: one glazed ground band
-  // plus broad upper window ribbons. Near-centre buildings use the detailed variant below.
   if(low){
     panel(.08,.56,Math.max(.3,length-.16),2.30,p.ground,.14);
     panel(.20,.72,Math.max(.3,length-.40),1.88,p.glass,.17);
@@ -123,61 +161,65 @@ export function addVisualTwinFacade(mesh,b,options={}){
       panel(.26,y,Math.max(.3,length-.52),Math.max(.58,Math.min(.92,rowH-.7)),p.glass,.15);
       panel(.20,y-.10,Math.max(.3,length-.40),.07,p.frame,.17);
     }
-    return true;
-  }
+  }else{
+    panel(0,.04,length,h-.04,p.wall,.07);
+    panel(0,.05,length,.46,p.ground,.11);
+    panel(0,3.08,length,.16,p.frame,.13);
+    panel(0,h-.34,length,.28,p.frame,.13);
 
-  panel(0,.04,length,h-.04,p.wall,.07);
-  panel(0,.05,length,.46,p.ground,.11);
-  panel(0,3.08,length,.16,p.frame,.13);
-  panel(0,h-.34,length,.28,p.frame,.13);
-
-  const retail=!!p.retail,groundCount=Math.max(2,Math.min(10,Math.round(length/(retail?3.3:4.2)))),gw=length/groundCount;
-  for(let col=0;col<groundCount;col++){
-    const u=col*gw+.13,w=Math.max(.42,gw-.26);
-    panel(u,.57,w,2.32,retail?p.ground:p.frame,.15);
-    panel(u+.10,.70,Math.max(.25,w-.20),1.98,p.glass,.18);
-    if(retail&&col%3===1)panel(u+w*.43,.70,.09,1.98,p.frame,.20);
-  }
-  if(p.awning)panel(.20,2.77,Math.max(.5,length-.40),.28,p.accent,.34);
-
-  const floors=Math.max(1,Math.min(6,Math.round(h/3.2)-1)),upperY=3.55,rowH=Math.max(2.45,(h-upperY-.25)/floors);
-  const spacing=p.archetype.includes('heritage')?2.55:p.archetype.includes('urban')?2.9:3.05;
-  const cols=Math.max(3,Math.min(16,Math.round(length/spacing))),cw=length/cols;
-  for(let row=0;row<floors;row++){
-    const y=upperY+row*rowH+.18,wh=Math.max(.72,Math.min(1.72,rowH-.55));
-    for(let col=0;col<cols;col++){
-      const inset=Math.min(.36,cw*.18),u=col*cw+inset,ww=Math.max(.40,cw-inset*2);
-      panel(u-.08,y-.08,ww+.16,wh+.16,p.frame,.15);
-      panel(u,y,ww,wh,p.glass,.18);
-      panel(u+.06,y+.07,Math.max(.16,ww*.43),Math.max(.35,wh-.14),'#789397',.20);
-      if(p.pilasters&&col===0)panel(Math.max(.02,u-.22),y-.16,.12,wh+.32,p.frame,.22);
+    const retail=!!p.retail,groundCount=Math.max(2,Math.min(10,Math.round(length/(retail?3.3:4.2)))),gw=length/groundCount;
+    for(let col=0;col<groundCount;col++){
+      const u=col*gw+.13,w=Math.max(.42,gw-.26);
+      panel(u,.57,w,2.32,retail?p.ground:p.frame,.15);
+      panel(u+.10,.70,Math.max(.25,w-.20),1.98,p.glass,.18);
+      if(retail&&col%3===1)panel(u+w*.43,.70,.09,1.98,p.frame,.20);
     }
-    if(p.balcony&&row%2===0){
-      const bw=Math.min(length*.32,5.8),u=Math.max(.3,(length-bw)/2);
-      panel(u-.22,y-.22,bw+.44,.10,p.accent,.31);
-      for(let x=u;x<u+bw;x+=.55)panel(x,y-.20,.035,.58,p.accent,.33);
+    if(p.awning)panel(.20,2.77,Math.max(.5,length-.40),.28,p.accent,.34);
+
+    const floors=Math.max(1,Math.min(6,Math.round(h/3.2)-1)),upperY=3.55,rowH=Math.max(2.45,(h-upperY-.25)/floors);
+    const spacing=p.archetype.includes('heritage')?2.55:p.archetype.includes('urban')?2.9:3.05;
+    const cols=Math.max(3,Math.min(16,Math.round(length/spacing))),cw=length/cols;
+    for(let row=0;row<floors;row++){
+      const y=upperY+row*rowH+.18,wh=Math.max(.72,Math.min(1.72,rowH-.55));
+      for(let col=0;col<cols;col++){
+        const inset=Math.min(.36,cw*.18),u=col*cw+inset,ww=Math.max(.40,cw-inset*2);
+        panel(u-.08,y-.08,ww+.16,wh+.16,p.frame,.15);
+        panel(u,y,ww,wh,p.glass,.18);
+        panel(u+.06,y+.07,Math.max(.16,ww*.43),Math.max(.35,wh-.14),'#789397',.20);
+        if(p.pilasters&&col===0)panel(Math.max(.02,u-.22),y-.16,.12,wh+.32,p.frame,.22);
+      }
+      if(p.balcony&&row%2===0){
+        const bw=Math.min(length*.32,5.8),u=Math.max(.3,(length-bw)/2);
+        panel(u-.22,y-.22,bw+.44,.10,p.accent,.31);
+        for(let x=u;x<u+bw;x+=.55)panel(x,y-.20,.035,.58,p.accent,.33);
+      }
+    }
+    if(p.pilasters){
+      const step=Math.max(5.5,length/5);
+      for(let u=.12;u<length-.12;u+=step)panel(u,.22,.10,Math.max(.5,h-.55),p.frame,.21);
     }
   }
-  if(p.pilasters){
-    const step=Math.max(5.5,length/5);
-    for(let u=.12;u<length-.12;u+=step)panel(u,.22,.10,Math.max(.5,h-.55),p.frame,.21);
-  }
 
-  // Secondary street-exposed walls must never remain as giant blank fields. These are
-  // intentionally simpler than the primary frontage, but still carry window rhythm,
-  // corner lines and a ground-floor datum. Only edges that actually face a named street
-  // within 18 m are decorated, so party walls stay quiet.
-  const secondary=edgeStreetExposure(b,18).filter(e=>!sameEdge(e,edge)).slice(0,low?1:2);
+  const streetSecondary=edgeStreetExposure(b,18).filter(e=>!sameEdge(e,edge));
+  const exposedFallback=visualTwinExposedEdges(b,options.neighbours||[])
+    .filter(e=>!sameEdge(e,edge)&&!streetSecondary.some(s=>sameEdge(s,e)))
+    .sort((a,b)=>b.length-a.length);
+  const secondary=[...streetSecondary,...exposedFallback].slice(0,low?2:3);
+
   for(const e of secondary){
     const ep=(u,y,out)=>[e.a[0]+e.tx*u+e.nx*out,y,e.a[1]+e.tz*u+e.nz*out];
     const eq=(u,y,w,ph,colour,out=.11)=>{if(w<=.08||ph<=.08)return;mesh.quad(ep(u,y,out),ep(u+w,y,out),ep(u+w,y+ph,out),ep(u,y+ph,out),colour);};
-    eq(.08,.10,Math.max(.3,e.length-.16),.34,p.ground,.12);
-    eq(.10,3.02,Math.max(.3,e.length-.20),.11,p.frame,.13);
+    // Give even gable/side walls a visible architectural frame before adding windows.
+    eq(.08,.10,Math.max(.3,e.length-.16),.36,p.ground,.12);
+    eq(.10,3.02,Math.max(.3,e.length-.20),.12,p.frame,.13);
+    eq(.10,h-.36,Math.max(.3,e.length-.20),.18,p.frame,.13);
     const floors=Math.max(1,Math.min(low?3:5,Math.round(h/3.2)-1)),rowH=Math.max(2.5,(h-3.45)/floors);
-    const cols=Math.max(2,Math.min(low?7:12,Math.round(e.length/(low?4.2:3.25)))),cw=e.length/cols;
+    const cols=Math.max(2,Math.min(low?8:12,Math.round(e.length/(low?3.8:3.15)))),cw=e.length/cols;
     for(let row=0;row<floors;row++){
       const y=3.58+row*rowH+.14,wh=Math.max(.65,Math.min(1.45,rowH-.62));
       for(let col=0;col<cols;col++){
+        // Slightly sparse blind-window rhythm on non-street gables avoids a fake shopfront wall.
+        if(!e.street&&((col+row+(p.variant||0))%5===0))continue;
         const inset=Math.min(.34,cw*.20),u=col*cw+inset,ww=Math.max(.36,cw-inset*2);
         eq(u-.05,y-.05,ww+.10,wh+.10,p.frame,.14);eq(u,y,ww,wh,p.glass,.17);
       }
