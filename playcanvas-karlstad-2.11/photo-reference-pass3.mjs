@@ -103,7 +103,7 @@ export const PHOTO_REFERENCE_PROFILES=Object.freeze({
   }),
   101608925:Object.freeze({
     address:'Tingvallagatan 15',name:'Frimurarelogen / Herman Anderssons bokhandel',front:'north',extraFaces:['west','east','south'],kind:'frimurarebok',
-    wall:'#9c8274',frame:'#d1c2ad',glass:'#4f676c',ground:'#756a61',accent:'#e1d6bd',
+    wall:'#c7a353',frame:'#eadfc4',glass:'#506a70',ground:'#979187',accent:'#e6d3a3',
     source:'Google Street View 2017-05 + Karlstad i förändring'
   }),
   77107220:Object.freeze({
@@ -610,11 +610,14 @@ export function addPhotoReferenceFacade(mesh,b){
     // paired pale pilasters, ornamental attic openings, central crest and green metal roof line.
     const drawFrimurareFace=(face,{primary=false,shops=false}={})=>{
       const f=photoReferenceFront(b,face);if(!f)return false;
-      const {a,length,tx,tz,nx,nz}=f,FACE_BIAS=.16;
+      const {a,length,tx,tz,nx,nz}=f,FACE_BIAS=.34;
       const point=(u,y,out)=>[a[0]+tx*u+nx*(out+FACE_BIAS),y,a[1]+tz*u+nz*(out+FACE_BIAS)];
       const q=(u,y,w,ph,col,out=.11)=>{if(w<=.08||ph<=.08)return;mesh.quad(point(u,y,out),point(u+w,y,out),point(u+w,y+ph,out),point(u,y+ph,out),col);};
+      // Full reference skin sits clearly in front of the OSM structural wall.
+      // This removes the blank-box look even on Safari/Intel where coplanar detail used to disappear.
+      q(0,.03,length,Math.max(3.2,h-.06),p.wall,.08);
       const baseH=Math.min(3.35,Math.max(2.95,h*.31));
-      q(0,.05,length,baseH,p.ground,.14);
+      q(0,.05,length,baseH,p.ground,.18);
       for(let y=.48;y<baseH-.18;y+=.58)q(.04,y,Math.max(.3,length-.08),.045,'#7f6f67',.17);
       const bays=Math.max(4,Math.min(primary?9:8,Math.round(length/4.0))),bw=length/bays,entrance=primary?Math.floor(bays/2):-1;
       for(let c=0;c<bays;c++){
@@ -636,7 +639,7 @@ export function addPhotoReferenceFacade(mesh,b){
         const u=c*bw+.34,w=Math.max(.46,bw-.68);
         q(u-.13,mainY-.14,w+.26,mainH+.18,p.frame,.20);q(u,mainY,w,mainH-.16,p.glass,.25);
         q(u-.06,mainY+mainH-.28,w+.12,.28,p.frame,.29);q(u+w*.47,mainY+.12,.055,Math.max(.8,mainH-.46),'#d7d4c9',.28);
-        if(c<bays-1)q((c+1)*bw-.045,baseH+.14,.09,Math.max(1.0,mainH+.66),'#b7aa99',.24);
+        if(c<bays-1)q((c+1)*bw-.10,baseH+.08,.20,Math.max(1.0,mainH+.78),p.frame,.34);
       }
       q(.03,mainY+mainH+.18,Math.max(.3,length-.06),.30,p.accent,.20);
       const atticY=mainY+mainH+.62,atticH=Math.max(.62,Math.min(1.05,h-atticY-.58));
@@ -650,8 +653,8 @@ export function addPhotoReferenceFacade(mesh,b){
       q(.02,h-.48,Math.max(.3,length-.04),.34,'#7d8072',.20);q(.16,h-.16,Math.max(.3,length-.32),.18,'#405b55',.25);
       if(primary){
         const mid=length/2,crestW=Math.min(4.5,length*.18);
-        q(mid-crestW/2,atticY-.18,crestW,Math.min(1.35,Math.max(.72,h-atticY-.48)),'#d9cdb8',.32);
-        q(mid-.42,atticY+.18,.84,.42,'#9b675f',.36);
+        q(mid-crestW/2,atticY-.22,crestW,Math.min(1.42,Math.max(.78,h-atticY-.42)),p.frame,.46);
+        q(mid-.48,atticY+.12,.96,.48,'#9a6c54',.51);
       }
       return true;
     };
