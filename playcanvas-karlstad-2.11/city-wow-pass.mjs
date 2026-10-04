@@ -1,0 +1,130 @@
+import {CITY_STREETS,IDENTITY_IDS} from './city-geography.mjs?v=2.11.17';
+import {visualTwinProfile,visualTwinFront} from './visual-twin.mjs?v=2.11.17';
+
+// High-impact city pass: richer ground floors, corner identity and two focal public spaces.
+// Everything is static vertex geometry: no new lights, shadows, entities or per-frame work.
+
+const TORGET={minx:-118,maxx:142,minz:-112,maxz:112};
+const OPERA_ID=75896103;
+const key=s=>String(s||'').trim().toLocaleUpperCase('sv-SE');
+
+function nearestTargets(b){
+  const byName=new Map();
+  for(const street of CITY_STREETS){
+    for(let i=1;i<street.points.length;i++){
+      const [x,z]=street.points[i-1],[ex,ez]=street.points[i],dx=ex-x,dz=ez-z,den=dx*dx+dz*dz||1;
+      const t=Math.max(0,Math.min(1,((b.cx-x)*dx+(b.cz-z)*dz)/den)),qx=x+t*dx,qz=z+t*dz,d2=(b.cx-qx)**2+(b.cz-qz)**2;
+      const k=key(street.name),old=byName.get(k);
+      if(!old||d2<old.d2)byName.set(k,{street,qx,qz,d2});
+    }
+  }
+  return [...byName.values()].sort((a,b)=>a.d2-b.d2);
+}
+function edgeForTarget(b,target){
+  if(!target||!Array.isArray(b.polygon)||b.polygon.length<3)return null;
+  const vx=target.qx-b.cx,vz=target.qz-b.cz,l=Math.hypot(vx,vz)||1,desired=[vx/l,vz/l],candidates=[];
+  let area=0;for(let i=0;i<b.polygon.length;i++){const a=b.polygon[i],q=b.polygon[(i+1)%b.polygon.length];area+=a[0]*q[1]-q[0]*a[1];}
+  const ccw=area>0;
+  for(let i=0;i<b.polygon.length;i++){
+    let a=b.polygon[i],q=b.polygon[(i+1)%b.polygon.length],dx=q[0]-a[0],dz=q[1]-a[1],length=Math.hypot(dx,dz);if(length<4.0)continue;
+    let tx=dx/length,tz=dz/length,nx=ccw?tz:-tz,nz=ccw?-tx:tx;
+    if(nx*desired[0]+nz*desired[1]<0){[a,q]=[q,a];tx=-tx;tz=-tz;nx=-nx;nz=-nz;}
+    const mx=(a[0]+q[0])/2,mz=(a[1]+q[1])/2,streetD=Math.hypot(mx-target.qx,mz-target.qz),facing=nx*desired[0]+nz*desired[1];
+    if(facing>.28)candidates.push({a,q,length,tx,tz,nx,nz,street:target.street.name,streetD,facing});
+  }
+  return candidates.sort((a,b)=>a.streetD-b.streetD||b.facing-a.facing||b.length-a.length)[0]||null;
+}
+export function visualTwinCornerFront(b){
+  if(!b||IDENTITY_IDS.has(b.osm)||!visualTwinProfile(b))return null;
+  const primary=visualTwinFront(b);if(!primary)return null;
+  const targets=nearestTargets(b);
+  const ptarget=targets.find(t=>key(t.street.name)===key(primary.street))||targets[0];if(!ptarget)return null;
+  const pv=[ptarget.qx-b.cx,ptarget.qz-b.cz],pl=Math.hypot(...pv)||1;
+  for(const t of targets){
+    if(key(t.street.name)===key(primary.street)||t.d2>34*34)continue;
+    const v=[t.qx-b.cx,t.qz-b.cz],vl=Math.hypot(...v)||1,dot=Math.abs((pv[0]*v[0]+pv[1]*v[1])/(pl*vl));
+    if(dot>.72)continue;
+    const e=edgeForTarget(b,t);if(!e)continue;
+    const same=Math.hypot(e.a[0]-primary.a[0],e.a[1]-primary.a[1])<.8&&Math.hypot(e.q[0]-primary.q[0],e.q[1]-primary.q[1])<.8;
+    if(!same)return e;
+  }
+  return null;
+}
+function panel(mesh,e,u,y,w,h,colour,out=.22){
+  if(!e||w<=.06||h<=.06)return;
+  const p=(along,yy,o)=>[e.a[0]+e.tx*along+e.nx*o,yy,e.a[1]+e.tz*along+e.nz*o];
+  mesh.quad(p(u,y,out),p(u+w,y,out),p(u+w,y+h,out),p(u,y+h,out),colour);
+}
+function richGround(mesh,b,e,p,{secondary=false}={}){
+  const len=e.length,variant=p.variant||0,square=b.cx>TORGET.minx&&b.cx<TORGET.maxx&&b.cz>TORGET.minz&&b.cz<TORGET.maxz;
+  const bays=Math.max(2,Math.min(9,Math.round(len/(secondary?4.1:3.45)))),bw=len/bays;
+  // Strong continuous retail datum makes the eye read a real street instead of a stack of windows.
+  panel(mesh,e,.08,2.76,Math.max(.3,len-.16),.31,square?'#f2d59a':p.accent,.29);
+  panel(mesh,e,.10,.43,Math.max(.3,len-.20),.10,p.frame,.25);
+  for(let i=0;i<bays;i++){
+    const u=i*bw+.13,w=Math.max(.35,bw-.26),door=i===((variant+1)%bays);
+    panel(mesh,e,u,.62,w,1.96,door?p.ground:p.glass,.27);
+    if(!door){
+      panel(mesh,e,u+.07,.70,Math.max(.20,w*.46),1.75,'#73979a',.30);
+      if((i+variant)%2===0)panel(mesh,e,u+w*.55,.70,Math.max(.16,w*.34),1.75,'#405f66',.30);
+    }else{
+      const dw=Math.max(.34,Math.min(.92,w*.58)),du=u+(w-dw)/2;
+      panel(mesh,e,du-.07,.55,dw+.14,2.15,p.frame,.31);
+      panel(mesh,e,du,.64,dw,1.95,'#263b40',.34);
+      panel(mesh,e,du+dw*.12,.79,dw*.76,1.50,'#789b9b',.36);
+    }
+    // Cheap warm window-card accents: baked quads, not light sources.
+    if(!secondary&&(i+variant)%3===0)panel(mesh,e,u+w*.22,2.29,Math.max(.10,w*.54),.12,'#f3c96e',.35);
+  }
+  if(square&&!secondary){
+    // Torget gets a stronger awning rhythm and cream shop headers along its edges.
+    for(let i=0;i<bays;i+=2){const u=i*bw+.15,w=Math.min(len-u-.15,bw*1.55);if(w>.5)panel(mesh,e,u,2.57,w,.18,(i+variant)%4?'#8f4c48':'#315f58',.42);}
+  }
+}
+export function addStreetfrontWow(mesh,b){
+  if(!b||IDENTITY_IDS.has(b.osm))return {front:false,corner:false,square:false};
+  const p=visualTwinProfile(b),front=visualTwinFront(b);if(!p||!front)return {front:false,corner:false,square:false};
+  richGround(mesh,b,front,p);
+  const corner=visualTwinCornerFront(b);
+  if(corner)richGround(mesh,b,corner,p,{secondary:true});
+  const square=b.cx>TORGET.minx&&b.cx<TORGET.maxx&&b.cz>TORGET.minz&&b.cz<TORGET.maxz;
+  return {front:true,corner:!!corner,square};
+}
+function addTorgetFurniture(mesh){
+  // Low static furniture along the edges; the centre remains open for gameplay and events.
+  let n=0;
+  for(const z of [-23,27])for(const x of [-45,-22,1,24,47]){
+    if(Math.abs(x)<8&&z<0)continue;
+    mesh.box(x,.31,z,2.25,.62,.72,'#6d6250','#544b3d');
+    mesh.box(x,.82,z,1.82,.40,.52,(x+z)%2?'#5b865c':'#6d8f59');n++;
+  }
+  for(const [x,z,yaw] of [[-51,-11,0],[-51,13,0],[57,-11,0],[57,13,0],[-29,31,90],[29,31,90]]){
+    if(yaw===0){mesh.box(x,.46,z,.55,.14,2.75,'#2b4142');mesh.box(x,.82,z-.27,.20,.72,2.75,'#2b4142');}
+    else{mesh.box(x,.46,z,2.75,.14,.55,'#2b4142');mesh.box(x-.27,.82,z,2.75,.72,.20,'#2b4142');}
+    n++;
+  }
+  return n;
+}
+function addOperaScene(mesh,buildings){
+  const b=buildings.find(x=>x.osm===OPERA_ID);if(!b)return 0;
+  // East/front threshold, dark marquee and a line of compact theatre bollards.
+  const depth=Math.max(10,Math.min(20,b.sz*.52)),frontX=b.maxx+.7;
+  mesh.box(frontX+.55,.055,b.cz,1.2,.08,depth,'#c8baa0');
+  mesh.box(frontX+.92,3.15,b.cz,1.35,.20,Math.min(13,depth*.72),'#252d31');
+  mesh.box(frontX+1.05,2.92,b.cz,1.42,.22,Math.min(8.8,depth*.48),'#d5aa54');
+  let n=3;
+  for(let z=b.cz-depth*.42;z<=b.cz+depth*.42;z+=3.2){
+    mesh.box(frontX+2.3,.54,z,.18,1.08,.18,'#303c3e');
+    mesh.box(frontX+2.3,1.12,z,.27,.10,.27,'#e8c97d');n++;
+  }
+  return n;
+}
+export function addCityWowPass(mesh,buildings=[]){
+  let fronts=0,corners=0,squareEdges=0;
+  for(const b of buildings){
+    if(b.dist>225)continue;
+    const s=addStreetfrontWow(mesh,b);fronts+=Number(s.front);corners+=Number(s.corner);squareEdges+=Number(s.square&&s.front);
+  }
+  const torgetProps=addTorgetFurniture(mesh),operaProps=addOperaScene(mesh,buildings);
+  return Object.freeze({fronts,corners,squareEdges,torgetProps,operaProps});
+}
