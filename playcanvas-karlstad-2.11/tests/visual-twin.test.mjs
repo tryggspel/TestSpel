@@ -49,3 +49,30 @@ test('audit distinguishes curated, generated and unresolved buildings without ch
   assert.equal(audit.total,audit.curated+audit.generated+audit.unresolved);
   for(const b of all)assert.ok(Array.isArray(b.polygon)&&Number.isFinite(b.minx)&&Number.isFinite(b.maxx));
 });
+
+
+test('fallback facades follow real OSM edges and cover large commercial blocks',()=>{
+  const all=[...buildings,...infill].map(b=>({...b,height:b.h}));
+  const panels=facadePanels(all);
+  const mall=panels.filter(p=>p.osm===234271401);
+  assert.ok(mall.length>0,'Mitt i City exterior must not be a blank slab');
+  const duvan=panels.filter(p=>p.osm===102190062);
+  assert.ok(duvan.length>0,'Duvan secondary walls must receive facade coverage');
+  const ahlens=panels.filter(p=>p.osm===102026709);
+  assert.ok(ahlens.length>0,'Åhléns secondary walls must receive facade coverage');
+
+  const olearys=panels.filter(p=>p.osm===100833292);
+  assert.ok(olearys.length>0,'O’Learys block must receive fallback facade coverage');
+  const directions=new Set(olearys.map(p=>Math.round((p.edgeYaw||0)/10)*10));
+  assert.ok(directions.size>=2,'long O’Learys block should be covered on more than one exposed direction');
+});
+
+test('photo-curated primary fronts stay clean while secondary walls can be filled',()=>{
+  const all=[...buildings,...infill].map(b=>({...b,height:b.h}));
+  const panels=facadePanels(all);
+  const eastYaw=90;
+  const blind=panels.filter(p=>p.osm===101935916);
+  assert.ok(blind.length>0,'Södra Kyrkogatan 3 may receive secondary-side coverage');
+  const diff=a=>Math.abs((((a-eastYaw)+540)%360)-180);
+  assert.ok(blind.every(p=>diff(p.edgeYaw)>34),'the verified east blind-brick facade stays owned by Street View geometry');
+});
