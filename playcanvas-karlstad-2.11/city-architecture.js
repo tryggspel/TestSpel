@@ -16,7 +16,15 @@ const CORE_WALLS=['#e4d2ae','#d9b991','#c8906d','#e8ddc6','#bca98d','#d8c49c','#
 export function coreContourBuildings(buildings,max=CORE_CONTOUR_LIMIT){
   return buildings.filter(b=>b.dist<CORE_CONTOUR_RADIUS&&!IDENTITY_IDS.has(b.osm)&&!MALL_BUILDING_IDS.has(b.osm)).sort((a,b)=>a.dist-b.dist||a.osm-b.osm).slice(0,max);
 }
-const rgb=hex=>[parseInt(hex.slice(1,3),16)/255,parseInt(hex.slice(3,5),16)/255,parseInt(hex.slice(5,7),16)/255,1];
+const rgb=hex=>{
+  const safe=/^#[0-9a-f]{6}$/i.test(String(hex||''))?String(hex):'#d8c8aa';
+  return [parseInt(safe.slice(1,3),16)/255,parseInt(safe.slice(3,5),16)/255,parseInt(safe.slice(5,7),16)/255,1];
+};
+export function meshChunkRanges(vertexCount,maxVertices=48000){
+  const safe=Math.max(3,Math.floor(maxVertices/3)*3),out=[];
+  for(let start=0;start<vertexCount;start+=safe)out.push([start,Math.min(vertexCount,start+safe)]);
+  return out;
+}
 const STREET_GLYPHS=Object.freeze({
   A:['01110','10001','10001','11111','10001','10001','10001'],
   B:['11110','10001','10001','11110','10001','10001','11110'],
@@ -293,8 +301,22 @@ export class ComicMesh {
     }
   }
   finish(pc,app,name,material){
-    const mesh=new pc.Mesh(app.graphicsDevice);mesh.setPositions(this.positions);mesh.setNormals(this.normals);mesh.setColors(this.colors);mesh.setIndices(this.indices);mesh.update(pc.PRIMITIVE_TRIANGLES);
-    const e=new pc.Entity(name);e.addComponent('render',{meshInstances:[new pc.MeshInstance(mesh,material)]});app.root.addChild(e);return e;
+    const vertexCount=this.positions.length/3,ranges=meshChunkRanges(vertexCount);
+    if(ranges.length===1){
+      const mesh=new pc.Mesh(app.graphicsDevice);mesh.setPositions(this.positions);mesh.setNormals(this.normals);mesh.setColors(this.colors);mesh.setIndices(this.indices);mesh.update(pc.PRIMITIVE_TRIANGLES);
+      const e=new pc.Entity(name);e.addComponent('render',{meshInstances:[new pc.MeshInstance(mesh,material)]});app.root.addChild(e);return e;
+    }
+    // iPhone/WebGL safety: ComicMesh writes unique vertices per triangle, so chunks can be
+    // sliced on triangle boundaries with local sequential indices. This avoids giant
+    // cross-building triangles when a driver falls back to 16-bit indices.
+    const parent=new pc.Entity(name);app.root.addChild(parent);
+    for(const [start,end] of ranges){
+      const positions=this.positions.slice(start*3,end*3),normals=this.normals.slice(start*3,end*3),colors=this.colors.slice(start*4,end*4);
+      const count=end-start,indices=Array.from({length:count},(_,i)=>i);
+      const mesh=new pc.Mesh(app.graphicsDevice);mesh.setPositions(positions);mesh.setNormals(normals);mesh.setColors(colors);mesh.setIndices(indices);mesh.update(pc.PRIMITIVE_TRIANGLES);
+      const child=new pc.Entity(name+' · del '+(parent.children.length+1));child.addComponent('render',{meshInstances:[new pc.MeshInstance(mesh,material)]});parent.addChild(child);
+    }
+    return parent;
   }
 }
 export function createCityArchitecture(pc,app,buildings){
