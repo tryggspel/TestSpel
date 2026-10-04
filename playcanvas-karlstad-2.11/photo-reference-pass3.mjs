@@ -107,7 +107,7 @@ export const PHOTO_REFERENCE_PROFILES=Object.freeze({
     source:'Google Street View 2017-05 + Karlstad i förändring'
   }),
   77107220:Object.freeze({
-    address:'Stora Torget / Kungsgatan',name:'Tingvallagymnasiet',front:'west',kind:'tingvalla-school',
+    address:'Stora Torget / Kungsgatan',name:'Tingvallagymnasiet',front:'north',kind:'tingvalla-school',
     wall:'#c8ad6d',frame:'#d9c79e',glass:'#304f5b',ground:'#5f5b55',accent:'#8d7448',
     source:'Google Street View 2022-06'
   }),
