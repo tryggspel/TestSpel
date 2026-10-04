@@ -413,7 +413,6 @@ export function addPhotoReferenceFacade(mesh,b){
     repeatWindows(cols,floors,{y0:3.40,row:2.55,side:.48,wh:1.18});
     const du=Math.max(.2,length-.80);
     panel(du-.08,.48,.72,2.32,'#8f8d85',.25);panel(du,.60,.56,2.08,'#455052',.28);
-  }
   }else if(p.kind==='ting9bergqvist'){
     // Bergqvisthuset/Falkgården: red 19th-century city facade with pale trim and
     // the two characteristic tower-like end accents added in 1906. O'Learys now
