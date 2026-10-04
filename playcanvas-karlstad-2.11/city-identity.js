@@ -289,8 +289,10 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
         for(const x of [w*.25,w*.65]){c.beginPath();c.arc(x,glassY+glassH*.58,34,0,Math.PI*2);c.arc(x+78,glassY+glassH*.58,34,0,Math.PI*2);c.moveTo(x+34,glassY+glassH*.58);c.lineTo(x+44,glassY+glassH*.58);c.stroke();}
       }else if(b.kind==='pharmacy'){
         c.fillRect(w*.18,glassY+glassH*.30,28,112);c.fillRect(w*.18-42,glassY+glassH*.30+42,112,28);
-      }else if(b.kind==='grocery'||b.kind==='retail'){
+      }else if(b.kind==='grocery'||b.kind==='retail'||b.kind==='beauty'||b.kind==='electronics'){
         for(let row=0;row<3;row++){c.fillStyle=row===1?b.accent:'#e5d5a9';c.fillRect(60,glassY+72+row*48,w-120,15);}
+        if(b.kind==='electronics'){c.fillStyle='#28383d';for(let x=100;x<w-80;x+=150){c.fillRect(x,glassY+glassH*.45,92,54);c.fillStyle=b.accent;c.fillRect(x+8,glassY+glassH*.52,70,6);c.fillStyle='#28383d';}}
+        if(b.kind==='beauty'){c.fillStyle='#f0d4df';for(let x=96;x<w-70;x+=122){c.beginPath();c.arc(x,glassY+glassH*.56,22,0,Math.PI*2);c.fill();}}
       }else if(['food','restaurant','pub','cafe'].includes(b.kind)){
         c.fillStyle='#efd49a';for(const x of [w*.20,w*.42,w*.64,w*.82]){c.fillRect(x-34,glassY+glassH*.63,68,10);c.fillRect(x-4,glassY+glassH*.63,8,56);}
       }else if(b.kind==='hotel'){
@@ -301,7 +303,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
     },1024,360);
     businessTextures.set(b.id,t);return t;
   }
-  const neonTextures=new Map(),neonIds=new Set(['musicpartner','synsam','normal','hm','radhuscafe','burgerking','sibylla','grekiska','leprechaun','gossip']);
+  const neonTextures=new Map(),neonIds=new Set(['musicpartner','synsam','normal','hm','radhuscafe','burgerking','sibylla','grekiska','leprechaun','gossip','lindex','kjell','kicks','apoteket']);
   function neonTexture(b){
     if(neonTextures.has(b.id))return neonTextures.get(b.id);
     const t=texture((c,w,h)=>{
