@@ -23,7 +23,7 @@ test('Visual Twin never replaces curated Kungsgatan or innerstad facades',()=>{
 
 test('photo-reference buildings keep verified fronts while Visual Twin rescues other exposed walls',()=>{
   const all=[...buildings,...infill];
-  for(const id of [101935916,100833292,101608925]){
+  for(const id of [101935916,100833292]){
     const b=all.find(x=>x.osm===id);assert.ok(b,'photo building '+id);
     assert.equal(visualTwinProfile(b),null,'public inferred profile must stay hidden for '+id);
     assert.equal(visualTwinFront(b),null,'verified primary front must stay reference-owned for '+id);
@@ -32,6 +32,13 @@ test('photo-reference buildings keep verified fronts while Visual Twin rescues o
     assert.ok(mesh.positions.length>0,'secondary rescue geometry '+id);
     assert.ok(mesh.positions.every(Number.isFinite),'finite rescue geometry '+id);
   }
+});
+
+test('Frimurarelogen is reference-owned on all four cardinal faces',()=>{
+  const all=[...buildings,...infill],b=all.find(x=>x.osm===101608925);assert.ok(b);
+  assert.equal(visualTwinProfile(b),null);assert.equal(visualTwinFront(b),null);
+  const mesh=new ComicMesh();assert.equal(addVisualTwinFacade(mesh,b,{neighbours:all}),false);
+  assert.equal(mesh.positions.length,0);
 });
 
 test('ordinary centre buildings receive deterministic street DNA and bounded facade geometry',()=>{

@@ -13,10 +13,18 @@ const blocked=(x,z)=>mallPassage(x,z)?mallGroundBlocked(x,z):buildings.some(b=>x
 const nav=new CityNavigation(blocked);
 function city(){const g=new CityJourney(nav,{x:-117,z:36},{'sista-rundan':{x:43,z:31},sandgrund:{x:-11,z:-365}});g.clerks=new FriendlyClerks(g,buildings);g.rush.start('free');return g;}
 const eye=q=>({...q,y:(q.y||0)+1.68});
-test('legacy comic facade overlay is disabled in the real-reference centre pass',()=>{
-  const b={osm:123456,minx:-40,maxx:40,minz:200,maxz:220,height:12};
-  assert.deepEqual(facadePanels([b]),[]);
-  assert.deepEqual(facadePanels(buildings.map(b=>({...b,height:b.h})),blocked),[]);
+test('long generic walls are fully covered by proportional facade modules, without replacing landmark art',()=>{
+  const b={osm:123456,minx:-40,maxx:40,minz:200,maxz:220,height:12},ps=facadePanels([b]);
+  assert.ok(ps.length>=16);assert.ok(ps.every(p=>p.w<=13));
+  const south=ps.filter(p=>p.nz===1);assert.ok(Math.abs(south.reduce((n,p)=>n+p.hi-p.lo,0)-80)<.001);
+  const real=facadePanels(buildings.map(b=>({...b,height:b.h})),blocked);assert.ok(new Set(real.map(p=>p.osm)).size>30);
+  const protectedIcons=new Set([75070676,101456563,1151016,101186411,106864586,75896103,95639598]);
+  assert.ok(real.every(p=>!protectedIcons.has(p.osm)),'iconic landmarks keep their hand-built art');
+  assert.ok(real.some(p=>[102190062,102026709,102496100,103695866,75360972].includes(p.osm)),'large commercial/civic landmark side walls may receive fallback coverage');
+});
+test('facade modules leave the mall street entrance open from floor to lintel',()=>{
+  const ps=facadePanels([{osm:106078938,minx:-153,maxx:-90,minz:36,maxz:52,height:12}]);
+  for(const p of ps.filter(p=>p.nz<-.9))if(p.y<3.4){const xs=[p.x+p.tx*p.lo,p.x+p.tx*p.hi].sort((a,b)=>a-b);assert.ok(xs[1]<=-121+.001||xs[0]>=-113-.001);}
 });
 test('all three shops are enterable on their verified floors; counters and wrong-floor entries block',()=>{
   for(const r of MALL_ROOMS){
