@@ -21,7 +21,7 @@ export const RYDE_ZONES=Object.freeze([
 // Fasta startplatser, utspridda där det annars blir långa promenader. Snäpps till gångbar mark.
 export const RYDE_SPAWNS=Object.freeze([
   [-48,40],[30,40],[-64,118],[-120,175],[60,180],[-190,270],[110,-30],[175,-120],
-  [-60,-150],[-40,-300],[-10,-398],[-164,-520],[-300,-110],[120,300],[280,140]
+  [-60,-150],[-40,-300],[-10,-398],[-164,-520],[-300,-110],[120,300],[292,140]
 ].map(([x,z],i)=>({id:'ryde-'+i,x,z})));
 const hash=(a,b)=>{let h=2166136261;for(const c of a+'|'+b)h=Math.imul(h^c.charCodeAt(0),16777619);return (h>>>0)/4294967296;};
 
