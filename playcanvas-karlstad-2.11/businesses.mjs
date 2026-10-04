@@ -48,7 +48,8 @@ export const REAL_BUSINESSES=Object.freeze([
   B('lindex','Lindex','Drottninggatan 15',106078946,'north',{width:8.2,shift:4.2,signOnly:true}),
   B('kjell','Kjell & Company','Drottninggatan 18',109895687,'south',{width:9.4,shift:-3.4}),
   B('kicks','KICKS','Järnvägsgatan 2',102190062,'west',{width:7.4,shift:-5.2,signOnly:true}),
-  B('apoteket','Apoteket Örnen','Järnvägsgatan 2',102190062,'west',{width:7.4,shift:5.2,signOnly:true})
+  B('apoteket','Apoteket Örnen','Järnvägsgatan 2',102190062,'west',{width:7.4,shift:5.2,signOnly:true}),
+  B('synsamoutlet','Synsam Outlet','Drottninggatan 19',104396327,'north',{width:8.8,signOnly:true,bg:'#232729',fg:'#f36a32',accent:'#f36a32',kind:'optics'})
 ]);
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
