@@ -392,7 +392,7 @@ export function createCityArchitecture(pc,app,buildings){
     }
   }
   for(const shop of STOREFRONTS){
-    if(KUNGSGATAN_PROFILES[shop.osm]||INNERSTAD_PROFILES[shop.osm])continue; // Reference facade supplies the glazing; identity signs may still render separately.
+    if(KUNGSGATAN_PROFILES[shop.osm]||INNERSTAD_PROFILES[shop.osm]||PHOTO_REFERENCE_PROFILES[shop.osm])continue; // Curated facade supplies the real glazing; readable identity signs still render separately.
     const p=storefrontAnchor(shop,buildings);if(!p)continue;const out=shop.face==='north'?-1:1;
     const green=shop.brand==='olearys'?'#155939':shop.brand==='espresso'?'#30554e':'#24477e';
     town.box(p.x,2.7,p.z,10.2,5.4,.12,green);
