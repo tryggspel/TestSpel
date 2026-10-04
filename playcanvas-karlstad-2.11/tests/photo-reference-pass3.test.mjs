@@ -26,7 +26,11 @@ test('reference pass 3 binds only to exact photographed Karlstad addresses',()=>
     [103767825,'Södra Kyrkogatan 6'],
     [106078949,'Södra Kyrkogatan 7'],
     [105746439,'Södra Kyrkogatan 10'],
-    [103695891,'Södra Kyrkogatan 11']
+    [103695891,'Södra Kyrkogatan 11'],
+    [100833292,'Tingvallagatan 9'],
+    [100839528,'Tingvallagatan 11'],
+    [101430152,'Tingvallagatan 13'],
+    [101608925,'Tingvallagatan 15']
   ]);
   assert.equal(PHOTO_REFERENCE_IDS.size,expected.size);
   for(const [id,address] of expected){
@@ -59,4 +63,31 @@ test('Street View reference batch is materially varied rather than one generic f
   assert.ok(kinds.size>=12,'expected many distinct reference kinds');
   const streetView=Object.values(PHOTO_REFERENCE_PROFILES).filter(p=>String(p.source).includes('Google Street View'));
   assert.ok(streetView.length>=12,'first automated Street View batch should be present');
+});
+
+
+test('Stora Torget south side is reference-driven from OLearys through the old bookshop',()=>{
+  const row=[
+    [100833292,'ting9bergqvist'],
+    [100839528,'ting11merchant'],
+    [101430152,'wermlandsbanken'],
+    [101608925,'frimurarebok']
+  ];
+  for(const [id,kind] of row){
+    assert.equal(PHOTO_REFERENCE_PROFILES[id]?.kind,kind);
+    assert.equal(PHOTO_REFERENCE_PROFILES[id]?.front,'north');
+    const b=all.find(x=>x.osm===id);assert.ok(b,'OSM building '+id);
+    const mesh=new ComicMesh();
+    assert.equal(addPhotoReferenceFacade(mesh,b),true);
+    assert.ok(mesh.positions.length/3>120,'Torget facade should contain real architectural detail: '+id);
+  }
+});
+
+test('Wermlandsbanken and Frimurarelogen have distinct architectural signatures',()=>{
+  const bank=PHOTO_REFERENCE_PROFILES[101430152],book=PHOTO_REFERENCE_PROFILES[101608925],olearys=PHOTO_REFERENCE_PROFILES[100833292];
+  assert.equal(bank.name,'Wermlandsbanken');
+  assert.match(book.name,/Herman Anderssons bokhandel/);
+  assert.match(olearys.name,/O'Learys/);
+  assert.notEqual(bank.wall,book.wall);
+  assert.notEqual(olearys.kind,bank.kind);
 });
