@@ -6,7 +6,6 @@ export const CITY_STREETS=Object.freeze([{"osm":4344323,"name":"Norra Strandgata
 // Extra OSM street centre-lines used for facade orientation only. They are intentionally
 // not rendered as extra road surfaces, which avoids duplicate carriageways/z-fighting.
 export const EXTRA_VISUAL_STREETS=Object.freeze([
-[
   {
     "osm": 4344368,
     "name": "Norra Kyrkogatan",
@@ -851,6 +850,5 @@ export const EXTRA_VISUAL_STREETS=Object.freeze([
       ]
     ]
   }
-]
 ]);
 export const VISUAL_STREETS=Object.freeze([...CITY_STREETS,...EXTRA_VISUAL_STREETS]);
