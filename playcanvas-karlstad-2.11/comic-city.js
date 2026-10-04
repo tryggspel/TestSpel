@@ -1,6 +1,7 @@
 import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.17';
 import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.17';
 import {visualTwinFaceYaw} from './visual-twin.mjs?v=2.11.17';
+import {PHOTO_REFERENCE_PROFILES,photoReferenceFaceYaw} from './photo-reference-pass3.mjs?v=2.11.17';
 import {IDENTITY_IDS,SHOP_IDS} from './city-geography.mjs?v=2.11.17';
 import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.17';
 const ink='#253d40',cream='#fff0c8';
@@ -60,6 +61,7 @@ export function facadePanels(buildings,blocked=()=>false){
     for(const face of faces){
       if(KUNGSGATAN_PROFILES[b.osm]&&face.yaw===0)continue; // Reference geometry follows the actual south polygon edge.
       if(INNERSTAD_PROFILES[b.osm]&&face.yaw===referenceFaceYaw(b.osm))continue; // Do not paint a generic facade over a hand-built reference front.
+      if(PHOTO_REFERENCE_PROFILES[b.osm]&&face.yaw===photoReferenceFaceYaw(b.osm))continue; // Pass 3 real-photo frontage owns this face.
       if(!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_PROFILES[b.osm]&&face.yaw===visualTwinFaceYaw(b))continue; // Visual Twin owns the ordinary building's primary street face.
       const a=face.yaw*Math.PI/180,tx=Math.cos(a),tz=-Math.sin(a),nx=Math.sin(a),nz=Math.cos(a);
       if(face.w<2||[-.35,0,.35].every(t=>blocked(face.x+tx*face.w*t+nx*1.2,face.z+tz*face.w*t+nz*1.2)))continue;
