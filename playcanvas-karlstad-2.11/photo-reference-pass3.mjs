@@ -606,73 +606,56 @@ export function addPhotoReferenceFacade(mesh,b){
     panel(mid-emW*.33,h-.45,emW*.66,.58,'#456c58',.23);
   }else if(p.kind==='frimurarebok'){
     // Frimurarelogen / Herman Anderssons gamla bokhandel.
-    // This hero facade deliberately uses shallow 3D boxes, not only coplanar quads:
-    // older Intel/Safari drivers occasionally dropped the thin panel layer on this large
-    // wall even though the geometry existed. The slight physical relief also reads much
-    // more like the successful Kungsgatan facades.
-    const northZ=b.minz-.46,northX=(b.minx+b.maxx)/2,northW=Math.max(10,b.maxx-b.minx-.7);
+    // Use sparse but physical 3D relief so Intel/Safari cannot lose the facade as a
+    // coplanar panel, while staying inside the existing mobile geometry budget.
+    const northZ=b.minz-.48,northX=(b.minx+b.maxx)/2,northW=Math.max(10,b.maxx-b.minx-.8);
     const relief=.18;
-    // Stone plinth, floor bands and heavy cornice.
     mesh.box(northX,.34,northZ,northW,.68,relief,p.ground);
-    mesh.box(northX,3.36,northZ-.015,northW-.25,.18,relief+.04,p.frame);
-    mesh.box(northX,h-.42,northZ-.02,northW-.18,.34,relief+.05,p.accent);
-    mesh.box(northX,h-.10,northZ-.03,northW-.70,.14,relief+.07,'#5d514b');
+    mesh.box(northX,3.35,northZ-.02,northW-.25,.18,relief+.04,p.frame);
+    mesh.box(northX,h-.42,northZ-.03,northW-.18,.34,relief+.05,p.accent);
+    mesh.box(northX,h-.10,northZ-.04,northW-.70,.14,relief+.07,'#5d514b');
 
-    const ncols=Math.max(7,Math.min(11,Math.round(northW/3.75))),ncw=northW/ncols;
-    const upperRows=Math.max(2,Math.min(3,Math.round((h-3.65)/2.35)));
+    const ncols=7,ncw=northW/ncols,upperRows=2;
     for(let r=0;r<upperRows;r++){
-      const cy=4.65+r*2.22;
-      if(cy+1.0>h-.55)continue;
+      const cy=4.72+r*2.28;if(cy+1.0>h-.55)continue;
       for(let c=0;c<ncols;c++){
-        const cx=b.minx+.55+c*ncw+ncw/2,ww=Math.max(1.65,Math.min(2.65,ncw*.64));
-        // Deep pale reveal + blue-green glass + mullions.
-        mesh.box(cx,cy,northZ-.04,ww+0.34,1.74,relief+.08,p.frame);
-        mesh.box(cx,cy,northZ-.15,ww,1.46,relief+.10,p.glass);
-        mesh.box(cx,cy,northZ-.22,.07,1.30,relief+.08,'#ded8c8');
-        mesh.box(cx,cy,northZ-.225,ww-.12,.06,relief+.08,'#ded8c8');
-        // Stepped arch/cap silhouette.
-        mesh.box(cx,cy+.87,northZ-.12,ww+.18,.20,relief+.11,p.frame);
+        const cx=b.minx+.60+c*ncw+ncw/2,ww=Math.max(2.0,Math.min(3.35,ncw*.62));
+        mesh.box(cx,cy,northZ-.05,ww+.42,1.86,relief+.10,p.frame);
+        mesh.box(cx,cy,northZ-.18,ww,1.48,relief+.12,p.glass);
       }
-      mesh.box(northX,cy-1.05,northZ-.01,northW-.40,.08,relief+.02,'#7c6c64');
+    }
+    // Four strong classical piers make the long wall read as architecture, not a slab.
+    for(let i=1;i<=4;i++){
+      const x=b.minx+(b.maxx-b.minx)*i/5;
+      mesh.box(x,(h+3.35)/2,northZ-.03,.18,Math.max(1.0,h-3.35),relief+.07,'#b6a390');
     }
 
-    // Strong classical pilasters break the 40 m wall into readable bays.
-    for(let c=0;c<=Math.floor(ncols/2);c++){
-      const x=b.minx+.42+c*(northW/Math.max(1,Math.floor(ncols/2)));
-      mesh.box(x,(h+3.35)/2,northZ-.02,.16,Math.max(1.0,h-3.35),relief+.06,'#b6a390');
-    }
+    // Keep the current tenant readable but integrate it into the historic facade.
+    const shopW=Math.min(12.8,northW*.36),shopX=northX+Math.min(2.0,northW*.06);
+    mesh.box(shopX,2.84,northZ-.13,shopW+.90,.20,relief+.15,p.frame);
+    mesh.box(shopX-shopW*.47,1.88,northZ-.10,.16,2.10,relief+.11,p.frame);
+    mesh.box(shopX+shopW*.47,1.88,northZ-.10,.16,2.10,relief+.11,p.frame);
 
-    // Keep the current Grekiska tenant but frame it as part of the historic building.
-    const shopW=Math.min(12.4,northW*.36),shopX=northX+Math.min(2.0,northW*.06);
-    mesh.box(shopX,2.83,northZ-.12,shopW+.85,.20,relief+.14,p.frame);
-    mesh.box(shopX-shopW*.47,1.88,northZ-.09,.16,2.08,relief+.10,p.frame);
-    mesh.box(shopX+shopW*.47,1.88,northZ-.09,.16,2.08,relief+.10,p.frame);
-
-    // West facade towards Västra Torggatan: the Street View reference shows tall,
-    // arched masonry openings. Give that long side the same robust physical relief.
-    const westX=b.minx-.46,westZ=(b.minz+b.maxz)/2,westD=Math.max(10,b.maxz-b.minz-.8);
+    // West facade towards Västra Torggatan, based on the Street View reference:
+    // tall masonry openings and a heavy classical cornice.
+    const westX=b.minx-.48,westZ=(b.minz+b.maxz)/2,westD=Math.max(10,b.maxz-b.minz-.9);
     mesh.box(westX,.34,westZ,relief,.68,westD,p.ground);
     mesh.box(westX-.02,3.34,westZ,relief+.05,.18,westD-.2,p.frame);
     mesh.box(westX-.03,h-.42,westZ,relief+.07,.34,westD-.18,p.accent);
-    const wcols=Math.max(7,Math.min(12,Math.round(westD/3.65))),wd=westD/wcols;
+    const wcols=6,wd=westD/wcols;
     for(let r=0;r<upperRows;r++){
-      const cy=4.65+r*2.22;if(cy+1.0>h-.55)continue;
+      const cy=4.72+r*2.28;if(cy+1.0>h-.55)continue;
       for(let c=0;c<wcols;c++){
-        const cz=b.minz+.55+c*wd+wd/2,wh=Math.max(1.55,Math.min(2.55,wd*.62));
-        mesh.box(westX-.04,cy,cz,relief+.08,1.74,wh+0.34,p.frame);
-        mesh.box(westX-.15,cy,cz,relief+.10,1.46,wh,p.glass);
-        mesh.box(westX-.22,cy,cz,relief+.08,1.30,.07,'#ded8c8');
-        mesh.box(westX-.225,cy,cz,relief+.08,.06,wh-.12,'#ded8c8');
-        mesh.box(westX-.12,cy+.87,cz,relief+.11,.20,wh+.18,p.frame);
+        const cz=b.minz+.62+c*wd+wd/2,wh=Math.max(1.9,Math.min(3.2,wd*.62));
+        mesh.box(westX-.05,cy,cz,relief+.10,1.86,wh+.42,p.frame);
+        mesh.box(westX-.18,cy,cz,relief+.12,1.48,wh,p.glass);
       }
     }
-    // Large arched-looking ground openings from the west-side Street View reference.
-    const groundBays=Math.max(6,Math.min(10,Math.round(westD/4.2))),gb=westD/groundBays;
+    const groundBays=5,gb=westD/groundBays;
     for(let c=0;c<groundBays;c++){
-      const cz=b.minz+.45+c*gb+gb/2,gh=Math.max(1.8,Math.min(2.8,gb*.60));
-      mesh.box(westX-.04,1.80,cz,relief+.08,2.62,gh+.34,p.frame);
-      mesh.box(westX-.15,1.77,cz,relief+.10,2.26,gh,p.glass);
-      mesh.box(westX-.12,2.92,cz,relief+.12,.24,gh+.15,p.frame);
+      const cz=b.minz+.60+c*gb+gb/2,gw=Math.max(2.1,Math.min(3.7,gb*.60));
+      mesh.box(westX-.05,1.82,cz,relief+.10,2.68,gw+.38,p.frame);
+      mesh.box(westX-.18,1.79,cz,relief+.12,2.26,gw,p.glass);
     }
   }else if(p.kind==='tingvalla-school'){
     // Tingvallagymnasiet: real yellow-brick institutional facade with deep dark plinth,
@@ -725,7 +708,7 @@ export function addPhotoReferenceFacade(mesh,b){
     panel(.05,h-.36,length-.10,.26,'#8f918b',.17);
   }
 
-  if(p.extraFaces?.includes('west')){
+  if(p.kind!=='frimurarebok'&&p.extraFaces?.includes('west')){
     const side=photoReferenceFront(b,'west');
     if(side){
       const {a:sa,length:sl,tx:stx,tz:stz,nx:snx,nz:snz}=side;
