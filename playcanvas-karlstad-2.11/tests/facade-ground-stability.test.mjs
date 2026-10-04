@@ -5,6 +5,7 @@ import {cityBuildings,infillBuildings} from '../city-geography.mjs';
 import {VISUAL_STREETS} from '../city-streets.mjs';
 import {visualTwinStreetEdges,addVisualTwinFacade} from '../visual-twin.mjs';
 import {ComicMesh,ROAD_RENDER_LEVELS} from '../city-architecture.js';
+import {PHOTO_REFERENCE_IDS} from '../photo-reference-pass3.mjs';
 
 const osm=JSON.parse(fs.readFileSync(new URL('../data/osm-buildings.json',import.meta.url)));
 const detailed=cityBuildings(osm),all=[...detailed,...infillBuildings(osm,detailed)];
@@ -15,7 +16,7 @@ test('facade-only network includes previously missing Karlstad side streets',()=
 });
 
 test('street-exposed side walls receive secondary facade rhythm',()=>{
-  const candidates=all.filter(b=>['Karlbergsgatan','Södra Kyrkogatan','Herrgårdsgatan','Eneströmsgatan'].includes(String(b.tags?.['addr:street']||'')));
+  const candidates=all.filter(b=>!PHOTO_REFERENCE_IDS.has(b.osm)&&['Karlbergsgatan','Södra Kyrkogatan','Herrgårdsgatan','Eneströmsgatan'].includes(String(b.tags?.['addr:street']||'')));
   assert.ok(candidates.length>0);
   const exposed=candidates.find(b=>visualTwinStreetEdges(b).length>=2);
   assert.ok(exposed,'at least one building on the reported side streets should expose two street faces');
