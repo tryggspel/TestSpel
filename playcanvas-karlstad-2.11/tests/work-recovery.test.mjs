@@ -31,6 +31,24 @@ test('Frimurarelogen hero4 card pipeline is present',()=>{
   assert.match(src,/101608925/);
 });
 
+test('Hero Card Centre Pass promotes curated reference facades through the proven card pipeline',()=>{
+  const src=fs.readFileSync(new URL('../city-identity.js',import.meta.url),'utf8');
+  assert.match(src,/PHOTO_REFERENCE_PROFILES/);
+  assert.match(src,/INNERSTAD_PROFILES/);
+  assert.match(src,/HERO_CARD_BUILDINGS/);
+  assert.match(src,/CENTRE PASS 1/);
+  assert.match(src,/Math\.min\(13\.8,p\.width\*\.72\)/,'Grekiska must leave more of Frimurarlogen visible');
+  assert.doesNotMatch(src,/fillText\('FRIMURARELOGEN · TINGVALLAGATAN 15'/,'large facade label must stay removed');
+});
+
+test('Hero Card Centre Pass launcher has one clean build cache key',()=>{
+  const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
+  const match=html.match(/app\.js\?v=2\.11\.21([^"']*)/);
+  assert.ok(match);
+  assert.equal((match[1].match(/&build=/g)||[]).length,1);
+  assert.match(match[1],/&build=hero-centre1/);
+});
+
 test('green map pass is capped to 31 nearest mapped areas',()=>{
   const origin={lat:59.380767,lon:13.50295};
   const elements=Array.from({length:40},(_,i)=>{const d=.00003*(i+1),lat=origin.lat+d,lon=origin.lon;return {id:700000+i,type:'way',tags:{landuse:'grass'},geometry:[{lat,lon},{lat,lon:lon+.00012},{lat:lat+.00012,lon:lon+.00012},{lat:lat+.00012,lon},{lat,lon}]};});
