@@ -61,12 +61,11 @@ const identityFrontYaw=osm=>{
 };
 const identityCanUseFallback=b=>{
   if(!IDENTITY_IDS.has(b.osm))return true;
-  const t=b.tags||{};
-  // Preserve hand-built iconic architecture. Large commercial/civic/hotel volumes,
-  // on the other hand, need secondary wall coverage or they become giant blank slabs.
-  if(t.historic||t.amenity==='place_of_worship'||t.amenity==='theatre'||t.tourism==='museum')return false;
-  if(['church','government','detached'].includes(String(t.building||'')))return false;
-  return true;
+  const t=b.tags||{},mark=LANDMARKS.find(x=>x.osm===b.osm);
+  // Landmarks are opt-in, not opt-out: only broad commercial/public boxes that benefit
+  // from secondary facade rhythm may use this fallback. Historic/iconic silhouettes stay
+  // entirely hand-built even if an auxiliary OSM source has sparse tags.
+  return ['hotel','retail','civic'].includes(String(t.building||''))||mark?.id==='duvan';
 };
 function polygonFacadeFaces(b){
   const poly=Array.isArray(b.polygon)?b.polygon:null;
