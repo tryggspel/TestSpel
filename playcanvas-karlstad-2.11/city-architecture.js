@@ -1,5 +1,6 @@
 import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.17';
 import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit} from './visual-twin.mjs?v=2.11.17';
+import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade} from './photo-reference-pass3.mjs?v=2.11.17';
 import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.17';
 import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture} from './innerstad-reference.mjs?v=2.11.17';
 import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.17';
@@ -360,14 +361,15 @@ export function createCityArchitecture(pc,app,buildings){
   // Mitt i City stays separate so its four entrances and walkable interior are untouched.
   const contours=coreContourBuildings(buildings),contourIds=new Set(contours.map(b=>b.osm));
   for(const b of contours){
-    const seed=Math.abs((b.osm*2654435761)>>>0),twin=visualTwinProfile(b),wall=INNERSTAD_PROFILES[b.osm]?.wall||KUNGSGATAN_PROFILES[b.osm]?.wall||twin?.wall||CORE_WALLS[seed%CORE_WALLS.length],h=Math.max(3.2,b.h);
+    const seed=Math.abs((b.osm*2654435761)>>>0),twin=visualTwinProfile(b),wall=PHOTO_REFERENCE_PROFILES[b.osm]?.wall||INNERSTAD_PROFILES[b.osm]?.wall||KUNGSGATAN_PROFILES[b.osm]?.wall||twin?.wall||CORE_WALLS[seed%CORE_WALLS.length],h=Math.max(3.2,b.h);
     town.walls(b.polygon,0,h,wall);
     town.walls(b.polygon,.04,.72,'#788a80',.035);
     const floors=Math.max(1,Math.min(5,Math.round(h/3.2)));
-    for(let f=0;f<floors&&!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_PROFILES[b.osm]&&!twin;f++){const y=f*3.2+1.28;if(y+1.0<h-.55)town.walls(b.polygon,y,y+1.0,'#5d7a7c',.05);}
+    for(let f=0;f<floors&&!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_PROFILES[b.osm]&&!PHOTO_REFERENCE_PROFILES[b.osm]&&!twin;f++){const y=f*3.2+1.28;if(y+1.0<h-.55)town.walls(b.polygon,y,y+1.0,'#5d7a7c',.05);}
     town.polygon(b.polygon,h+.015,'#3b5155');
     addKungsgatanFacade(town,b);
     addInnerstadFacade(town,b);
+    addPhotoReferenceFacade(town,b);
     addVisualTwinFacade(town,b,{neighbours:buildings});
     if(b.tags['roof:shape']==='gabled'||(b.area<260&&b.sx<26&&b.sz<26))town.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
@@ -524,7 +526,7 @@ export function createCityArchitecture(pc,app,buildings){
 const INFILL_WALLS=['#e2cfa7','#d8b48b','#c98f6a','#e6dcc4','#b9a68a','#d7c39b','#c7a07a','#e9d9b6'];
 export function infillMesh(buildings,mesh=new ComicMesh()){
   for(const b of buildings){
-    const seed=Math.abs((b.osm*2654435761)>>>0),twin=visualTwinProfile(b),wall=twin?.wall||INFILL_WALLS[seed%INFILL_WALLS.length];
+    const seed=Math.abs((b.osm*2654435761)>>>0),twin=visualTwinProfile(b),wall=PHOTO_REFERENCE_PROFILES[b.osm]?.wall||twin?.wall||INFILL_WALLS[seed%INFILL_WALLS.length];
     const h=Math.max(3.2,b.h),poly=b.polygon;
     mesh.walls(poly,0,h,wall);
     mesh.walls(poly,h-.45,h,'#2b4448',.06);
@@ -532,6 +534,7 @@ export function infillMesh(buildings,mesh=new ComicMesh()){
     const floors=Math.max(1,Math.round(h/3.2));
     if(!twin)for(let f=0;f<floors;f++){const y=f*3.2+1.25;if(y+1.1<h-.5)mesh.walls(poly,y,y+1.1,'#5d7a7c',.05);}
     mesh.polygon(poly,h+.01,'#3e5357');
+    addPhotoReferenceFacade(mesh,b);
     addVisualTwinFacade(mesh,b,{lod:'low',neighbours:buildings});
     if(b.area<260&&b.sx<26&&b.sz<26)mesh.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
