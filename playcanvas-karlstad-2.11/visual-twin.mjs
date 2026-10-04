@@ -139,6 +139,19 @@ export function visualTwinExposedEdges(b,neighbours=[]){
   return polygonEdges(b,6.5).filter(e=>!edgeBlockedByNeighbour(e,b,neighbours));
 }
 
+export function visualTwinGroundMode(b){
+  const p=visualTwinProfile(b);if(!p)return 'none';
+  const a=p.archetype||'',v=p.variant||0;
+  if(p.retail){
+    if(/heritage|classic/.test(a))return v%2?'heritage-retail':'cafe';
+    return ['retail','retail','cafe','office'][v%4];
+  }
+  if(/civic|heritage/.test(a))return 'heritage';
+  if(/residential|riverfront/.test(a))return v%3===0?'mixed':'residential';
+  if(/office|station/.test(a))return 'office';
+  return ['mixed','residential','office'][v%3];
+}
+
 export function visualTwinFaceYaw(b){
   const e=visualTwinFront(b);if(!e)return null;
   if(Math.abs(e.nx)>Math.abs(e.nz))return e.nx>0?90:-90;
@@ -147,14 +160,81 @@ export function visualTwinFaceYaw(b){
 
 export function addVisualTwinFacade(mesh,b,options={}){
   const p=visualTwinProfile(b),edge=visualTwinFront(b);if(!p||!edge)return false;
-  const {a,length,tx,tz,nx,nz}=edge,h=Math.max(3.2,b.h),low=options.lod==='low';
+  const {a,length,tx,tz,nx,nz}=edge,h=Math.max(3.2,b.h),low=options.lod==='low',groundMode=visualTwinGroundMode(b);
   const point=(u,y,out)=>[a[0]+tx*u+nx*out,y,a[1]+tz*u+nz*out];
   const panel=(u,y,w,ph,colour,out=.10)=>{if(w<=.08||ph<=.08)return;mesh.quad(point(u,y,out),point(u+w,y,out),point(u+w,y+ph,out),point(u,y+ph,out),colour);};
+  const drawGroundFloor=(compact=false)=>{
+    const len=length,v=p.variant||0,stone=['#a7a496','#bbb4a3','#8e938c','#c3b7a2'][v%4];
+    const bays=Math.max(2,Math.min(compact?7:10,Math.round(len/(groundMode==='residential'?4.1:3.35)))),bw=len/bays;
+    // Every building gets a distinct plinth + cornice so the lower facade does not read as
+    // the same generic strip repeated across Karlstad.
+    panel(.04,.05,Math.max(.3,len-.08),.34,groundMode==='heritage'?stone:p.ground,.12);
+    panel(.08,2.94,Math.max(.3,len-.16),.16,groundMode==='heritage'?p.frame:p.accent,.18);
+
+    if(groundMode==='residential'){
+      const door=Math.max(0,Math.min(bays-1,(v*3)%bays));
+      for(let i=0;i<bays;i++){
+        const u=i*bw+.18,w=Math.max(.36,bw-.36);
+        if(i===door){
+          const dw=Math.min(.92,w*.72),du=u+(w-dw)/2;
+          panel(du-.08,.42,dw+.16,2.36,p.frame,.18);panel(du,.52,dw,2.15,'#3b4b4b',.21);
+          panel(du+dw*.16,1.70,dw*.68,.10,p.accent,.24);
+        }else{
+          panel(u,.72,w,1.55,p.frame,.16);panel(u+.08,.80,Math.max(.22,w-.16),1.38,p.glass,.19);
+        }
+      }
+      panel(.10,.40,Math.max(.3,len-.20),.12,stone,.16);
+    }else if(groundMode==='heritage'){
+      const door=Math.max(0,Math.min(bays-1,(v+1)%bays));
+      for(let i=0;i<bays;i++){
+        const u=i*bw+.13,w=Math.max(.40,bw-.26);
+        panel(u-.07,.48,w+.14,2.22,p.frame,.17);
+        if(i===door){
+          panel(u,.58,w,2.04,'#394646',.21);panel(u+w*.42,.72,.08,1.76,p.accent,.23);
+        }else{
+          panel(u,.63,w,1.76,p.glass,.20);panel(u,.63,w,.15,stone,.22);panel(u,2.24,w,.15,stone,.22);
+        }
+        if(i<bays-1)panel(Math.max(.02,(i+1)*bw-.05),.28,.10,2.56,stone,.21);
+      }
+    }else if(groundMode==='office'){
+      const door=Math.max(0,Math.min(bays-1,Math.floor(bays/2)+(v%2?1:-1)));
+      for(let i=0;i<bays;i++){
+        const u=i*bw+.10,w=Math.max(.38,bw-.20);
+        panel(u,.58,w,2.15,'#34474b',.17);
+        panel(u+.08,.68,Math.max(.22,w-.16),1.95,i===door?'#607c80':p.glass,.20);
+        if(i%2===0)panel(u+w*.48,.68,.06,1.95,p.frame,.22);
+      }
+      panel(.08,2.70,Math.max(.3,len-.16),.18,p.frame,.22);
+    }else{
+      // retail, cafe and mixed: storefronts share a datum but vary bay width, doors,
+      // awnings and solid panels. This avoids a repeated "same shop" silhouette.
+      const door=Math.max(0,Math.min(bays-1,(v*2+1)%bays));
+      for(let i=0;i<bays;i++){
+        const u=i*bw+.10,w=Math.max(.38,bw-.20),solid=groundMode==='mixed'&&((i+v)%4===0);
+        if(i===door){
+          const dw=Math.min(1.0,w*.68),du=u+(w-dw)/2;
+          panel(du-.07,.48,dw+.14,2.38,p.frame,.21);panel(du,.58,dw,2.16,'#2c3b3f',.24);
+        }else if(solid){
+          panel(u,.48,w,2.32,p.wall,.18);panel(u+.16,1.08,Math.max(.20,w-.32),.88,p.glass,.21);
+        }else{
+          panel(u,.55,w,2.20,p.ground,.18);panel(u+.08,.67,Math.max(.22,w-.16),1.92,p.glass,.22);
+          if((i+v)%2===0)panel(u+w*.50,.67,.055,1.92,p.frame,.24);
+        }
+      }
+      if(groundMode==='cafe'){
+        for(let i=0;i<bays;i+=2){const u=i*bw+.16,w=Math.min(len-u-.16,bw*1.45);if(w>.45)panel(u,2.54,w,.20,(i+v)%4?'#884f43':p.accent,.31);}
+      }else if(p.awning||groundMode==='retail'){
+        panel(.18,2.66,Math.max(.4,len-.36),.20,p.accent,.28);
+      }
+      if(groundMode==='mixed'){
+        const signW=Math.min(3.8,Math.max(1.5,len*.22)),su=Math.max(.2,len-signW-.45);
+        panel(su,2.48,signW,.24,'#d1ad6b',.31);
+      }
+    }
+  };
 
   if(low){
-    panel(.08,.56,Math.max(.3,length-.16),2.30,p.ground,.14);
-    panel(.20,.72,Math.max(.3,length-.40),1.88,p.glass,.17);
-    if(p.awning)panel(.22,2.73,Math.max(.3,length-.44),.22,p.accent,.25);
+    drawGroundFloor(true);
     const floors=Math.max(1,Math.min(4,Math.round(h/3.2)-1)),rowH=Math.max(2.5,(h-3.55)/floors);
     for(let row=0;row<floors;row++){
       const y=3.72+row*rowH;
@@ -163,18 +243,8 @@ export function addVisualTwinFacade(mesh,b,options={}){
     }
   }else{
     panel(0,.04,length,h-.04,p.wall,.07);
-    panel(0,.05,length,.46,p.ground,.11);
-    panel(0,3.08,length,.16,p.frame,.13);
+    drawGroundFloor(false);
     panel(0,h-.34,length,.28,p.frame,.13);
-
-    const retail=!!p.retail,groundCount=Math.max(2,Math.min(10,Math.round(length/(retail?3.3:4.2)))),gw=length/groundCount;
-    for(let col=0;col<groundCount;col++){
-      const u=col*gw+.13,w=Math.max(.42,gw-.26);
-      panel(u,.57,w,2.32,retail?p.ground:p.frame,.15);
-      panel(u+.10,.70,Math.max(.25,w-.20),1.98,p.glass,.18);
-      if(retail&&col%3===1)panel(u+w*.43,.70,.09,1.98,p.frame,.20);
-    }
-    if(p.awning)panel(.20,2.77,Math.max(.5,length-.40),.28,p.accent,.34);
 
     const floors=Math.max(1,Math.min(6,Math.round(h/3.2)-1)),upperY=3.55,rowH=Math.max(2.45,(h-upperY-.25)/floors);
     const spacing=p.archetype.includes('heritage')?2.55:p.archetype.includes('urban')?2.9:3.05;
