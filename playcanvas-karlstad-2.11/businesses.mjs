@@ -1,4 +1,4 @@
-import {cityPoint} from './city-geography.mjs?v=2.11.25';
+import {cityPoint} from './city-geography.mjs?v=2.11.26';
 
 const FACE_YAW=Object.freeze({north:180,south:0,east:90,west:-90});
 const FACADE_OFFSET=.34; // comic-city panels sit at .25; real businesses must render in front.
@@ -35,7 +35,7 @@ export const REAL_BUSINESSES=Object.freeze([
   B('normal','Normal','Drottninggatan 11',104778905,'north',{lon:13.5028741,lat:59.3792396,width:9.4,approximateBuilding:true,door:.60}),
   B('hm','H&M','Drottninggatan 12',471365595,'south',{lon:13.502617,lat:59.379395,width:12.0,approximateBuilding:true,door:.50}),
   B('scandic','Scandic Karlstad City','Drottninggatan 4',106864598,'south',{width:11.5,door:.55}),
-  B('radhuscafe','Rådhuscaféet','Tingvallagatan 8',101456563,'east',{width:8.8,door:.62}),
+  B('radhuscafe','Rådhuscaféet','Tingvallagatan 8',101456563,'east',{width:8.8,door:.62,out:2.6}),
   B('savoy','Hotel Savoy','Västra Torggatan 1',106078942,'east',{width:10.6,door:.20,signOnly:true}),
   B('homeplaza','Home Hotel Plaza','Västra Torggatan 2',110733713,'west',{width:11.2,door:.50,signOnly:true}),
   B('fratelli','Hotel Fratelli','Drottninggatan 17',104529134,'north',{width:8.8,signOnly:true}),
@@ -47,8 +47,8 @@ export const REAL_BUSINESSES=Object.freeze([
   B('gossip','Gossip & Bubbels','Älvgatan 2',101202579,'south',{width:11.8,door:.56}),
   B('lindex','Lindex','Drottninggatan 15',106078946,'north',{width:8.2,shift:4.2,signOnly:true}),
   B('kjell','Kjell & Company','Drottninggatan 18',109895687,'south',{width:9.4,shift:-3.4}),
-  B('kicks','KICKS','Järnvägsgatan 2',102190062,'west',{width:7.4,shift:-5.2,signOnly:true}),
-  B('apoteket','Apoteket Örnen','Järnvägsgatan 2',102190062,'west',{width:7.4,shift:5.2,signOnly:true}),
+  B('kicks','KICKS','Järnvägsgatan 2',102190062,'west',{width:7.4,shift:-10.5,signOnly:true,out:.9}),
+  B('apoteket','Apoteket Örnen','Järnvägsgatan 2',102190062,'west',{width:7.4,shift:10.5,signOnly:true,out:.9}),
   B('synsamoutlet','Synsam Outlet','Drottninggatan 19',104396327,'north',{width:8.8,signOnly:true,bg:'#232729',fg:'#f36a32',accent:'#f36a32',kind:'optics'})
 ]);
 
@@ -71,10 +71,10 @@ export function businessAnchor(business,colliders=[]){
   const margin=1.6,p=pin||{x:(b.minx+b.maxx)/2,z:(b.minz+b.maxz)/2};
   if(face==='north'||face==='south'){
     const span=Math.max(3,b.maxx-b.minx-2*margin),width=Math.min(business.width||10,span);
-    return Object.freeze({x:clamp(p.x+(business.shift||0),b.minx+margin,b.maxx-margin),z:(face==='north'?b.minz-FACADE_OFFSET:b.maxz+FACADE_OFFSET),yaw,width,direct:false});
+    return Object.freeze({x:clamp(p.x+(business.shift||0),b.minx+margin,b.maxx-margin),z:(face==='north'?b.minz-FACADE_OFFSET-(business.out||0):b.maxz+FACADE_OFFSET+(business.out||0)),yaw,width,direct:false});
   }
   const span=Math.max(3,b.maxz-b.minz-2*margin),width=Math.min(business.width||10,span);
-  return Object.freeze({x:(face==='west'?b.minx-FACADE_OFFSET:b.maxx+FACADE_OFFSET),z:clamp(p.z+(business.shift||0),b.minz+margin,b.maxz-margin),yaw,width,direct:false});
+  return Object.freeze({x:(face==='west'?b.minx-FACADE_OFFSET-(business.out||0):b.maxx+FACADE_OFFSET+(business.out||0)),z:clamp(p.z+(business.shift||0),b.minz+margin,b.maxz-margin),yaw,width,direct:false});
 }
 
 // Known real businesses just outside the current OSM building snapshot. They are kept as

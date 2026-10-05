@@ -1,9 +1,10 @@
-import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,CITY_STREETS,storefrontAnchor} from './city-geography.mjs?v=2.11.25';
-import {MALL_ROOMS} from './mall-space.mjs?v=2.11.25';
-import {REAL_BUSINESSES,BUSINESS_OSM_IDS,businessAnchor} from './businesses.mjs?v=2.11.25';
-import {createMallSigns} from './mall-architecture.js?v=2.11.25';
-import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.25';
-import {SOUTH_STREETS} from './city-south-data.mjs?v=2.11.25';
+import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,CITY_STREETS,storefrontAnchor} from './city-geography.mjs?v=2.11.26';
+import {MALL_ROOMS} from './mall-space.mjs?v=2.11.26';
+import {REAL_BUSINESSES,BUSINESS_OSM_IDS,businessAnchor} from './businesses.mjs?v=2.11.26';
+import {drawBrandLogo,hasBrandLogo} from './brand-logos.mjs?v=2.11.26';
+import {createMallSigns} from './mall-architecture.js?v=2.11.26';
+import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.26';
+import {SOUTH_STREETS} from './city-south-data.mjs?v=2.11.26';
 const ink='#263f46',paper='#f6ebd3';
 
 // Curated building facades are owned by city-architecture.js and rendered as hand-built
@@ -358,8 +359,10 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       c.fillStyle=b.bg;c.fillRect(0,0,w,h);
       c.fillStyle=b.accent;c.fillRect(0,signH-8,w,8);
       c.fillStyle=b.fg;c.textAlign='center';c.textBaseline='middle';
-      const fontSize=b.name.length>18?48:b.name.length>12?58:70;
-      c.font='900 '+fontSize+'px system-ui,sans-serif';c.fillText(b.name,w/2,signH*.50,w-54);
+      if(!drawBrandLogo(c,b.id,{x:36,y:4,w:w-72,h:signH-18,mode:'solid',palette:b})){
+        const fontSize=b.name.length>18?48:b.name.length>12?58:70;
+        c.font='900 '+fontSize+'px system-ui,sans-serif';c.fillText(b.name,w/2,signH*.50,w-54);
+      }
       c.fillStyle='#28444a';c.fillRect(0,glassY,w,glassH);
       const door=Math.max(.18,Math.min(.82,b.door??.5)),doorX=Math.round(w*door),doorW=Math.max(72,Math.round(w*.12));
       c.fillStyle='#83b4b5';for(let i=0;i<4;i++){const x=18+i*w/4;c.fillRect(x,glassY+14,w/4-28,glassH-30);}
@@ -393,36 +396,58 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
     },1024,360);
     businessTextures.set(b.id,t);return t;
   }
-  const neonTextures=new Map(),neonIds=new Set(['musicpartner','synsam','normal','hm','radhuscafe','burgerking','sibylla','grekiska','leprechaun','gossip','lindex','kjell','kicks','apoteket','synsamoutlet']);
+  // 2.11.26: every real business gets its logotype on the fascia sign, a large neon sign above the shopfront
+  // and a blade plate with the logo. The shapes come from brand-logos.mjs (original vector wordmarks).
+  const neonTextures=new Map(),plateTextures=new Map(),bladeTextures=new Map();
   function neonTexture(b){
     if(neonTextures.has(b.id))return neonTextures.get(b.id);
     const t=texture((c,w,h)=>{
-      c.clearRect(0,0,w,h);c.fillStyle='#10191b';c.fillRect(0,0,w,h);
-      c.strokeStyle=b.accent;c.lineWidth=5;c.shadowColor=b.accent;c.shadowBlur=26;c.strokeRect(10,10,w-20,h-20);
-      const fs=b.name.length>18?38:b.name.length>12?46:56;
-      c.textAlign='center';c.textBaseline='middle';c.font='900 '+fs+'px system-ui,sans-serif';
-      c.strokeStyle=b.accent;c.lineWidth=7;c.shadowBlur=30;c.strokeText(b.name.toUpperCase(),w/2,h*.52,w-44);
-      c.shadowBlur=0;c.fillStyle=b.fg;c.fillText(b.name.toUpperCase(),w/2,h*.52,w-44);
-    },768,150);
+      c.fillStyle='#0d1416';c.fillRect(0,0,w,h);
+      const tubeCol=b.accent&&b.accent!=='#1d2425'?b.accent:'#ffd36a';
+      c.save();c.shadowColor=tubeCol;c.shadowBlur=30;c.strokeStyle=tubeCol;c.lineWidth=7;c.lineJoin='round';c.strokeRect(14,14,w-28,h-28);c.restore();
+      c.save();c.strokeStyle='#fff6e6';c.lineWidth=2.5;c.strokeRect(14,14,w-28,h-28);c.restore();
+      if(!drawBrandLogo(c,b.id,{x:36,y:24,w:w-72,h:h-48,mode:'neon',palette:b})){
+        c.textAlign='center';c.textBaseline='middle';c.font='900 '+(b.name.length>12?74:96)+'px system-ui,sans-serif';
+        c.shadowColor=tubeCol;c.shadowBlur=34;c.strokeStyle=tubeCol;c.lineWidth=9;c.strokeText(b.name.toUpperCase(),w/2,h*.52,w-90);c.shadowBlur=0;c.fillStyle='#fff6e6';c.fillText(b.name.toUpperCase(),w/2,h*.52,w-90);
+      }
+    },1024,256);
     neonTextures.set(b.id,t);return t;
+  }
+  function plateTexture(b){
+    if(plateTextures.has(b.id))return plateTextures.get(b.id);
+    const t=texture((c,w,h)=>{
+      c.fillStyle=b.bg;c.fillRect(0,0,w,h);c.strokeStyle=b.accent;c.lineWidth=8;c.strokeRect(8,8,w-16,h-16);
+      if(!drawBrandLogo(c,b.id,{x:34,y:20,w:w-68,h:h-40,mode:'solid',palette:b})){c.fillStyle=b.fg;c.textAlign='center';c.textBaseline='middle';c.font='900 80px system-ui,sans-serif';c.fillText(b.name.toUpperCase(),w/2,h/2,w-70);}
+    },1024,256);
+    plateTextures.set(b.id,t);return t;
+  }
+  function bladeTexture(b){
+    if(bladeTextures.has(b.id))return bladeTextures.get(b.id);
+    const t=texture((c,w,h)=>{
+      c.fillStyle=b.bg;c.fillRect(0,0,w,h);c.strokeStyle=b.accent;c.lineWidth=14;c.strokeRect(10,10,w-20,h-20);
+      if(!drawBrandLogo(c,b.id,{x:28,y:h*.22,w:w-56,h:h*.56,mode:'solid',palette:b})){c.fillStyle=b.fg;c.textAlign='center';c.textBaseline='middle';c.font='900 64px system-ui,sans-serif';c.fillText(b.name,w/2,h/2,w-50);}
+    },512,512);
+    bladeTextures.set(b.id,t);return t;
   }
   const realBusinesses=[];
   for(const b of REAL_BUSINESSES){
     const p=businessAnchor(b,host.colliders);if(!p)continue;
+    const a=p.yaw*Math.PI/180,nx=Math.sin(a),nz=Math.cos(a),tx=Math.cos(a),tz=-Math.sin(a);
+    let topY;
     if(b.signOnly){
-      mount('Verklig skylt · '+b.name,labelTex([b.name.toUpperCase()],b.bg,b.fg),Math.min(6.2,p.width*.78),.72,p.x,2.62,p.z,p.yaw);
+      const pw=Math.min(5.6,p.width*.8);
+      mount('Verklig skylt · '+b.name,plateTexture(b),pw,pw/4,p.x,2.35,p.z,p.yaw);topY=2.35+pw/4;
     }else{
       const bw=b.id==='grekiska'?Math.min(13.8,p.width*.72):p.width;
       const bh=b.id==='grekiska'?3.15:3.65;
-      mount('Verklig verksamhet · '+b.name,businessTexture(b),bw,bh,p.x,.12,p.z,p.yaw);
+      mount('Verklig verksamhet · '+b.name,businessTexture(b),bw,bh,p.x,.12,p.z,p.yaw);topY=.12+bh;
     }
-    if(neonIds.has(b.id)){
-      const a=p.yaw*Math.PI/180,nx=Math.sin(a),nz=Math.cos(a),tx=Math.cos(a),tz=-Math.sin(a);
-      const nw=Math.max(2.7,Math.min(5.4,p.width*.58));
-      mount('Neonskylt · '+b.name,neonTexture(b),nw,.62,p.x+nx*.18,3.46,p.z+nz*.18,p.yaw);
-      mount('Hängskylt · '+b.name,neonTexture(b),1.42,.54,p.x+tx*Math.min(3.2,p.width*.34)+nx*.38,2.88,p.z+tz*Math.min(3.2,p.width*.34)+nz*.38,p.yaw+90,true);
+    if(hasBrandLogo(b.id)){
+      const nw=Math.max(4.2,Math.min(7.2,p.width*.78)),nh=nw/4;
+      mount('Neonskylt · '+b.name,neonTexture(b),nw,nh,p.x+nx*.2,topY+.12,p.z+nz*.2,p.yaw);
+      mount('Hängskylt · '+b.name,bladeTexture(b),1.3,1.3,p.x+tx*Math.min(3.2,p.width*.34)+nx*.45,2.3,p.z+tz*Math.min(3.2,p.width*.34)+nz*.45,p.yaw+90,true);
     }
-    realBusinesses.push({id:b.id,name:b.name,address:b.address,x:p.x,z:p.z,yaw:p.yaw,width:p.width,approximate:!!b.approximateBuilding});
+    realBusinesses.push({id:b.id,name:b.name,address:b.address,x:p.x,z:p.z,yaw:p.yaw,width:p.width,approximate:!!b.approximateBuilding,logo:hasBrandLogo(b.id),neon:hasBrandLogo(b.id)});
   }
   const brandTextures=new Map();
   function brandTexture(brand){
@@ -436,7 +461,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
         c.fillStyle=bg;c.fillRect(0,0,w,h);const fit=Math.min((w-44)/img.naturalWidth,(h-28)/img.naturalHeight),iw=img.naturalWidth*fit,ih=img.naturalHeight*fit;
         c.drawImage(img,(w-iw)/2,(h-ih)/2,iw,ih);c.strokeStyle=brand==='olearys'?'#d5cba6':'#263f46';c.lineWidth=4;c.strokeRect(4,4,w-8,h-8);t.setSource(canvas);logoStates[brand]='official';
       };
-      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.25',import.meta.url).href;
+      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.26',import.meta.url).href;
     }
     return t;
   }

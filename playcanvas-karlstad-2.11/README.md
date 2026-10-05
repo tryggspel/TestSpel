@@ -1,3 +1,9 @@
+# Karlstad City — 2.11.26 · Logotyper och neonskyltar
+
+Butikernas uppgifter fanns men syntes bara som små textkort. Alla 20 verkliga verksamheter har nu egenritade logotyper (`brand-logos.mjs`) på fascian, en stor neonskylt (4,2–7,2 m) ovanför butiken, en hängskylt med logotyp och, för verksamheter utan butiksfasad, en logotypplatta. Rådhuscaféets skylt som göms bakom Rådhusets pelare är framflyttad, och KICKS/Apoteket Örnen ligger fria från Galleria Duvans skylt och pelare. Pressbyrån på Kungsgatan 14 är orörd. Se `art/BUSINESS-SOURCES.md`.
+
+## Föregående version
+
 # Karlstad City — 2.11.25 · Fasadluckor i hela staden
 
 Kameraoberoende mätning av det körande spelet (`tools/facade-audit/audit.mjs`) visade 252 blanka väggar (41 930 m²). Orsak: Visual Twin målar en fasadkant per hus, sidoväggspasset hoppade över väggar som pekar som fronten, allt längre bort än 230 m och Torget-audit-husen, och lägre grannar räknades som brandväggar. Nya pass (`addMissingWalls`, `addAuditSideWalls`, `completeBlankWalls`) målar exakt de väggar som inget annat pass ritat; kvartersfyllnadens fönster ligger i en egen batch. Resultat: 8 blanka väggar och 481 m² kvar, alla under 6 m. Kungsgatan 14, 16 och 18 är orörda och vaktas av test. Detaljer, orsaker och det som kvarstår (handbyggda landmärkeslådor, Mitt i City, södra stadsdelen): `art/FACADE-GAPS.md`.
