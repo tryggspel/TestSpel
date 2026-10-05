@@ -47,7 +47,7 @@ test('Kungsgatan-profile pipeline launcher has one clean build cache key',()=>{
   const match=html.match(/app\.js\?v=2\.11\.21([^"']*)/);
   assert.ok(match);
   assert.equal((match[1].match(/&build=/g)||[]).length,1);
-  assert.match(match[1],/&build=kungsgatan-pipeline1/);
+  assert.match(match[1],/&build=graphics-audit2/);
 });
 
 test('green map pass is capped to 31 nearest mapped areas',()=>{
@@ -68,3 +68,12 @@ test('mobile pickup feedback has fixed 26px height and clears bottom positioning
 test('Haga and Bryggudden are selectable city destinations',()=>{const places=Object.fromEntries(SOUTH_PLACES.map(p=>[p.id,p]));assert.deepEqual([places.willys.x,places.willys.z],[271,413]);assert.deepEqual([places.icahaga.x,places.icahaga.z],[566,-129]);const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');assert.match(html,/route-place-willys/);assert.match(html,/route-place-icahaga/);});
 
 test('Klaralven and sightseeing train stay in the static city pass',()=>{const south=fs.readFileSync(new URL('../city-south.js',import.meta.url),'utf8');assert.match(south,/#2f91a5/);assert.match(south,/KARLSTAD SIGHTSEEING/);assert.match(south,/Kungsgatan: two low glass-walled outdoor seating areas/);});
+
+
+test('Torget audit profiles render in main static mesh',()=>{
+  const src=fs.readFileSync(new URL('../city-architecture.js',import.meta.url),'utf8');
+  assert.match(src,/TORGET_AUDIT_PROFILES/);
+  for(const id of ['101935889','107041955','101247031','101456562','471365594'])assert.match(src,new RegExp(id));
+  assert.match(src,/addTorgetAuditFacade\(town,b\)/);
+  assert.match(src,/!TORGET_AUDIT_PROFILES\[b\.osm\]/);
+});
