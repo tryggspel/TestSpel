@@ -23,7 +23,7 @@ import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.11.21';
 import {pedestrianAt} from './pedestrian.mjs?v=2.11.21';
 import {createPedestrianSigns} from './pedestrian-view.js?v=2.11.21';
 import {drawMapLabels} from './city-geography.mjs?v=2.11.21';
-import {createCityIdentity} from './city-identity.js?v=2.11.21&build=hero-centre2';
+import {createCityIdentity} from './city-identity.js?v=2.11.21&build=kungsgatan-pipeline1';
 import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.11.21';
 
 import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.11.21';
