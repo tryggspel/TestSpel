@@ -1,10 +1,10 @@
-import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,CITY_STREETS,storefrontAnchor} from './city-geography.mjs?v=2.11.27';
-import {MALL_ROOMS} from './mall-space.mjs?v=2.11.27';
-import {REAL_BUSINESSES,BUSINESS_OSM_IDS,businessAnchor} from './businesses.mjs?v=2.11.27';
-import {drawBrandLogo,hasBrandLogo} from './brand-logos.mjs?v=2.11.27';
-import {createMallSigns} from './mall-architecture.js?v=2.11.27';
-import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.27';
-import {SOUTH_STREETS} from './city-south-data.mjs?v=2.11.27';
+import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,CITY_STREETS,storefrontAnchor} from './city-geography.mjs?v=2.11.28';
+import {MALL_ROOMS} from './mall-space.mjs?v=2.11.28';
+import {REAL_BUSINESSES,BUSINESS_OSM_IDS,businessAnchor} from './businesses.mjs?v=2.11.28';
+import {drawBrandLogo,hasBrandLogo} from './brand-logos.mjs?v=2.11.28';
+import {createMallSigns} from './mall-architecture.js?v=2.11.28';
+import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.28';
+import {SOUTH_STREETS} from './city-south-data.mjs?v=2.11.28';
 const ink='#263f46',paper='#f6ebd3';
 
 // Curated building facades are owned by city-architecture.js and rendered as hand-built
@@ -293,9 +293,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       mount('Biblioteket · Västra Torggatan',lt,d,10,b.minx-.05,0,z,-90);mount('Biblioteket · östfasad',lt,d,10,b.maxx+.08,0,z,90);
       mount('Biblioteket · sydfasad',lt,w,10,x,0,b.maxz+.05,0);mount('Biblioteket · nordfasad',lt,w,10,x,0,b.minz-.08,180);
     }else if(mark.id==='residenset'){
-      const t=facade('residenset',1024,512),rh=Math.max(12.4,Math.min(14.6,b.h+2.2));
-      mount('Residenset · östfasad',t,d,rh,b.maxx+.10,0,z,90);mount('Residenset · västfasad',t,d,rh,b.minx-.10,0,z,-90);
-      mount('Residenset · nordfasad',t,w,rh,x,0,b.minz-.10,180);mount('Residenset · sydfasad',t,w,rh,x,0,b.maxz+.10,0);
+      // Residenset is real geometry now (residenset-facade.mjs); no texture cards.
     }else if(mark.id==='biskopsgarden'){
       const t=facade('biskopsgarden',1024,512),bh=Math.max(9.6,Math.min(11.2,b.h+1.2));
       mount('Biskopsgården · östfasad',t,d,bh,b.maxx+.10,0,z,90);mount('Biskopsgården · västfasad',t,d,bh,b.minx-.10,0,z,-90);
@@ -320,10 +318,8 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       mount(mark.name+' · baksida',facade(side),d,height,mark.id==='duvan'?b.maxx+.08:b.minx-.08,0,z,mark.id==='duvan'?90:-90);
     }else if(mark.id==='opera'){
       const oh=Math.max(13.5,Math.min(18,b.h+5.5));
-      mount('Wermland Opera · huvudfasad',facade('opera',1024,512),d,oh,b.maxx+.12,0,z,90);
-      mount('Wermland Opera · sidofasad',facade('opera',1024,512),w,oh,x,0,b.minz-.10,180);
-      mount('Wermland Opera · Stora scenen',labelTex(['STORA SCENEN'],'#243235','#f4e8c9'),5.0,.62,b.maxx+.22,3.12,z,90);
-      mount('Wermland Opera · Operacafé',labelTex(['OPERACAFÉ'],'#153e37','#f3d37f'),3.55,.50,b.maxx+.24,2.36,z+5.0,90);
+      mount('Wermland Opera · Stora scenen',labelTex(['STORA SCENEN'],'#243235','#f4e8c9'),5.0,.62,-293.3,4.55,-145.5,90);
+      mount('Wermland Opera · Operacafé',labelTex(['OPERACAFÉ'],'#153e37','#f3d37f'),3.55,.50,-293.3,3.55,-139.9,90);
     }else if(mark.id==='museum'){
       mount('Cyrillushuset · tegel',facade('museum-old'),28.8,6.8,-146,0,-478.95);
       mount('Cyrillushuset · älven',facade('museum-old'),35.8,6.8,-160.54,0,-497,-90);
@@ -443,7 +439,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
         c.fillStyle=bg;c.fillRect(0,0,w,h);const fit=Math.min((w-44)/img.naturalWidth,(h-28)/img.naturalHeight),iw=img.naturalWidth*fit,ih=img.naturalHeight*fit;
         c.drawImage(img,(w-iw)/2,(h-ih)/2,iw,ih);c.strokeStyle=brand==='olearys'?'#d5cba6':'#263f46';c.lineWidth=4;c.strokeRect(4,4,w-8,h-8);t.setSource(canvas);logoStates[brand]='official';
       };
-      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.27',import.meta.url).href;
+      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.28',import.meta.url).href;
     }
     return t;
   }

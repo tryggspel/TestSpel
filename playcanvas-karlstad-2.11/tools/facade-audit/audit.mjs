@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Facade-gap audit: starts the real game in headless Chromium, collects the geometry that was actually drawn
 // and counts, for every free wall of every building, the facade vertices standing in front of it.
-// A wall with fewer than 12 vertices between 3.3 m and the roofline is reported as blank.
+// A wall with fewer than max(12, 4 per metre) detail vertices between 3.3 m and the roofline is reported as blank:
+// real window grammar gives 8+ per metre, a few long glass ribbons give about 3.
 //
 //   npm i playcanvas@2.22.4 playwright     (the CDN is blocked in some sandboxes; the local copy is routed in)
 //   python3 -m http.server 8902            (in the game directory)
@@ -43,9 +44,9 @@ for(const b of all){
     let n=0;const mx=a[0]+dx/2,mz=a[1]+dz/2,r=len/2+1.5;
     for(let gx=Math.floor((mx-r)/C);gx<=Math.floor((mx+r)/C);gx++)for(let gz=Math.floor((mz-r)/C);gz<=Math.floor((mz+r)/C);gz++){
       const c=grid.get(gx+','+gz);if(!c)continue;
-      for(let j=0;j<c.length;j+=3){const rx=c[j]-a[0],rz=c[j+2]-a[1],u=rx*tx+rz*tz,o=rx*nx+rz*nz,y=c[j+1];if(u>=0&&u<=len&&o>.03&&o<.5&&y>3.3&&y<b.h-.2)n++;}
+      for(let j=0;j<c.length;j+=3){const rx=c[j]-a[0],rz=c[j+2]-a[1],u=rx*tx+rz*tz,o=rx*nx+rz*nz,y=c[j+1];if(u>=0&&u<=len&&o>.065&&o<.5&&y>3.3&&y<b.h-.2)n++;}
     }
-    res.push({osm:b.osm,name:b.name||((b.tags['addr:street']||'')+' '+(b.tags['addr:housenumber']||'')).trim(),len:+len.toFixed(1),h:b.h,n,blank:n<12,mx:+mx.toFixed(1),mz:+mz.toFixed(1)});
+    res.push({osm:b.osm,name:b.name||((b.tags['addr:street']||'')+' '+(b.tags['addr:housenumber']||'')).trim(),len:+len.toFixed(1),h:b.h,n,blank:n<Math.max(12,4*len),mx:+mx.toFixed(1),mz:+mz.toFixed(1)});
   }
 }
 const blank=res.filter(x=>x.blank);

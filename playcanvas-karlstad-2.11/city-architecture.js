@@ -1,13 +1,15 @@
-import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.27';
-import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit,visualTwinFaceYaw,visualTwinFront} from './visual-twin.mjs?v=2.11.27';
-import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.27';
-import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.27';
-import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.27';
-import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.27';
+import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.28';
+import {addResidensetWall,addResidensetRoof,RESIDENSET_COLOURS} from './residenset-facade.mjs?v=2.11.28';
+import {addOperaFront,OPERA_COLOURS} from './opera-facade.mjs?v=2.11.28';
+import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit,visualTwinFaceYaw,visualTwinFront} from './visual-twin.mjs?v=2.11.28';
+import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.28';
+import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.28';
+import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.28';
+import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.28';
 
-import {SOUTH_IDS,SOUTH_HANDBUILT_IDS} from './city-south-space.mjs?v=2.11.27';
-import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.27';
-import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.27';
+import {SOUTH_IDS,SOUTH_HANDBUILT_IDS} from './city-south-space.mjs?v=2.11.28';
+import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.28';
+import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.28';
 
 // Static, vertex-coloured geometry: one draw call per landmark, one for streets,
 // one for rooflines and storefront frames. No lights, shadows or per-frame work.
@@ -139,15 +141,16 @@ export function isTwinHouse(b){
   return !!b&&Array.isArray(b.polygon)&&b.polygon.length>=3&&b.area>=60&&Math.max(3.2,b.h)>=5&&!GAP_FACADES[b.osm]&&!!visualTwinProfile(b)
     &&!PHOTO_REFERENCE_PROFILES[b.osm]&&!INNERSTAD_PROFILES[b.osm]&&!KUNGSGATAN_PROFILES[b.osm]&&!TORGET_AUDIT_IDS.has(b.osm)&&!IDENTITY_IDS.has(b.osm)&&!MALL_BUILDING_IDS.has(b.osm)&&!SOUTH_IDS.has(b.osm);
 }
-export function missingWallFaces(b,neighbours=[],lod='high'){
+export function missingWallFaces(b,neighbours=[],lod='high',twinFront=true){
   if(!isTwinHouse(b))return [];
   const painted=[];
-  const front=visualTwinFront(b);if(front)painted.push(front);
+  // In the infill batch Visual Twin only draws the ground floor (ribbons:false), so the front needs windows too.
+  const front=twinFront?visualTwinFront(b):null;if(front)painted.push(front);
   if(lod!=='low'||b.dist<SIDE_WALL_LOW_RADIUS)painted.push(...sideWallFaces(b,neighbours));
   return exposedFaces(b,neighbours,()=>true,5).filter(f=>!painted.some(e=>sameEdgeXZ(e,f)));
 }
-export function addMissingWalls(mesh,b,{neighbours=[],lod='high'}={}){
-  const faces=missingWallFaces(b,neighbours,lod);if(!faces.length)return 0;
+export function addMissingWalls(mesh,b,{neighbours=[],lod='high',twinFront=true}={}){
+  const faces=missingWallFaces(b,neighbours,lod,twinFront);if(!faces.length)return 0;
   const frame=visualTwinProfile(b)?.frame||PLAIN_FRAMES[Math.abs((b.osm*2654435761)>>>0)%PLAIN_FRAMES.length];
   paintWindowFaces(mesh,b,faces,frame,lod==='low');
   return faces.length;
@@ -996,16 +999,12 @@ export function createCityArchitecture(pc,app,buildings,others=[]){
       m.box(-125,2.3,-480,13,4.6,6,'#84b1b1');m.box(-125,4.7,-480,13.5,.2,6.5,'#f1e3c4');
       m.box(-83,3,-462,10,.23,4,'#f3e4c7');
     }else if(b.osm===101186411){
-      // Residenset: 1700-talets landshövdingeresidens vid Residenstorget. Två våningar puts,
-      // valmat tak och en mittrisalit med fronton mot öster. Stiliserad, inte uppmätt.
-      m.box(x,4.6,z,w,9.2,d,'#ead7a4','#cdbb8c');
-      for(const y of [.45,4.5,9.0])m.box(x,y,z,w+.3,.3,d+.3,y===.45?'#7c8a80':'#fbf1d6');
-      m.hip(x,9.25,z,w+.8,d+.8,4.2,'#3f565a','#2e4448');
-      const fx=b.maxx+.5;m.box(fx,4.7,z,1.0,9.4,Math.min(12,d*.4),'#f3e2b4');
-      m.roof(fx-.3,9.4,z,2.6,Math.min(12.6,d*.42),2.4,'z');
-      m.box(fx+.55,1.6,z,.2,3.2,2.2,'#2a4247');m.box(fx+.6,3.45,z,.4,.25,2.8,'#fbf1d6');
-      for(let dz=-d/2+2.2;dz<d/2-1.5;dz+=3.1)for(const y of [2.4,6.6])if(Math.abs(dz)>Math.min(6,d*.2))m.box(b.maxx+.08,y,z+dz,.12,1.9,1.15,'#4f6d70');
-      for(const dz of [-d/2,d/2])m.box(b.maxx,4.6,z+dz,.5,9.2,.5,'#fbf1d6');
+      // Residenset, from the reference photo: ochre render, grey rusticated ground floor, mansard roof with
+      // dormers and a flag (see residenset-facade.mjs). Deliberately unlike the bright yellow Stadshotellet.
+      const H=10.4;
+      m.walls(b.polygon,0,H,RESIDENSET_COLOURS.wall);
+      for(const f of exposedFaces({...b,h:H},[],()=>true,3.5))addResidensetWall(m,f,H);
+      addResidensetRoof(m,{minx:b.minx,maxx:b.maxx,minz:b.minz,maxz:b.maxz,H});
     }else if(b.osm===106864586){
       // Biskopsgården: biskopens gård norr om Domkyrkan. Tvåvånings herrgårdsvolym med brutet
       // (säteri-)tak, ljus puts och vita hörnkedjor. Stiliserad efter stadskartans läge.
@@ -1017,19 +1016,20 @@ export function createCityArchitecture(pc,app,buildings,others=[]){
       m.box(b.maxx+.1,1.4,z,.2,2.8,1.8,'#5a4136');
       for(let dz=-d/2+1.8;dz<d/2-1;dz+=2.6)for(const y of [1.7,4.9])if(Math.abs(dz)>1.4)m.box(b.maxx+.06,y,z+dz,.1,1.5,.95,'#5b7476');
     }else if(b.osm===75896103){
-      // Wermland Opera / Karlstads teater (1893) på Klarasidan vid Västra bron: salongsvolym,
-      // högre scentorn bakom, pilastrad entréfasad med fronton. Stiliserad tolkning.
-      const hall=Math.max(12,b.h+4);
-      m.box(x,hall/2,z,w,hall,d,'#dcb98c','#b99872');
-      for(const y of [.5,5.2,hall-.2])m.box(x,y,z,w+.35,.35,d+.35,'#f6e7c8');
-      m.box(x-w*.18,(hall+7)/2,z,w*.42,hall+7,d*.7,'#c9a67c','#a8885f');
-      m.box(x-w*.18,hall+7.1,z,w*.44,.4,d*.72,'#36504f');
-      m.roof(x+w*.12,hall+.1,z,w*.55,d+.6,3.6,'z');
-      const fx=b.maxx+.4;
-      for(let dz=-d/2+1.5;dz<=d/2-1.4;dz+=3.4)m.box(fx,hall/2,z+dz,.7,hall-.6,.75,'#f9ecd0');
-      m.box(fx+.2,3.0,z,.35,6,4.6,'#3a3433');m.box(fx+.3,6.4,z,.6,.45,5.6,'#f9ecd0');
-      m.roof(fx-.5,hall+.1,z,2.6,Math.min(16,d*.55),3.2,'z');
-      m.box(fx+.6,hall+1.4,z,.2,1.3,4.2,'#6f9a84');
+      // Wermland Opera / Karlstads teater (1893): the real footprint extruded in white, a pedimented hall with the
+      // photographed entrance front facing east, and a taller stage tower at the west end (see opera-facade.mjs).
+      const H1=10.5,wing={...b,h:H1};
+      m.walls(b.polygon,0,H1,OPERA_COLOURS.wall);m.walls(b.polygon,0,3.3,OPERA_COLOURS.rust,.04);
+      m.walls(b.polygon,H1-.5,H1,OPERA_COLOURS.trim,.08);m.polygon(b.polygon,H1+.02,'#3a4448');
+      const hallX1=-297.0,hallW=31,hallZ=-145.5,hallD=16,eaves=13.5;
+      m.box(hallX1-hallW/2,eaves/2,hallZ,hallW,eaves,hallD,OPERA_COLOURS.wall,OPERA_COLOURS.wall);
+      m.roof(hallX1-hallW/2,eaves,hallZ,hallW,hallD+.4,5.5,'x');
+      const tw=15;m.box(b.minx+13.5,10,hallZ+2,tw,20,14,OPERA_COLOURS.wall,OPERA_COLOURS.wall);
+      m.box(b.minx+13.5,20.15,hallZ+2,tw+.6,.3,14.6,OPERA_COLOURS.roof,OPERA_COLOURS.roof);
+      addOperaFront(m,{x0:hallX1+.02,zc:hallZ,W:hallD});
+      // Windows on every exposed wall of the wings and tower so the sides are not bare.
+      const side=exposedFaces(wing,[],()=>true,5).filter(f=>f.nx<.7);
+      paintWindowFaces(m,wing,side,OPERA_COLOURS.trim,false);
     }else if(b.osm===95639598){
       m.box(x,2,z,w,4,d,'#f3ecd9','#d6ddcc');m.box(x,4.1,z,w+1,.28,d+1,'#344c51');
       m.box(x,2.1,b.maxz+.08,w-2,2.6,.18,'#385b68');
@@ -1061,7 +1061,7 @@ export function infillMesh(buildings,mesh=new ComicMesh(),others=[]){
     if(!twin)for(let f=0;f<floors;f++){const y=f*3.2+1.25;if(y+1.1<h-.5)mesh.walls(poly,y,y+1.1,'#5d7a7c',.05);}
     mesh.polygon(poly,h+.01,'#3e5357');
     addPhotoReferenceFacade(mesh,b);
-    addVisualTwinFacade(mesh,b,{lod:'low',neighbours:buildings});
+    addVisualTwinFacade(mesh,b,{lod:'low',neighbours:buildings,ribbons:false});
     addSideWallFacades(mesh,b,{neighbours:wallNeighbours,lod:'low'});
     if(b.area<260&&b.sx<26&&b.sz<26)mesh.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
@@ -1073,7 +1073,7 @@ export function infillWindowsMesh(buildings,mesh=new ComicMesh(),others=[],refer
   for(const b of buildings){
     const lod=b.dist<NEAR_DETAIL_RADIUS?'high':'low';
     if(GAP_FACADES[b.osm]){addGapFacades(mesh,b,{neighbours:wallNeighbours,lod});continue;}
-    addMissingWalls(mesh,b,{neighbours:wallNeighbours,lod});
+    addMissingWalls(mesh,b,{neighbours:wallNeighbours,lod,twinFront:false});
     if(lod==='low'&&!(b.dist<SIDE_WALL_LOW_RADIUS)&&!isTwinHouse(b))addSideWallFacades(mesh,b,{neighbours:wallNeighbours,lod:'low',force:true});
   }
   completeBlankWalls(mesh,buildings,{neighbours:wallNeighbours,reference,lod:'low'});

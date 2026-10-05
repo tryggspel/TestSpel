@@ -1,7 +1,7 @@
-import {VISUAL_STREETS as CITY_STREETS} from './city-streets.mjs?v=2.11.27';
-import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.27';
-import {INNERSTAD_PROFILES} from './innerstad-reference.mjs?v=2.11.27';
-import {PHOTO_REFERENCE_PROFILES} from './photo-reference-pass3.mjs?v=2.11.27';
+import {VISUAL_STREETS as CITY_STREETS} from './city-streets.mjs?v=2.11.28';
+import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.28';
+import {INNERSTAD_PROFILES} from './innerstad-reference.mjs?v=2.11.28';
+import {PHOTO_REFERENCE_PROFILES} from './photo-reference-pass3.mjs?v=2.11.28';
 
 // Karlstad Visual Twin: one data-driven facade system for ordinary city buildings.
 // Curated Street View/reference facades always win. Generated profiles are deliberately
@@ -186,7 +186,10 @@ export function addVisualTwinFacade(mesh,b,options={}){
   // the detail layer outward so large facade sheets never compete in the depth buffer.
   const FACE_BIAS=.07;
   const point=(u,y,out)=>[a[0]+tx*u+nx*(out+FACE_BIAS),y,a[1]+tz*u+nz*(out+FACE_BIAS)];
-  const panel=(u,y,w,ph,colour,out=.10)=>{if(w<=.08||ph<=.08)return;mesh.quad(point(u,y,out),point(u+w,y,out),point(u+w,y+ph,out),point(u,y+ph,out),colour);};
+  // Wind the quad so it faces along the edge normal. OSM rings digitised the other way round give an edge whose
+  // tangent runs against that rule; the old fixed order then produced back faces that vanished from the street.
+  const faceOut=(tx*nz-tz*nx)>0;
+  const panel=(u,y,w,ph,colour,out=.10)=>{if(w<=.08||ph<=.08)return;const A=point(u,y,out),B=point(u+w,y,out),C=point(u+w,y+ph,out),D=point(u,y+ph,out);if(faceOut)mesh.quad(A,B,C,D,colour);else mesh.quad(B,A,D,C,colour);};
   const drawGroundFloor=(compact=false)=>{
     const len=length,v=p.variant||0,stone=['#a7a496','#bbb4a3','#8e938c','#c3b7a2'][v%4];
     const bays=Math.max(2,Math.min(compact?4:10,Math.round(len/(groundMode==='residential'?4.1:3.35)))),bw=len/bays;
@@ -259,7 +262,8 @@ export function addVisualTwinFacade(mesh,b,options={}){
 
   if(low){
     drawGroundFloor(true);
-    const floors=Math.max(1,Math.min(4,Math.round(h/3.2)-1)),rowH=Math.max(2.5,(h-3.55)/floors);
+    // options.ribbons===false: the caller paints real windows on every upper floor, so skip the long glass bands.
+    const floors=options.ribbons===false?0:Math.max(1,Math.min(4,Math.round(h/3.2)-1)),rowH=Math.max(2.5,(h-3.55)/Math.max(1,floors));
     for(let row=0;row<floors;row++){
       const y=3.72+row*rowH;
       panel(.26,y,Math.max(.3,length-.52),Math.max(.58,Math.min(.92,rowH-.7)),p.glass,.15);
@@ -297,11 +301,12 @@ export function addVisualTwinFacade(mesh,b,options={}){
   const exposedFallback=visualTwinExposedEdges(b,options.neighbours||[])
     .filter(e=>!sameEdge(e,edge)&&!photoReferenceProtectedEdge(b,e)&&!streetSecondary.some(s=>sameEdge(s,e)))
     .sort((a,b)=>b.length-a.length);
-  const secondary=[...streetSecondary,...exposedFallback].slice(0,low?2:3);
+  const secondary=(low&&options.ribbons===false)?[]:[...streetSecondary,...exposedFallback].slice(0,low?2:3);
 
   for(const e of secondary){
     const ep=(u,y,out)=>[e.a[0]+e.tx*u+e.nx*out,y,e.a[1]+e.tz*u+e.nz*out];
-    const eq=(u,y,w,ph,colour,out=.11)=>{if(w<=.08||ph<=.08)return;mesh.quad(ep(u,y,out),ep(u+w,y,out),ep(u+w,y+ph,out),ep(u,y+ph,out),colour);};
+    const eOut=(e.tx*e.nz-e.tz*e.nx)>0;
+    const eq=(u,y,w,ph,colour,out=.11)=>{if(w<=.08||ph<=.08)return;const A=ep(u,y,out),B=ep(u+w,y,out),C=ep(u+w,y+ph,out),D=ep(u,y+ph,out);if(eOut)mesh.quad(A,B,C,D,colour);else mesh.quad(B,A,D,C,colour);};
     // Give even gable/side walls a visible architectural frame before adding windows.
     eq(.08,.10,Math.max(.3,e.length-.16),.36,p.ground,.12);
     eq(.10,3.02,Math.max(.3,e.length-.20),.12,p.frame,.13);

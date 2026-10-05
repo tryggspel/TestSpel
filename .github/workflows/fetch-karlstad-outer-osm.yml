@@ -1,0 +1,97 @@
+name: Fetch Karlstad outer-area OSM data
+
+# Haga, Inre hamn and Mariebergsskogen lie outside the bundled city extract. This job downloads them once and commits
+# playcanvas-karlstad-2.11/data/osm-outer-*.json to the branch it ran on. Runs when this file is pushed to a claude/**
+# branch, or by hand.
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths:
+      - '.github/workflows/fetch-karlstad-outer-osm.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: karlstad-outer-osm
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download and convert
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p playcanvas-karlstad-2.11/data /tmp/osm
+          fetch() {
+            curl --fail --location --silent --show-error --retry 5 --retry-delay 3 --retry-all-errors \
+              --connect-timeout 15 --max-time 180 "https://api.openstreetmap.org/api/0.6/map?bbox=$2" -o "/tmp/osm/$1.osm"
+            test -s "/tmp/osm/$1.osm"
+            echo "$1: $(wc -c < /tmp/osm/$1.osm) bytes"
+          }
+          fetch haga 13.5086,59.3790,13.5240,59.3860
+          fetch hamn 13.5000,59.3730,13.5140,59.3785
+          fetch marieberg 13.4840,59.3665,13.4950,59.3715
+          python3 - <<'PY'
+          import json
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          areas = {
+              'haga': [13.5086, 59.3790, 13.5240, 59.3860],
+              'hamn': [13.5000, 59.3730, 13.5140, 59.3785],
+              'marieberg': [13.4840, 59.3665, 13.4950, 59.3715],
+          }
+          out = Path('playcanvas-karlstad-2.11/data')
+          for name, bbox in areas.items():
+              root = ET.parse(f'/tmp/osm/{name}.osm').getroot()
+              nodes, trees = {}, []
+              for n in root.findall('node'):
+                  nid = int(n.attrib['id']); lat = float(n.attrib['lat']); lon = float(n.attrib['lon'])
+                  tags = {t.attrib['k']: t.attrib['v'] for t in n.findall('tag')}
+                  nodes[nid] = (lat, lon)
+                  if tags.get('natural') == 'tree':
+                      trees.append({'id': nid, 'lat': lat, 'lon': lon})
+              buildings, roads, env = [], [], []
+              for w in root.findall('way'):
+                  tags = {t.attrib['k']: t.attrib['v'] for t in w.findall('tag')}
+                  geom = [nodes[int(nd.attrib['ref'])] for nd in w.findall('nd') if int(nd.attrib['ref']) in nodes]
+                  if len(geom) < 2:
+                      continue
+                  item = {'id': int(w.attrib['id']), 'tags': tags, 'geometry': [{'lat': a, 'lon': b} for a, b in geom]}
+                  if tags.get('building'):
+                      buildings.append(item)
+                  elif tags.get('highway') or tags.get('railway'):
+                      roads.append(item)
+                  elif (tags.get('natural') in {'water', 'wood', 'scrub', 'beach'} or tags.get('waterway') in {'river', 'riverbank', 'stream'}
+                        or tags.get('leisure') in {'park', 'pitch', 'garden', 'playground', 'nature_reserve', 'sports_centre', 'swimming_pool', 'stadium'}
+                        or tags.get('landuse') in {'grass', 'forest', 'recreation_ground', 'meadow', 'allotments', 'cemetery', 'residential'}
+                        or tags.get('tourism') in {'zoo', 'attraction'}):
+                      env.append(item)
+              payload = {'area': name, 'bbox': bbox, 'updated': datetime.now(timezone.utc).isoformat(),
+                         'source': 'OpenStreetMap API 0.6 map extract (ODbL)',
+                         'buildings': buildings, 'roads': roads, 'environment': env, 'trees': trees}
+              (out / f'osm-outer-{name}.json').write_text(json.dumps(payload, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+              print(name, {k: len(payload[k]) for k in ('buildings', 'roads', 'environment', 'trees')})
+          PY
+
+      - name: Commit data
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add playcanvas-karlstad-2.11/data
+          if git diff --cached --quiet; then
+            echo "No change"
+          else
+            git commit -m "Add outer-area OSM data (Haga, Inre hamn, Mariebergsskogen)"
+            git push
+          fi

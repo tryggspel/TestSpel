@@ -1,3 +1,13 @@
+# Karlstad City — 2.11.28 · Operan, Residenset och 109 osynliga fasader
+
+* **Wermland Opera** är byggd som geometri efter fotona (`opera-facade.mjs`): fronton med grön akantusrelief och guldplakett, tre runda fönster med gröna stuckgirlander, tre höga fönster (välvd fronton över det mittersta), dentilkrans, rusticerad sockel, tre mörkgröna dörrar under ett glas- och järntak med välvd mitt, trappsteg. Fotavtrycket extruderas från kartan och scentornet står bakom.
+* **Residenset** skiljs nu från Stadshotellet (`residenset-facade.mjs`, efter ditt foto): ockrafärgad puts, grå rusticerad bottenvåning med välvda fönster, kräm pilastrar och fönsteromfattningar, mansardtak i skiffer med runda takkupor och flaggstång. Stadshotellet förblir klargult med vita pilastrar.
+* **Visual Twin:** 109 av 186 husfronter ritades med fel vindriktning och var osynliga utifrån gatan. Det gav de släta väggarna, inklusive butiksfönster som saknades. Fixat i `visual-twin.mjs`. Kvartersfyllnaden ritade dessutom långa blågrå band i stället för fönster; de är ersatta av riktiga fönster.
+* **Mätverktyget** (`tools/facade-audit`) räknar nu detaljtäthet per meter, så band-väggar upptäcks.
+* **Yttre områden:** `.github/workflows/fetch-karlstad-outer-osm.yml` hämtar kartdata för Haga, Inre hamn och Mariebergsskogen till `data/osm-outer-*.json`.
+
+## Föregående version
+
 # Karlstad City — 2.11.27 · Mitt i City, ett skyltlager och inga comic-kort
 
 * **Skyltar:** neonskyltarna ovanför butikerna är borta. Kvar är de undre skyltarna med logotyper i varumärkets färger, plus hängskylten.
