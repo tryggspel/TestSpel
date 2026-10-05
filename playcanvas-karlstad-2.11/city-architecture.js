@@ -431,7 +431,6 @@ export const ROAD_RENDER_LEVELS=Object.freeze({
 
 export function createCityArchitecture(pc,app,buildings){
   const material=new pc.StandardMaterial();material.useLighting=false;material.diffuse.set(0,0,0);material.emissive.set(1,1,1);material.emissiveVertexColor=true;material.update();
-  const referenceMaterial=new pc.StandardMaterial();referenceMaterial.useLighting=false;referenceMaterial.diffuse.set(0,0,0);referenceMaterial.emissive.set(1,1,1);referenceMaterial.emissiveVertexColor=true;referenceMaterial.cull=pc.CULLFACE_NONE;referenceMaterial.depthTest=true;referenceMaterial.depthWrite=true;referenceMaterial.update();
   const road=new ComicMesh();
   // Sidewalks and their dark ink edges follow the same OSM polylines as the map.
   for(const s of CITY_STREETS)road.strip(s.points,s.width+4.7,ROAD_RENDER_LEVELS.sidewalkBase,'#637a72');
@@ -453,7 +452,7 @@ export function createCityArchitecture(pc,app,buildings){
   for(let z=-22;z<32;z+=8)road.strip([[-58,z],[67,z]],.035,ROAD_RENDER_LEVELS.squareLine,'#ada68e');
   road.finish(pc,app,'Karlstad · verkliga gatustråk',material);
 
-  const batches=[];const town=new ComicMesh(),reference=new ComicMesh();
+  const batches=[];const town=new ComicMesh();
   // 2.11.20 real-centre pass: all 95 admitted ordinary centre buildings use their real OSM footprints in one static batch.
   // Mitt i City stays separate so its four entrances and walkable interior are untouched.
   const contours=coreContourBuildings(buildings),contourIds=new Set(contours.map(b=>b.osm));
@@ -479,7 +478,8 @@ export function createCityArchitecture(pc,app,buildings){
     town.polygon(b.polygon,h+.015,'#3b5155');
     addKungsgatanFacade(town,b);
     addInnerstadFacade(town,b);
-    addPhotoReferenceFacade(reference,b);
+    // Curated photo/Street View profiles use the exact Kungsgatan route: hand-built geometry in the main static town mesh.
+    addPhotoReferenceFacade(town,b);
     addVisualTwinFacade(town,b,{neighbours:buildings});
     if(b.tags['roof:shape']==='hipped')town.hip(b.cx,h+.02,b.cz,b.sx*.96,b.sz*.96,Math.min(3.8,Math.min(b.sx,b.sz)*.24),'#425a56','#314744');
     else if(b.tags['roof:shape']==='gabled'||(b.area<260&&b.sx<26&&b.sz<26))town.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
@@ -519,8 +519,6 @@ export function createCityArchitecture(pc,app,buildings){
   const wow=addCityWowPass(town,buildings);
   const addressPlates=addAddressPlates(town,buildings);
   town.finish(pc,app,'Karlstad · taklinjer, adresskyltar och gågatumöbler',material);
-  const referenceDraw=reference.indices.length?1:0;
-  if(referenceDraw)reference.finish(pc,app,'Karlstad · separata verklighetsbaserade referensfasader',referenceMaterial);
   for(const b of buildings.filter(b=>IDENTITY_IDS.has(b.osm)&&!SOUTH_IDS.has(b.osm))){
     const m=new ComicMesh(),x=b.cx,z=b.cz,w=b.sx,d=b.sz;
     if(b.osm===75070676){
@@ -631,7 +629,7 @@ export function createCityArchitecture(pc,app,buildings){
     batches.push(m.finish(pc,app,'Karlstad · '+(b.name||b.osm),material));
   }
   const visualTwin=visualTwinAudit(buildings);
-  return {streetWays:CITY_STREETS.length,landmarks:batches.length,contours:contours.length,addressPlates,visualTwin,wow,contourIds:Object.freeze([...contourIds]),staticDrawCalls:2+batches.length+referenceDraw};
+  return {streetWays:CITY_STREETS.length,landmarks:batches.length,contours:contours.length,addressPlates,visualTwin,wow,contourIds:Object.freeze([...contourIds]),staticDrawCalls:2+batches.length};
 }
 
 // 2.11: kvartersfyllnad — stadens övriga OSM-byggnader i samma tecknade stil (färgade väggar,
