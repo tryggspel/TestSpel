@@ -1,4 +1,4 @@
-import {PENINSULA_SHORE,PARK_PIERS} from './city-sites.mjs?v=2.11.29';
+import {PENINSULA_SHORE,PARK_PIERS,PARK_PATHS} from './city-sites.mjs?v=2.11.30';
 const half=PENINSULA_SHORE.length/2;
 // OSM-derived bank limits, two-metre rows: constant-time water collision at runtime.
 export function peninsulaBanks(z){
@@ -16,7 +16,20 @@ export function waterBlocked(x,z){
   if(z<-844)return true;
   const [left,right]=peninsulaBanks(z);
   if(x>left+.65&&x<right-.65)return false;
+  if(onParkPath(x,z))return false; // drawn paths and boardwalks that lead out over the water are walkable
   return !PARK_PIERS.some(p=>inPolygon(x,z,p.points)&&inPolygon(x+.5,z,p.points)&&inPolygon(x-.5,z,p.points));
+}
+export function onParkPath(x,z){
+  for(const path of PARK_PATHS){
+    const half=(path.width||2)/2+.9,ps=path.points;
+    for(let i=1;i<ps.length;i++){
+      const [ax,az]=ps[i-1],[bx,bz]=ps[i],dx=bx-ax,dz=bz-az,len2=dx*dx+dz*dz;
+      const t=len2?Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/len2)):0;
+      const qx=ax+dx*t-x,qz=az+dz*t-z;
+      if(qx*qx+qz*qz<=half*half)return true;
+    }
+  }
+  return false;
 }
 export const PARK_ENCOUNTERS=Object.freeze([
   {id:'museum-fight',name:'MUSEIVAKTEN HAR RAST',x:-173,z:-457,spawnX:-175,spawnZ:-446},

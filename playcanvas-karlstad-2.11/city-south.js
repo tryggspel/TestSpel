@@ -1,9 +1,9 @@
-import {addKungsgatanTerraces} from './kungsgatan-reference.mjs?v=2.11.29';
-import {KIL} from './scenic-transit.js?v=2.11.29';
-import {ComicMesh,curatedRoute} from './city-architecture.js?v=2.11.29';
-import {WATER_TRIANGLES,WATER_POLYGONS,SOUTH_STREETS,RAIL_LINES,SCHOOL_YARD,FREDSMONUMENT} from './city-south-data.mjs?v=2.11.29';
-import {SOUTH_IDS,HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.11.29';
-import {splitMallWall} from './mall-space.mjs?v=2.11.29';
+import {addKungsgatanTerraces} from './kungsgatan-reference.mjs?v=2.11.30';
+import {KIL} from './scenic-transit.js?v=2.11.30';
+import {ComicMesh,curatedRoute} from './city-architecture.js?v=2.11.30';
+import {WATER_TRIANGLES,WATER_POLYGONS,SOUTH_STREETS,RAIL_LINES,SCHOOL_YARD,FREDSMONUMENT} from './city-south-data.mjs?v=2.11.30';
+import {SOUTH_IDS,HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.11.30';
+import {splitMallWall} from './mall-space.mjs?v=2.11.30';
 
 const REMOTE_RETAIL=Object.freeze([
   Object.freeze({id:'willys',name:'WILLYS BRYGGUDDEN',x:271,z:413,w:38,d:26,h:8,wall:'#d9d5c4',accent:'#2b7a48',front:'south'}),

@@ -2,8 +2,8 @@
 // OpenStreetMap data fetched by .github/workflows/fetch-karlstad-outer-osm.yml (data/osm-outer-*.json, ODbL).
 // Real footprints with the same window grammar as the rest of the city, roads, lawns, woods, water and trees.
 // The model is pure data (testable in Node); createOuterCity() turns it into static batches and colliders.
-import {ComicMesh,exposedFaces,meshChunkRanges} from './city-architecture.js?v=2.11.29';
-import {cityPoint} from './city-geography.mjs?v=2.11.29';
+import {ComicMesh,exposedFaces,meshChunkRanges} from './city-architecture.js?v=2.11.30';
+import {cityPoint} from './city-geography.mjs?v=2.11.30';
 
 export const OUTER_AREAS=Object.freeze(['haga','hamn','marieberg']);
 const WALLS=['#e2cfa7','#d8b48b','#c98f6a','#e6dcc4','#b9a68a','#d7c39b','#c7a07a','#e9d9b6','#d9c4a0','#cf9a78'];
@@ -49,7 +49,7 @@ export function buildOuterModel(datasets,{skipIds=new Set(),skipBoxes=[]}={}){
       const t=e.tags||{},kind=t.railway?'rail':t.highway;if(!kind||['proposed','construction'].includes(kind))continue;
       if(area!=='marieberg'&&['footway','path','steps','cycleway','platform'].includes(kind)&&!(t.name))continue; // small unnamed paths only matter in the park
       const pts=e.geometry.map(g=>{const p=cityPoint(g.lon,g.lat);return [p.x,p.z];});if(pts.length<2)continue;
-      model.roads.push({id:e.id,kind,width:ROAD_WIDTH[kind]||4,points:pts,name:t.name||''});
+      model.roads.push({id:e.id,kind,width:ROAD_WIDTH[kind]||4,points:pts,name:t.name||'',tags:{bridge:t.bridge,highway:t.highway,railway:t.railway,name:t.name}});
     }
     const roads=model.roads.length-r0;
     for(const e of data.environment||[]){

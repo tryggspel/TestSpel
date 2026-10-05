@@ -1,24 +1,25 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.11.29';
-import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.11.29';
-import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.11.29';
-import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.29';
-import {createCityEnvironment} from './city-environment.mjs?v=2.11.29';
-import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.11.29';
-import {ColliderGrid} from './collider-grid.mjs?v=2.11.29';
-import {onVastraBron} from './city-water.mjs?v=2.11.29';
-import {createRiverArchitecture} from './river-architecture.js?v=2.11.29';
-import {createMallArchitecture} from './mall-architecture.js?v=2.11.29';
-import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.11.29';
-import {createParkArchitecture} from './park-architecture.js?v=2.11.29';
-import {atKil,KIL} from './scenic-transit.js?v=2.11.29';
-import {createOuterCity,OUTER_AREAS} from './outer-city.js?v=2.11.29';
-import {createSouthCity} from './city-south.js?v=2.11.29';
-import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage,OUTER_WATER,outerWaterBlocked} from './city-south-space.mjs?v=2.11.29';
-import {waterBlocked} from './park-space.mjs?v=2.11.29';
-import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.11.29';
-import {createAudioEngine} from './audio-engine.mjs?v=2.11.29';
-import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.11.29';
+import {createLastRound} from './last-round.js?v=2.11.30';
+import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.11.30';
+import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.11.30';
+import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.30';
+import {createCityEnvironment} from './city-environment.mjs?v=2.11.30';
+import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.11.30';
+import {ColliderGrid} from './collider-grid.mjs?v=2.11.30';
+import {onVastraBron} from './city-water.mjs?v=2.11.30';
+import {createRiverArchitecture} from './river-architecture.js?v=2.11.30';
+import {createMallArchitecture} from './mall-architecture.js?v=2.11.30';
+import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.11.30';
+import {createParkArchitecture} from './park-architecture.js?v=2.11.30';
+import {atKil,KIL} from './scenic-transit.js?v=2.11.30';
+import {registerBridges,onBridge} from './bridges.mjs?v=2.11.30';
+import {createOuterCity,OUTER_AREAS} from './outer-city.js?v=2.11.30';
+import {createSouthCity} from './city-south.js?v=2.11.30';
+import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage,OUTER_WATER,outerWaterBlocked} from './city-south-space.mjs?v=2.11.30';
+import {waterBlocked} from './park-space.mjs?v=2.11.30';
+import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.11.30';
+import {createAudioEngine} from './audio-engine.mjs?v=2.11.30';
+import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.11.30';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -467,7 +468,7 @@ function addBuildings(osm,environment,outerData={}){
       addFacadePass12(b,hero,seed);
       if(hero)addHeroLandmarkPass14(b);
     }
-    colliders.push({precise:INNERSTAD_REFERENCE_IDS.has(b.osm)||[77107220,100024120,100024325].includes(b.osm),polygon:b.polygon,osm:b.osm,name:b.name,tags:b.tags,cx:b.cx,cz:b.cz,dist:b.dist,area:b.area,sx:b.sx,sz:b.sz,h:b.h,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
+    colliders.push({precise:INNERSTAD_REFERENCE_IDS.has(b.osm)||[77107220,100024120,100024325,1151016].includes(b.osm),polygon:b.polygon,osm:b.osm,name:b.name,tags:b.tags,cx:b.cx,cz:b.cz,dist:b.dist,area:b.area,sx:b.sx,sz:b.sz,h:b.h,height:b.h,minx:b.minx-.15,maxx:b.maxx+.15,minz:b.minz-.15,maxz:b.maxz+.15});
   }
   // 2.11: resten av kvarteren från OSM-utdraget (kollision mot exakt fotavtryck).
   const infill=infillBuildings(osm,admitted);
@@ -478,6 +479,7 @@ function addBuildings(osm,environment,outerData={}){
     const taken=new Set([...colliders.map(c=>c.osm),...SOUTH_IDS]);
     outer=createOuterCity(pc,app,outerData,{skipIds:taken,skipBoxes:[{x:566,z:-129,w:44,d:30},{x:271,z:413,w:38,d:26}]});
     for(const c of outer.colliders)colliders.push(c);
+    registerBridges(outer.model.roads);
     OUTER_WATER.length=0;for(const w of outer.water)OUTER_WATER.push(w);
   }catch(e){console.error('[Outer districts skipped]',e);}
   window.KarlstadOuter=Object.freeze(outer?outer.stats:{skipped:true});
@@ -492,7 +494,7 @@ function addBuildings(osm,environment,outerData={}){
 function blocked(x,z){
   if(atKil({x,z}))return !(x>KIL.x-48&&x<KIL.x+48&&z>KIL.z-4&&z<KIL.z+24);
   const remote=mariebergBlocked(x,z);if(remote!==null)return remote;
-  if(waterBlocked(x,z)||(southWaterBlocked(x,z)&&!onVastraBron(x,z))||outerWaterBlocked(x,z))return true;
+  if((waterBlocked(x,z)||(southWaterBlocked(x,z)&&!onVastraBron(x,z))||outerWaterBlocked(x,z))&&!onBridge(x,z))return true;
   if(southPassage(x,z,southGate))return false;
   if(mallPassage(x,z))return mallGroundBlocked(x,z);
   for(const c of colliderGrid?colliderGrid.near(x,z,PLAYER_RADIUS+.5):colliders){
@@ -673,6 +675,8 @@ async function boot(){
     const [r,environmentResponse]=await Promise.all([fetch('./data/osm-buildings.json?v='+GAME_VERSION),fetch('./data/osm-environment.json?v='+GAME_VERSION)]);
     if(!r.ok) throw new Error('OSM '+r.status);
     const osm=await r.json(),environment=environmentResponse.ok?await environmentResponse.json():{elements:[]};
+    // Bridges of the main extract (Västra bron, Tingvallabron, Sandgrundsbron, ...) stay walkable over the river.
+    try{const rr=await fetch('./data/osm-roads.json?v='+GAME_VERSION);if(rr.ok){const roads=await rr.json();registerBridges((roads.elements||[]).filter(e=>e.tags&&e.tags.bridge).map(e=>({tags:e.tags,points:e.geometry.map(g=>{const [x,z]=localXY(g.lon,g.lat);return [x,z];})})));}}catch(e){console.warn('[bridges skipped]',e);}
     // Haga, Inre hamn and Mariebergsskogen are optional: the city works without them if a file is missing.
     const outerData={};
     await Promise.all(OUTER_AREAS.map(async a=>{try{const rr=await fetch('./data/osm-outer-'+a+'.json?v='+GAME_VERSION);if(rr.ok)outerData[a]=await rr.json();}catch(e){console.warn('[outer '+a+' skipped]',e);}}));

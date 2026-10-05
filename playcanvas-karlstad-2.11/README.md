@@ -1,3 +1,14 @@
+# Karlstad City — 2.11.30 · Broar och gångvägar
+
+Bästa versionen före denna är sparad som grenen `best/karlstad-city-2.11.29`.
+
+* **Broar:** alla broar i kartdatan (Hagabron, Götgatsbron, Gubbholmsbron, Sandgrundsbron, Västra bron, Tingvallabron, Mariedalsbron, Glasbruksbron, Hagaleden med flera) är nu gångbara över älven (`bridges.mjs`). Tidigare räknades älven som vatten rakt igenom, så man stannade vid bron mot Haga. Järnvägsbroar är fortfarande stängda.
+* **Sandgrundsudden:** museets kollisionsruta var en rektangel på 7 800 m² över en byggnad på 4 400 m² och täckte stigen på norra sidan mot Sandgrund. Den följer nu byggnadens verkliga fotavtryck. Parkens stigar och spänger som leder ut över vatten är gångbara (`onParkPath`), så man kan gå ut från båda hållen.
+* **Orrholmen:** Västra bron och vägen över den är öppen.
+* Mätt i det körande spelet: Torget till Haga, Torget över Västra bron och Sandgrund ner till staden har alla passager på minst 12 m.
+
+## Föregående version
+
 # Karlstad City — 2.11.29 · Haga, Inre hamn och Mariebergsskogen
 
 De tre områdena utanför stadsutdraget är byggda från riktiga OpenStreetMap-data (`data/osm-outer-*.json`, hämtade av `.github/workflows/fetch-karlstad-outer-osm.yml`, ODbL): 378 byggnader med verkliga fotavtryck och fönster, 589 vägar och järnvägsspår, gräsytor, skogar, vatten och 461 träd (`outer-city.js`, sex statiska batcher, ca 268 000 vertex). Husen har kollision, vatten blockerar, och Mariebergsskogen är ett öppet vandringsbart område i stället för en liten instängd trädgård. ICA Hagahallen och Willys Brygguddén behåller sina handbyggda versioner och dubbleras inte. Båtbussens ankomstpunkter ligger på land och bryggan vid Inre hamn är fortsatt gångbar.
