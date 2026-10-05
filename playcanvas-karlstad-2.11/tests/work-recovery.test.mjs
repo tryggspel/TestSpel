@@ -24,29 +24,30 @@ test('Frimurarelogen explicit hero creates a full four-face reference shell',()=
   assert.ok(mesh.normals[2]<-.9,'first north-face triangle must point outward toward Tingvallagatan (-Z)');
 });
 
-test('Frimurarelogen hero4 card pipeline is present',()=>{
-  const src=fs.readFileSync(new URL('../city-identity.js',import.meta.url),'utf8');
-  assert.match(src,/Frimurarelogen · HERO4 · Tingvallagatan/);
-  assert.match(src,/kind==='frimurare'/);
-  assert.match(src,/101608925/);
+test('curated photo facades use the same main-mesh pipeline as Kungsgatan',()=>{
+  const src=fs.readFileSync(new URL('../city-architecture.js',import.meta.url),'utf8');
+  assert.match(src,/addKungsgatanFacade\(town,b\)/);
+  assert.match(src,/addInnerstadFacade\(town,b\)/);
+  assert.match(src,/addPhotoReferenceFacade\(town,b\)/);
+  assert.doesNotMatch(src,/reference=new ComicMesh/,'curated photo facades must not be isolated in a second render mesh');
+  assert.doesNotMatch(src,/separata verklighetsbaserade referensfasader/);
 });
 
-test('Hero Card Centre Pass promotes curated reference facades through the proven card pipeline',()=>{
+test('identity layer never covers curated architecture with generated hero cards',()=>{
   const src=fs.readFileSync(new URL('../city-identity.js',import.meta.url),'utf8');
-  assert.match(src,/PHOTO_REFERENCE_PROFILES/);
-  assert.match(src,/INNERSTAD_PROFILES/);
-  assert.match(src,/HERO_CARD_BUILDINGS/);
-  assert.match(src,/CENTRE PASS 1/);
+  assert.doesNotMatch(src,/HERO_CARD_BUILDINGS/);
+  assert.doesNotMatch(src,/Frimurarelogen · HERO4 · Tingvallagatan/);
+  assert.doesNotMatch(src,/Referensfasad ·/);
+  assert.match(src,/must not cover\n\/\/ curated architecture with generated facade cards/);
   assert.match(src,/Math\.min\(13\.8,p\.width\*\.72\)/,'Grekiska must leave more of Frimurarlogen visible');
-  assert.doesNotMatch(src,/fillText\('FRIMURARELOGEN · TINGVALLAGATAN 15'/,'large facade label must stay removed');
 });
 
-test('Hero Card Centre Pass launcher has one clean build cache key',()=>{
+test('Kungsgatan-profile pipeline launcher has one clean build cache key',()=>{
   const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
   const match=html.match(/app\.js\?v=2\.11\.21([^"']*)/);
   assert.ok(match);
   assert.equal((match[1].match(/&build=/g)||[]).length,1);
-  assert.match(match[1],/&build=hero-centre2/);
+  assert.match(match[1],/&build=kungsgatan-pipeline1/);
 });
 
 test('green map pass is capped to 31 nearest mapped areas',()=>{
