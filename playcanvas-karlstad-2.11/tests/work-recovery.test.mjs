@@ -47,7 +47,7 @@ test('Kungsgatan-profile pipeline launcher has one clean build cache key',()=>{
   const match=html.match(/app\.js\?v=2\.11\.21([^"']*)/);
   assert.ok(match);
   assert.equal((match[1].match(/&build=/g)||[]).length,1);
-  assert.match(match[1],/&build=streetview-pass1/);
+  assert.match(match[1],/&build=streetview-rootfix1/);
 });
 
 test('green map pass is capped to 31 nearest mapped areas',()=>{
@@ -88,4 +88,18 @@ test('Street View pass 1 real Torget facades',()=>{
   assert.match(src,/101935889/);
   assert.match(src,/107041955/);
   assert.match(src,/101247031/);
+});
+
+
+test('Frimurarelogen uses one Street View renderer',()=>{
+  const arch=fs.readFileSync(new URL('../city-architecture.js',import.meta.url),'utf8');
+  const photo=fs.readFileSync(new URL('../photo-reference-pass3.mjs',import.meta.url),'utf8');
+  const branch=arch.match(/if\(b\.osm===FRIMURARE_OSM\)\{([\s\S]*?)continue;\n\s*\}/)?.[1]||'';
+  assert.match(branch,/addPhotoReferenceFacade\(town,b\)/);
+  assert.doesNotMatch(branch,/addFrimurareExplicitHero\(town,b\)/);
+  assert.match(arch,/frimurareRenderer:'photo-reference-mainmesh'/);
+  assert.match(arch,/photo-reference-pass3\.mjs\?v=2\.11\.21&build=streetview-rootfix1/);
+  assert.match(photo,/101608925:Object\.freeze/);
+  assert.match(photo,/wall:'#a58d84'/);
+  assert.match(photo,/ground:'#8a8982'/);
 });
