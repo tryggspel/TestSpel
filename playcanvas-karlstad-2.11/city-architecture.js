@@ -1,22 +1,41 @@
-import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit} from './visual-twin.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade} from './photo-reference-pass3.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture} from './innerstad-reference.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.21&build=streetview-cache-rootfix2';
+import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.22';
+import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit} from './visual-twin.mjs?v=2.11.22';
+import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade} from './photo-reference-pass3.mjs?v=2.11.22';
+import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.22';
+import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture} from './innerstad-reference.mjs?v=2.11.22';
+import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.22';
 
-import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.21&build=streetview-cache-rootfix2';
+import {SOUTH_IDS,SOUTH_HANDBUILT_IDS} from './city-south-space.mjs?v=2.11.22';
+import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.22';
+import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.22';
 
 // Static, vertex-coloured geometry: one draw call per landmark, one for streets,
 // one for rooflines and storefront frames. No lights, shadows or per-frame work.
 const CORE_CONTOUR_RADIUS=260;
 const CORE_CONTOUR_LIMIT=95;
 const CORE_WALLS=['#e4d2ae','#d9b991','#c8906d','#e8ddc6','#bca98d','#d8c49c','#c8a17b','#eadab8'];
-export function coreContourBuildings(buildings,max=CORE_CONTOUR_LIMIT){
-  return buildings.filter(b=>b.dist<CORE_CONTOUR_RADIUS&&!IDENTITY_IDS.has(b.osm)&&!MALL_BUILDING_IDS.has(b.osm)).sort((a,b)=>a.dist-b.dist||a.osm-b.osm).slice(0,max);
+// RENDER ROUTING — single source of truth (2.11.22 root fix).
+// A building with a curated reference profile (Kungsgatan, photo/Street View, Torget audit)
+// is ALWAYS drawn through the Kungsgatan route: hand-built geometry in the static town mesh.
+// Before 2.11.22 three gates silently sent curated buildings elsewhere, so profile edits never
+// reached the screen: dist>=260 (generic PlayCanvas box in app.js), SOUTH_IDS (generic box in
+// city-south.js — this is why Frimurarelogen/Grekiska never changed) and MALL_BUILDING_IDS.
+// Mall buildings stay excluded on purpose: their walls are cut for the four real entrances.
+export function curatedRoute(b){
+  const id=b?.osm;
+  if(!(TORGET_AUDIT_PROFILES[id]||PHOTO_REFERENCE_PROFILES[id]||KUNGSGATAN_PROFILES[id]))return false;
+  if(MALL_BUILDING_IDS.has(id)||SOUTH_HANDBUILT_IDS.has(id))return false;
+  if(IDENTITY_IDS.has(id)&&!SOUTH_IDS.has(id))return false; // hand-built landmark meshes keep ownership
+  return true;
 }
+export function coreContourBuildings(buildings,max=CORE_CONTOUR_LIMIT){
+  const ordinary=b=>b.dist<CORE_CONTOUR_RADIUS&&!IDENTITY_IDS.has(b.osm)&&!MALL_BUILDING_IDS.has(b.osm);
+  return buildings.filter(b=>curatedRoute(b)||ordinary(b))
+    .sort((a,b)=>Number(curatedRoute(b))-Number(curatedRoute(a))||a.dist-b.dist||a.osm-b.osm).slice(0,max);
+}
+// Debug canary: ?canary paints every curated-route building magenta. If the magenta does not
+// appear on screen, the problem is deploy/cache, not facade art.
+const CANARY=(()=>{try{return new URLSearchParams(location.search).has('canary');}catch{return false;}})();
 const rgb=hex=>{
   const safe=/^#[0-9a-f]{6}$/i.test(String(hex||''))?String(hex):'#d8c8aa';
   return [parseInt(safe.slice(1,3),16)/255,parseInt(safe.slice(3,5),16)/255,parseInt(safe.slice(5,7),16)/255,1];
@@ -659,6 +678,7 @@ export function createCityArchitecture(pc,app,buildings){
   const contours=coreContourBuildings(buildings),contourIds=new Set(contours.map(b=>b.osm));
   for(const b of contours){
     const seed=Math.abs((b.osm*2654435761)>>>0),twin=visualTwinProfile(b),wall=TORGET_AUDIT_PROFILES[b.osm]?.wall||PHOTO_REFERENCE_PROFILES[b.osm]?.wall||INNERSTAD_PROFILES[b.osm]?.wall||KUNGSGATAN_PROFILES[b.osm]?.wall||twin?.wall||CORE_WALLS[seed%CORE_WALLS.length],h=Math.max(3.2,b.h);
+    if(CANARY&&curatedRoute(b)){town.walls(b.polygon,0,h+.6,'#ff00ff',.45);}
 
     // Frimurarelogen is a deterministic hero building. Do not route it through a separate
     // reference mesh: build the structural shell and all facade detail in the same known-good

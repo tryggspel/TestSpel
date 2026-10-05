@@ -1,5 +1,5 @@
-import {CITY_STREETS,IDENTITY_IDS} from './city-geography.mjs?v=2.11.21';
-import {visualTwinProfile,visualTwinFront,visualTwinGroundMode} from './visual-twin.mjs?v=2.11.21';
+import {CITY_STREETS,IDENTITY_IDS} from './city-geography.mjs?v=2.11.22';
+import {visualTwinProfile,visualTwinFront,visualTwinGroundMode} from './visual-twin.mjs?v=2.11.22';
 
 // High-impact city pass: richer ground floors, corner identity and two focal public spaces.
 // Everything is static vertex geometry: no new lights, shadows, entities or per-frame work.

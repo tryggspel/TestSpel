@@ -1,4 +1,4 @@
-import {LastRound} from './last-round-rules.mjs?v=2.11.21';
+import {LastRound} from './last-round-rules.mjs?v=2.11.22';
 
 export const MISSIONS = Object.freeze([
   {id:'sista-rundan',name:'Sista rundan',place:'O’Learys',tag:'KNUFFA · 90 SEK',title:'SISTA<br><em>RUNDAN.</em>',lead:'Matchen är slut. Zombiefansen håller inte med.',description:'Knuffa tre fans till HEMGÅNG. Sedan kommer Kapten Övertid. Gå bakom figurerna och använd soptunnan för kedjeträffar.',win:'STÄNGT & KLART.'},

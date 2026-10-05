@@ -6,7 +6,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const exts=new Set(['.js','.mjs','.html','.css']);
-const KEY=/\?v=(\d+\.\d+\.\d+)/g;
+const KEY=/\?v=([^'"\s)]+)/g; // strikt: hela query-svansen räknas, så ?v=X&build=Y blir en egen nyckel
 export function sourceFiles(dir=root){
   const out=[];
   for(const e of fs.readdirSync(dir,{withFileTypes:true})){

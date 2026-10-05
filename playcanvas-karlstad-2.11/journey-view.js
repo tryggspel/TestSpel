@@ -1,6 +1,6 @@
-import {createBusModel} from './transit-art.js?v=2.11.21';
-import {createComicCity} from './comic-city.js?v=2.11.21';
-import {SUN} from './city-ecology.mjs?v=2.11.21';
+import {createBusModel} from './transit-art.js?v=2.11.22';
+import {createComicCity} from './comic-city.js?v=2.11.22';
+import {SUN} from './city-ecology.mjs?v=2.11.22';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
   const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');

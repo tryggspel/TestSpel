@@ -1,9 +1,10 @@
-import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.21';
-import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.21';
-import {visualTwinFaceYaw} from './visual-twin.mjs?v=2.11.21';
-import {PHOTO_REFERENCE_PROFILES,photoReferenceFaceYaw,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.21';
-import {IDENTITY_IDS,SHOP_IDS,LANDMARKS} from './city-geography.mjs?v=2.11.21';
-import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.21';
+import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.22';
+import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.22';
+import {visualTwinFaceYaw} from './visual-twin.mjs?v=2.11.22';
+import {PHOTO_REFERENCE_PROFILES,photoReferenceFaceYaw,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.22';
+import {IDENTITY_IDS,SHOP_IDS,LANDMARKS} from './city-geography.mjs?v=2.11.22';
+import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.22';
+import {TORGET_AUDIT_IDS} from './city-architecture.js?v=2.11.22';
 const ink='#253d40',cream='#fff0c8';
 const palettes=[['#eeb985','#d88c67','#ae4e45'],['#a7c7b4','#789e91','#367c75'],['#dec5a0','#b29a7e','#70568a'],['#c4b6d7','#9886b7','#a85159']];
 // 2.11.21: fallback panels stay enabled only on unclaimed/secondary walls; curated reference fronts keep ownership.
@@ -98,6 +99,8 @@ export function facadePanels(buildings,blocked=()=>false){
   if(!LEGACY_COMIC_FACADES)return panels;
   for(const b of buildings){
     if(b.height<5||!identityCanUseFallback(b))continue;
+    // Torget audit facades draw all four sides themselves; legacy cards would z-fight/cover them.
+    if(TORGET_AUDIT_IDS.has(b.osm))continue;
     const h=b.height-.08,faces=polygonFacadeFaces(b),markYaw=identityFrontYaw(b.osm);
     for(const face of faces){
       // Curated or hand-built primary fronts keep ownership; secondary/exposed sides

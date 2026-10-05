@@ -42,12 +42,13 @@ test('identity layer never covers curated architecture with generated hero cards
   assert.match(src,/Math\.min\(13\.8,p\.width\*\.72\)/,'Grekiska must leave more of Frimurarlogen visible');
 });
 
-test('Kungsgatan-profile pipeline launcher has one clean build cache key',()=>{
+test('launcher loads app.js with a clean ?v=<version> cache key (no &build=)',()=>{
   const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
-  const match=html.match(/app\.js\?v=2\.11\.21([^"']*)/);
-  assert.ok(match);
-  assert.equal((match[1].match(/&build=/g)||[]).length,1);
-  assert.match(match[1],/&build=streetview-cache-rootfix2/);
+  const {version}=JSON.parse(fs.readFileSync(new URL('../version.json',import.meta.url),'utf8'));
+  const match=html.match(/app\.js\?v=([^"'\s)]+)/);
+  assert.ok(match,'app.js?v= saknas i index.html');
+  assert.equal(match[1],version);
+  assert.doesNotMatch(html,/&build=/);
 });
 
 test('green map pass is capped to 31 nearest mapped areas',()=>{
@@ -98,7 +99,7 @@ test('Frimurarelogen uses one Street View renderer',()=>{
   assert.match(branch,/addPhotoReferenceFacade\(town,b\)/);
   assert.doesNotMatch(branch,/addFrimurareExplicitHero\(town,b\)/);
   assert.match(arch,/frimurareRenderer:'photo-reference-mainmesh'/);
-  assert.match(arch,/photo-reference-pass3\.mjs\?v=2\.11\.21&build=streetview-cache-rootfix2/);
+  assert.match(arch,/photo-reference-pass3\.mjs\?v=2\.11\.22'/);
   assert.match(photo,/101608925:Object\.freeze/);
   assert.match(photo,/wall:'#a58d84'/);
   assert.match(photo,/ground:'#8a8982'/);
@@ -106,14 +107,15 @@ test('Frimurarelogen uses one Street View renderer',()=>{
 
 
 test('runtime cache key is propagated through Karlstad centre graph',()=>{
+  const {version}=JSON.parse(fs.readFileSync(new URL('../version.json',import.meta.url),'utf8'));
   const names=['app.js','city-geography.mjs','city-architecture.js','city-identity.js','last-round.js','businesses.mjs'];
   for(const name of names){
     const src=fs.readFileSync(new URL('../'+name,import.meta.url),'utf8');
     const imports=src.split('\n').filter(line=>line.includes("from './")||line.includes("import('./"));
-    for(const line of imports)if(line.includes('?v=2.11.21'))assert.ok(line.includes('build=streetview-cache-rootfix2'),name+' has stale import: '+line);
+    for(const line of imports)if(line.includes('?v='))assert.ok(line.includes('?v='+version+"'"),name+' has stale import: '+line);
   }
   const app=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
-  assert.ok(app.includes("const CACHE_BUILD='streetview-cache-rootfix2'"));
-  assert.ok(app.includes("osm-buildings.json?v='+GAME_VERSION+'&build='+CACHE_BUILD"));
-  assert.ok(app.includes("osm-environment.json?v='+GAME_VERSION+'&build='+CACHE_BUILD"));
+  assert.doesNotMatch(app,/CACHE_BUILD|&build=/);
+  assert.ok(app.includes("osm-buildings.json?v='+GAME_VERSION"));
+  assert.ok(app.includes("osm-environment.json?v='+GAME_VERSION"));
 });
