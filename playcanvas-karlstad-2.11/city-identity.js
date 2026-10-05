@@ -4,136 +4,12 @@ import {REAL_BUSINESSES,BUSINESS_OSM_IDS,businessAnchor} from './businesses.mjs?
 import {createMallSigns} from './mall-architecture.js?v=2.11.21';
 import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.21';
 import {SOUTH_STREETS} from './city-south-data.mjs?v=2.11.21';
-import {PHOTO_REFERENCE_PROFILES} from './photo-reference-pass3.mjs?v=2.11.21';
-import {INNERSTAD_PROFILES} from './innerstad-reference.mjs?v=2.11.21';
 const ink='#263f46',paper='#f6ebd3';
 
-const REFERENCE_FACE_YAW=Object.freeze({north:180,south:0,east:90,west:-90});
-const REFERENCE_FRONT_OFFSET=.20;
-const FOUR_SIDE_REFERENCE_IDS=new Set([
-  100833292,100839528,101430152,101608925,77107220,106078938,
-  101170479,102590980,106078942,104778900,108352774,105746401,
-  110733713,105746413,106864602,104529128
-]);
-export const HERO_CARD_BUILDINGS=Object.freeze([
-  ...Object.entries(INNERSTAD_PROFILES).map(([osm,profile])=>Object.freeze({osm:Number(osm),source:'innerstad',...profile})),
-  ...Object.entries(PHOTO_REFERENCE_PROFILES).map(([osm,profile])=>Object.freeze({osm:Number(osm),source:'photo',...profile}))
-]);
-
-export function drawReferenceCardFacade(c,w,h,p,{side=false}={}){
-  c.save();c.scale(w/1024,h/512);c.lineJoin='round';
-  const box=(x,y,bw,bh,fill,line=0)=>{c.fillStyle=fill;c.fillRect(x,y,bw,bh);if(line){c.strokeStyle='#263f46';c.lineWidth=line;c.strokeRect(x,y,bw,bh);}};
-  const win=(x,y,bw,bh,arched=false)=>{
-    box(x-5,y-5,bw+10,bh+10,p.frame,0);
-    c.fillStyle=p.glass;c.strokeStyle='#263f46';c.lineWidth=3;
-    if(arched){
-      c.beginPath();c.moveTo(x,y+bh);c.lineTo(x,y+bw/2);c.arc(x+bw/2,y+bw/2,bw/2,Math.PI,Math.PI*2);c.lineTo(x+bw,y+bh);c.closePath();c.fill();c.stroke();
-    }else box(x,y,bw,bh,p.glass,3);
-    box(x+bw*.47,y,bw*.06,bh,'#e9dfca');
-    box(x,y+bh*.48,bw,4,'#e9dfca');
-  };
-  const kind=String(p.kind||''),classic=/heritage|classic|bank|merchant|school|arched|frimurare/i.test(kind),modern=/modern|office|sixties|midcentury|balcony|metal/i.test(kind),wood=/wood/i.test(kind),brick=/brick|fratelli|merchant/i.test(kind);
-
-  // CENTRE PASS 2: the Torget row uses building-specific hero cards.
-  // Pass 1 proved that the card/texture route is reliable on Safari/iPhone, but its generic
-  // facade rhythm hid the richer Street View-derived geometry underneath. Keep the robust
-  // renderer, but paint the actual architectural signatures into the front cards.
-  if(!side&&kind==='ting9bergqvist'){
-    box(0,0,1024,512,'#a44d43');box(0,356,1024,156,'#514541');
-    box(0,20,1024,13,'#34474a');box(0,168,1024,10,'#eadbb9');box(0,330,1024,12,'#eadbb9');
-    for(const x of [0,820]){box(x,0,204,122,'#7d4038');box(x+18,16,168,16,'#efe1bf');box(x+58,0,88,28,'#34474a');}
-    const cols=9,g=25,cw=(1024-g*(cols+1))/cols;
-    for(let r=0;r<2;r++)for(let i=0;i<cols;i++)win(g+i*(cw+g),62+r*140,cw,94,false);
-    const bays=7,bg=22,bw=(1024-bg*(bays+1))/bays;
-    for(let i=0;i<bays;i++){const x=bg+i*(bw+bg);box(x,378,bw,106,'#383d3c',2);box(x+8,389,bw-16,82,'#5e7d80',2);}
-    box(205,344,614,31,p.accent,2);box(237,350,550,19,'#d8ead8');
-    c.restore();return;
-  }
-  if(!side&&kind==='ting11merchant'){
-    box(0,0,1024,512,'#d4a05f');box(0,365,1024,147,'#806b54');
-    for(const y of [27,176,340])box(0,y,1024,10,'#efe4c9');
-    const cols=8,g=30,cw=(1024-g*(cols+1))/cols;
-    for(let r=0;r<2;r++)for(let i=0;i<cols;i++)win(g+i*(cw+g),64+r*137,cw,96,false);
-    const bays=6,bg=25,bw=(1024-bg*(bays+1))/bays;
-    for(let i=0;i<bays;i++){const x=bg+i*(bw+bg);box(x,384,bw,102,'#6c5a48',2);box(x+9,394,bw-18,80,p.glass,2);}
-    box(440,364,144,126,'#3b4747',2);box(0,335,1024,12,'#5b6e58');
-    c.restore();return;
-  }
-  if(!side&&kind==='wermlandsbanken'){
-    box(0,0,1024,512,'#7f4a3a');box(0,352,1024,160,'#85817a');
-    for(let y=374;y<500;y+=30)box(0,y,1024,3,'#696660');
-    box(0,18,1024,17,'#3e6755');box(36,0,952,18,'#284c43');box(0,335,1024,12,'#b9b0a4');
-    const cols=9,g=24,cw=(1024-g*(cols+1))/cols,portal=Math.floor(cols/2);
-    for(let i=0;i<cols;i++){
-      const x=g+i*(cw+g);
-      if(i===portal){box(x-6,377,cw+12,112,'#aaa39a',2);box(x+10,391,cw-20,88,'#283538',2);}
-      else win(x,386,cw,80,true);
-    }
-    for(let r=0;r<2;r++)for(let i=0;i<cols;i++)win(g+i*(cw+g),72+r*128,cw,86,false);
-    box(364,46,296,272,'#ffffff0b');for(const x of [370,642])box(x,46,14,272,'#a0765f');
-    c.fillStyle='#d7c292';c.textAlign='center';c.textBaseline='middle';c.font='700 31px Georgia,serif';c.fillText('WERMLANDSBANKEN',512,326,430);
-    c.restore();return;
-  }
-  if(!side&&kind==='tingvalla-school'){
-    box(0,0,1024,512,'#c8ad6d');box(0,381,1024,131,'#5f5b55');
-    box(0,22,1024,14,'#5c594f');box(0,352,1024,13,'#8d7448');
-    const cols=11,g=23,cw=(1024-g*(cols+1))/cols;
-    for(let r=0;r<2;r++){
-      const y=75+r*145;
-      for(let i=0;i<cols;i++){const x=g+i*(cw+g);win(x,y,cw,100,r===1);if(i<cols-1)box(x+cw+10,55,7,285,'#b5965e');}
-    }
-    for(let i=0;i<7;i++){const x=31+i*142;box(x,397,112,86,'#504e49',2);box(x+9,408,94,64,p.glass,2);}
-    c.restore();return;
-  }
-  if(!side&&kind==='ting19shops'){
-    box(0,0,1024,512,'#d7d7d1');box(0,361,1024,151,'#676864');
-    box(0,24,1024,11,'#8b8f88');box(0,340,1024,12,'#eeeeea');
-    const cols=12,g=19,cw=(1024-g*(cols+1))/cols;
-    for(let r=0;r<2;r++)for(let i=0;i<cols;i++)win(g+i*(cw+g),72+r*132,cw,80,false);
-    const bays=8,bg=19,bw=(1024-bg*(bays+1))/bays;
-    for(let i=0;i<bays;i++){const x=bg+i*(bw+bg);box(x,382,bw,105,'#565b59',2);box(x+8,393,bw-16,82,p.glass,2);if(i%2===0)box(x+10,362,bw-20,20,i%4===0?'#63a58d':'#c9a063');}
-    c.restore();return;
-  }
-  box(0,0,1024,512,p.wall);
-  box(0,355,1024,157,p.ground);
-  if(wood){for(let y=22;y<512;y+=28)box(0,y,1024,3,p.frame);}
-  if(brick){for(let y=28;y<355;y+=24)box(0,y,1024,3,'#00000018');}
-  box(0,338,1024,13,p.frame);
-  box(0,24,1024,12,p.frame);
-  if(classic){box(0,172,1024,10,p.frame);box(0,184,1024,7,p.accent);}
-  if(modern){for(let y=150;y<345;y+=92)box(0,y,1024,7,p.frame);}
-  const cols=side?6:(classic?9:modern?10:8),gap=side?34:26,cw=(1024-gap*(cols+1))/cols;
-  const rows=side?2:(modern?3:2);
-  for(let r=0;r<rows;r++){
-    const y=side?80+r*145:(modern?64+r*94:classic?76+r*144:86+r*142);
-    const wh=side?92:(modern?68:classic?104:92);
-    for(let i=0;i<cols;i++) win(gap+i*(cw+gap),y,cw,wh,classic&&r===1);
-  }
-  if(!side){
-    const groundCols=/garage/i.test(kind)?5:6,gapG=24,gw=(1024-gapG*(groundCols+1))/groundCols;
-    for(let i=0;i<groundCols;i++){
-      const x=gapG+i*(gw+gapG);
-      box(x,374,gw,108,p.frame);
-      box(x+8,385,gw-16,86,p.glass);
-    }
-    if(/awning|fratelli|ting19|ting9|savoy/i.test(kind)){
-      for(let i=0;i<5;i++)box(36+i*194,340,150,26,i%2?p.accent:p.frame);
-    }
-    if(/balcony|bay/i.test(kind)){
-      for(const x of [170,610]){box(x,206,220,12,p.frame);for(let k=0;k<9;k++)box(x+10+k*24,168,6,38,p.accent);}
-    }
-    if(/bank|school/i.test(kind)){
-      box(396,52,232,290,'#ffffff12');
-      for(const x of [404,612])box(x,52,16,290,p.frame);
-    }
-  }else{
-    // Side cards deliberately avoid cloning the shopfront; they carry only the real palette/window rhythm.
-    box(0,355,1024,157,p.wall);
-    for(let i=0;i<5;i++)win(54+i*194,382,132,88,false);
-  }
-  c.restore();
-}
-
+// Curated building facades are owned by city-architecture.js and rendered as hand-built
+// geometry directly on their real OSM faces, exactly like the Kungsgatan reference pass.
+// This identity layer only adds names, businesses and brand signage; it must not cover
+// curated architecture with generated facade cards.
 
 // Original comic drawings, baked once. Windows, masonry and print shading cost no geometry.
 export function drawLandmarkFacade(c,w,h,kind){
@@ -462,47 +338,9 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       }
     }
   }
-  // HERO4: guarantee Frimurarelogen through the same card/texture path that renders Grekiska.
-  // This bypasses ComicMesh entirely and therefore cannot disappear through mesh chunking/culling.
-  const frim=host.colliders.find(b=>b.osm===101608925);
-  if(frim){
-    const fx=(frim.minx+frim.maxx)/2,fz=(frim.minz+frim.maxz)/2;
-    const fw=Math.max(36,frim.maxx-frim.minx-.30),fd=Math.max(32,frim.maxz-frim.minz-.30);
-    const fh=Math.max(9.6,frim.h||frim.height||9.6),ft=facade('frimurare',1536,768);
-    // Grekiska sits at minz-.34; these cards sit behind it but clearly in front of the structural wall.
-    mount('Frimurarelogen · HERO4 · Tingvallagatan',ft,fw,fh,fx,.03,frim.minz-.18,180,true);
-    mount('Frimurarelogen · HERO4 · gårdssida',ft,fw,fh,fx,.03,frim.maxz+.18,0,true);
-    mount('Frimurarelogen · HERO4 · västsida',ft,fd,fh,frim.minx-.18,.03,fz,-90,true);
-    mount('Frimurarelogen · HERO4 · östsida',ft,fd,fh,frim.maxx+.18,.03,fz,90,true);
-  }
-
-  // CENTRE PASS 1: promote every curated real-world reference onto the proven card/texture path.
-  // The verified street front always gets a detailed card; selected high-exposure core buildings also get
-  // reference-colour side cards so no large blank gable survives around Torget/Kungsgatan/Västra Torggatan.
-  const referenceTextures=new Map();
-  const referenceTexture=(entry,side=false)=>{
-    const key=entry.osm+':'+(side?'side':'front');
-    if(referenceTextures.has(key))return referenceTextures.get(key);
-    const tex=texture((c,w,h)=>drawReferenceCardFacade(c,w,h,entry,{side}),side?384:512,256);
-    referenceTextures.set(key,tex);return tex;
-  };
-  const mountReferenceFace=(entry,b,face,tex,label)=>{
-    const x=(b.minx+b.maxx)/2,z=(b.minz+b.maxz)/2,w=Math.max(4,b.maxx-b.minx-.22),d=Math.max(4,b.maxz-b.minz-.22),h=Math.max(6.4,b.h||b.height||9.6);
-    if(face==='north')mount(label,tex,w,h,x,.02,b.minz-REFERENCE_FRONT_OFFSET,180,true);
-    else if(face==='south')mount(label,tex,w,h,x,.02,b.maxz+REFERENCE_FRONT_OFFSET,0,true);
-    else if(face==='west')mount(label,tex,d,h,b.minx-REFERENCE_FRONT_OFFSET,.02,z,-90,true);
-    else if(face==='east')mount(label,tex,d,h,b.maxx+REFERENCE_FRONT_OFFSET,.02,z,90,true);
-  };
-  const referenceLandmarkIds=new Set(LANDMARKS.map(m=>m.osm));
-  for(const entry of HERO_CARD_BUILDINGS){
-    if(entry.osm===101608925||referenceLandmarkIds.has(entry.osm))continue; // Frimurarlogen and landmark heroes already have bespoke cards.
-    const b=host.colliders.find(x=>x.osm===entry.osm);if(!b)continue;
-    mountReferenceFace(entry,b,entry.front,referenceTexture(entry,false),'Referensfasad · '+(entry.name||entry.address||entry.osm));
-    if(FOUR_SIDE_REFERENCE_IDS.has(entry.osm)){
-      const sideTex=referenceTexture(entry,true);
-      for(const face of ['north','south','west','east'])if(face!==entry.front)mountReferenceFace(entry,b,face,sideTex,'Referenssida · '+(entry.name||entry.address||entry.osm)+' · '+face);
-    }
-  }
+  // Curated facades (including Frimurarelogen and the Torget row) are intentionally not
+  // mounted as texture cards here. Their hand-coded OSM-face geometry already rendered
+  // in the static town mesh remains the visible source of truth.
 
   const landmarkIds=new Set(LANDMARKS.map(m=>m.osm)),shopIds=new Set(STOREFRONTS.map(s=>s.osm));
   for(const b of host.colliders){
