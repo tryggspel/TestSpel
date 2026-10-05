@@ -26,7 +26,7 @@ MusicPartner is represented as a music-service office/studio with a coffee-bar f
 
 Butiksuppgifterna (namn, adress, färger, `REAL_BUSINESSES` i `businesses.mjs`) fanns redan och ritades som kort på fasaderna, men skyltarna var små och bestod bara av namnet i ett vanligt typsnitt. Det som saknades var logotyper och tydliga neonskyltar.
 
-Nu har alla 20 verkliga verksamheter (neonskyltarna som först lades ovanför butikerna togs bort i 2.11.27 eftersom de dubblade fascia-skylten; neonläget finns kvar i ):
+Nu har alla 20 verkliga verksamheter (neonskyltarna som först lades ovanför butikerna togs bort i 2.11.27 eftersom de dubblade fascia-skylten; neonläget finns kvar i `brand-logos.mjs`):
 
 * **Logotyp på fascian.** Egenritade vektorlogotyper i `brand-logos.mjs`, byggda på varumärkets färger och bokstavsstil (till exempel Synsams glasögon, Hemköps hjärta, Leprechauns klöver, Burger Kings bullar, Apoteketets blad och kors). Inga tredjepartsfiler kopieras eller distribueras.
 * **Hängskylt** med logotyp, 1,3 × 1,3 m, vinkelrät mot fasaden.

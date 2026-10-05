@@ -1,8 +1,8 @@
 # Karlstad City — 2.11.27 · Mitt i City, ett skyltlager och inga comic-kort
 
 * **Skyltar:** neonskyltarna ovanför butikerna är borta. Kvar är de undre skyltarna med logotyper i varumärkets färger, plus hängskylten.
-* **Comic-husen:** de illustrerade fasadkorten (, 72 batcher över 178 byggnader) är avstängda. De riktiga fasaderna (kurerade profiler, Visual Twin och fönstervägg-passen från 2.11.25) täcker alla väggar utan dem; mätningen i  visar fortfarande 8 blanka kanter under 6 m.
-* **Mitt i City:** hela kvarterets exteriör är ombyggd efter referensfotot (): mörkgrå puts, fönsterluckor med lameller, balkonger med räcken, bottenvåning med träkarmad glasning, indragna översta våningar i vitt och gult trä, samt kopparkupol med kula över Västra Torggatan 7. De fyra entréerna är öppna och portalerna har samma skiffergrå ton.
+* **Comic-husen:** de illustrerade fasadkorten (`comic-city.js`, 72 batcher över 178 byggnader) är avstängda. De riktiga fasaderna (kurerade profiler, Visual Twin och fönstervägg-passen från 2.11.25) täcker alla väggar utan dem; mätningen i `tools/facade-audit` visar fortfarande 8 blanka kanter under 6 m.
+* **Mitt i City:** hela kvarterets exteriör är ombyggd efter referensfotot (`mitt-i-city-exterior.mjs`): mörkgrå puts, fönsterluckor med lameller, balkonger med räcken, bottenvåning med träkarmad glasning, indragna översta våningar i vitt och gult trä, samt kopparkupol med kula över Västra Torggatan 7. De fyra entréerna är öppna och portalerna har samma skiffergrå ton.
 
 ## Föregående version
 
