@@ -33,6 +33,67 @@ export function drawReferenceCardFacade(c,w,h,p,{side=false}={}){
     box(x,y+bh*.48,bw,4,'#e9dfca');
   };
   const kind=String(p.kind||''),classic=/heritage|classic|bank|merchant|school|arched|frimurare/i.test(kind),modern=/modern|office|sixties|midcentury|balcony|metal/i.test(kind),wood=/wood/i.test(kind),brick=/brick|fratelli|merchant/i.test(kind);
+
+  // CENTRE PASS 2: the Torget row uses building-specific hero cards.
+  // Pass 1 proved that the card/texture route is reliable on Safari/iPhone, but its generic
+  // facade rhythm hid the richer Street View-derived geometry underneath. Keep the robust
+  // renderer, but paint the actual architectural signatures into the front cards.
+  if(!side&&kind==='ting9bergqvist'){
+    box(0,0,1024,512,'#a44d43');box(0,356,1024,156,'#514541');
+    box(0,20,1024,13,'#34474a');box(0,168,1024,10,'#eadbb9');box(0,330,1024,12,'#eadbb9');
+    for(const x of [0,820]){box(x,0,204,122,'#7d4038');box(x+18,16,168,16,'#efe1bf');box(x+58,0,88,28,'#34474a');}
+    const cols=9,g=25,cw=(1024-g*(cols+1))/cols;
+    for(let r=0;r<2;r++)for(let i=0;i<cols;i++)win(g+i*(cw+g),62+r*140,cw,94,false);
+    const bays=7,bg=22,bw=(1024-bg*(bays+1))/bays;
+    for(let i=0;i<bays;i++){const x=bg+i*(bw+bg);box(x,378,bw,106,'#383d3c',2);box(x+8,389,bw-16,82,'#5e7d80',2);}
+    box(205,344,614,31,p.accent,2);box(237,350,550,19,'#d8ead8');
+    c.restore();return;
+  }
+  if(!side&&kind==='ting11merchant'){
+    box(0,0,1024,512,'#d4a05f');box(0,365,1024,147,'#806b54');
+    for(const y of [27,176,340])box(0,y,1024,10,'#efe4c9');
+    const cols=8,g=30,cw=(1024-g*(cols+1))/cols;
+    for(let r=0;r<2;r++)for(let i=0;i<cols;i++)win(g+i*(cw+g),64+r*137,cw,96,false);
+    const bays=6,bg=25,bw=(1024-bg*(bays+1))/bays;
+    for(let i=0;i<bays;i++){const x=bg+i*(bw+bg);box(x,384,bw,102,'#6c5a48',2);box(x+9,394,bw-18,80,p.glass,2);}
+    box(440,364,144,126,'#3b4747',2);box(0,335,1024,12,'#5b6e58');
+    c.restore();return;
+  }
+  if(!side&&kind==='wermlandsbanken'){
+    box(0,0,1024,512,'#7f4a3a');box(0,352,1024,160,'#85817a');
+    for(let y=374;y<500;y+=30)box(0,y,1024,3,'#696660');
+    box(0,18,1024,17,'#3e6755');box(36,0,952,18,'#284c43');box(0,335,1024,12,'#b9b0a4');
+    const cols=9,g=24,cw=(1024-g*(cols+1))/cols,portal=Math.floor(cols/2);
+    for(let i=0;i<cols;i++){
+      const x=g+i*(cw+g);
+      if(i===portal){box(x-6,377,cw+12,112,'#aaa39a',2);box(x+10,391,cw-20,88,'#283538',2);}
+      else win(x,386,cw,80,true);
+    }
+    for(let r=0;r<2;r++)for(let i=0;i<cols;i++)win(g+i*(cw+g),72+r*128,cw,86,false);
+    box(364,46,296,272,'#ffffff0b');for(const x of [370,642])box(x,46,14,272,'#a0765f');
+    c.fillStyle='#d7c292';c.textAlign='center';c.textBaseline='middle';c.font='700 31px Georgia,serif';c.fillText('WERMLANDSBANKEN',512,326,430);
+    c.restore();return;
+  }
+  if(!side&&kind==='tingvalla-school'){
+    box(0,0,1024,512,'#c8ad6d');box(0,381,1024,131,'#5f5b55');
+    box(0,22,1024,14,'#5c594f');box(0,352,1024,13,'#8d7448');
+    const cols=11,g=23,cw=(1024-g*(cols+1))/cols;
+    for(let r=0;r<2;r++){
+      const y=75+r*145;
+      for(let i=0;i<cols;i++){const x=g+i*(cw+g);win(x,y,cw,100,r===1);if(i<cols-1)box(x+cw+10,55,7,285,'#b5965e');}
+    }
+    for(let i=0;i<7;i++){const x=31+i*142;box(x,397,112,86,'#504e49',2);box(x+9,408,94,64,p.glass,2);}
+    c.restore();return;
+  }
+  if(!side&&kind==='ting19shops'){
+    box(0,0,1024,512,'#d7d7d1');box(0,361,1024,151,'#676864');
+    box(0,24,1024,11,'#8b8f88');box(0,340,1024,12,'#eeeeea');
+    const cols=12,g=19,cw=(1024-g*(cols+1))/cols;
+    for(let r=0;r<2;r++)for(let i=0;i<cols;i++)win(g+i*(cw+g),72+r*132,cw,80,false);
+    const bays=8,bg=19,bw=(1024-bg*(bays+1))/bays;
+    for(let i=0;i<bays;i++){const x=bg+i*(bw+bg);box(x,382,bw,105,'#565b59',2);box(x+8,393,bw-16,82,p.glass,2);if(i%2===0)box(x+10,362,bw-20,20,i%4===0?'#63a58d':'#c9a063');}
+    c.restore();return;
+  }
   box(0,0,1024,512,p.wall);
   box(0,355,1024,157,p.ground);
   if(wood){for(let y=22;y<512;y+=28)box(0,y,1024,3,p.frame);}
