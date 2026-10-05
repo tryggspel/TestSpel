@@ -330,7 +330,7 @@ const FRIMURARE_OSM=101608925;
 export function addFrimurareExplicitHero(mesh,b){
   if(!b||b.osm!==FRIMURARE_OSM)return false;
   const h=Math.max(9.6,b.h),minx=b.minx,maxx=b.maxx,minz=b.minz,maxz=b.maxz;
-  const wall='#c7a353',frame='#eadfc4',glass='#506a70',stone='#8f8577',ink='#5c5448',roof='#405b55';
+  const wall='#a58d84',frame='#cdbfb2',glass='#4e676b',stone='#8a8982',ink='#756b64',roof='#3f4d4b';
   const nz=minz-.22,sz=maxz+.22,wx=minx-.22,ex=maxx+.22;
 
   // Outward winding is deliberate: north=-Z, south=+Z, west=-X, east=+X.
@@ -374,7 +374,7 @@ export function addFrimurareExplicitHero(mesh,b){
     }
     // Central risalit and crest.
     const cx=(minx+maxx)/2,rw=Math.min(7.2,width*.18);
-    qN(cx-rw/2,3.18,cx+rw/2,h-.55,'#cfad62',nz-.018);
+    qN(cx-rw/2,3.18,cx+rw/2,h-.55,'#ad9489',nz-.018);
     qN(cx-rw*.46,3.66,cx+rw*.46,5.98,frame,nz-.085);
     qN(cx-rw*.39,3.79,cx+rw*.39,5.78,glass,nz-.10);
     qN(cx-1.25,8.38,cx+1.25,h-.62,frame,nz-.09);
@@ -421,9 +421,9 @@ export function addFrimurareExplicitHero(mesh,b){
 // Kungsgatan reference pass. Every exposed side gets window/cornice rhythm so a player
 // never meets a large empty beige/brown wall when circling Stora Torget.
 export const TORGET_AUDIT_PROFILES=Object.freeze({
-  101935889:Object.freeze({name:'Västra Torggatan 12',front:'west',style:'classic',wall:'#d8c9b4',frame:'#f0e5d2',glass:'#587178',ground:'#74695a',accent:'#8c5a43'}),
-  107041955:Object.freeze({name:'Västra Torggatan 7',front:'east',style:'merchant',wall:'#c58a67',frame:'#ead8be',glass:'#557179',ground:'#4d4942',accent:'#356d59'}),
-  101247031:Object.freeze({name:'Östra Torggatan 9 · Arkaden',front:'east',style:'arcade90',wall:'#d7c9b7',frame:'#eee7da',glass:'#456a73',ground:'#4f5657',accent:'#8b6f5d'}),
+  101935889:Object.freeze({name:'Västra Torggatan 12',front:'west',style:'sv-vt12',wall:'#b77b70',frame:'#d2c0b2',glass:'#4a6368',ground:'#8f968f',accent:'#2f3435'}),
+  107041955:Object.freeze({name:'Västra Torggatan 7',front:'east',style:'sv-vt7',wall:'#c4b7a8',frame:'#ded7cb',glass:'#4c6268',ground:'#696a65',accent:'#2c3335'}),
+  101247031:Object.freeze({name:'Östra Torggatan 9',front:'east',style:'sv-ot9',wall:'#6f5750',frame:'#4d4744',glass:'#293f46',ground:'#332f2d',accent:'#8b7a68'}),
   101456562:Object.freeze({name:'Tingvallagatan 10',front:'south',style:'government',wall:'#d8c7a5',frame:'#efe4cc',glass:'#516b71',ground:'#8a8375',accent:'#9b794a'}),
   471365594:Object.freeze({name:'Tingvallagatan · Torget öst',front:'north',style:'brickcity',wall:'#b56f56',frame:'#e2ceb6',glass:'#516c73',ground:'#49443f',accent:'#6c7b67'})
 });
@@ -439,8 +439,110 @@ export function addTorgetAuditFacade(mesh,b){
   const faces={north:{len:maxx-minx,q:qN},south:{len:maxx-minx,q:qS},west:{len:maxz-minz,q:qW},east:{len:maxz-minz,q:qE}};
   const front=p.front;
 
+  // Street View pass 1. For these audited facades the real reference owns the street front.
+  // Use shallow 3D boxes rather than zero-thickness quads so the details stay visible in Safari/WebGL.
+  const frontBox=(u,y,w,hh,depth,colour,out=.20)=>{
+    if(front==='east'||front==='west'){
+      const x=front==='east'?maxx+out:minx-out,z=minz+u+w/2;
+      mesh.box(x,y+hh/2,z,depth,hh,w,colour,colour);
+    }else{
+      const z=front==='south'?maxz+out:minz-out,x=minx+u+w/2;
+      mesh.box(x,y+hh/2,z,w,hh,depth,colour,colour);
+    }
+  };
+  const drawStreetViewFront=()=>{
+    const len=faces[front].len;
+    if(p.style==='sv-vt12'){
+      // Västra Torggatan 12 · Street View 2017-05:
+      // dusty rose upper facade, grey rusticated base, large arched shop windows and passage.
+      frontBox(0,.02,len,h-.05,.18,p.wall,.17);
+      frontBox(0,.04,len,3.08,.20,p.ground,.21);
+      frontBox(0,3.00,len,.24,.22,p.frame,.24);
+      frontBox(0,h-.42,len,.24,.22,p.frame,.23);
+      const bays=Math.max(4,Math.min(6,Math.round(len/4.8))),bw=len/bays;
+      for(let i=0;i<bays;i++){
+        const u=i*bw+.22,w=Math.max(.75,bw-.44);
+        // Ground-floor stone piers and large dark shop glazing.
+        frontBox(u,.50,w,2.16,.14,p.frame,.29);
+        frontBox(u+.12,.68,w-.24,1.76,.11,p.glass,.36);
+        frontBox(u+.12,2.18,w-.24,.26,.11,'#31464b',.36);
+        // Upper tall white-framed windows.
+        frontBox(u+.15,3.72,w-.30,1.90,.13,p.frame,.28);
+        frontBox(u+.26,3.84,w-.52,1.66,.10,'#667d80',.35);
+        frontBox(u+w*.48,3.88,.07,1.58,.07,'#d8d5cc',.41);
+        if(h>7.1){
+          frontBox(u+.18,6.18,w-.36,1.48,.13,p.frame,.28);
+          frontBox(u+.28,6.30,w-.56,1.23,.10,'#667d80',.35);
+        }
+      }
+      // Central carriage passage/portal, visible landmark in the reference.
+      const pw=Math.min(3.2,len*.18),pu=(len-pw)/2;
+      frontBox(pu,.30,pw,2.63,.15,'#575a56',.41);
+      frontBox(pu+.28,.46,pw-.56,2.30,.11,'#28363a',.47);
+      return true;
+    }
+    if(p.style==='sv-vt7'){
+      // Västra Torggatan 7 · Street View 2017-05:
+      // calm beige facade, very tall narrow upper windows and oversized shop glazing.
+      frontBox(0,.02,len,h-.05,.18,p.wall,.17);
+      frontBox(0,.04,len,.50,.20,'#6c6d69',.22);
+      const groundBays=Math.max(3,Math.min(5,Math.round(len/4.2))),gb=len/groundBays;
+      for(let i=0;i<groundBays;i++){
+        const u=i*gb+.18,w=Math.max(.75,gb-.36);
+        frontBox(u,.62,w,2.24,.13,'#80786e',.27);
+        frontBox(u+.10,.75,w-.20,1.98,.10,p.glass,.34);
+      }
+      frontBox(0,3.02,len,.16,.20,'#8f8981',.23);
+      const cols=Math.max(4,Math.min(7,Math.round(len/3.0))),cw=len/cols;
+      for(let i=0;i<cols;i++){
+        const u=i*cw+.34,w=Math.max(.45,cw-.68);
+        frontBox(u,3.52,w,2.05,.12,p.frame,.27);
+        frontBox(u+.12,3.63,w-.24,1.82,.09,'#6f8588',.34);
+        if(h>7.0){
+          frontBox(u,6.10,w,1.68,.12,p.frame,.27);
+          frontBox(u+.12,6.20,w-.24,1.46,.09,'#6f8588',.34);
+        }
+      }
+      // Dark recessed entrance volume from the photographed Mitt i City frontage.
+      const ew=Math.min(3.4,len*.22),eu=len-ew-.22;
+      frontBox(eu,.36,ew,2.72,.18,'#222a2c',.43);
+      frontBox(eu+.28,.55,ew-.56,2.25,.11,'#52666a',.50);
+      frontBox(eu+.24,2.46,ew-.48,.30,.12,'#9e7f55',.51);
+      return true;
+    }
+    if(p.style==='sv-ot9'){
+      // Östra Torggatan 9 · Street View 2026-06:
+      // dark brown cladding, broad dark window bands and a projecting glass/metal canopy.
+      frontBox(0,.02,len,h-.05,.20,p.wall,.18);
+      frontBox(0,.04,len,3.00,.22,p.ground,.23);
+      const rows=Math.max(2,Math.min(4,Math.round((h-3.4)/2.35)));
+      for(let r=0;r<rows;r++){
+        const y=3.42+r*2.25;
+        frontBox(.22,y,len-.44,1.16,.14,p.frame,.26);
+        const cols=Math.max(3,Math.min(7,Math.round(len/4.1))),cw=(len-.44)/cols;
+        for(let i=0;i<cols;i++){
+          const u=.22+i*cw+.16,w=Math.max(.55,cw-.32);
+          frontBox(u,y+.10,w,.94,.10,p.glass,.34);
+        }
+      }
+      // Ground restaurant glazing and the glass canopy visible across the facade.
+      const gb=Math.max(3,Math.min(7,Math.round(len/3.8))),bw=len/gb;
+      for(let i=0;i<gb;i++){
+        const u=i*bw+.14,w=Math.max(.58,bw-.28);
+        frontBox(u,.48,w,2.12,.12,'#3d3b39',.30);
+        frontBox(u+.08,.61,w-.16,1.79,.09,'#22373d',.37);
+      }
+      frontBox(.12,2.62,len-.24,.22,.38,'#70685f',.48);
+      frontBox(.28,2.46,len-.56,.10,.72,'#98a0a0',.56);
+      return true;
+    }
+    return false;
+  };
+  const hasStreetViewFront=drawStreetViewFront();
+
   const drawFace=(face)=>{
     const {len,q}=faces[face];if(len<2.4)return;
+    if(hasStreetViewFront&&face===front)return;
     const isFront=face===front,baseH=p.style==='government'?3.15:3.0;
     q(0,.03,len,h-.03,p.wall,.16);
     q(0,.03,len,baseH,p.ground,.20);
@@ -562,7 +664,7 @@ export function createCityArchitecture(pc,app,buildings){
     // reference mesh: build the structural shell and all facade detail in the same known-good
     // town mesh so Safari/iPhone cannot lose it through a second material/render path.
     if(b.osm===FRIMURARE_OSM){
-      town.walls(b.polygon,0,h,'#c7a353');
+      town.walls(b.polygon,0,h,'#a58d84');
       town.walls(b.polygon,.04,.72,'#8f8577',.035);
       town.polygon(b.polygon,h+.015,'#405b55');
       addFrimurareExplicitHero(town,b);
