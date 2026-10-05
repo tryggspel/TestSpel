@@ -103,7 +103,8 @@ export const PHOTO_REFERENCE_PROFILES=Object.freeze({
   }),
   101608925:Object.freeze({
     address:'Tingvallagatan 15',name:'Frimurarelogen / Herman Anderssons bokhandel',front:'north',extraFaces:['west','east','south'],kind:'frimurarebok',
-    wall:'#c7a353',frame:'#eadfc4',glass:'#506a70',ground:'#979187',accent:'#e6d3a3',
+    // Street View reference: muted dusty-rose plaster above a grey stone/rusticated base.
+    wall:'#a58d84',frame:'#cdbfb2',glass:'#4e676b',ground:'#8a8982',accent:'#b7a899',
     source:'Google Street View 2017-05 + Karlstad i förändring'
   }),
   77107220:Object.freeze({
