@@ -1,9 +1,5 @@
-import {WATER_ROWS,FERRY_PORTS,EXT_BUILDINGS} from './city-south-data.mjs?v=2.11.22';
+import {WATER_ROWS,FERRY_PORTS,EXT_BUILDINGS} from './city-south-data.mjs?v=2.11.21';
 export const SOUTH_IDS=new Set(EXT_BUILDINGS.map(b=>b.id));
-// South/extension buildings with their own hand-built architecture in city-south.js.
-// Every other SOUTH_IDS building is drawn there only as a generic box, so a curated
-// reference profile may take it over (see curatedRoute() in city-architecture.js).
-export const SOUTH_HANDBUILT_IDS=new Set([80278038,356121937,80868525,77107220,100024120,100024325]);
 export const HARBOUR={...FERRY_PORTS.hamn,x:236,z:552,id:'hamn',name:'Inre hamn'};
 export const MARIEBERG={...FERRY_PORTS.marieberg,x:-778,z:1321,id:'marieberg',name:'Mariebergsskogen'};
 export const SOUTH_PLACES=Object.freeze([

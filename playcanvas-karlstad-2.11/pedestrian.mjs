@@ -1,7 +1,7 @@
 // Gågator i spelets område enligt OpenStreetMap (highway=pedestrian), © OpenStreetMap contributors.
 // Drottninggatan och Västra Torggatan är Karlstads gågator i centrum, plus en gatstensyta vid Museigatan.
 // Gångfartsområden (living_street) räknas inte som gågata.
-import {CITY_STREETS} from './city-streets.mjs?v=2.11.22';
+import {CITY_STREETS} from './city-streets.mjs?v=2.11.21';
 export const PEDESTRIAN_STREETS=Object.freeze(CITY_STREETS.filter(s=>s.pedestrian).map(s=>Object.freeze({osm:s.osm,name:s.name,width:s.width,points:s.points})));
 // Gågatuyta med gatsten längs Klarälven vid Museigatan (OSM way 923099551, highway=pedestrian,
 // area=yes, surface=sett). Saknar namn i OSM; spelet kallar den efter gatan den följer.

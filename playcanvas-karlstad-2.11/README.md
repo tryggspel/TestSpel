@@ -1,19 +1,3 @@
-# Karlstad City — 2.11.22 · Rotorsaksfix: kurerade fasader når alltid skärmen
-
-Fasadändringar syntes inte för att tre spärrar skickade kurerade hus till andra renderare än Kungsgatan-vägen:
-
-1. **Frimurarelogen/Grekiska** (101608925) låg i `SOUTH_IDS` och ritades som en generisk gul låda i `city-south.js`. Alla tidigare Frimurare-fixar, inklusive "root fix"-grenen i `city-architecture.js`, var död kod.
-2. **10 foto/Street View-profiler** låg längre bort än 260 m. De ritades som grå PlayCanvas-lådor i `app.js` i stället för med sina profiler.
-3. **Gamla serietexturkort** (`comic-city.js`) låg över Torget-audit-fasaderna och z-fightade med dem.
-
-Dessutom var cache-nycklarna blandade (`?v=2.11.21` och `?v=2.11.21&build=…`). Därför laddades `city-architecture.js` och `photo-reference-pass3.mjs` som två separata modulinstanser.
-
-Fix: `curatedRoute()` i `city-architecture.js` är nu enda sanningskällan för vilka hus som går Kungsgatan-vägen, och `city-south.js` hoppar över dem. Torget-audit-hus får inga serietexturkort. Alla moduler använder en enda nyckel, `?v=2.11.22`. Medvetna undantag är Mitt i City-väggarna (VT7, 106078938), Tingvallagymnasiet och Bilan, som har egen handbyggd arkitektur.
-
-Verifiering: `node tools/check-render-routing.mjs` kräver `"type":"module"`. Den failar på 2.11.21 med 12 fel och passerar på 2.11.22. `?canary` i URL:en målar alla kurerade hus magenta, som deploy-/cachekontroll.
-
-## Föregående version
-
 # Karlstad City — 2.11.9 · Västra Torggatan, östra fasadraden
 
 Detta pass bygger den motsatta sidan av Västra Torggatan med samma referensmetod som 2.11.4–2.11.8. Tre ytterligare OSM-hus får individuella gatufasader: **Home Hotel Plaza, Västra Torggatan 2**, **Västra Torggatan 8** och **Västra Torggatan 10**.

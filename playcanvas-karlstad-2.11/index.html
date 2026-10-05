@@ -30,8 +30,8 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:11px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.11.22">
-<link rel="stylesheet" href="./compact-hud.css?v=2.11.22">
+<link rel="stylesheet" href="./last-round.css?v=2.11.21&build=streetview-cache-rootfix2">
+<link rel="stylesheet" href="./compact-hud.css?v=2.11.21&build=streetview-cache-rootfix2">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
@@ -108,7 +108,7 @@
 </div>
 <div id="roundPanel" role="dialog" aria-modal="true" aria-label="Karlstad efter stängning">
   <section id="round-city-intro" class="round-card city-card" hidden>
-    <div class="episode-label"><span>KARLSTAD / STADSJAKTEN</span><span class="game-version">2.11.22</span></div>
+    <div class="episode-label"><span>KARLSTAD / STADSJAKTEN</span><span class="game-version">2.10.0</span></div>
     <h1>KARLSTAD<br><em>ÄR DITT.</em></h1>
     <p class="round-lead">Promenera, hitta nya platser och samla termosar.</p>
     <div class="city-rules"><span><b>01 · SAMLA 800 XP</b>Följ cyanpilarna till gatuhändelser. BYT MÅL öppnar kartan.</span><span><b>02 · TA BUSS 666</b>Ta ratten. Rädda bussen. Upp till 350 XP.</span><span><b>03 · FLY TILL GRÖNT</b>Nå en tryggzon innan tiden tar slut. Livet får inte ta slut!</span></div>
@@ -142,7 +142,7 @@
     <button id="momentRetry" class="round-secondary" hidden>EN BUSSRESA TILL →</button><button id="momentClose" class="round-tertiary">Tillbaka</button>
   </section>
   <section id="round-intro" class="round-card">
-    <div class="episode-label"><span>KARLSTAD / SPECIALUPPDRAG</span><span class="game-version">2.11.22</span></div>
+    <div class="episode-label"><span>KARLSTAD / SPECIALUPPDRAG</span><span class="game-version">2.10.0</span></div>
     <nav id="missionPicker" aria-label="Välj uppdrag">
       <button id="select-sista-rundan" aria-pressed="true"><b>01</b><span>SISTA RUNDAN<small>O’Learys · knuffa</small></span></button>
       <button id="select-fikapanik" aria-pressed="false"><b>02</b><span>FIKAPANIK<small>Torget · 24 zombies</small></span></button>
@@ -231,6 +231,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.11.22"></script>
+<script type="module" src="./app.js?v=2.11.21&build=streetview-cache-rootfix2"></script>
 </body>
 </html>
