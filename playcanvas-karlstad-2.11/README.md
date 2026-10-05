@@ -1,3 +1,13 @@
+# Karlstad City — 2.11.24 · Fasadluckor Kungsgatan och Torget
+
+Genomgång av spelet i riktig Chromium dokumenterade blanka väggar kring Kungsgatan och Stora Torget (`art/FACADE-GAPS.md`, bilder före/efter i `art/facade-gaps/`). Tio byggnader fick nya fönsterväggar via `GAP_FACADES` i `city-architecture.js`: Västra Torggatan 10 och 16, Östra Torggatan 10, 14 och 16, Tingvallagatan 7, Västra Kyrkogatan 1 och 3,5 samt två byggnader utan adress öster om Domkyrkan. Samma fönstergrammatik som sidoväggspasset (karm, glas, mittpost, våningsrytm), brandväggar lämnas släta och väggar som sidoväggspasset redan ritar hoppas över.
+
+Kungsgatan 14 (Pressbyrån), 16 och 18 är låsta: de står inte i listan och `tests/gap-facades.test.mjs` vaktar det. En pixeljämförelse före/efter från gatan visar identisk bild för de tre husen.
+
+Ej åtgärdat (dokumenterat): Mitt i City-väggen vid Västra Torggatan 7 (egen handbyggd arkitektur) och Sightseeing-kioskerna på Torget (rekvisita).
+
+## Föregående version
+
 # Karlstad City — 2.11.22 · Rotorsaksfix: kurerade fasader når alltid skärmen
 
 Fasadändringar syntes inte för att tre spärrar skickade kurerade hus till andra renderare än Kungsgatan-vägen:

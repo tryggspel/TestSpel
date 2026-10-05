@@ -1,13 +1,13 @@
-import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.23';
-import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit,visualTwinFaceYaw} from './visual-twin.mjs?v=2.11.23';
-import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.23';
-import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.23';
-import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.23';
-import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.23';
+import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.24';
+import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit,visualTwinFaceYaw} from './visual-twin.mjs?v=2.11.24';
+import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.24';
+import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.24';
+import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.24';
+import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.24';
 
-import {SOUTH_IDS,SOUTH_HANDBUILT_IDS} from './city-south-space.mjs?v=2.11.23';
-import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.23';
-import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.23';
+import {SOUTH_IDS,SOUTH_HANDBUILT_IDS} from './city-south-space.mjs?v=2.11.24';
+import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.24';
+import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.24';
 
 // Static, vertex-coloured geometry: one draw call per landmark, one for streets,
 // one for rooflines and storefront frames. No lights, shadows or per-frame work.
@@ -58,8 +58,14 @@ export function sideWallFaces(b,neighbours=[]){
 }
 export function addSideWallFacades(mesh,b,{neighbours=[],frame=null,lod='high'}={}){
   if(lod==='low'&&!(b.dist<SIDE_WALL_LOW_RADIUS))return 0;
-  const faces=sideWallFaces(b,neighbours);if(!faces.length)return 0;const low=lod==='low';
-  const h=Math.max(3.2,b.h),fr=frame||PHOTO_REFERENCE_PROFILES[b.osm]?.frame||INNERSTAD_PROFILES[b.osm]?.frame||visualTwinProfile(b)?.frame||'#e8e0cc';
+  const faces=sideWallFaces(b,neighbours);if(!faces.length)return 0;
+  const fr=frame||PHOTO_REFERENCE_PROFILES[b.osm]?.frame||INNERSTAD_PROFILES[b.osm]?.frame||visualTwinProfile(b)?.frame||'#e8e0cc';
+  paintWindowFaces(mesh,b,faces,fr,lod==='low');
+  return faces.length;
+}
+// Shared window grammar (frame, glass, mullion, floor rhythm) for walls without a hand-built profile.
+function paintWindowFaces(mesh,b,faces,fr,low){
+  const h=Math.max(3.2,b.h);
   for(const f of faces){
     const P=(u,y,o)=>[f.a[0]+f.tx*u+f.nx*o,y,f.a[1]+f.tz*u+f.nz*o];
     const panel=(u,y,w,ph,colour,o)=>{const P0=P(u,y,o),Q0=P(u+w,y,o),P1=P(u,y+ph,o),Q1=P(u+w,y+ph,o);if(f.ccw)mesh.quad(Q0,P0,P1,Q1,colour);else mesh.quad(P0,Q0,Q1,P1,colour);};
@@ -80,6 +86,45 @@ export function addSideWallFacades(mesh,b,{neighbours=[],frame=null,lod='high'}=
       }
     }
   }
+}
+// 2.11.24 facade-gap pass (art/FACADE-GAPS.md): walls found blank in the Kungsgatan/Torget walk-through.
+// Listed walls get the window grammar above. 'all' = every exposed wall (plain infill with no windows
+// at all); otherwise cardinal outward directions (N/E/S/W, +-40 deg). Party walls stay plain.
+// Kungsgatan 14/16/18 are never listed (KUNGSGATAN_PROFILES guard below as well).
+export const GAP_FACADES=Object.freeze({
+  103695873:Object.freeze({name:'Västra Torggatan 16',faces:['W']}),
+  101170472:Object.freeze({name:'Östra Torggatan 14',faces:['W']}),
+  101935913:Object.freeze({name:'Tingvallagatan 7',faces:['N']}),
+  110997315:Object.freeze({name:'Östra Torggatan 10',faces:['W']}),
+  113214347:Object.freeze({name:'Kungsgatan öst',faces:'all'}),
+  101453952:Object.freeze({name:'Västra Kyrkogatan 1',faces:'all'}),
+  101935869:Object.freeze({name:'Västra Kyrkogatan 3,5',faces:'all'}),
+  102580709:Object.freeze({name:'Östra Torggatan 16',faces:'all'}),
+  101453951:Object.freeze({name:'Torn Kungsgatan öst',faces:'all'}),
+  104529128:Object.freeze({name:'Västra Torggatan 10',faces:['W']})
+});
+const GAP_YAW=Object.freeze({S:0,E:90,N:180,W:-90});
+export function gapFaces(b,neighbours=[]){
+  const spec=GAP_FACADES[b?.osm];
+  if(!spec||KUNGSGATAN_PROFILES[b.osm]||!Array.isArray(b.polygon)||b.polygon.length<3||Math.max(3.2,b.h)<5)return [];
+  const poly=b.polygon;let area=0;for(let i=0;i<poly.length;i++){const a=poly[i],q=poly[(i+1)%poly.length];area+=a[0]*q[1]-q[0]*a[1];}
+  const ccw=area>0,near=neighbours.filter(n=>n!==b&&n.osm!==b.osm&&Array.isArray(n.polygon)&&Math.abs(n.cx-b.cx)<b.sx/2+n.sx/2+4&&Math.abs(n.cz-b.cz)<b.sz/2+n.sz/2+4),out=[];
+  for(let i=0;i<poly.length;i++){
+    const a=poly[i],q=poly[(i+1)%poly.length],dx=q[0]-a[0],dz=q[1]-a[1],length=Math.hypot(dx,dz);
+    if(length<6)continue;
+    const tx=dx/length,tz=dz/length,nx=ccw?tz:-tz,nz=ccw?-tx:tx,yaw=Math.atan2(nx,nz)*180/Math.PI;
+    if(spec.faces!=='all'&&!spec.faces.some(c=>yawGap(yaw,GAP_YAW[c])<=40))continue;
+    const party=[.2,.5,.8].every(t=>{const x=a[0]+dx*t+nx*1.2,z=a[1]+dz*t+nz*1.2;return near.some(n=>pointInPolygon(x,z,n.polygon));});
+    if(party)continue;
+    out.push({a,q,length,tx,tz,nx,nz,yaw,ccw});
+  }
+  return out;
+}
+export function addGapFacades(mesh,b,{neighbours=[],lod='high'}={}){
+  // Walls the side-wall pass already paints are skipped, so nothing is drawn twice.
+  const done=lod==='low'&&!(b.dist<SIDE_WALL_LOW_RADIUS)?[]:sideWallFaces(b,neighbours);
+  const faces=gapFaces(b,neighbours).filter(f=>!done.some(d=>d.a===f.a&&d.q===f.q));if(!faces.length)return 0;
+  paintWindowFaces(mesh,b,faces,'#e8e0cc',lod==='low');
   return faces.length;
 }
 export function coreContourBuildings(buildings,max=CORE_CONTOUR_LIMIT){
@@ -764,6 +809,7 @@ export function createCityArchitecture(pc,app,buildings,others=[]){
     addTorgetAuditFacade(town,b);
     if(!TORGET_AUDIT_PROFILES[b.osm])addVisualTwinFacade(town,b,{neighbours:buildings});
     sideWalls+=addSideWallFacades(town,b,{neighbours:wallNeighbours});
+    sideWalls+=addGapFacades(town,b,{neighbours:wallNeighbours});
     if(b.tags['roof:shape']==='hipped')town.hip(b.cx,h+.02,b.cz,b.sx*.96,b.sz*.96,Math.min(3.8,Math.min(b.sx,b.sz)*.24),'#425a56','#314744');
     else if(b.tags['roof:shape']==='gabled'||(b.area<260&&b.sx<26&&b.sz<26))town.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
@@ -932,6 +978,7 @@ export function infillMesh(buildings,mesh=new ComicMesh(),others=[]){
     addPhotoReferenceFacade(mesh,b);
     addVisualTwinFacade(mesh,b,{lod:'low',neighbours:buildings});
     addSideWallFacades(mesh,b,{neighbours:wallNeighbours,lod:'low'});
+    addGapFacades(mesh,b,{neighbours:wallNeighbours,lod:'low'});
     if(b.area<260&&b.sx<26&&b.sz<26)mesh.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
   return mesh;
