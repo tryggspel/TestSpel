@@ -46,7 +46,7 @@ test('Hero Card Centre Pass launcher has one clean build cache key',()=>{
   const match=html.match(/app\.js\?v=2\.11\.21([^"']*)/);
   assert.ok(match);
   assert.equal((match[1].match(/&build=/g)||[]).length,1);
-  assert.match(match[1],/&build=hero-centre1/);
+  assert.match(match[1],/&build=hero-centre2/);
 });
 
 test('green map pass is capped to 31 nearest mapped areas',()=>{
