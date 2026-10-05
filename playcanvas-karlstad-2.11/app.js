@@ -1,8 +1,8 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.11.21&build=graphics-audit2';
+import {createLastRound} from './last-round.js?v=2.11.21&build=streetview-pass1';
 import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.11.21';
 import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.11.21';
-import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.21&build=graphics-audit2';
+import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.21&build=streetview-pass1';
 import {createCityEnvironment} from './city-environment.mjs?v=2.11.21';
 import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.11.21';
 import {ColliderGrid} from './collider-grid.mjs?v=2.11.21';
