@@ -416,6 +416,105 @@ export function addFrimurareExplicitHero(mesh,b){
   return true;
 }
 
+// Graphics audit 2026-10-05: explicit real-centre treatment for the remaining blank
+// Torget facades. These are deliberately hand-coded by OSM building id, just like the
+// Kungsgatan reference pass. Every exposed side gets window/cornice rhythm so a player
+// never meets a large empty beige/brown wall when circling Stora Torget.
+export const TORGET_AUDIT_PROFILES=Object.freeze({
+  101935889:Object.freeze({name:'Västra Torggatan 12',front:'west',style:'classic',wall:'#d8c9b4',frame:'#f0e5d2',glass:'#587178',ground:'#74695a',accent:'#8c5a43'}),
+  107041955:Object.freeze({name:'Västra Torggatan 7',front:'east',style:'merchant',wall:'#c58a67',frame:'#ead8be',glass:'#557179',ground:'#4d4942',accent:'#356d59'}),
+  101247031:Object.freeze({name:'Östra Torggatan 9 · Arkaden',front:'east',style:'arcade90',wall:'#d7c9b7',frame:'#eee7da',glass:'#456a73',ground:'#4f5657',accent:'#8b6f5d'}),
+  101456562:Object.freeze({name:'Tingvallagatan 10',front:'south',style:'government',wall:'#d8c7a5',frame:'#efe4cc',glass:'#516b71',ground:'#8a8375',accent:'#9b794a'}),
+  471365594:Object.freeze({name:'Tingvallagatan · Torget öst',front:'north',style:'brickcity',wall:'#b56f56',frame:'#e2ceb6',glass:'#516c73',ground:'#49443f',accent:'#6c7b67'})
+});
+export const TORGET_AUDIT_IDS=new Set(Object.keys(TORGET_AUDIT_PROFILES).map(Number));
+
+export function addTorgetAuditFacade(mesh,b){
+  const p=TORGET_AUDIT_PROFILES[b?.osm];if(!p)return false;
+  const h=Math.max(7.2,b.h||9.6),minx=b.minx,maxx=b.maxx,minz=b.minz,maxz=b.maxz;
+  const qN=(u0,y0,u1,y1,col,out=.18)=>{const z=minz-out;mesh.quad([minx+u1,y0,z],[minx+u0,y0,z],[minx+u0,y1,z],[minx+u1,y1,z],col);};
+  const qS=(u0,y0,u1,y1,col,out=.18)=>{const z=maxz+out;mesh.quad([minx+u0,y0,z],[minx+u1,y0,z],[minx+u1,y1,z],[minx+u0,y1,z],col);};
+  const qW=(u0,y0,u1,y1,col,out=.18)=>{const x=minx-out;mesh.quad([x,y0,minz+u0],[x,y0,minz+u1],[x,y1,minz+u1],[x,y1,minz+u0],col);};
+  const qE=(u0,y0,u1,y1,col,out=.18)=>{const x=maxx+out;mesh.quad([x,y0,minz+u1],[x,y0,minz+u0],[x,y1,minz+u0],[x,y1,minz+u1],col);};
+  const faces={north:{len:maxx-minx,q:qN},south:{len:maxx-minx,q:qS},west:{len:maxz-minz,q:qW},east:{len:maxz-minz,q:qE}};
+  const front=p.front;
+
+  const drawFace=(face)=>{
+    const {len,q}=faces[face];if(len<2.4)return;
+    const isFront=face===front,baseH=p.style==='government'?3.15:3.0;
+    q(0,.03,len,h-.03,p.wall,.16);
+    q(0,.03,len,baseH,p.ground,.20);
+    q(0,baseH-.08,len,baseH+.16,p.frame,.23);
+    q(0,h-.48,len,h-.24,p.style==='arcade90'?'#4f5758':p.accent,.22);
+
+    if(p.style==='government'){
+      for(let y=.48;y<baseH-.22;y+=.58)q(.04,y,len-.04,y+.045,'#756f65',.24);
+    }else if(p.style==='brickcity'||p.style==='merchant'){
+      for(let y=baseH+.22;y<h-.70;y+=.72)q(.05,y,len-.05,y+.035,'#7d5748',.19);
+    }
+
+    // Ground floor: active shop/entrance rhythm only on the actual street front.
+    if(isFront){
+      const bays=Math.max(3,Math.min(10,Math.round(len/(p.style==='arcade90'?4.3:3.5)))),bw=len/bays;
+      for(let i=0;i<bays;i++){
+        const u=i*bw+.16,w=Math.max(.48,bw-.32);
+        if(p.style==='government'&&i===Math.floor(bays/2)){
+          q(u-.08,.50,u+w+.08,baseH-.20,p.frame,.31);
+          q(u+.08,.68,u+w-.08,baseH-.38,'#334347',.35);
+        }else{
+          q(u,.56,u+w,baseH-.32,p.frame,.27);
+          q(u+.10,.70,u+w-.10,baseH-.48,p.glass,.31);
+        }
+        if((p.style==='merchant'||p.style==='brickcity')&&i%2===0)q(u-.02,baseH-.44,u+w+.02,baseH-.18,p.accent,.36);
+      }
+      if(p.style==='arcade90'){
+        q(.10,baseH-.08,len-.10,baseH+.34,'#596163',.38);
+        for(let u=.32;u<len-.3;u+=Math.max(3.2,len/8))q(u,.30,u+.12,baseH+.16,p.frame,.39);
+      }
+    }else{
+      const sideBays=Math.max(2,Math.min(7,Math.round(len/4.5))),bw=len/sideBays;
+      for(let i=0;i<sideBays;i++){
+        const u=i*bw+.38,w=Math.max(.42,bw-.76);
+        q(u,.88,u+w,2.34,p.frame,.24);q(u+.08,.99,u+w-.08,2.18,p.glass,.28);
+      }
+    }
+
+    // Upper floors: distinct real-city proportions instead of generic continuous window bands.
+    const upperStart=baseH+.55,available=Math.max(2.0,h-upperStart-.78);
+    const rows=Math.max(1,Math.min(4,Math.round(available/2.55))),rowH=available/rows;
+    const cols=Math.max(3,Math.min(12,Math.round(len/(p.style==='arcade90'?3.8:3.15)))),cw=len/cols;
+    for(let r=0;r<rows;r++){
+      const y=upperStart+r*rowH+.18,wh=Math.max(.74,Math.min(1.55,rowH-.48));
+      for(let i=0;i<cols;i++){
+        const u=i*cw+.34,w=Math.max(.42,cw-.68);
+        if(p.style==='arcade90'){
+          q(u-.08,y-.08,u+w+.08,y+wh+.08,'#b9b1a6',.23);
+          q(u,y,u+w,y+wh,p.glass,.28);
+          if((i+r)%3===1)q(u-.12,y+wh+.13,u+w+.12,y+wh+.26,p.accent,.32);
+        }else if(p.style==='classic'||p.style==='government'){
+          q(u-.11,y-.11,u+w+.11,y+wh+.11,p.frame,.25);
+          q(u,y,u+w,y+wh,p.glass,.30);
+          q(u-.08,y+wh+.14,u+w+.08,y+wh+.25,p.frame,.31);
+        }else{
+          q(u-.08,y-.08,u+w+.08,y+wh+.08,p.frame,.24);
+          q(u,y,u+w,y+wh,p.glass,.29);
+        }
+        q(u+w*.47,y+.04,u+w*.53,y+wh-.04,'#e2e4d9',.32);
+      }
+      if(p.style==='classic'||p.style==='government')q(.04,y+wh+.38,len-.04,y+wh+.48,p.accent,.22);
+    }
+
+    // Strong corner/pilaster language makes the block readable while turning around it.
+    if(p.style==='classic'||p.style==='government'){
+      q(.08,baseH+.18,.24,h-.58,p.frame,.34);
+      q(len-.24,baseH+.18,len-.08,h-.58,p.frame,.34);
+    }
+  };
+
+  drawFace('north');drawFace('south');drawFace('west');drawFace('east');
+  return true;
+}
+
 export const ROAD_RENDER_LEVELS=Object.freeze({
   sidewalkBase:.045,
   sidewalk:.065,
@@ -457,7 +556,7 @@ export function createCityArchitecture(pc,app,buildings){
   // Mitt i City stays separate so its four entrances and walkable interior are untouched.
   const contours=coreContourBuildings(buildings),contourIds=new Set(contours.map(b=>b.osm));
   for(const b of contours){
-    const seed=Math.abs((b.osm*2654435761)>>>0),twin=visualTwinProfile(b),wall=PHOTO_REFERENCE_PROFILES[b.osm]?.wall||INNERSTAD_PROFILES[b.osm]?.wall||KUNGSGATAN_PROFILES[b.osm]?.wall||twin?.wall||CORE_WALLS[seed%CORE_WALLS.length],h=Math.max(3.2,b.h);
+    const seed=Math.abs((b.osm*2654435761)>>>0),twin=visualTwinProfile(b),wall=TORGET_AUDIT_PROFILES[b.osm]?.wall||PHOTO_REFERENCE_PROFILES[b.osm]?.wall||INNERSTAD_PROFILES[b.osm]?.wall||KUNGSGATAN_PROFILES[b.osm]?.wall||twin?.wall||CORE_WALLS[seed%CORE_WALLS.length],h=Math.max(3.2,b.h);
 
     // Frimurarelogen is a deterministic hero building. Do not route it through a separate
     // reference mesh: build the structural shell and all facade detail in the same known-good
@@ -474,13 +573,14 @@ export function createCityArchitecture(pc,app,buildings){
     town.walls(b.polygon,0,h,wall);
     town.walls(b.polygon,.04,.72,'#788a80',.035);
     const floors=Math.max(1,Math.min(5,Math.round(h/3.2)));
-    for(let f=0;f<floors&&!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_PROFILES[b.osm]&&!PHOTO_REFERENCE_PROFILES[b.osm]&&!twin;f++){const y=f*3.2+1.28;if(y+1.0<h-.55)town.walls(b.polygon,y,y+1.0,'#5d7a7c',.05);}
+    for(let f=0;f<floors&&!TORGET_AUDIT_PROFILES[b.osm]&&!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_PROFILES[b.osm]&&!PHOTO_REFERENCE_PROFILES[b.osm]&&!twin;f++){const y=f*3.2+1.28;if(y+1.0<h-.55)town.walls(b.polygon,y,y+1.0,'#5d7a7c',.05);}
     town.polygon(b.polygon,h+.015,'#3b5155');
     addKungsgatanFacade(town,b);
     addInnerstadFacade(town,b);
     // Curated photo/Street View profiles use the exact Kungsgatan route: hand-built geometry in the main static town mesh.
     addPhotoReferenceFacade(town,b);
-    addVisualTwinFacade(town,b,{neighbours:buildings});
+    addTorgetAuditFacade(town,b);
+    if(!TORGET_AUDIT_PROFILES[b.osm])addVisualTwinFacade(town,b,{neighbours:buildings});
     if(b.tags['roof:shape']==='hipped')town.hip(b.cx,h+.02,b.cz,b.sx*.96,b.sz*.96,Math.min(3.8,Math.min(b.sx,b.sz)*.24),'#425a56','#314744');
     else if(b.tags['roof:shape']==='gabled'||(b.area<260&&b.sx<26&&b.sz<26))town.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
