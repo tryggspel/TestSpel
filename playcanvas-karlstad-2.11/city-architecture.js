@@ -1,6 +1,6 @@
 import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.21';
 import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit} from './visual-twin.mjs?v=2.11.21';
-import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade} from './photo-reference-pass3.mjs?v=2.11.21&build=frimurare-shell1';
+import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade} from './photo-reference-pass3.mjs?v=2.11.21&build=streetview-rootfix1';
 import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.21';
 import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture} from './innerstad-reference.mjs?v=2.11.21';
 import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.21';
@@ -664,11 +664,20 @@ export function createCityArchitecture(pc,app,buildings){
     // reference mesh: build the structural shell and all facade detail in the same known-good
     // town mesh so Safari/iPhone cannot lose it through a second material/render path.
     if(b.osm===FRIMURARE_OSM){
-      town.walls(b.polygon,0,h,'#a58d84');
-      town.walls(b.polygon,.04,.72,'#8f8577',.035);
-      town.polygon(b.polygon,h+.015,'#405b55');
-      addFrimurareExplicitHero(town,b);
-      town.hip(b.cx,h+.02,b.cz,b.sx*.96,b.sz*.96,Math.min(3.8,Math.min(b.sx,b.sz)*.24),'#405b55','#314744');
+      // Root fix 2026-10-05: there used to be TWO Frimurarelogen renderers.
+      // The legacy axis-aligned addFrimurareExplicitHero() path returned early here and
+      // permanently bypassed the newer Street View/OSM-face renderer below. The facade
+      // the player actually saw was therefore the old blank shell even while the modern
+      // photo-reference profile was being updated.
+      //
+      // Keep one source of truth: structural OSM shell + addPhotoReferenceFacade() in
+      // the SAME static town mesh used by the Kungsgatan pipeline.
+      const fp=PHOTO_REFERENCE_PROFILES[b.osm];
+      town.walls(b.polygon,0,h,fp?.wall||'#a58d84');
+      town.walls(b.polygon,.04,.72,fp?.ground||'#8a8982',.035);
+      town.polygon(b.polygon,h+.015,'#3f4d4b');
+      addPhotoReferenceFacade(town,b);
+      town.hip(b.cx,h+.02,b.cz,b.sx*.96,b.sz*.96,Math.min(3.8,Math.min(b.sx,b.sz)*.24),'#3f4d4b','#303f3e');
       continue;
     }
 
@@ -831,7 +840,7 @@ export function createCityArchitecture(pc,app,buildings){
     batches.push(m.finish(pc,app,'Karlstad · '+(b.name||b.osm),material));
   }
   const visualTwin=visualTwinAudit(buildings);
-  return {streetWays:CITY_STREETS.length,landmarks:batches.length,contours:contours.length,addressPlates,visualTwin,wow,contourIds:Object.freeze([...contourIds]),staticDrawCalls:2+batches.length};
+  return {streetWays:CITY_STREETS.length,landmarks:batches.length,contours:contours.length,addressPlates,visualTwin,wow,frimurareRenderer:'photo-reference-mainmesh',contourIds:Object.freeze([...contourIds]),staticDrawCalls:2+batches.length};
 }
 
 // 2.11: kvartersfyllnad — stadens övriga OSM-byggnader i samma tecknade stil (färgade väggar,
