@@ -1,23 +1,23 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.11.26';
-import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.11.26';
-import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.11.26';
-import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.26';
-import {createCityEnvironment} from './city-environment.mjs?v=2.11.26';
-import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.11.26';
-import {ColliderGrid} from './collider-grid.mjs?v=2.11.26';
-import {onVastraBron} from './city-water.mjs?v=2.11.26';
-import {createRiverArchitecture} from './river-architecture.js?v=2.11.26';
-import {createMallArchitecture} from './mall-architecture.js?v=2.11.26';
-import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.11.26';
-import {createParkArchitecture} from './park-architecture.js?v=2.11.26';
-import {atKil,KIL} from './scenic-transit.js?v=2.11.26';
-import {createSouthCity} from './city-south.js?v=2.11.26';
-import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage} from './city-south-space.mjs?v=2.11.26';
-import {waterBlocked} from './park-space.mjs?v=2.11.26';
-import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.11.26';
-import {createAudioEngine} from './audio-engine.mjs?v=2.11.26';
-import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.11.26';
+import {createLastRound} from './last-round.js?v=2.11.27';
+import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.11.27';
+import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.11.27';
+import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.11.27';
+import {createCityEnvironment} from './city-environment.mjs?v=2.11.27';
+import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.11.27';
+import {ColliderGrid} from './collider-grid.mjs?v=2.11.27';
+import {onVastraBron} from './city-water.mjs?v=2.11.27';
+import {createRiverArchitecture} from './river-architecture.js?v=2.11.27';
+import {createMallArchitecture} from './mall-architecture.js?v=2.11.27';
+import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.11.27';
+import {createParkArchitecture} from './park-architecture.js?v=2.11.27';
+import {atKil,KIL} from './scenic-transit.js?v=2.11.27';
+import {createSouthCity} from './city-south.js?v=2.11.27';
+import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage} from './city-south-space.mjs?v=2.11.27';
+import {waterBlocked} from './park-space.mjs?v=2.11.27';
+import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.11.27';
+import {createAudioEngine} from './audio-engine.mjs?v=2.11.27';
+import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.11.27';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -180,7 +180,7 @@ function mat(hex,metal=0,gloss=.25){
 }
 const M={
   ground:null,plaza:null,building:null,stone:null,plaster:null,brick:null,light:null,glass:null,
-  hero:null,heroDark:null,road:null,sidewalk:null,marking:null,grass:null,tree:null,trunk:null,
+  hero:null,heroDark:null,mittSlate:null,road:null,sidewalk:null,marking:null,grass:null,tree:null,trunk:null,
   metal:null,marker:null,windowCool:null,windowWarm:null,door:null,accent:null,concrete:null,
   olearysGreen:null,olearysDark:null,xp:null,energy:null
 };
@@ -392,6 +392,7 @@ function initScene(){
   M.glass=mat(0x517f8b,.15,.62);
   M.hero=mat(0xe6b467,0,.3);
   M.heroDark=mat(0x2d363b,.08,.5);
+  M.mittSlate=mat(0x555b66,0,.2);
   M.road=mat(0x475763,0,.08);
   M.sidewalk=mat(0xa79b80,0,.1);
   M.marking=mat(0xe8e3d6,0,.18);
@@ -455,7 +456,7 @@ function addBuildings(osm,environment){
     const hero=/Mitt i City|Residenset|Wermland/i.test(b.name);
     const seed=hashStr((b.name||'byggnad')+'|'+Math.round(b.cx)+'|'+Math.round(b.cz));
     if(!identity&&b.osm!==234271401&&MALL_BUILDING_IDS.has(b.osm)){
-      const cut=splitMallWall(b),colour=cityMats[seed%cityMats.length];
+      const cut=splitMallWall(b),colour=M.mittSlate; // 2.11.27: same slate as the new Mitt i City exterior
       for(const q of cut.pieces)addBox('Mitt i City · kvartersfasad',(q.minx+q.maxx)/2,b.h/2,(q.minz+q.maxz)/2,q.maxx-q.minx,b.h,q.maxz-q.minz,colour);
       for(const q of cut.openings)addBox('Mitt i City · entrévalv',(q.minx+q.maxx)/2,(b.h+3.4)/2,(q.minz+q.maxz)/2,q.maxx-q.minx,b.h-3.4,q.maxz-q.minz,colour);
     }else if(!identity&&b.osm!==234271401&&!contourIds.has(b.osm)&&!INNERSTAD_REFERENCE_IDS.has(b.osm)){

@@ -74,5 +74,5 @@ Före/efter-bilder: `art/facade-gaps/part2/` (Västra Torggatan 2, Drottninggata
 ## Kvarstår (dokumenterat, ej åtgärdat)
 
 * **Handbyggda landmärkeslådor** (Sandgrund, Värmlands museum, Wermland Opera, Löfbergs Lila × 2): de ritas som rektangulära lådor och följer inte byggnadens polygon, så den generella fönstergrammatiken passar inte. Deras långsidor är släta och behöver egna handbyggda fasader.
-* **Mitt i City** (mörka väggar mot Järnvägsgatan, Tingvallagatan 19–23): egen arkitektur med skurna entréer, orörd.
+* **Mitt i City:** exteriören byggdes om i 2.11.27 efter referensfoto (, bilder i ).
 * **Södra stadsdelen** (`EXT_BUILDINGS`, 8 handbyggda hus i `city-south.js`: Tingvallagymnasiet med annexet och skolhuset, Löfbergs Lila × 2, Karlstads central, Home Hotel Bilan, Frimurarelogen): har egna fönsterrutnät i koden. Löfbergs Lilas långsidor var släta i närbilderna och hör hemma under landmärkeslådorna ovan. Övriga är inte genomgångna med mätningen, som bara täcker OSM-husen.

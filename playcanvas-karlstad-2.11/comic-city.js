@@ -1,14 +1,15 @@
-import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.26';
-import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.26';
-import {visualTwinFaceYaw} from './visual-twin.mjs?v=2.11.26';
-import {PHOTO_REFERENCE_PROFILES,photoReferenceFaceYaw,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.26';
-import {IDENTITY_IDS,SHOP_IDS,LANDMARKS} from './city-geography.mjs?v=2.11.26';
-import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.26';
-import {TORGET_AUDIT_IDS} from './city-architecture.js?v=2.11.26';
+import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.11.27';
+import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.27';
+import {visualTwinFaceYaw} from './visual-twin.mjs?v=2.11.27';
+import {PHOTO_REFERENCE_PROFILES,photoReferenceFaceYaw,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.27';
+import {IDENTITY_IDS,SHOP_IDS,LANDMARKS} from './city-geography.mjs?v=2.11.27';
+import {MALL_CORRIDORS} from './mall-space.mjs?v=2.11.27';
+import {TORGET_AUDIT_IDS} from './city-architecture.js?v=2.11.27';
 const ink='#253d40',cream='#fff0c8';
 const palettes=[['#eeb985','#d88c67','#ae4e45'],['#a7c7b4','#789e91','#367c75'],['#dec5a0','#b29a7e','#70568a'],['#c4b6d7','#9886b7','#a85159']];
 // 2.11.21: fallback panels stay enabled only on unclaimed/secondary walls; curated reference fronts keep ownership.
-export const LEGACY_COMIC_FACADES=true;
+// 2.11.27: the illustrated comic facade cards are retired; real geometry (Visual Twin, curated profiles, window walls) owns every wall.
+export const LEGACY_COMIC_FACADES=false;
 export function drawComicFacade(c,w,h,variant=0,upperOnly=false){
   c.save();c.scale(w/640,h/768);c.lineJoin='round';const [wall,shade,accent]=palettes[variant%4];
   const box=(x,y,w,h,fill,line=3)=>{c.fillStyle=fill;c.fillRect(x,y,w,h);if(line){c.strokeStyle=ink;c.lineWidth=line;c.strokeRect(x,y,w,h);}};
@@ -96,7 +97,6 @@ function polygonFacadeFaces(b){
 
 export function facadePanels(buildings,blocked=()=>false){
   const panels=[];
-  if(!LEGACY_COMIC_FACADES)return panels;
   for(const b of buildings){
     if(b.height<5||!identityCanUseFallback(b))continue;
     // Torget audit facades draw all four sides themselves; legacy cards would z-fight/cover them.

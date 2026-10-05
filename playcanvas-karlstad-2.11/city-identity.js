@@ -1,10 +1,10 @@
-import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,CITY_STREETS,storefrontAnchor} from './city-geography.mjs?v=2.11.26';
-import {MALL_ROOMS} from './mall-space.mjs?v=2.11.26';
-import {REAL_BUSINESSES,BUSINESS_OSM_IDS,businessAnchor} from './businesses.mjs?v=2.11.26';
-import {drawBrandLogo,hasBrandLogo} from './brand-logos.mjs?v=2.11.26';
-import {createMallSigns} from './mall-architecture.js?v=2.11.26';
-import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.26';
-import {SOUTH_STREETS} from './city-south-data.mjs?v=2.11.26';
+import {LANDMARKS,STOREFRONTS,STREET_SIGNS,PLACE_SIGNS,CITY_STREETS,storefrontAnchor} from './city-geography.mjs?v=2.11.27';
+import {MALL_ROOMS} from './mall-space.mjs?v=2.11.27';
+import {REAL_BUSINESSES,BUSINESS_OSM_IDS,businessAnchor} from './businesses.mjs?v=2.11.27';
+import {drawBrandLogo,hasBrandLogo} from './brand-logos.mjs?v=2.11.27';
+import {createMallSigns} from './mall-architecture.js?v=2.11.27';
+import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.27';
+import {SOUTH_STREETS} from './city-south-data.mjs?v=2.11.27';
 const ink='#263f46',paper='#f6ebd3';
 
 // Curated building facades are owned by city-architecture.js and rendered as hand-built
@@ -396,23 +396,8 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
     },1024,360);
     businessTextures.set(b.id,t);return t;
   }
-  // 2.11.26: every real business gets its logotype on the fascia sign, a large neon sign above the shopfront
-  // and a blade plate with the logo. The shapes come from brand-logos.mjs (original vector wordmarks).
-  const neonTextures=new Map(),plateTextures=new Map(),bladeTextures=new Map();
-  function neonTexture(b){
-    if(neonTextures.has(b.id))return neonTextures.get(b.id);
-    const t=texture((c,w,h)=>{
-      c.fillStyle='#0d1416';c.fillRect(0,0,w,h);
-      const tubeCol=b.accent&&b.accent!=='#1d2425'?b.accent:'#ffd36a';
-      c.save();c.shadowColor=tubeCol;c.shadowBlur=30;c.strokeStyle=tubeCol;c.lineWidth=7;c.lineJoin='round';c.strokeRect(14,14,w-28,h-28);c.restore();
-      c.save();c.strokeStyle='#fff6e6';c.lineWidth=2.5;c.strokeRect(14,14,w-28,h-28);c.restore();
-      if(!drawBrandLogo(c,b.id,{x:36,y:24,w:w-72,h:h-48,mode:'neon',palette:b})){
-        c.textAlign='center';c.textBaseline='middle';c.font='900 '+(b.name.length>12?74:96)+'px system-ui,sans-serif';
-        c.shadowColor=tubeCol;c.shadowBlur=34;c.strokeStyle=tubeCol;c.lineWidth=9;c.strokeText(b.name.toUpperCase(),w/2,h*.52,w-90);c.shadowBlur=0;c.fillStyle='#fff6e6';c.fillText(b.name.toUpperCase(),w/2,h*.52,w-90);
-      }
-    },1024,256);
-    neonTextures.set(b.id,t);return t;
-  }
+  // 2.11.26: every real business gets its logotype on the fascia sign and a blade plate with the logo. The shapes come from brand-logos.mjs (original vector wordmarks).
+  const plateTextures=new Map(),bladeTextures=new Map();
   function plateTexture(b){
     if(plateTextures.has(b.id))return plateTextures.get(b.id);
     const t=texture((c,w,h)=>{
@@ -442,12 +427,9 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
       const bh=b.id==='grekiska'?3.15:3.65;
       mount('Verklig verksamhet · '+b.name,businessTexture(b),bw,bh,p.x,.12,p.z,p.yaw);topY=.12+bh;
     }
-    if(hasBrandLogo(b.id)){
-      const nw=Math.max(4.2,Math.min(7.2,p.width*.78)),nh=nw/4;
-      mount('Neonskylt · '+b.name,neonTexture(b),nw,nh,p.x+nx*.2,topY+.12,p.z+nz*.2,p.yaw);
-      mount('Hängskylt · '+b.name,bladeTexture(b),1.3,1.3,p.x+tx*Math.min(3.2,p.width*.34)+nx*.45,2.3,p.z+tz*Math.min(3.2,p.width*.34)+nz*.45,p.yaw+90,true);
-    }
-    realBusinesses.push({id:b.id,name:b.name,address:b.address,x:p.x,z:p.z,yaw:p.yaw,width:p.width,approximate:!!b.approximateBuilding,logo:hasBrandLogo(b.id),neon:hasBrandLogo(b.id)});
+    // Blade plate with the logo; the large neon sign was dropped in 2.11.27 (it doubled the fascia sign).
+    if(hasBrandLogo(b.id))mount('Hängskylt · '+b.name,bladeTexture(b),1.3,1.3,p.x+tx*Math.min(3.2,p.width*.34)+nx*.45,2.3,p.z+tz*Math.min(3.2,p.width*.34)+nz*.45,p.yaw+90,true);
+    realBusinesses.push({id:b.id,name:b.name,address:b.address,x:p.x,z:p.z,yaw:p.yaw,width:p.width,approximate:!!b.approximateBuilding,logo:hasBrandLogo(b.id)});
   }
   const brandTextures=new Map();
   function brandTexture(brand){
@@ -461,7 +443,7 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
         c.fillStyle=bg;c.fillRect(0,0,w,h);const fit=Math.min((w-44)/img.naturalWidth,(h-28)/img.naturalHeight),iw=img.naturalWidth*fit,ih=img.naturalHeight*fit;
         c.drawImage(img,(w-iw)/2,(h-ih)/2,iw,ih);c.strokeStyle=brand==='olearys'?'#d5cba6':'#263f46';c.lineWidth=4;c.strokeRect(4,4,w-8,h-8);t.setSource(canvas);logoStates[brand]='official';
       };
-      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.26',import.meta.url).href;
+      img.onerror=()=>{logoStates[brand]='fallback';};img.src=new URL('./art/brands/'+brand+(['coop','cervera','clas'].includes(brand)?'.webp':['espresso','duvan','ahlens','museum'].includes(brand)?'.svg':'.png')+'?v=2.11.27',import.meta.url).href;
     }
     return t;
   }

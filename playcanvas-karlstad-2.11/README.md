@@ -1,3 +1,11 @@
+# Karlstad City — 2.11.27 · Mitt i City, ett skyltlager och inga comic-kort
+
+* **Skyltar:** neonskyltarna ovanför butikerna är borta. Kvar är de undre skyltarna med logotyper i varumärkets färger, plus hängskylten.
+* **Comic-husen:** de illustrerade fasadkorten (, 72 batcher över 178 byggnader) är avstängda. De riktiga fasaderna (kurerade profiler, Visual Twin och fönstervägg-passen från 2.11.25) täcker alla väggar utan dem; mätningen i  visar fortfarande 8 blanka kanter under 6 m.
+* **Mitt i City:** hela kvarterets exteriör är ombyggd efter referensfotot (): mörkgrå puts, fönsterluckor med lameller, balkonger med räcken, bottenvåning med träkarmad glasning, indragna översta våningar i vitt och gult trä, samt kopparkupol med kula över Västra Torggatan 7. De fyra entréerna är öppna och portalerna har samma skiffergrå ton.
+
+## Föregående version
+
 # Karlstad City — 2.11.26 · Logotyper och neonskyltar
 
 Butikernas uppgifter fanns men syntes bara som små textkort. Alla 20 verkliga verksamheter har nu egenritade logotyper (`brand-logos.mjs`) på fascian, en stor neonskylt (4,2–7,2 m) ovanför butiken, en hängskylt med logotyp och, för verksamheter utan butiksfasad, en logotypplatta. Rådhuscaféets skylt som göms bakom Rådhusets pelare är framflyttad, och KICKS/Apoteket Örnen ligger fria från Galleria Duvans skylt och pelare. Pressbyrån på Kungsgatan 14 är orörd. Se `art/BUSINESS-SOURCES.md`.

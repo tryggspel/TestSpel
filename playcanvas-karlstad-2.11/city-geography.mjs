@@ -1,15 +1,15 @@
-import {VASTRA_BRON} from './city-water.mjs?v=2.11.26';
-import {PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.26';
-import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.11.26';
-import {PHOTO_REFERENCE_IDS} from './photo-reference-pass3.mjs?v=2.11.26';
+import {VASTRA_BRON} from './city-water.mjs?v=2.11.27';
+import {PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.27';
+import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.11.27';
+import {PHOTO_REFERENCE_IDS} from './photo-reference-pass3.mjs?v=2.11.27';
 // One coordinate system for buildings, signs, the street mesh and the player map.
-export {CITY_STREETS} from './city-streets.mjs?v=2.11.26';
-import {CITY_STREETS} from './city-streets.mjs?v=2.11.26';
-import {MUSEUM_BUILDING,PENINSULA_SHORE,PARK_PATHS,PARK_PIERS} from './city-sites.mjs?v=2.11.26';
-import {MALL_ENTRANCES,MALL_CORRIDORS} from './mall-space.mjs?v=2.11.26';
-import {EXT_BUILDINGS,SOUTH_STREETS,RAIL_LINES} from './city-south-data.mjs?v=2.11.26';
-import {SOUTH_IDS,SOUTH_PLACES} from './city-south-space.mjs?v=2.11.26';
-import {drawSouthWater} from './city-south.js?v=2.11.26';
+export {CITY_STREETS} from './city-streets.mjs?v=2.11.27';
+import {CITY_STREETS} from './city-streets.mjs?v=2.11.27';
+import {MUSEUM_BUILDING,PENINSULA_SHORE,PARK_PATHS,PARK_PIERS} from './city-sites.mjs?v=2.11.27';
+import {MALL_ENTRANCES,MALL_CORRIDORS} from './mall-space.mjs?v=2.11.27';
+import {EXT_BUILDINGS,SOUTH_STREETS,RAIL_LINES} from './city-south-data.mjs?v=2.11.27';
+import {SOUTH_IDS,SOUTH_PLACES} from './city-south-space.mjs?v=2.11.27';
+import {drawSouthWater} from './city-south.js?v=2.11.27';
 export const CITY_ORIGIN=Object.freeze({lat:59.380767,lon:13.50295});
 export function cityPoint(lon,lat){return {x:(lon-CITY_ORIGIN.lon)*111320*Math.cos(CITY_ORIGIN.lat*Math.PI/180),z:-(lat-CITY_ORIGIN.lat)*110540};}
 export const LANDMARKS=Object.freeze([
