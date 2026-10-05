@@ -47,7 +47,7 @@ test('Kungsgatan-profile pipeline launcher has one clean build cache key',()=>{
   const match=html.match(/app\.js\?v=2\.11\.21([^"']*)/);
   assert.ok(match);
   assert.equal((match[1].match(/&build=/g)||[]).length,1);
-  assert.match(match[1],/&build=streetview-rootfix1/);
+  assert.match(match[1],/&build=streetview-cache-rootfix2/);
 });
 
 test('green map pass is capped to 31 nearest mapped areas',()=>{
@@ -98,8 +98,22 @@ test('Frimurarelogen uses one Street View renderer',()=>{
   assert.match(branch,/addPhotoReferenceFacade\(town,b\)/);
   assert.doesNotMatch(branch,/addFrimurareExplicitHero\(town,b\)/);
   assert.match(arch,/frimurareRenderer:'photo-reference-mainmesh'/);
-  assert.match(arch,/photo-reference-pass3\.mjs\?v=2\.11\.21&build=streetview-rootfix1/);
+  assert.match(arch,/photo-reference-pass3\.mjs\?v=2\.11\.21&build=streetview-cache-rootfix2/);
   assert.match(photo,/101608925:Object\.freeze/);
   assert.match(photo,/wall:'#a58d84'/);
   assert.match(photo,/ground:'#8a8982'/);
+});
+
+
+test('runtime cache key is propagated through Karlstad centre graph',()=>{
+  const names=['app.js','city-geography.mjs','city-architecture.js','city-identity.js','last-round.js','businesses.mjs'];
+  for(const name of names){
+    const src=fs.readFileSync(new URL('../'+name,import.meta.url),'utf8');
+    const localVersioned=[...src.matchAll(/['\"]\\.\\/[^'\"]+\\?v=2\\.11\\.21[^'\"]*['\"]/g)].map(m=>m[0]);
+    for(const spec of localVersioned)assert.match(spec,/build=streetview-cache-rootfix2/);
+  }
+  const app=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
+  assert.match(app,/const CACHE_BUILD='streetview-cache-rootfix2'/);
+  assert.match(app,/osm-buildings\\.json\\?v='\\+GAME_VERSION\\+'&build='\\+CACHE_BUILD/);
+  assert.match(app,/osm-environment\\.json\\?v='\\+GAME_VERSION\\+'&build='\\+CACHE_BUILD/);
 });
