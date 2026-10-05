@@ -34,3 +34,45 @@ Kontroll att Kungsgatan 14–18 är oförändrade: skärmdumpar från x = −40,
 1. `npm i playcanvas@2.22.4` och servera katalogen på `localhost:8902`.
 2. Playwright med `--use-angle=swiftshader`; routa `cdn.jsdelivr.net/npm/playcanvas…` till den lokala filen.
 3. Klicka `#cityClean`, kalla en teleportfunktion (utan ändring av spelkoden; skriptet lägger in den i `app.js` i farten) och ta skärmdump per position och riktning.
+
+---
+
+# Del 2 — resten av staden (hittat i 2.11.24, åtgärdat i 2.11.25)
+
+Samma metod som del 1, men över alla övriga 188 byggnader i OSM-utdraget (364 närbilder), följt av en kameraoberoende mätning: spelet startas i Chromium, all geometri som verkligen ritats hämtas ur scenen, och för varje fri vägg räknas fönsterdetaljerna framför den (`tools/facade-audit/audit.mjs`). En vägg med färre än 12 detaljvertex mellan 3,3 m och takfoten räknas som blank.
+
+## Orsak
+
+* Visual Twin målar **en** fasadkant per hus (närmaste gatan) plus högst två sekundära. Resten av väggarna blev släta lådor.
+* Sidoväggspasset hoppade över väggar som pekar åt samma håll som fronten, allt längre bort än 230 m i kvartersfyllnaden och alla Torget-audit-hus.
+* En vägg räknades som brandvägg så fort en granne stod intill, även när grannen var lägre och väggen låg fri ovanför dess tak.
+
+## Åtgärd
+
+| Pass | Gäller | Vad |
+|------|--------|-----|
+| `addMissingWalls` | Visual Twin-hus | Målar exakt de fria kanter som varken fronten eller sidoväggspasset ritar |
+| `addAuditSideWalls` | Torget-audit-hus | Sidor och baksidor (fronten är handbyggd och orörd) |
+| `addGapFacades` | Utvalda kurerade hus (`GAP_FACADES`) | Namngivna väggar, 2.11.24 + Drottninggatan 24 och Södra Kyrkogatan 7 |
+| `completeBlankWalls` | Alla övriga, körs sist | Mäter vad som faktiskt ritats framför varje fri vägg och målar de som fortfarande är bara. Fångar väggar som ramlar mellan de andra passen |
+| Brandvägg | alla | Bara lika höga grannar räknas som brandvägg |
+
+Kvartersfyllnadens fönster ligger i en egen batch (`Karlstad · kvartersfyllnad fönster`, två delar) eftersom bas-meshen redan ligger på 16-bitarsgränsen. Kungsgatan 14, 16 och 18 hoppas över i alla pass och vaktas av `tests/gap-facades.test.mjs`.
+
+## Resultat (mätt i det körande spelet)
+
+| | Före (2.11.24) | Efter (2.11.25) |
+|---|---|---|
+| Fria väggkanter ≥ 5 m | 781 | 771 (parkeringshuset utesluts) |
+| Blanka väggkanter | **252** | **8** |
+| Blank väggyta | **41 930 m²** | **481 m²** |
+
+De 8 som återstår är alla kortare än 6 m (under gränsen för fönsterrytm). Ahlmarks Parkering är ett betonghus och får medvetet inga fönster.
+
+Före/efter-bilder: `art/facade-gaps/part2/` (Västra Torggatan 2, Drottninggatan 24 och 31, Kungsgatan 20, Hamngatan 6).
+
+## Kvarstår (dokumenterat, ej åtgärdat)
+
+* **Handbyggda landmärkeslådor** (Sandgrund, Värmlands museum, Wermland Opera, Löfbergs Lila × 2): de ritas som rektangulära lådor och följer inte byggnadens polygon, så den generella fönstergrammatiken passar inte. Deras långsidor är släta och behöver egna handbyggda fasader.
+* **Mitt i City** (mörka väggar mot Järnvägsgatan, Tingvallagatan 19–23): egen arkitektur med skurna entréer, orörd.
+* **Södra stadsdelen** (`EXT_BUILDINGS`, 8 handbyggda hus i `city-south.js`: Tingvallagymnasiet med annexet och skolhuset, Löfbergs Lila × 2, Karlstads central, Home Hotel Bilan, Frimurarelogen): har egna fönsterrutnät i koden. Löfbergs Lilas långsidor var släta i närbilderna och hör hemma under landmärkeslådorna ovan. Övriga är inte genomgångna med mätningen, som bara täcker OSM-husen.

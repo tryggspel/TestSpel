@@ -1,3 +1,9 @@
+# Karlstad City — 2.11.25 · Fasadluckor i hela staden
+
+Kameraoberoende mätning av det körande spelet (`tools/facade-audit/audit.mjs`) visade 252 blanka väggar (41 930 m²). Orsak: Visual Twin målar en fasadkant per hus, sidoväggspasset hoppade över väggar som pekar som fronten, allt längre bort än 230 m och Torget-audit-husen, och lägre grannar räknades som brandväggar. Nya pass (`addMissingWalls`, `addAuditSideWalls`, `completeBlankWalls`) målar exakt de väggar som inget annat pass ritat; kvartersfyllnadens fönster ligger i en egen batch. Resultat: 8 blanka väggar och 481 m² kvar, alla under 6 m. Kungsgatan 14, 16 och 18 är orörda och vaktas av test. Detaljer, orsaker och det som kvarstår (handbyggda landmärkeslådor, Mitt i City, södra stadsdelen): `art/FACADE-GAPS.md`.
+
+## Föregående version
+
 # Karlstad City — 2.11.24 · Fasadluckor Kungsgatan och Torget
 
 Genomgång av spelet i riktig Chromium dokumenterade blanka väggar kring Kungsgatan och Stora Torget (`art/FACADE-GAPS.md`, bilder före/efter i `art/facade-gaps/`). Tio byggnader fick nya fönsterväggar via `GAP_FACADES` i `city-architecture.js`: Västra Torggatan 10 och 16, Östra Torggatan 10, 14 och 16, Tingvallagatan 7, Västra Kyrkogatan 1 och 3,5 samt två byggnader utan adress öster om Domkyrkan. Samma fönstergrammatik som sidoväggspasset (karm, glas, mittpost, våningsrytm), brandväggar lämnas släta och väggar som sidoväggspasset redan ritar hoppas över.
