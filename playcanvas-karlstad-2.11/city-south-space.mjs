@@ -1,4 +1,4 @@
-import {WATER_ROWS,FERRY_PORTS,EXT_BUILDINGS} from './city-south-data.mjs?v=2.11.28';
+import {WATER_ROWS,FERRY_PORTS,EXT_BUILDINGS} from './city-south-data.mjs?v=2.11.29';
 export const SOUTH_IDS=new Set(EXT_BUILDINGS.map(b=>b.id));
 // South/extension buildings with their own hand-built architecture in city-south.js.
 // Every other SOUTH_IDS building is drawn there only as a generic box, so a curated
@@ -23,10 +23,19 @@ export function southWaterBlocked(x,z){
   if(x>230&&x<249&&z>544&&z<565)return false;
   return row.some(([a,b])=>x>a&&x<b);
 }
+// Water polygons of the outer districts (filled by app.js from data/osm-outer-*.json).
+export const OUTER_WATER=[];
+export function outerWaterBlocked(x,z){
+  if(!OUTER_WATER.length)return false;
+  // The pier at the real Inre hamn stop stays a safe boarding platform.
+  if(x>230&&x<249&&z>544&&z<565)return false;
+  return OUTER_WATER.some(w=>footprintContains(x,z,w));
+}
 export function mariebergBlocked(x,z){
-  // Bounded landing garden keeps the distant destination independent of the city's AI grid.
-  if(Math.hypot(x-MARIEBERG.x,z-MARIEBERG.z)>140)return null;
-  return !(x>-826&&x<-771&&z>1292&&z<1349);
+  // Until the outer districts are loaded the distant destination stays a bounded landing garden.
+  if(Math.hypot(x-MARIEBERG.x,z-MARIEBERG.z)>420)return null;
+  if(!OUTER_WATER.length)return Math.hypot(x-MARIEBERG.x,z-MARIEBERG.z)>140?null:!(x>-826&&x<-771&&z>1292&&z<1349);
+  return null; // open park: the normal water and building collision rules apply
 }
 export function southPassage(x,z,buildings){
   const b=buildings.find(b=>b.osm===80868525);if(!b)return false;

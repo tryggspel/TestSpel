@@ -1,3 +1,11 @@
+# Karlstad City — 2.11.29 · Haga, Inre hamn och Mariebergsskogen
+
+De tre områdena utanför stadsutdraget är byggda från riktiga OpenStreetMap-data (`data/osm-outer-*.json`, hämtade av `.github/workflows/fetch-karlstad-outer-osm.yml`, ODbL): 378 byggnader med verkliga fotavtryck och fönster, 589 vägar och järnvägsspår, gräsytor, skogar, vatten och 461 träd (`outer-city.js`, sex statiska batcher, ca 268 000 vertex). Husen har kollision, vatten blockerar, och Mariebergsskogen är ett öppet vandringsbart område i stället för en liten instängd trädgård. ICA Hagahallen och Willys Brygguddén behåller sina handbyggda versioner och dubbleras inte. Båtbussens ankomstpunkter ligger på land och bryggan vid Inre hamn är fortsatt gångbar.
+
+Kartdata © OpenStreetMap-bidragsgivare (ODbL). Kvarstår: områdenas byggnader har ännu inga namnskyltar, och Mariebergsskogens djurpark och Friluftsteatern är bara markerade som byggnader.
+
+## Föregående version
+
 # Karlstad City — 2.11.28 · Operan, Residenset och 109 osynliga fasader
 
 * **Wermland Opera** är byggd som geometri efter fotona (`opera-facade.mjs`): fronton med grön akantusrelief och guldplakett, tre runda fönster med gröna stuckgirlander, tre höga fönster (välvd fronton över det mittersta), dentilkrans, rusticerad sockel, tre mörkgröna dörrar under ett glas- och järntak med välvd mitt, trappsteg. Fotavtrycket extruderas från kartan och scentornet står bakom.

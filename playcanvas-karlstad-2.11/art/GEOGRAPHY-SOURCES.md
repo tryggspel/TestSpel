@@ -139,3 +139,7 @@ This pass fills the **east side of Västra Torggatan** opposite the already mode
 - **Västra Torggatan 10 / OSM 104529128.** Local-history/current facade reference: https://www.tidsresankarlstad.se/vastra-torggatan-10/ . The source states that the building dates from after the 1865 fire and has largely retained its late-1860s appearance; the game models a restrained plaster/pilaster rhythm and the documented central carriage passage without copying historical advertising. Street View position anchor: https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=59.37970909375,13.50216565625 .
 
 Google Street View remains the preferred position/panorama source. In this execution environment the Google Maps Street View renderer rejects automated access, so panorama-specific facade claims are not made unless the same feature is independently visible in an inspectable still image.
+
+## Yttre områden (2.11.29)
+
+`data/osm-outer-haga.json`, `osm-outer-hamn.json` och `osm-outer-marieberg.json` är OpenStreetMap-utdrag (API 0.6, bbox i respektive fil) hämtade 2026-10-05 av `.github/workflows/fetch-karlstad-outer-osm.yml`. © OpenStreetMap-bidragsgivare, ODbL. Filerna uppdateras genom att köra arbetsflödet igen.

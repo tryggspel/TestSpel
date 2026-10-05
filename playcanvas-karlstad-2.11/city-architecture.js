@@ -1,15 +1,15 @@
-import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.28';
-import {addResidensetWall,addResidensetRoof,RESIDENSET_COLOURS} from './residenset-facade.mjs?v=2.11.28';
-import {addOperaFront,OPERA_COLOURS} from './opera-facade.mjs?v=2.11.28';
-import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit,visualTwinFaceYaw,visualTwinFront} from './visual-twin.mjs?v=2.11.28';
-import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.28';
-import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.28';
-import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.28';
-import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.28';
+import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.29';
+import {addResidensetWall,addResidensetRoof,RESIDENSET_COLOURS} from './residenset-facade.mjs?v=2.11.29';
+import {addOperaFront,OPERA_COLOURS} from './opera-facade.mjs?v=2.11.29';
+import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit,visualTwinFaceYaw,visualTwinFront} from './visual-twin.mjs?v=2.11.29';
+import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.29';
+import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.29';
+import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.29';
+import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.29';
 
-import {SOUTH_IDS,SOUTH_HANDBUILT_IDS} from './city-south-space.mjs?v=2.11.28';
-import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.28';
-import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.28';
+import {SOUTH_IDS,SOUTH_HANDBUILT_IDS} from './city-south-space.mjs?v=2.11.29';
+import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.29';
+import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.29';
 
 // Static, vertex-coloured geometry: one draw call per landmark, one for streets,
 // one for rooflines and storefront frames. No lights, shadows or per-frame work.
@@ -66,7 +66,7 @@ export function addSideWallFacades(mesh,b,{neighbours=[],frame=null,lod='high',f
   return faces.length;
 }
 // Shared window grammar (frame, glass, mullion, floor rhythm) for walls without a hand-built profile.
-function paintWindowFaces(mesh,b,faces,fr,low){
+export function paintWindowFaces(mesh,b,faces,fr,low){
   const h=Math.max(3.2,b.h);
   for(const f of faces){
     const P=(u,y,o)=>[f.a[0]+f.tx*u+f.nx*o,y,f.a[1]+f.tz*u+f.nz*o];
@@ -110,7 +110,7 @@ export const GAP_FACADES=Object.freeze({
   106078949:Object.freeze({name:'Södra Kyrkogatan 7',faces:['S','E']})
 });
 const GAP_YAW=Object.freeze({S:0,E:90,N:180,W:-90});
-function exposedFaces(b,neighbours,accept,minLength){
+export function exposedFaces(b,neighbours,accept,minLength){
   const poly=b.polygon;let area=0;for(let i=0;i<poly.length;i++){const a=poly[i],q=poly[(i+1)%poly.length];area+=a[0]*q[1]-q[0]*a[1];}
   // A wall is only a party wall where the neighbour is about as tall; above a lower neighbour it is a free wall.
   const ccw=area>0,near=neighbours.filter(n=>n!==b&&n.osm!==b.osm&&Array.isArray(n.polygon)&&n.h>=b.h-.5&&Math.abs(n.cx-b.cx)<b.sx/2+n.sx/2+4&&Math.abs(n.cz-b.cz)<b.sz/2+n.sz/2+4),out=[];
