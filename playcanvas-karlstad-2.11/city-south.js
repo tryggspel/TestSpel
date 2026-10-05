@@ -1,9 +1,9 @@
-import {addKungsgatanTerraces} from './kungsgatan-reference.mjs?v=2.11.21';
-import {KIL} from './scenic-transit.js?v=2.11.21';
-import {ComicMesh} from './city-architecture.js?v=2.11.21';
-import {WATER_TRIANGLES,WATER_POLYGONS,SOUTH_STREETS,RAIL_LINES,SCHOOL_YARD,FREDSMONUMENT} from './city-south-data.mjs?v=2.11.21';
-import {SOUTH_IDS,HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.11.21';
-import {splitMallWall} from './mall-space.mjs?v=2.11.21';
+import {addKungsgatanTerraces} from './kungsgatan-reference.mjs?v=2.11.23';
+import {KIL} from './scenic-transit.js?v=2.11.23';
+import {ComicMesh,curatedRoute} from './city-architecture.js?v=2.11.23';
+import {WATER_TRIANGLES,WATER_POLYGONS,SOUTH_STREETS,RAIL_LINES,SCHOOL_YARD,FREDSMONUMENT} from './city-south-data.mjs?v=2.11.23';
+import {SOUTH_IDS,HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.11.23';
+import {splitMallWall} from './mall-space.mjs?v=2.11.23';
 
 const REMOTE_RETAIL=Object.freeze([
   Object.freeze({id:'willys',name:'WILLYS BRYGGUDDEN',x:271,z:413,w:38,d:26,h:8,wall:'#d9d5c4',accent:'#2b7a48',front:'south'}),
@@ -23,7 +23,7 @@ export function createSouthCity(pc,app,buildings){
     if(vertical)m.box(x+.1,y,z,.18,h-.35,.07,'#e6d8b5');else m.box(x,y,z+.1,.08,h-.35,.18,'#e6d8b5');
   };
   const schoolFace=(a,b,c,d,col)=>{town.quad(a,b,c,d,col);town.quad(d,c,b,a,col);};
-  for(const b of buildings.filter(b=>SOUTH_IDS.has(b.osm))){
+  for(const b of buildings.filter(b=>SOUTH_IDS.has(b.osm)&&!curatedRoute(b))){ // curated ones are drawn by the Kungsgatan route
     const x=b.cx,z=b.cz,w=b.sx,d=b.sz,factory=b.osm===80278038,school=[77107220,100024120,100024325].includes(b.osm),station=b.osm===356121937,prison=b.osm===80868525;
     const h=factory?42:station?7.5:school?13.8:prison?11:10.4,col=factory?'#ad956d':school?'#d0b273':prison?'#eedebe':station?'#ce9b69':'#e0c68e';
     if(school){

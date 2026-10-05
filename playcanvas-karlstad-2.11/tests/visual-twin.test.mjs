@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {cityBuildings,infillBuildings} from '../city-geography.mjs';
-import {ComicMesh,coreContourBuildings} from '../city-architecture.js';
+import {ComicMesh,coreContourBuildings,TORGET_AUDIT_IDS} from '../city-architecture.js';
 import {facadePanels} from '../comic-city.js';
 import {KUNGSGATAN_PROFILES} from '../kungsgatan-reference.mjs';
 import {INNERSTAD_REFERENCE_IDS} from '../innerstad-reference.mjs';
@@ -55,7 +55,7 @@ test('ordinary centre buildings receive deterministic street DNA and bounded fac
 });
 
 test('generic comic texture cannot cover the generated primary street facade',()=>{
-  const sample=coreContourBuildings(buildings).find(b=>!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_REFERENCE_IDS.has(b.osm)&&!PHOTO_REFERENCE_IDS.has(b.osm)&&visualTwinFaceYaw(b)!==null);
+  const sample=coreContourBuildings(buildings).find(b=>!KUNGSGATAN_PROFILES[b.osm]&&!INNERSTAD_REFERENCE_IDS.has(b.osm)&&!PHOTO_REFERENCE_IDS.has(b.osm)&&!TORGET_AUDIT_IDS.has(b.osm)&&visualTwinFaceYaw(b)!==null);
   assert.ok(sample);
   const yaw=visualTwinFaceYaw(sample),panels=facadePanels([{...sample,height:sample.h}]);
   assert.ok(panels.length>0);

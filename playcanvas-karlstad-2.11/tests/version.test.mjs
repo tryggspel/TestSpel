@@ -14,8 +14,8 @@ test('alla moduler använder samma cache-nyckel som version.json och build-info'
 
 test('spelet äger sin egen OSM-snapshot och hämtar den versionerat',()=>{
   const app=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
-  assert.match(app,/fetch\('\.\/data\/osm-buildings\.json\?v='\+GAME_VERSION\+'&build='\+CACHE_BUILD\)/);
-  assert.match(app,/fetch\('\.\/data\/osm-environment\.json\?v='\+GAME_VERSION\+'&build='\+CACHE_BUILD\)/);
+  assert.match(app,/fetch\('\.\/data\/osm-buildings\.json\?v='\+GAME_VERSION\)/);
+  assert.match(app,/fetch\('\.\/data\/osm-environment\.json\?v='\+GAME_VERSION\)/);
   assert.doesNotMatch(app,/karlstad-city-mobile/);
   assert.ok(fs.existsSync(new URL('../data/osm-buildings.json',import.meta.url)));
 });

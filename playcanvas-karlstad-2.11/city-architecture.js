@@ -1,21 +1,91 @@
-import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit} from './visual-twin.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade} from './photo-reference-pass3.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture} from './innerstad-reference.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.21&build=streetview-cache-rootfix2';
+import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.11.23';
+import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit,visualTwinFaceYaw} from './visual-twin.mjs?v=2.11.23';
+import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.11.23';
+import {addCityWowPass} from './city-wow-pass.mjs?v=2.11.23';
+import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture,referenceFaceYaw} from './innerstad-reference.mjs?v=2.11.23';
+import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.11.23';
 
-import {SOUTH_IDS} from './city-south-space.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.21&build=streetview-cache-rootfix2';
-import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.21&build=streetview-cache-rootfix2';
+import {SOUTH_IDS,SOUTH_HANDBUILT_IDS} from './city-south-space.mjs?v=2.11.23';
+import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.11.23';
+import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.11.23';
 
 // Static, vertex-coloured geometry: one draw call per landmark, one for streets,
 // one for rooflines and storefront frames. No lights, shadows or per-frame work.
 const CORE_CONTOUR_RADIUS=260;
 const CORE_CONTOUR_LIMIT=95;
 const CORE_WALLS=['#e4d2ae','#d9b991','#c8906d','#e8ddc6','#bca98d','#d8c49c','#c8a17b','#eadab8'];
+// RENDER ROUTING — single source of truth (2.11.22 root fix).
+// A building with a curated reference profile (Kungsgatan, photo/Street View, Torget audit)
+// is ALWAYS drawn through the Kungsgatan route: hand-built geometry in the static town mesh.
+// Before 2.11.22 three gates silently sent curated buildings elsewhere, so profile edits never
+// reached the screen: dist>=260 (generic PlayCanvas box in app.js), SOUTH_IDS (generic box in
+// city-south.js — this is why Frimurarelogen/Grekiska never changed) and MALL_BUILDING_IDS.
+// Mall buildings stay excluded on purpose: their walls are cut for the four real entrances.
+export function curatedRoute(b){
+  const id=b?.osm;
+  if(!(TORGET_AUDIT_PROFILES[id]||PHOTO_REFERENCE_PROFILES[id]||KUNGSGATAN_PROFILES[id]))return false;
+  if(MALL_BUILDING_IDS.has(id)||SOUTH_HANDBUILT_IDS.has(id))return false;
+  if(IDENTITY_IDS.has(id)&&!SOUTH_IDS.has(id))return false; // hand-built landmark meshes keep ownership
+  return true;
+}
+// 2.11.23 side-wall pass: Visual Twin and curated houses only get detail on their street front,
+// so their other walls used to render as blank planes. Exposed side walls now get the same
+// window grammar as the approved Kungsgatan facades (frame, glass, mullion, floor rhythm).
+// Kungsgatan and Torget-audit houses are never touched. Party walls (a neighbour footprint
+// right outside the wall) stay plain. Depth stays below COMIC_FACE_BIAS (.16) so existing
+// comic cards still sit on top where they are drawn.
+const pointInPolygon=(x,z,poly)=>{let inside=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const [xi,zi]=poly[i],[xj,zj]=poly[j];if((zi>z)!==(zj>z)&&x<(xj-xi)*(z-zi)/(zj-zi)+xi)inside=!inside;}return inside;};
+const SIDE_WALL_LOW_RADIUS=230; // infill keeps the 16-bit single-mesh budget
+const yawGap=(a,b)=>Math.abs(((a-b)%360+540)%360-180);
+export function sideWallFaces(b,neighbours=[]){
+  if(!b||!Array.isArray(b.polygon)||b.polygon.length<3)return [];
+  if(KUNGSGATAN_PROFILES[b.osm]||TORGET_AUDIT_IDS.has(b.osm)||b.osm===FRIMURARE_OSM||Math.max(3.2,b.h)<5)return [];
+  const curatedFront=PHOTO_REFERENCE_PROFILES[b.osm]||INNERSTAD_PROFILES[b.osm];
+  if(!curatedFront&&!visualTwinProfile(b))return []; // plain houses already get window bands on every wall
+  const fronts=[...photoReferenceFaceYaws(b.osm),referenceFaceYaw(b.osm),curatedFront?null:visualTwinFaceYaw(b)].filter(Number.isFinite);
+  const poly=b.polygon;let area=0;for(let i=0;i<poly.length;i++){const a=poly[i],q=poly[(i+1)%poly.length];area+=a[0]*q[1]-q[0]*a[1];}
+  const ccw=area>0,near=neighbours.filter(n=>n!==b&&n.osm!==b.osm&&Array.isArray(n.polygon)&&Math.abs(n.cx-b.cx)<b.sx/2+n.sx/2+4&&Math.abs(n.cz-b.cz)<b.sz/2+n.sz/2+4),out=[];
+  for(let i=0;i<poly.length;i++){
+    const a=poly[i],q=poly[(i+1)%poly.length],dx=q[0]-a[0],dz=q[1]-a[1],length=Math.hypot(dx,dz);
+    if(length<6)continue;
+    const tx=dx/length,tz=dz/length,nx=ccw?tz:-tz,nz=ccw?-tx:tx,yaw=Math.atan2(nx,nz)*180/Math.PI;
+    if(fronts.some(f=>yawGap(yaw,f)<=34))continue;
+    const party=[.2,.5,.8].every(t=>{const x=a[0]+dx*t+nx*1.2,z=a[1]+dz*t+nz*1.2;return near.some(n=>pointInPolygon(x,z,n.polygon));});
+    if(party)continue;
+    out.push({a,q,length,tx,tz,nx,nz,yaw,ccw});
+  }
+  return out;
+}
+export function addSideWallFacades(mesh,b,{neighbours=[],frame=null,lod='high'}={}){
+  if(lod==='low'&&!(b.dist<SIDE_WALL_LOW_RADIUS))return 0;
+  const faces=sideWallFaces(b,neighbours);if(!faces.length)return 0;const low=lod==='low';
+  const h=Math.max(3.2,b.h),fr=frame||PHOTO_REFERENCE_PROFILES[b.osm]?.frame||INNERSTAD_PROFILES[b.osm]?.frame||visualTwinProfile(b)?.frame||'#e8e0cc';
+  for(const f of faces){
+    const P=(u,y,o)=>[f.a[0]+f.tx*u+f.nx*o,y,f.a[1]+f.tz*u+f.nz*o];
+    const panel=(u,y,w,ph,colour,o)=>{const P0=P(u,y,o),Q0=P(u+w,y,o),P1=P(u,y+ph,o),Q1=P(u+w,y+ph,o);if(f.ccw)mesh.quad(Q0,P0,P1,Q1,colour);else mesh.quad(P0,Q0,Q1,P1,colour);};
+    panel(0,3.15,f.length,.16,fr,.06);
+    const floors=Math.max(1,Math.round(h/3.2)-1),rh=(h-3.7)/floors,count=Math.max(2,Math.round(f.length/2.9)),cw=f.length/count;
+    // Ground floor: plain plinth windows, no shopfronts on side streets.
+    if(!low)for(let col=0;col<count;col++){const u=col*cw+.4,ww=cw-.8;if(ww<.7)continue;panel(u-.06,1.0,ww+.12,1.5,fr,.07);panel(u,1.06,ww,1.38,'#41595d',.09);}
+    for(let row=0;row<floors;row++){
+      const y=3.75+row*rh,wh=Math.min(1.7,rh-.62);if(wh<.5||y+wh>h-.4)continue;
+      for(let col=0;col<count;col++){
+        const u=col*cw+.3,ww=cw-.6;if(ww<.7)continue;
+        panel(u-.08,y-.08,ww+.16,wh+.16,fr,.07);
+        panel(u,y,ww,wh,'#344e51',.09);
+        if(low)continue;
+        panel(u+.06,y+.08,ww*.48,wh-.16,'#718f8c',.10);
+        panel(u+ww*.48,y,.065,wh,fr,.11);
+        panel(u-.12,y-.13,ww+.24,.10,fr,.12);
+      }
+    }
+  }
+  return faces.length;
+}
 export function coreContourBuildings(buildings,max=CORE_CONTOUR_LIMIT){
-  return buildings.filter(b=>b.dist<CORE_CONTOUR_RADIUS&&!IDENTITY_IDS.has(b.osm)&&!MALL_BUILDING_IDS.has(b.osm)).sort((a,b)=>a.dist-b.dist||a.osm-b.osm).slice(0,max);
+  const ordinary=b=>b.dist<CORE_CONTOUR_RADIUS&&!IDENTITY_IDS.has(b.osm)&&!MALL_BUILDING_IDS.has(b.osm);
+  return buildings.filter(b=>curatedRoute(b)||ordinary(b))
+    .sort((a,b)=>Number(curatedRoute(b))-Number(curatedRoute(a))||a.dist-b.dist||a.osm-b.osm).slice(0,max);
 }
 const rgb=hex=>{
   const safe=/^#[0-9a-f]{6}$/i.test(String(hex||''))?String(hex):'#d8c8aa';
@@ -630,7 +700,8 @@ export const ROAD_RENDER_LEVELS=Object.freeze({
   squareLine:.165
 });
 
-export function createCityArchitecture(pc,app,buildings){
+export function createCityArchitecture(pc,app,buildings,others=[]){
+  const wallNeighbours=others.length?buildings.concat(others):buildings;
   const material=new pc.StandardMaterial();material.useLighting=false;material.diffuse.set(0,0,0);material.emissive.set(1,1,1);material.emissiveVertexColor=true;material.update();
   const road=new ComicMesh();
   // Sidewalks and their dark ink edges follow the same OSM polylines as the map.
@@ -656,7 +727,7 @@ export function createCityArchitecture(pc,app,buildings){
   const batches=[];const town=new ComicMesh();
   // 2.11.20 real-centre pass: all 95 admitted ordinary centre buildings use their real OSM footprints in one static batch.
   // Mitt i City stays separate so its four entrances and walkable interior are untouched.
-  const contours=coreContourBuildings(buildings),contourIds=new Set(contours.map(b=>b.osm));
+  const contours=coreContourBuildings(buildings),contourIds=new Set(contours.map(b=>b.osm));let sideWalls=0;
   for(const b of contours){
     const seed=Math.abs((b.osm*2654435761)>>>0),twin=visualTwinProfile(b),wall=TORGET_AUDIT_PROFILES[b.osm]?.wall||PHOTO_REFERENCE_PROFILES[b.osm]?.wall||INNERSTAD_PROFILES[b.osm]?.wall||KUNGSGATAN_PROFILES[b.osm]?.wall||twin?.wall||CORE_WALLS[seed%CORE_WALLS.length],h=Math.max(3.2,b.h);
 
@@ -692,6 +763,7 @@ export function createCityArchitecture(pc,app,buildings){
     addPhotoReferenceFacade(town,b);
     addTorgetAuditFacade(town,b);
     if(!TORGET_AUDIT_PROFILES[b.osm])addVisualTwinFacade(town,b,{neighbours:buildings});
+    sideWalls+=addSideWallFacades(town,b,{neighbours:wallNeighbours});
     if(b.tags['roof:shape']==='hipped')town.hip(b.cx,h+.02,b.cz,b.sx*.96,b.sz*.96,Math.min(3.8,Math.min(b.sx,b.sz)*.24),'#425a56','#314744');
     else if(b.tags['roof:shape']==='gabled'||(b.area<260&&b.sx<26&&b.sz<26))town.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
@@ -840,13 +912,14 @@ export function createCityArchitecture(pc,app,buildings){
     batches.push(m.finish(pc,app,'Karlstad · '+(b.name||b.osm),material));
   }
   const visualTwin=visualTwinAudit(buildings);
-  return {streetWays:CITY_STREETS.length,landmarks:batches.length,contours:contours.length,addressPlates,visualTwin,wow,frimurareRenderer:'photo-reference-mainmesh',contourIds:Object.freeze([...contourIds]),staticDrawCalls:2+batches.length};
+  return {streetWays:CITY_STREETS.length,landmarks:batches.length,contours:contours.length,sideWalls,addressPlates,visualTwin,wow,frimurareRenderer:'photo-reference-mainmesh',contourIds:Object.freeze([...contourIds]),staticDrawCalls:2+batches.length};
 }
 
 // 2.11: kvartersfyllnad — stadens övriga OSM-byggnader i samma tecknade stil (färgade väggar,
 // mörk taklist, fönsterband per våning, sadeltak på små hus). Ett enda statiskt batch.
 const INFILL_WALLS=['#e2cfa7','#d8b48b','#c98f6a','#e6dcc4','#b9a68a','#d7c39b','#c7a07a','#e9d9b6'];
-export function infillMesh(buildings,mesh=new ComicMesh()){
+export function infillMesh(buildings,mesh=new ComicMesh(),others=[]){
+  const wallNeighbours=others.length?buildings.concat(others):buildings;
   for(const b of buildings){
     const seed=Math.abs((b.osm*2654435761)>>>0),twin=visualTwinProfile(b),wall=PHOTO_REFERENCE_PROFILES[b.osm]?.wall||twin?.wall||INFILL_WALLS[seed%INFILL_WALLS.length];
     const h=Math.max(3.2,b.h),poly=b.polygon;
@@ -858,13 +931,14 @@ export function infillMesh(buildings,mesh=new ComicMesh()){
     mesh.polygon(poly,h+.01,'#3e5357');
     addPhotoReferenceFacade(mesh,b);
     addVisualTwinFacade(mesh,b,{lod:'low',neighbours:buildings});
+    addSideWallFacades(mesh,b,{neighbours:wallNeighbours,lod:'low'});
     if(b.area<260&&b.sx<26&&b.sz<26)mesh.roof(b.cx,h+.02,b.cz,b.sx*.92,b.sz*.92,Math.min(3,Math.min(b.sx,b.sz)*.22),b.sx>b.sz?'x':'z');
   }
   return mesh;
 }
-export function createInfill(pc,app,buildings){
+export function createInfill(pc,app,buildings,others=[]){
   const material=new pc.StandardMaterial();material.useLighting=false;material.diffuse.set(0,0,0);material.emissive.set(1,1,1);material.emissiveVertexColor=true;material.update();
-  const mesh=infillMesh(buildings);if(!mesh.indices.length)return {buildings:0,addressPlates:0,staticDrawCalls:0};
+  const mesh=infillMesh(buildings,new ComicMesh(),others);if(!mesh.indices.length)return {buildings:0,addressPlates:0,staticDrawCalls:0};
   const addressPlates=addAddressPlates(mesh,buildings);
   mesh.finish(pc,app,'Karlstad · kvartersfyllnad med adresskyltar',material);
   return {buildings:buildings.length,addressPlates,visualTwin:visualTwinAudit(buildings),triangles:mesh.indices.length/3,staticDrawCalls:1};

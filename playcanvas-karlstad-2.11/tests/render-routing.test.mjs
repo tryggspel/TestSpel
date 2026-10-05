@@ -63,3 +63,18 @@ test('Frimurarelogen/Grekiska ritas av fotoreferensen, inte som generisk sydlåd
   assert.ok(A.curatedRoute(frim));
   assert.ok(contour.has(101608925));
 });
+
+test('2.11.23 sidoväggar: Twin/kurerade hus får Kungsgatan-fönster på blanka sidor, Kungsgatan och Torget orörda',async()=>{
+  const {A,adm,K}=await ctx;
+  const G=await imp('city-geography.mjs');
+  const osm=JSON.parse(fs.readFileSync(path.join(root,'data/osm-buildings.json')));
+  const all=adm.concat(G.infillBuildings(osm,adm));
+  for(const id of Object.keys(K.KUNGSGATAN_PROFILES))assert.equal(A.sideWallFaces(adm.find(b=>b.osm===+id),all).length,0,'Kungsgatan '+id+' får inte ändras');
+  for(const id of A.TORGET_AUDIT_IDS){const b=adm.find(x=>x.osm===id);if(b)assert.equal(A.sideWallFaces(b,all).length,0);}
+  assert.equal(A.sideWallFaces(adm.find(b=>b.osm===101608925),all).length,0,'Frimurarelogen behåller sin egen fasad');
+  const covered=A.coreContourBuildings(adm).filter(b=>A.sideWallFaces(b,all).length);
+  assert.ok(covered.length>=10,'minst tio stadskärnehus ska få sidofasader, fick '+covered.length);
+  for(const b of covered)for(const f of A.sideWallFaces(b,all))assert.ok(f.length>=6);
+  const m=new A.ComicMesh();const n=A.addSideWallFacades(m,covered[0],{neighbours:all});
+  assert.ok(n>0&&m.positions.length>0);
+});
