@@ -47,7 +47,7 @@ test('Kungsgatan-profile pipeline launcher has one clean build cache key',()=>{
   const match=html.match(/app\.js\?v=2\.11\.21([^"']*)/);
   assert.ok(match);
   assert.equal((match[1].match(/&build=/g)||[]).length,1);
-  assert.match(match[1],/&build=graphics-audit2/);
+  assert.match(match[1],/&build=streetview-pass1/);
 });
 
 test('green map pass is capped to 31 nearest mapped areas',()=>{
@@ -76,4 +76,16 @@ test('Torget audit profiles render in main static mesh',()=>{
   for(const id of ['101935889','107041955','101247031','101456562','471365594'])assert.match(src,new RegExp(id));
   assert.match(src,/addTorgetAuditFacade\(town,b\)/);
   assert.match(src,/!TORGET_AUDIT_PROFILES\[b\.osm\]/);
+});
+
+
+test('Street View pass 1 real Torget facades',()=>{
+  const src=fs.readFileSync(new URL('../city-architecture.js',import.meta.url),'utf8');
+  assert.match(src,/sv-vt12/);
+  assert.match(src,/sv-vt7/);
+  assert.match(src,/sv-ot9/);
+  assert.match(src,/drawStreetViewFront/);
+  assert.match(src,/101935889/);
+  assert.match(src,/107041955/);
+  assert.match(src,/101247031/);
 });
