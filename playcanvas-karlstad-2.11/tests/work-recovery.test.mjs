@@ -109,11 +109,11 @@ test('runtime cache key is propagated through Karlstad centre graph',()=>{
   const names=['app.js','city-geography.mjs','city-architecture.js','city-identity.js','last-round.js','businesses.mjs'];
   for(const name of names){
     const src=fs.readFileSync(new URL('../'+name,import.meta.url),'utf8');
-    const localVersioned=[...src.matchAll(/['\"]\\.\\/[^'\"]+\\?v=2\\.11\\.21[^'\"]*['\"]/g)].map(m=>m[0]);
-    for(const spec of localVersioned)assert.match(spec,/build=streetview-cache-rootfix2/);
+    const imports=src.split('\n').filter(line=>line.includes("from './")||line.includes("import('./"));
+    for(const line of imports)if(line.includes('?v=2.11.21'))assert.ok(line.includes('build=streetview-cache-rootfix2'),name+' has stale import: '+line);
   }
   const app=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8');
-  assert.match(app,/const CACHE_BUILD='streetview-cache-rootfix2'/);
-  assert.match(app,/osm-buildings\\.json\\?v='\\+GAME_VERSION\\+'&build='\\+CACHE_BUILD/);
-  assert.match(app,/osm-environment\\.json\\?v='\\+GAME_VERSION\\+'&build='\\+CACHE_BUILD/);
+  assert.ok(app.includes("const CACHE_BUILD='streetview-cache-rootfix2'"));
+  assert.ok(app.includes("osm-buildings.json?v='+GAME_VERSION+'&build='+CACHE_BUILD"));
+  assert.ok(app.includes("osm-environment.json?v='+GAME_VERSION+'&build='+CACHE_BUILD"));
 });
