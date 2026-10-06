@@ -3,6 +3,9 @@
 /* Turbo-knappen bor bland de övriga knapparna och syns bara i City Explore. */
 #turboBtn{display:none}
 .fun-explore #turboBtn{display:inline-block}
+/* Tvåhandsläge på pekskärm: vänster spak ligger där verktygsraden annars ligger, så turbon flyttas ovanför hoppknappen till höger. */
+@media(pointer:coarse){body:not(.one-hand).fun-explore #roundUtilities #turboBtn{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:calc(max(20px,calc(env(safe-area-inset-bottom) + 20px)) + 62px);min-width:76px;min-height:44px;border-radius:13px;border-width:2px;border-color:#9db49a8c;background:#143b32f2}}
+body:not(.one-hand).fun-explore #roundUtilities #turboBtn.on{background:#ffd56c;color:#183d2b;border-color:#fff3c4}
 #roundUtilities #turboBtn.on{background:#ffd56c;color:#183d2b;border-color:#fff3c4;box-shadow:0 0 0 2px #ffd56c66,0 0 16px #ffd56c88}
 #roundUtilities #turboBtn.on[aria-pressed="true"]{animation:turboBtn 1s ease-in-out infinite alternate}
 @keyframes turboBtn{from{box-shadow:0 0 0 2px #ffd56c44,0 0 8px #ffd56c66}to{box-shadow:0 0 0 3px #ffd56c88,0 0 20px #ffd56caa}}
@@ -48,7 +51,8 @@ body.turbo-on #turboFx{opacity:1}
 #journeyPickupToast[data-rarity="rainbow"]{border-color:#ffd0f2;background:linear-gradient(90deg,#8b2d6bee,#2d5f8bee)}
 /* Låg skärm (mobil på sidan): nivå och kombo flyttar till höger, under radarn, så att de inte krockar med kompassraden. */
 @media(max-height:500px){#funHud{left:auto;right:max(12px,env(safe-area-inset-right));top:max(126px,calc(env(safe-area-inset-top) + 122px));width:min(176px,34vw)}#funHud>div{padding:4px 8px}.fun-combo b{font-size:13px}#funDaily{display:none}}
-@media(pointer:coarse) and (max-width:520px){#funHud{width:min(190px,52vw);top:max(150px,calc(env(safe-area-inset-top) + 146px))}}
+/* Mobil stående: pickup-raden ligger runt 160–190 px, så nivå och kombo börjar under den. */
+@media(pointer:coarse) and (max-width:520px) and (min-height:501px){#funHud{width:min(190px,52vw);top:max(194px,calc(env(safe-area-inset-top) + 190px))}}
 
 /* Fanfarer ligger över pickup-raden, inte på den. */
 .fun-explore #roundToast{bottom:calc(24% + 56px)}
