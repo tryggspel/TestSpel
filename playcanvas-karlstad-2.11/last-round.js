@@ -1,35 +1,36 @@
-import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.13.0';
-import {createSouthSigns} from './city-south.js?v=2.13.0';
-import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.13.0';
-import {createZombieAtlases} from './zombie-art.js?v=2.13.0';
-import {FriendlyClerks} from './friendly-clerks.mjs?v=2.13.0';
-import {createFriendlyView} from './friendly-view.js?v=2.13.0';
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.13.0';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.13.0';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.13.0';
-import {CityJourney} from './journey-rules.mjs?v=2.13.0';
-import {createJourneyView} from './journey-view.js?v=2.13.0';
-import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.13.0';
-import {createBoatRide} from './boat-ride.js?v=2.13.0';
-import {createBusRide} from './bus-ride.js?v=2.13.0';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.13.0';
-import {createPostcard} from './challenge-postcard.js?v=2.13.0';
-import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.13.0';
-import {RUSH} from './city-rush.mjs?v=2.13.0';
-import {StampBook} from './city-stamps.mjs?v=2.13.0';
-import {turboScale,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.13.0';
-import {busRideSeconds,LEGACY_HINTS,areaOf} from './explore-places.mjs?v=2.13.0';
-import {GhostRun} from './ghost-run.mjs?v=2.13.0';
-import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.13.0';
-import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.13.0';
-import {pedestrianAt} from './pedestrian.mjs?v=2.13.0';
-import {createPedestrianSigns} from './pedestrian-view.js?v=2.13.0';
-import {drawMapLabels} from './city-geography.mjs?v=2.13.0';
-import {createCityIdentity} from './city-identity.js?v=2.13.0';
-import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.13.0';
+import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.14.0';
+import {createSouthSigns} from './city-south.js?v=2.14.0';
+import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.14.0';
+import {createZombieAtlases} from './zombie-art.js?v=2.14.0';
+import {FriendlyClerks} from './friendly-clerks.mjs?v=2.14.0';
+import {createFriendlyView} from './friendly-view.js?v=2.14.0';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.14.0';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.14.0';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.14.0';
+import {CityJourney} from './journey-rules.mjs?v=2.14.0';
+import {createJourneyView} from './journey-view.js?v=2.14.0';
+import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.14.0';
+import {createBoatRide} from './boat-ride.js?v=2.14.0';
+import {createBusRide} from './bus-ride.js?v=2.14.0';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.14.0';
+import {createPostcard} from './challenge-postcard.js?v=2.14.0';
+import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.14.0';
+import {RUSH} from './city-rush.mjs?v=2.14.0';
+import {StampBook} from './city-stamps.mjs?v=2.14.0';
+import {turboScale,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.14.0';
+import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.14.0';
+import {fetchLiveBoard} from './bus-quiz.mjs?v=2.14.0';
+import {GhostRun} from './ghost-run.mjs?v=2.14.0';
+import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.14.0';
+import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.14.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.14.0';
+import {createPedestrianSigns} from './pedestrian-view.js?v=2.14.0';
+import {drawMapLabels} from './city-geography.mjs?v=2.14.0';
+import {createCityIdentity} from './city-identity.js?v=2.14.0';
+import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.14.0';
 
-import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.13.0';
-import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.13.0';
+import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.14.0';
+import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.14.0';
 
 export function createLastRound(pc, host) {
   // 2.10: elementuppslag cachas, och HUD-text skrivs bara om när värdet faktiskt ändras.
@@ -80,7 +81,7 @@ export function createLastRound(pc, host) {
   let panel = 'intro', previousTime = performance.now(), uiTime = 0;
   let cursedOmenUntil=0;
   // 2.13: turbo, fanfarer i kö, hållplatsväljare och Ryde-/turbomätare.
-  let turbo=false,turboMeters=0,fanfareQueue=[],busFrom=null,lastChainShown=0,areaSeen=null,areaSince=0,areaShown=null;
+  let liveBoard=null,liveAt=0,turbo=false,turboMeters=0,fanfareQueue=[],busFrom=null,lastChainShown=0,areaSeen=null,areaSince=0,areaShown=null;
   let shotFlash = 0, toastUntil = 0, soundEnabled = !host.music?.muted;
   let aimHelp = true, currentTarget = null, currentGuide = null, triggerPointer = null, damageFlash = 0;
   try {const saved = localStorage.getItem('karlstad:aim-help:v2'); if (saved !== null) aimHelp = saved === 'on';} catch {}
@@ -259,6 +260,7 @@ export function createLastRound(pc, host) {
     ...PLACE_ROUTES.map(id=>quickPlaceTarget(id)).filter(Boolean).map(t=>({id:t.id.replace(/^place-/,''),label:String(t.label).split(' · ')[0],x:t.x,z:t.z,y:t.y||0})),
     {id:'kil',label:'KIL STATION',x:KIL.x,z:KIL.z,radius:30},
     {id:'marieberg',label:'MARIEBERGSSKOGEN',x:MARIEBERG.x,z:MARIEBERG.z,radius:30},
+    {id:'musicpartner',label:'MUSICPARTNER · KUNGSGATAN 6D',x:MUSIC_OFFICE.x,z:MUSIC_OFFICE.z,radius:12},
     // 2.13: ändhållplatserna på busslinjerna.
     {id:'haga-hagahallen',label:'HAGA · HAGAHALLEN',x:566,z:-100,radius:30},
     {id:'attkanten',label:'ÅTTKANTEN',x:1000,z:-100,radius:30},
@@ -327,17 +329,18 @@ export function createLastRound(pc, host) {
     onCrash:(result,to,from)=>{recordBusMoment(result,to,from);journey.position={x:to.x,z:to.z};journey.heading=0;journey.health=Math.max(25,journey.health-20);journey.contactCooldown=5;journey.save();host.music?.city?.();toast('AVSTIGNING. OPLANERAD.','Tillbaka vid hållplatsen. −20 liv. Bättre styrning nästa tur!',3);if(busChallenge)openMoment('bus-intro');}
   });
   const boatRide=createBoatRide(host,{
+    onSpot:()=>{note(1046.5,'triangle',.15,.07);setTimeout(()=>note(1318.5,'triangle',.18,.06),70);},
     onTick:dt=>{journey.rush.clock(dt);if(['caught','finished'].includes(journey.rush.state)){boatRide.stop();if(journey.rush.state==='caught')host.teleport(HARBOUR.x,HARBOUR.z,0,-2);}},
     onArrive:(result,to,from)=>{
       journey.position={x:to.x,z:to.z};journey.actors.forEach(a=>a.active=false);journey.pendingAmbush=null;journey.contactCooldown=5;
       if(!result.calm){journey.reward(result.points);let best=result.points;try{best=Math.max(best,Number(storage?.getItem('karlstad:boat:best:1'))||0);storage?.setItem('karlstad:boat:best:1',String(best));}catch{}
         rememberMoment({kind:'boat',seed,score:result.points,health:Math.round(result.saved/12*100),saved:result.saved,won:result.saved>=8,seconds:36,title:'KAPTENEN HADE VISST SJÖBEN.',place:'Inre hamn → Mariebergsskogen'});
         toast('FRAMME · '+result.saved+' RÄDDADE','+'+result.points+' XP · rekord '+best+'. Ditt vykort finns i PAUS.',4);
-      }else toast(to.name.toUpperCase(),'Kliv iland, samla termosar och ta returbåten när du vill.',3);
+      }else{const seen=result.sightings?' '+result.sightings+' djur och båtar sedda · +'+result.points+' poäng.':'';if(cleanExplore()&&result.points>0)journey.reward(result.points);toast(to.name.toUpperCase(),'Kliv iland, samla termosar och ta returbåten när du vill.'+seen,3.4);}
       journey.save();
     }
   });
-  const scenicRide=createScenicRide(host,{onTick:dt=>{journey.rush.clock(dt);if(['caught','finished'].includes(journey.rush.state)){scenicRide.stop();if(journey.rush.state==='caught')host.teleport(0,14,0,-2);}},onArrive:(to,kind)=>{journey.position={x:to.x,z:to.z};journey.lastStep=null;journey.actors.forEach(a=>a.active=false);journey.pendingAmbush=null;journey.save();if(kind==='bus'&&journey.busArrive(to))return;toast(to.name.toUpperCase(),kind==='train'?'Gå en sväng på perrongen. Returtåget väntar.':'Framme! Fortsätt din stadspromenad.',3);}});
+  const scenicRide=createScenicRide(host,{onTick:dt=>{journey.rush.clock(dt);if(['caught','finished'].includes(journey.rush.state)){scenicRide.stop();if(journey.rush.state==='caught')host.teleport(0,14,0,-2);}},onArrive:(to,kind,quiz)=>{journey.position={x:to.x,z:to.z};journey.lastStep=null;journey.actors.forEach(a=>a.active=false);journey.pendingAmbush=null;journey.save();if(kind==='bus'&&journey.busArrive(to,quiz))return;toast(to.name.toUpperCase(),kind==='train'?'Gå en sväng på perrongen. Returtåget väntar.':'Framme! Fortsätt din stadspromenad.',3);}});
   function boardBoat(){
     if(panel||!isJourney()||boatRide.active()||busRide.active())return;
     const p=host.player.getPosition(),back=atMarieberg(p);
@@ -388,7 +391,7 @@ export function createLastRound(pc, host) {
   function setPanel(name) {
     panel = name; document.body.classList.toggle('round-panel-open', !!name);
     $('roundPanel').hidden = !name;
-    for (const id of ['intro', 'pause', 'result', 'map','city-intro','city-result','album','daily-intro','moment','bus-intro','trail-result','boat-intro','bus-pick']) $('round-' + id).hidden = name !== id;
+    for (const id of ['intro', 'pause', 'result', 'map','city-intro','city-result','album','daily-intro','moment','bus-intro','trail-result','boat-intro','bus-pick','musicpartner']) $('round-' + id).hidden = name !== id;
     if(name==='city-intro'||name==='daily-intro')refreshDaily();
     if(name==='city-intro')renderFunStatus();
     if(name==='city-intro')$('cityControlCopy').textContent=host.oneHand?.()?'EN HAND: spaken går och svänger. Sikta mot zombien så skjuter du automatiskt. Byt till två händer i PAUS.':'WASD: gå · mus: sikta · klick: solstöt · E: uppdrag / buss · M: karta · T: turbo i City Explore. Samma snabba gång som tidigare.';
@@ -576,10 +579,33 @@ export function createLastRound(pc, host) {
     $('funBadgeTitle').textContent='MÄRKEN · '+s.badges.filter(b=>b.earned).length+' / '+s.badges.length;
     fill('funBadges',s.badges.map(b=>[(b.earned?'✓ ':'')+b.name+(b.earned?'':' · '+b.desc),b.earned?'stamped':'']));
   }
+  // MusicPartner på Kungsgatan 6D: checka in, lyssna och återställ poäng.
+  let resetArmedUntil=0;
+  function openMusicOffice(){
+    if(panel||!isJourney()||game.phase!=='playing')return;
+    game.pause();resetArmedUntil=0;renderMusic();setPanel('musicpartner');
+  }
+  function renderMusic(){
+    const clean=cleanExplore(),s=journey.fun.snapshot(journey.lifetime),done=journey.fun.checkedInToday();
+    $('mpStatus').textContent='Nivå '+s.level+' · '+s.title+' · '+Math.round(s.xp)+' poäng'+(clean?'':' · incheckning finns i City Explore');
+    const b=$('mpCheckin');b.disabled=!clean||done;b.firstChild.textContent=!clean?'CHECKA IN (CITY EXPLORE)':done?'INCHECKAD IDAG ✓ ':'CHECKA IN · +'+MUSIC_OFFICE.checkinBonus+' ';
+    const box=$('mpTracks');box.textContent='';const playing=host.music?.jukebox?.playing;
+    for(const t of JUKEBOX){const btn=document.createElement('button');btn.type='button';btn.className=playing===t.id?'playing':'';btn.textContent=(playing===t.id?'▶ ':'')+t.label;const sm=document.createElement('small');sm.textContent=t.note;btn.appendChild(sm);btn.addEventListener('click',()=>{host.music?.jukebox?.play(t.id);renderMusic();});box.appendChild(btn);}
+    $('mpStop').disabled=!playing;const r=$('mpReset');r.classList.toggle('armed',performance.now()<resetArmedUntil);r.textContent=performance.now()<resetArmedUntil?'TRYCK IGEN: NOLLSTÄLL ALLA POÄNG OCH NIVÅER':'ÅTERSTÄLL XP';
+  }
+  $('mpCheckin').addEventListener('click',()=>{const r=journey.musicCheckIn();if(r?.first){sound('capture');toast('INCHECKAD · MUSICPARTNER','+'+r.bonus+' poäng. Kom tillbaka imorgon för en ny.',2.6);}renderMusic();});
+  $('mpStop').addEventListener('click',()=>{host.music?.jukebox?.stop();renderMusic();});
+  $('mpReset').addEventListener('click',()=>{
+    if(performance.now()<resetArmedUntil){resetArmedUntil=0;journey.resetXp();sound('bump');toast('POÄNGEN ÄR NOLLSTÄLLD','Du börjar om som Turist. Album, skatter och märken är kvar.',3);}
+    else{resetArmedUntil=performance.now()+4000;setTimeout(renderMusic,4100);}
+    renderMusic();});
+  $('mpClose').addEventListener('click',()=>{if(panel==='musicpartner')resume();});
   // Hållplatsväljare: tryck E vid en busshållplats i City Explore och välj linje.
   function openBusPicker(from){
     if(panel||!isJourney()||game.phase!=='playing')return;
     busFrom=from;game.pause();host.music?.pause?.();renderBusPicker(from);setPanel('bus-pick');
+    // Riktiga avgångar till bussens skärm: hämtas i bakgrunden, högst en gång per minut. Går det snett används de inbyggda frågorna.
+    if(performance.now()-liveAt>60000){liveAt=performance.now();fetchLiveBoard().then(b=>{if(b)liveBoard=b;});}
   }
   function renderBusPicker(from){
     $('busPickFrom').textContent=from.name.toUpperCase();
@@ -596,7 +622,7 @@ export function createLastRound(pc, host) {
   }
   function rideBus(from,to,secs){
     busFrom=null;game.resume();host.music?.resume?.();setPanel(null);previousTime=performance.now();
-    scenicRide.start(from,to,'bus',{duration:secs,line:to.hub?0:to.line});
+    scenicRide.start(from,to,'bus',{duration:secs,line:to.hub?0:to.line,live:liveBoard,seed:Math.floor(performance.now()),onAnswer:r=>{if(r.ok){note(784,'triangle',.18,.08);setTimeout(()=>note(1046.5,'triangle',.22,.08),90);}else note(196,'sawtooth',.25,.05);}});
   }
   // 2.10: effektljud går via spelets gemensamma ljudmotor (en AudioContext, respekterar mute).
   const SFX={shot:170,charge:95,capture:620,chain:780,boss:90,energy:900,start:420,win:660,bump:130};
@@ -626,6 +652,7 @@ export function createLastRound(pc, host) {
       if(fleet.riding){parkRyde();return;}
       const station=atKil(here)?KIL:KARLSTAD_C;if(Math.hypot(here.x-station.x,here.z-station.z)<8){if(!atKil(here)&&trainWait(journey.elapsed)){toast('NÄSTA TÅG MOT KIL',trainWait(journey.elapsed)+' sekunder. Samla termosar på stationsplan medan du väntar.',2);return;}scenicRide.start(station,atKil(here)?KARLSTAD_C:KIL);return;}
       if(fleet.canPickUp(here)&&!mallInside(here)&&here.y<3.7){fleet.pickUp(here);return;}
+      if(journey.rush.peaceful&&journey.nearOffice(here)){openMusicOffice();return;}
       if(journey.rush.peaceful){const from=journey.nearestBus(here);if(from.distance<6.5){openBusPicker(from);return;}}
       if(journey.clerks.interact(here))return;
       if(mallInside(here)){journey.landmarkGoal=landmarkDestination('mitticity',host.colliders);journey.routeMode='landmark';toast('MITT I CITY · TVÅ PLAN','Gå på rulltrappan för att åka med. Fikaförrådet väntar på plan 1.',3);return;}
@@ -691,6 +718,7 @@ export function createLastRound(pc, host) {
       for(const id of places){const place=landmarkDestination(id,host.colliders);if(place&&mapGoal.id!==place.id)dot(place.x,place.z,place.label.replace(' · TVÅ PLAN',''),'#f4dab0',...(offsets[id]||[9,-6]),1,id==='radhuset'?null:id);}
       if(!mapWide)for(const shop of STOREFRONTS){const p=storefrontAnchor(shop,host.colliders);if(p)dot(p.x,p.z,shop.name.toUpperCase(),shop.brand==='olearys'?'#9de2aa':'#b9ddea',shop.id==='pressbyran20'?-9:9,shop.id==='pressbyran20'?18:shop.id==='espresso15'?18:-6,1,shop.id==='olearys'?'olearys':null);}
     }else drawMallPlan(c,point,scale,host.mallWalk?.level||0,journey.secretsFound.has(MALL_CACHE.id));
+    if(isJourney()&&journey.rush.peaceful&&!indoor)dot(MUSIC_OFFICE.x,MUSIC_OFFICE.z,'MUSICPARTNER','#e78336',9,-6,2);
     if(isJourney()&&journey.rush.peaceful&&!indoor)for(const s of journey.busNetwork)dot(s.x,s.z,s.hub?'BUSS · TORGET':'BUSS '+s.line+' · '+s.name.toUpperCase(),'#f79b68',9,-6,2);
     if(cleanExplore()&&!indoor){
       // Ungefärligt område för varje skatt som inte hittats: en streckad ring med frågetecken, som en skattkarta.
@@ -765,10 +793,11 @@ export function createLastRound(pc, host) {
     if(!isPush()){
       const station=isJourney()?journeyView.nearbyStation(p):null,portal=isJourney()?journey.nearestPortal(p):null,bus=isJourney()?journey.nearestBus(p):null;
       const interactive=isJourney()&&['power','bowling'].includes(journey.rush.contract?.kind)&&Math.hypot(p.x-journey.rush.contract.spot.x,p.z-journey.rush.contract.spot.z)<3.3;
+      const office=isJourney()&&journey.rush.peaceful&&journey.nearOffice(p);
       const dock=atMarieberg(p)?MARIEBERG:HARBOUR,nearBoat=isJourney()&&Math.hypot(p.x-dock.x,p.z-dock.z)<7;
       const trainStation=atKil(p)?KIL:KARLSTAD_C,nearTrain=isJourney()&&Math.hypot(p.x-trainStation.x,p.z-trainStation.z)<8;
-      $('useBtn').dataset.context=String((isJourney()&&(!!fleet.riding||fleet.canPickUp(p)))||nearTrain||nearBoat||bus?.distance<6.5||!isJourney()||!!journey.clerks.prompt(p)||!!interactive||!journey.rush.peaceful&&(bus?.distance<6.5||!!station||portal?.distance<9));
-      $('useBtn').textContent=isJourney()&&(fleet.riding||fleet.canPickUp(p))?rydeLabel():nearTrain?(atKil(p)?'RETURTÅG · KARLSTAD C':trainWait(journey.elapsed)?'TÅG MOT KIL · '+trainWait(journey.elapsed)+' S':'KLIV PÅ · TÅGET TILL KIL'):journey.rush.peaceful&&bus?.distance<6.5?'ÅK BUSS · VÄLJ LINJE':nearBoat?(atMarieberg(p)?'RETURBÅT · INRE HAMN':journey.rush.peaceful?'BÅTBUSS · LUGN TUR':'BÅTBUSS · RÄDDA PASSAGERARNA'):isJourney()&&journey.clerks.prompt(p)?journey.clerks.prompt(p):isJourney()&&mallInside(p)?'VISA VÄG I GALLERIAN':interactive?journey.rush.contract.action:bus?.distance<6.5?'KLIV PÅ BUSSEN':station?(station.type==='clue'?'LÄS TIPS':'LADDA SOL'):portal?.distance<9?'STARTA UPPDRAG':'UPPDRAG';
+      $('useBtn').dataset.context=String((isJourney()&&(!!fleet.riding||fleet.canPickUp(p)))||office||nearTrain||nearBoat||bus?.distance<6.5||!isJourney()||!!journey.clerks.prompt(p)||!!interactive||!journey.rush.peaceful&&(bus?.distance<6.5||!!station||portal?.distance<9));
+      $('useBtn').textContent=isJourney()&&(fleet.riding||fleet.canPickUp(p))?rydeLabel():office?'MUSICPARTNER · CHECKA IN':nearTrain?(atKil(p)?'RETURTÅG · KARLSTAD C':trainWait(journey.elapsed)?'TÅG MOT KIL · '+trainWait(journey.elapsed)+' S':'KLIV PÅ · TÅGET TILL KIL'):journey.rush.peaceful&&bus?.distance<6.5?'ÅK BUSS · VÄLJ LINJE':nearBoat?(atMarieberg(p)?'RETURBÅT · INRE HAMN':journey.rush.peaceful?'BÅTBUSS · LUGN TUR':'BÅTBUSS · RÄDDA PASSAGERARNA'):isJourney()&&journey.clerks.prompt(p)?journey.clerks.prompt(p):isJourney()&&mallInside(p)?'VISA VÄG I GALLERIAN':interactive?journey.rush.contract.action:bus?.distance<6.5?'KLIV PÅ BUSSEN':station?(station.type==='clue'?'LÄS TIPS':'LADDA SOL'):portal?.distance<9?'STARTA UPPDRAG':'UPPDRAG';
       $('roundTactic').textContent=isJourney()&&journey.clerks.near(p)?journey.clerks.near(p).name.toUpperCase()+' · SNÄLL ZOMBIE · TRYCK '+journey.clerks.prompt(p):isJourney()&&mallInside(p)&&!currentTarget?'MITT I CITY · PLAN '+(host.mallWalk?.level||0)+' · KLIV PÅ RULLTRAPPAN FÖR ATT ÅKA':currentTarget?`${currentTarget.name.toUpperCase()} · ${'●'.repeat(Math.max(0,currentTarget.hp))}${host.oneHand?.()?' · AUTOELD':''}`:isJourney()?(bus.distance<6.5?'BUSS 666 · 30 SEKUNDERS KAOS · +200–350 XP':journey.rush.exitReady?''+RUSH.target+' XP KLARA · FÖLJ GRÖNT TILL TRYGGZON':station?station.brand+' · TRYCK '+$('useBtn').textContent:portal.distance<9?portal.name.toUpperCase()+' · TRYCK STARTA':guidance?.turn||'FÖLJ CYANPILARNA TILL DITT MÅL'):selectedMission==='sandgrund'?(game.rescued<3?'GÅ NÄRA BESÖKARE · LED DEM TILL GRÖNA PLATSEN':'BESÖKARNA ÄR SÄKRA · STOPPA ZOMBIE-LERIN'):selectedMission==='fikapanik'?'VÄND DIG OM · ZOMBIERNA KOMMER FRÅN FLERA HÅLL':game.collected<3?'HÄMTA GULA TERMOSAR · FÖLJ RADARN':'FÖLJ GULA SPÅRET TILL MITT I CITY';return;
     }
     if (!currentGuide) {$('roundTactic').textContent = 'HITTA ETT FAN · GULA CIRKELN PÅ RADARN = HEMGÅNG'; return;}
@@ -892,7 +921,7 @@ export function createLastRound(pc, host) {
   });
   window.addEventListener('keydown', e => {
     if (e.repeat) return;
-    if (e.code === 'Escape') {if (!panel) pause(); else if (panel === 'pause' || panel === 'map') resume(); else if (panel === 'bus-pick') {busFrom=null;resume();}}
+    if (e.code === 'Escape') {if (!panel) pause(); else if (panel === 'pause' || panel === 'map') resume(); else if (panel === 'bus-pick') {busFrom=null;resume();} else if (panel === 'musicpartner') resume();}
     if (panel) return;
     if (e.code === 'KeyE') use();
     if (e.code === 'KeyM') showMap();
@@ -954,6 +983,7 @@ export function createLastRound(pc, host) {
       if(event.fun){[523.25,659.25,783.99,1046.5].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.28,.08),i*95));journeyView.burst(event.x,event.y||0,event.z,'gold');toast('SKATT HITTAD! +'+event.points,event.name+' · '+event.found+' av '+event.total+' skatter',3.8);}
       else toast('HEMLIGHET HITTAD! +200',event.name+' · Fullt liv och full solenergi.',3.5);
       journey.save();},
+    'checkin':(event,now)=>{fanfare('INCHECKAD · '+event.name.toUpperCase(),'+'+event.bonus+' poäng. Ny incheckning imorgon.',2.6,'capture');},
     'combo-praise':(event,now)=>{fanfare(event.text,'KOMBO '+event.chain+' · poäng ×'+event.mult,1.5,'chain');},
     'combo-lost':(event,now)=>{$('journeyPickupToast').textContent='KEDJAN BRÖTS · '+event.chain+' I RAD';$('journeyPickupToast').dataset.rarity='common';$('journeyPickupToast').classList.add('visible');pickupToastUntil=now+1500;},
     'booster':(event,now)=>{fanfare(event.label+'!',event.text+' '+event.seconds+' sekunder.',2.6,'energy');},
@@ -961,7 +991,7 @@ export function createLastRound(pc, host) {
     'daily-done':(event,now)=>{fanfare('DAGENS MÅL KLART!','+'+event.bonus+' poäng'+(event.streak>1?' · '+event.streak+' dagar i rad':'')+'. Nya mål och nya sällsynta termosar imorgon.',3.4,'win');},
     'area-done':(event,now)=>{fanfare('SAMLING KLAR · '+event.name.toUpperCase(),'Alla '+event.total+' termosar funna · +'+event.bonus+' poäng',3.4,'win');},
     'badge':(event,now)=>{fanfare('MÄRKE · '+event.name.toUpperCase(),event.desc,2.8,'capture');},
-    'bus-arrive':(event,now)=>{fanfare(event.first?'NY HÅLLPLATS! +'+event.bonus:event.name.toUpperCase(),event.first?event.name+' · '+event.visited+' av '+event.total+' hållplatser besökta':'Framme! Fortsätt din stadspromenad.',3,'capture');},
+    'bus-arrive':(event,now)=>{const q=event.quiz&&event.quiz.total?' BussQuiz: '+event.quiz.correct+' av '+event.quiz.total+' rätt (+'+event.quiz.points+').':'';fanfare(event.first?'NY HÅLLPLATS! +'+event.bonus:event.name.toUpperCase(),(event.first?event.name+' · '+event.visited+' av '+event.total+' hållplatser besökta.':'Framme! Fortsätt din stadspromenad.')+q,3.4,'capture');},
     'rustle':(event,now)=>{sound('bump');toast('…PRASSEL?','Någon har känt doften av kaffe.',1);},
     'ambush':(event,now)=>{sound('boss');toast(event.name||'”HAR DU PÅTÅR?!”','Vänd dig om. SOLSTÖT!',1.3);},
     'ambush-clear':(event,now)=>{sound('capture');$('journeyPickupToast').textContent='BAKHÅLL KLARAT · +30 KAFFEPOÄNG';$('journeyPickupToast').classList.add('visible');pickupToastUntil=now+1800;journey.save();},
@@ -1102,6 +1132,7 @@ export function createLastRound(pc, host) {
     if (uiTime > .08) {
       uiTime = 0;
       if(game.phase==='playing'&&!panel){const st=stampBook.check(p);if(st){sound('capture');toast('STÄMPEL · '+st.place.label,st.complete?'Alla '+st.total+' platser! Du har sett hela Karlstad.':st.count+' av '+st.total+' platser · se PAUS → STÄMPELKARTA',st.complete?4:2.4);}}
+      if(host.music?.jukebox?.playing&&Math.hypot(p.x-MUSIC_OFFICE.x,p.z-MUSIC_OFFICE.z)>90)host.music.jukebox.stop();
       guidance=!isPush()?guideFor(p,game.objective(p)):null;
       updateGuide(p); drawRadar(p);renderTurbo();updateFunHud(p);
       const timed=isJourney()&&['timed','trail'].includes(journey.rush.mode),time=Math.ceil(journey.rush.time);

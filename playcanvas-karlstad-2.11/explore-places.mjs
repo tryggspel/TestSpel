@@ -52,6 +52,15 @@ export const LEGACY_HINTS=Object.freeze({
   'udden-cache':'Längst ut på Sandgrundsudden.'
 });
 
+// MusicPartners kontor, Kungsgatan 6D (OSM-byggnad 119214077, söderfasaden). Man står på trottoaren framför dörren.
+// Där kan man checka in (en gång per dag), lyssna på spelets musik och återställa sina poäng och nivåer.
+export const MUSIC_OFFICE=Object.freeze({id:'musicpartner',name:'MusicPartner',address:'Kungsgatan 6D',x:302,z:-23.5,radius:8,checkinBonus:100});
+export const JUKEBOX=Object.freeze([
+  {id:'main',label:'Karlstad City-temat',note:'Spelets stadsmusik'},
+  {id:'zombie',label:'Zombiejakten',note:'Musiken från stadsjakten'},
+  {id:'arena',label:'Arenalagret',note:'Kort spår, 18 sekunder'}
+]);
+
 // Fikaalbumet: tretton områden. Varje område har ett antal termosar; att hitta alla ger en samlingsbonus.
 // Ordningen är avgörande: första träffen gäller.
 export const ALBUM_AREAS=Object.freeze([

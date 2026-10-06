@@ -1,7 +1,7 @@
 // Fixed slots, deterministic timing. No city AI or physics simulation aboard.
 export class BoatRescue {
   constructor({calm=false,seed=1}={}){
-    this.calm=calm;this.seed=seed;this.duration=calm?18:36;this.elapsed=0;this.state='playing';this.saved=0;this.missed=0;this.points=0;this.combo=0;this.bestCombo=0;this.cooldown=0;this.shots=[];
+    this.calm=calm;this.seed=seed;this.duration=calm?18:36;this.elapsed=0;this.state='playing';this.saved=0;this.missed=0;this.points=0;this.combo=0;this.bestCombo=0;this.cooldown=0;this.shots=[];this.spotted=new Set();this.sightings=0;
     this.people=Array.from({length:4},(_,i)=>({id:i,status:'waiting',at:1+i*1.25,round:0,until:0}));
   }
   step(dt){
@@ -16,6 +16,11 @@ export class BoatRescue {
     }
     if(this.elapsed===this.duration){this.state='arrived';if(!this.calm)this.points+=this.saved>=8?100:0;}
   }
+  // Sjöliv: en fågel, fisk eller båt som man trycker på. En gång per figur och förbipasserande. Lugn tur ger 10 poäng, räddningsturen 5.
+  spot(key){
+    if(this.state!=='playing'||this.spotted.has(key)||this.spotted.size>=40)return null;
+    this.spotted.add(key);this.sightings++;const points=this.calm?10:5;this.points+=points;return {points,sightings:this.sightings};
+  }
   throwTo(id){
     const p=this.people.find(p=>p.id===id);
     if(this.calm||this.state!=='playing'||this.cooldown>0||!p||!['deck','water'].includes(p.status))return null;
@@ -23,5 +28,5 @@ export class BoatRescue {
     const points=20+(this.combo>=3?10:0);this.points+=points;p.status='safe';p.until=this.elapsed+1.2;
     this.shots.push({id,tool,at:this.elapsed});return {tool,points};
   }
-  snapshot(){return {calm:this.calm,state:this.state,elapsed:this.elapsed,remaining:this.duration-this.elapsed,duration:this.duration,saved:this.saved,missed:this.missed,points:this.points,combo:this.combo,bestCombo:this.bestCombo,people:this.people.map(p=>({...p})),shots:this.shots.map(s=>({...s}))};}
+  snapshot(){return {sightings:this.sightings,calm:this.calm,state:this.state,elapsed:this.elapsed,remaining:this.duration-this.elapsed,duration:this.duration,saved:this.saved,missed:this.missed,points:this.points,combo:this.combo,bestCombo:this.bestCombo,people:this.people.map(p=>({...p})),shots:this.shots.map(s=>({...s}))};}
 }

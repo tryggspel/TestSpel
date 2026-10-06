@@ -161,3 +161,19 @@ test('respawn gäller inte trail och zombieläget',()=>{
   const t=commonItems(g)[0];step(g,t);assert.ok(g.found.has(t.id));assert.equal(g.foundAt.size,0);
   for(let i=0;i<RESPAWN.after+30;i++)step(g,FAR,1);assert.ok(g.found.has(t.id),'termosrundan fylls inte på av sig själv');
 });
+
+test('MusicPartner: incheckning en gång per dag, märke, och återställning av poäng och nivå',()=>{
+  const g=clean(),office={x:302,z:-23.5};
+  assert.equal(g.nearOffice(office),true);assert.equal(g.nearOffice({x:302,z:-5}),false);
+  const first=g.musicCheckIn();assert.equal(first.first,true);assert.equal(first.bonus,100);assert.equal(g.balance,100);
+  const ev=g.drainEvents();assert.ok(ev.some(e=>e.type==='checkin'&&e.bonus===100));assert.ok(ev.some(e=>e.type==='badge'&&e.id==='checkin-1'));
+  assert.equal(g.musicCheckIn().first,false);assert.equal(g.balance,100,'bara en gång per dag');assert.equal(g.fun.checkedInToday(),true);
+  const trail=new CityJourney(nav,mall,portals,storage());trail.rush.start('trail');assert.equal(trail.musicCheckIn(),null,'bara City Explore');
+  // poäng och nivå nollas, album och skatter ligger kvar
+  const t=commonItems(g)[0];step(g,t);g.fun.afterReward(60000);g.reward(60000);assert.ok(g.fun.snapshot(g.lifetime).level>=7);
+  const found=g.fun.snapshot(g.lifetime).album.reduce((n,a)=>n+a.found,0),kept=g.fun.state.badges.length;
+  g.resetXp();assert.equal(g.balance,0);assert.equal(g.lifetime,0);assert.equal(g.rush.xp,0);assert.equal(g.fun.state.levelSeen,1);assert.equal(g.fun.snapshot(g.lifetime).level,1);
+  assert.equal(g.fun.snapshot(g.lifetime).album.reduce((n,a)=>n+a.found,0),found);assert.ok(g.fun.state.badges.length>=kept);
+  assert.equal(step(g,commonItems(g)[3]).some(e=>e.type==='level-up'&&e.level>3),false,'ingen flod av nivåhöjningar efter återställning');
+  const saved=storage();const h=clean(saved);h.musicCheckIn();h.fun.save();assert.equal(new CityJourney(nav,mall,portals,saved).fun.checkedInToday(),true,'sparas mellan sessioner');
+});

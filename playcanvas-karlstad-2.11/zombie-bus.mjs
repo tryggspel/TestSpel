@@ -1,7 +1,11 @@
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const turns=[0,1,1,-1,-1,1,-1,1];
+// Zombiechauffören klantar sig: somnar vid ratten, och bussens skärm (BussQuiz/GPS) ballar ur så att bussen vill åt fel håll.
+// Spelaren fixar det: skaka föraren (3 gånger) eller svara rätt på skärmen. Bara med incidents:true, så att äldre regler och tester är oförändrade.
+export const INCIDENTS=Object.freeze([{at:5.5,kind:'sleep',dir:1},{at:14.5,kind:'gps',dir:-1},{at:22,kind:'sleep',dir:-1}]);
 export class ZombieBus {
-  constructor(route,{duration=30}={}){
+  constructor(route,{duration=30,incidents=false}={}){
+    this.incidents=!!incidents;this.incident=null;this.nextIncident=0;this.resolved=0;this.drift=0;this.incidentLog=[];
     if(route.length<2)throw new Error('Bussen behöver en sammanhängande färdväg.');
     this.route=route.map(p=>({...p}));this.lengths=[0];for(let i=1;i<route.length;i++)this.lengths.push(this.lengths[i-1]+Math.hypot(route[i].x-route[i-1].x,route[i].z-route[i-1].z));
     this.distance=this.lengths.at(-1);this.duration=duration;this.elapsed=0;this.roll=0;this.velocity=0;this.health=100;this.steady=0;this.state='playing';this.turn=0;this.points=0;this.lastBeat=-1;this.falls=0;this.passengers=Array.from({length:3},(_,i)=>({x:(i-1)*.05,vx:0,angle:0,bounce:0,fallen:false,recover:0}));
@@ -20,6 +24,7 @@ export class ZombieBus {
       const beat=Math.min(turns.length-1,Math.floor(this.elapsed/4));this.turn=turns[beat];
       // Steering corrects lateral drift. Passengers react, without changing FPS controls.
       const jolt=this.elapsed>4?Math.sin(this.elapsed*2.5)*.25:0;
+      if(this.incidents)this.stepIncident(h);
       this.velocity+=(this.turn*3+input*4.2+jolt-this.roll*.5-this.velocity*2.2)*h;
       this.roll=clamp(this.roll+this.velocity*h,-2,2);
       for(const [i,p] of this.passengers.entries()){
@@ -34,11 +39,24 @@ export class ZombieBus {
       if(Math.abs(this.roll)<.4)this.steady+=h;
       if(Math.abs(this.roll)>.7)this.health=Math.max(0,this.health-(Math.abs(this.roll)-.7)*38*h);
       if(this.health===0){this.state='crashed';break;}
-      if(this.elapsed>=this.duration-.00001){this.elapsed=this.duration;this.state='arrived';this.points=200+Math.round(this.steady*5);}
+      if(this.elapsed>=this.duration-.00001){this.elapsed=this.duration;this.state='arrived';this.points=200+Math.round(this.steady*5)+this.resolved*40;}
     }
   }
+  stepIncident(h){
+    const next=INCIDENTS[this.nextIncident];
+    if(!this.incident&&next&&this.elapsed>=next.at){this.nextIncident++;this.incident={kind:next.kind,since:this.elapsed,need:next.kind==='sleep'?3:1,dir:next.dir};this.incidentLog.push({kind:next.kind,at:this.elapsed});}
+    if(!this.incident){this.drift=0;return;}
+    const age=this.elapsed-this.incident.since;this.drift=this.incident.dir*Math.min(3.4,1.4+age*.45);this.velocity+=this.drift*h;
+    if(age>8)this.health=Math.max(0,this.health-4*h);
+  }
+  // Skaka föraren: tre skakar väcker honom. Returnerar true när incidenten är löst.
+  shake(){const i=this.incident;if(!i||i.kind!=='sleep')return false;i.need--;if(i.need>0)return false;this.incident=null;this.resolved++;return true;}
+  // Skärmen startas om (rätt svar i quizet).
+  fixGps(){const i=this.incident;if(!i||i.kind!=='gps')return false;this.incident=null;this.resolved++;return true;}
+  // Fel svar på skärmen skakar om bussen.
+  bump(damage=6){this.health=Math.max(0,this.health-damage);if(this.health===0&&this.state==='playing')this.state='crashed';}
   get remaining(){return Math.max(0,this.duration-this.elapsed);}
-  get instruction(){return this.elapsed<3?'DRAG RATTEN ÅT SIDORNA':this.roll>.18?'← STYR VÄNSTER':this.roll<-.18?'STYR HÖGER →':'SNYGGT! HÅLL KURSEN';}
-  get quip(){return this.elapsed<4?'KÖRKORT? JAG HAR BUSSKORT.':this.elapsed>15&&this.elapsed<18?'FARTHINDER? FLYGHINDER.':this.elapsed>9&&this.elapsed<12?'KAFFET ÅKER GRATIS.':this.health<35?'DET DÄR VAR NOG HJULUPPHÄNGNINGEN.':this.passengers.some(p=>p.fallen)?'NÄSTA HÅLLPLATS: GOLVET.':'HÅLL I DIG. TIDTABELLEN ÄR ETT FÖRSLAG.';}
-  snapshot(){return {state:this.state,elapsed:this.elapsed,falls:this.falls,passengers:this.passengers.map(p=>({...p})),remaining:this.remaining,roll:this.roll,turn:this.turn,health:this.health,points:this.points,progress:this.elapsed/this.duration};}
+  get instruction(){if(this.incident)return this.incident.kind==='sleep'?'FÖRAREN SOMNAR! SKAKA HONOM':'SKÄRMEN BALLAR UR! SVARA RÄTT';return this.elapsed<3?'DRAG RATTEN ÅT SIDORNA':this.roll>.18?'← STYR VÄNSTER':this.roll<-.18?'STYR HÖGER →':'SNYGGT! HÅLL KURSEN';}
+  get quip(){if(this.incident)return this.incident.kind==='sleep'?'CHAUFFÖREN: ”ZZZ… ÄR VI FRAMME?”':'SKÄRMEN: ”SVÄNG VÄNSTER I VÄNERN.”';return this.elapsed<4?'KÖRKORT? JAG HAR BUSSKORT.':this.elapsed>15&&this.elapsed<18?'FARTHINDER? FLYGHINDER.':this.elapsed>9&&this.elapsed<12?'KAFFET ÅKER GRATIS.':this.health<35?'DET DÄR VAR NOG HJULUPPHÄNGNINGEN.':this.passengers.some(p=>p.fallen)?'NÄSTA HÅLLPLATS: GOLVET.':'HÅLL I DIG. TIDTABELLEN ÄR ETT FÖRSLAG.';}
+  snapshot(){return {incident:this.incident?{kind:this.incident.kind,need:this.incident.need,age:this.elapsed-this.incident.since}:null,resolved:this.resolved,driver:{sleeping:this.incident?.kind==='sleep',panic:this.incident?.kind==='gps'},state:this.state,elapsed:this.elapsed,falls:this.falls,passengers:this.passengers.map(p=>({...p})),remaining:this.remaining,roll:this.roll,turn:this.turn,health:this.health,points:this.points,progress:this.elapsed/this.duration};}
 }

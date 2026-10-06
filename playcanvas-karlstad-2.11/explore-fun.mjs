@@ -3,8 +3,8 @@
 // Idéerna är lånade: kombo och beröm från Candy Crush, regnbågstermosen från Mario Karts frågetecken-lådor,
 // dagsmål och streak från Duolingo och Pokémon GO, hett/kallt från geocaching, album från samlarkort.
 // Ren spellogik utan DOM och rendering, så att allt går att testa. Bara 'clean'-läget (City Explore) använder den.
-import {stockholmDay} from './daily-challenge.mjs?v=2.13.0';
-import {ALBUM_AREAS,areaOf} from './explore-places.mjs?v=2.13.0';
+import {stockholmDay} from './daily-challenge.mjs?v=2.14.0';
+import {ALBUM_AREAS,areaOf} from './explore-places.mjs?v=2.14.0';
 
 export const FUN_KEY='karlstad:fun:1';
 export const BASE_POINTS=25;
@@ -104,6 +104,9 @@ export const BADGES=Object.freeze([
   {id:'treasure-all',name:'Skattmästare',desc:'Hitta alla gömda skatter.',test:s=>s.treasureTotal>0&&s.treasures>=s.treasureTotal},
   {id:'bus-1',name:'Första bussen',desc:'Åk buss till en ny hållplats.',test:s=>s.stops>=1},
   {id:'bus-all',name:'Hela linjenätet',desc:'Besök alla hållplatser.',test:s=>s.stopTotal>0&&s.stops>=s.stopTotal},
+  {id:'quiz-10',name:'Busskunskap',desc:'Svara rätt på 10 frågor i bussens BussQuiz.',test:s=>s.quizCorrect>=10},
+  {id:'quiz-perfect',name:'Full pott på linjen',desc:'Svara rätt på alla frågor under en busstur.',test:s=>s.quizPerfect>=1},
+  {id:'checkin-1',name:'Incheckad',desc:'Checka in hos MusicPartner på Kungsgatan.',test:s=>s.checkins>=1},
   {id:'turbo-2k',name:'Turbotok',desc:'Kör 2 kilometer i turbo.',test:s=>s.turboMeters>=2000},
   {id:'area-1',name:'Områdeskungen',desc:'Samla alla termosar i ett område.',test:s=>s.areasDone>=1},
   {id:'streak-3',name:'Stammis',desc:'Nå dagsmålet tre dagar i rad.',test:s=>s.bestStreak>=3},
@@ -117,7 +120,7 @@ export function heatFor(distance){for(const [d,label,level] of HEAT)if(distance<
 
 const freshState=()=>({version:1,collected:[],treasures:[],stops:[],badges:[],areasDone:[],day:'',dayCount:0,dayDone:false,
   streak:0,lastDone:'',bestStreak:0,bestChain:0,levelSeen:1,
-  stats:{thermos:0,silver:0,gold:0,rainbow:0,turboMeters:0,rides:0,treasures:0}});
+  checkinDay:'',stats:{thermos:0,silver:0,gold:0,rainbow:0,turboMeters:0,rides:0,treasures:0,quizCorrect:0,quizPerfect:0,checkins:0}});
 const idList=(v,max=2000)=>Array.isArray(v)?[...new Set(v.filter(x=>typeof x==='string'&&x.length>0&&x.length<64))].slice(0,max):[];
 
 export class ExploreFun{
@@ -141,7 +144,7 @@ export class ExploreFun{
     s.collected=idList(v.collected);s.treasures=idList(v.treasures,200);s.stops=idList(v.stops,50);s.badges=idList(v.badges,100);s.areasDone=idList(v.areasDone,50);
     s.day=typeof v.day==='string'?v.day.slice(0,10):'';s.dayCount=clampInt(v.dayCount,9999);s.dayDone=!!v.dayDone;
     s.streak=clampInt(v.streak,9999);s.lastDone=typeof v.lastDone==='string'?v.lastDone.slice(0,10):'';s.bestStreak=clampInt(v.bestStreak,9999);s.bestChain=clampInt(v.bestChain,9999);
-    s.levelSeen=Math.max(1,clampInt(v.levelSeen,999));
+    s.levelSeen=Math.max(1,clampInt(v.levelSeen,999));s.checkinDay=typeof v.checkinDay==='string'?v.checkinDay.slice(0,10):'';
     for(const k of Object.keys(s.stats))s.stats[k]=clampInt(v.stats?.[k],1e9);
     return true;
   }
@@ -214,8 +217,9 @@ export class ExploreFun{
     return {count:s.treasures.length,total:this.treasureTotal,events:this.badgeEvents()};
   }
   // En busstur till en hållplats. Navet (Torget) räknas inte som ny hållplats.
-  ride(stop,bonus=150){
+  ride(stop,bonus=150,quiz=null){
     const s=this.state;s.stats.rides++;this.dirty=true;
+    if(quiz&&quiz.total>0){s.stats.quizCorrect+=quiz.correct;if(quiz.correct===quiz.total)s.stats.quizPerfect++;}
     const first=!stop.hub&&this.stopIds.has(stop.id)&&!s.stops.includes(stop.id);
     if(first)s.stops.push(stop.id);
     return {first,bonus:first?bonus:0,visited:s.stops.length,total:this.stopIds.size,events:this.badgeEvents()};
@@ -225,6 +229,14 @@ export class ExploreFun{
     this.state.stats.turboMeters+=meters;this.dirty=true;
     return this.badgeEvents();
   }
+  // Incheckning hos MusicPartner: en gång per dag.
+  checkIn(){
+    const s=this.state,day=this.rollDay();if(s.checkinDay===day)return {first:false,events:[]};
+    s.checkinDay=day;s.stats.checkins++;this.dirty=true;return {first:true,events:this.badgeEvents()};
+  }
+  checkedInToday(){return this.state.checkinDay===this.day;}
+  // Återställ nivån (poängen nollställs av spelet). Album, skatter, märken och dagsmål ligger kvar.
+  resetLevel(){this.state.levelSeen=1;this.combo=new ComboMeter();this.dirty=true;}
   // Efter varje poängutdelning: nivåhöjning och märken som beror på nivån.
   afterReward(xp){
     const out=[],lv=levelFor(xp),s=this.state;

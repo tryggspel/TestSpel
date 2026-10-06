@@ -30,9 +30,9 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:11px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.13.0">
-<link rel="stylesheet" href="./compact-hud.css?v=2.13.0">
-<link rel="stylesheet" href="./explore-fun.css?v=2.13.0">
+<link rel="stylesheet" href="./last-round.css?v=2.14.0">
+<link rel="stylesheet" href="./compact-hud.css?v=2.14.0">
+<link rel="stylesheet" href="./explore-fun.css?v=2.14.0">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
@@ -92,7 +92,7 @@
   <div id="solarFlash"></div><div id="damageFlash"></div>
   <div id="solarWeapon" aria-hidden="true" hidden><div class="weapon-top">SOL / 01</div><div class="weapon-barrel"><i>✳</i></div><div class="weapon-grip"></div></div>
 </div>
-<div id="scenicLayer" hidden><canvas id="scenicCanvas" aria-hidden="true"></canvas><header class="boat-header"><div><small id="scenicFrom"></small><b id="scenicDestination"></b></div><strong id="scenicClock"></strong><button id="scenicPause" aria-label="Pausa resan">Ⅱ</button></header><div class="boat-progress"><i id="scenicProgress"></i></div><div class="scenic-note">EN KAFFEPAUS MED UTSIKT.</div><div id="scenicPaused" hidden><div><h2>PAUS PÅ RESAN.</h2><button id="scenicResume" class="round-primary">FORTSÄTT →</button><button id="scenicAbort" class="round-secondary">TILLBAKA TILL HÅLLPLATSEN</button></div></div></div>
+<div id="scenicLayer" hidden><canvas id="scenicCanvas" aria-hidden="true"></canvas><header class="boat-header"><div><small id="scenicFrom"></small><b id="scenicDestination"></b></div><strong id="scenicClock"></strong><button id="scenicPause" aria-label="Pausa resan">Ⅱ</button></header><div class="boat-progress"><i id="scenicProgress"></i></div><div id="scenicScreen" hidden><small id="scenicQHead">BUSSQUIZ</small><b id="scenicQ"></b><div class="scenic-qtime"><i id="scenicQTime"></i></div><div class="scenic-answers"><button id="scenicA0" type="button"></button><button id="scenicA1" type="button"></button><button id="scenicA2" type="button"></button></div></div><div class="scenic-note">EN KAFFEPAUS MED UTSIKT.</div><div id="scenicPaused" hidden><div><h2>PAUS PÅ RESAN.</h2><button id="scenicResume" class="round-primary">FORTSÄTT →</button><button id="scenicAbort" class="round-secondary">TILLBAKA TILL HÅLLPLATSEN</button></div></div></div>
 <div id="boatLayer" hidden>
   <canvas id="boatCanvas" aria-hidden="true"></canvas>
   <header class="boat-header"><div><small>BÅTBUSS / INRE HAMN</small><b id="boatDestination">MARIEBERGSSKOGEN</b><span id="boatScore"></span></div><strong id="boatClock"></strong><button id="boatPause" aria-label="Pausa båtturen">Ⅱ</button></header>
@@ -106,6 +106,7 @@
   <div class="bus-header"><b>LINJE 666 <span id="busDestination">SANDGRUND</span></b><strong><span id="busClock">30</span><small>SEK KVAR</small></strong><button id="busPause" aria-label="Pausa bussresan">Ⅱ</button></div>
   <div class="bus-progress"><i id="busProgress"></i></div>
   <div id="busQuip">KÖRKORT? JAG HAR BUSSKORT.</div>
+  <div id="busIncident" hidden><b id="busIncidentTitle"></b><button id="busShake" type="button">SKAKA FÖRAREN · MELLANSLAG</button><div id="busGps" hidden><small>BUSSQUIZ · SYSTEMFEL · SVARA RÄTT FÖR ATT STARTA OM</small><div id="busGpsQ"></div><div class="bus-gps-answers"><button id="busGps0" type="button"></button><button id="busGps1" type="button"></button><button id="busGps2" type="button"></button></div></div></div>
   <div class="bus-dashboard">
     <b id="busInstruction">DRAG RATTEN ÅT SIDORNA</b>
     <div class="bus-balance-meter"><span></span><i id="busBalanceDot"></i></div>
@@ -171,6 +172,19 @@
     <button id="roundExplore" class="round-tertiary">Tillbaka till kaffejakten</button>
     <p id="roundIntroControls" class="control-hint"></p>
     <p id="roundSeed" class="round-fine"></p>
+  </section>
+  <section id="round-musicpartner" class="round-card compact" hidden>
+    <div class="episode-label"><span>MUSICPARTNER</span><span>KUNGSGATAN 6D</span></div>
+    <h2>VÄLKOMMEN<br><em>IN.</em></h2>
+    <p id="mpStatus" class="round-fine"></p>
+    <button id="mpCheckin" class="round-primary" type="button">CHECKA IN · +100 <span>→</span></button>
+    <h3 class="mp-h">LYSSNA</h3>
+    <div id="mpTracks" class="mp-tracks"></div>
+    <button id="mpStop" class="round-secondary" type="button">STOPPA MUSIKEN</button>
+    <h3 class="mp-h">ÅTERSTÄLL</h3>
+    <p class="round-fine">Nollställer poäng och nivå. Album, skatter, märken och dagsmål ligger kvar.</p>
+    <button id="mpReset" class="round-secondary" type="button">ÅTERSTÄLL XP</button>
+    <button id="mpClose" class="round-tertiary" type="button">Tillbaka till gatan</button>
   </section>
   <section id="round-bus-pick" class="round-card compact" hidden>
     <div class="episode-label"><span>VÄRMLANDSTRAFIK</span><span id="busPickFrom">TORGET</span></div>
@@ -257,6 +271,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.13.0"></script>
+<script type="module" src="./app.js?v=2.14.0"></script>
 </body>
 </html>

@@ -42,8 +42,17 @@ export function drawCabin(c,w,h){
   c.fillStyle='#172f32';c.fillRect(450,352,132,24);c.fillStyle='#f3d786';c.font='900 10px sans-serif';c.fillText('KAFFE PÅ EGEN RISK',516,368);
   c.restore();
 }
-export function drawPassengers(c,w,h,state,sprites=[]){
+export function drawPassengers(c,w,h,state,sprites=[],driver=null){
   c.clearRect(0,0,w,h);c.save();c.translate(w/2,0);c.scale(h/900,h/900);c.translate(-300,0);
+  // Zombiechauffören vid ratten: nickar när han somnar, skakar när skärmen ballar ur.
+  {const d=state.driver||{},nod=d.sleeping?.55+Math.sin(state.elapsed*3)*.12:Math.sin(state.elapsed*5)*.04,shake=d.panic?Math.sin(state.elapsed*30)*5:0;
+    c.save();c.translate(124+shake,458);c.rotate(nod*.5);c.fillStyle='#12272c55';c.beginPath();c.ellipse(0,8,38,8,0,0,Math.PI*2);c.fill();
+    if(driver)c.drawImage(driver,-48,-150,96,150);else{c.fillStyle='#a8c88b';c.strokeStyle=ink;c.lineWidth=5;c.beginPath();c.ellipse(0,-90,34,40,0,0,Math.PI*2);c.fill();c.stroke();c.fillStyle='#5b8a76';c.fillRect(-30,-50,60,50);c.strokeRect(-30,-50,60,50);}
+    c.restore();
+    c.save();c.font='900 26px sans-serif';c.lineWidth=5;c.strokeStyle=ink;c.textAlign='center';
+    if(d.sleeping){const t=state.elapsed;for(let i=0;i<3;i++){const y=290-((t*30+i*30)%90),a=1-((t*30+i*30)%90)/90;c.globalAlpha=a;c.strokeText('Z',150+i*24,y);c.fillStyle='#ffe887';c.fillText('Z',150+i*24,y);}}
+    if(d.panic){c.strokeText('?!',150,300);c.fillStyle='#ff9f8c';c.fillText('?!',150,300);}
+    c.restore();}
   for(const [i,p] of state.passengers.entries()){
     const x=[220,376,291][i]+p.x*105,y=[493,551,630][i]-p.bounce*55,size=[111,128,147][i];
     c.save();c.translate(x,y);c.rotate(p.angle);c.fillStyle='#12272c55';c.beginPath();c.ellipse(0,8,size*.35,9,0,0,Math.PI*2);c.fill();
@@ -55,9 +64,9 @@ export function drawPassengers(c,w,h,state,sprites=[]){
   if(state.elapsed>9){for(let i=0;i<2;i++){const x=300+Math.sin(state.elapsed*2+i*3)*100+state.roll*40,y=462+i*71-Math.abs(Math.sin(state.elapsed*3+i))*50;c.save();c.translate(x,y);c.rotate(state.roll+i*.5);poly(c,[[-9,-16],[11,-16],[7,5],[-6,5]],'#aa75cb',3);c.fillStyle='#eee1b4';c.fillRect(-11,-20,24,5);c.fillStyle='#693f24';for(let k=0;k<3;k++)c.fillRect(13+k*7,-12-k*6,4,6);c.restore();}}
   c.restore();
 }
-export function createCabinView(canvas,passengerCanvas,textures){
-  const sprites=textures.map(t=>t.getSource()),c=canvas.getContext('2d'),p=passengerCanvas.getContext('2d');let active=false,last=null,acc=0;
+export function createCabinView(canvas,passengerCanvas,textures,driverTexture=null){
+  const sprites=textures.map(t=>t.getSource()),driver=driverTexture?.getSource?.()||null,c=canvas.getContext('2d'),p=passengerCanvas.getContext('2d');let active=false,last=null,acc=0;
   function resize(){if(!active)return;const scale=Math.min(1.25,1000/Math.max(window.innerWidth,window.innerHeight));canvas.width=passengerCanvas.width=Math.round(window.innerWidth*scale);canvas.height=passengerCanvas.height=Math.round(window.innerHeight*scale);drawCabin(c,canvas.width,canvas.height);if(last)drawPassengers(p,canvas.width,canvas.height,last,sprites);}
   window.addEventListener('resize',resize);
-  return {start(){active=true;last=null;acc=0;resize();},stop(){active=false;last=null;},draw(state,dt=1){if(!active)return;acc+=dt;if(acc<1/30)return;acc%=1/30;last=state;drawPassengers(p,canvas.width,canvas.height,state,sprites);}};
+  return {start(){active=true;last=null;acc=0;resize();},stop(){active=false;last=null;},draw(state,dt=1){if(!active)return;acc+=dt;if(acc<1/30)return;acc%=1/30;last=state;drawPassengers(p,canvas.width,canvas.height,state,sprites,driver);}};
 }

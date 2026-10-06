@@ -1,4 +1,4 @@
-import {cityPoint} from './city-geography.mjs?v=2.13.0';
+import {cityPoint} from './city-geography.mjs?v=2.14.0';
 
 const FACE_YAW=Object.freeze({north:180,south:0,east:90,west:-90});
 const FACADE_OFFSET=.34; // comic-city panels sit at .25; real businesses must render in front.

@@ -1,8 +1,8 @@
-import {createBusModel} from './transit-art.js?v=2.13.0';
-import {createComicCity} from './comic-city.js?v=2.13.0';
-import {SUN} from './city-ecology.mjs?v=2.13.0';
-import {rarityFor,BOOSTERS} from './explore-fun.mjs?v=2.13.0';
-import {BUS_NETWORK} from './explore-places.mjs?v=2.13.0';
+import {createBusModel} from './transit-art.js?v=2.14.0';
+import {createComicCity} from './comic-city.js?v=2.14.0';
+import {SUN} from './city-ecology.mjs?v=2.14.0';
+import {rarityFor,BOOSTERS} from './explore-fun.mjs?v=2.14.0';
+import {BUS_NETWORK,MUSIC_OFFICE} from './explore-places.mjs?v=2.14.0';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
   const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');
@@ -135,6 +135,10 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const sunSign=card('Följ solen',labelTex(['SOLA!','FÖLJ MIG · 2× XP'], '#f4d176','#224838'),2.7,.85,0,2.5,0);
   chaosFlask.enabled=sunPad.enabled=sunSign.enabled=false;
   const comicCity=createComicCity(pc,host,draw);
+  // MusicPartner på Kungsgatan: orange skylt och ring vid dörren.
+  const officeSign=card('MusicPartner',labelTex(['MUSICPARTNER','CHECKA IN · MUSIK · XP'],'#252729','#e78336'),3.2,1.0,MUSIC_OFFICE.x+2.6,.15,MUSIC_OFFICE.z+1.5,true);
+  const officePad=primitive('MusicPartner-ring','cylinder',MUSIC_OFFICE.x,.1,MUSIC_OFFICE.z,MUSIC_OFFICE.radius*1.2,.04,MUSIC_OFFICE.radius*1.2,material('#e78336'));
+  officeSign.enabled=officePad.enabled=false;
   function nearbyStation(p){return stations.find(s=>Math.hypot(p.x-s.x,p.z-s.z)<4);}
   const rarityCache=new Map();let rarityDay='',lastNow=0;
   function update(p,now,game){
@@ -169,6 +173,7 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     visitors.forEach((e,i)=>{const v=sandgrund.visitors[i];e.enabled=gallery&&!v.rescued;if(e.enabled){e.setPosition(v.x,0,v.z);e.setEulerAngles(0,Math.atan2(p.x-v.x,p.z-v.z)*180/Math.PI,0);}});
     for(const s of stations)s.e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);
     const calmNow=roaming&&journey.rush.peaceful;
+    {const d=Math.hypot(p.x-MUSIC_OFFICE.x,p.z-MUSIC_OFFICE.z);officeSign.enabled=officePad.enabled=calmNow&&d<45;if(officeSign.enabled)officeSign.setEulerAngles(0,Math.atan2(p.x-MUSIC_OFFICE.x,p.z-MUSIC_OFFICE.z)*180/Math.PI,0);}
     busViews.forEach(v=>{
       const {s,post,sign,pad,vehicle}=v,shown=calmNow?s.net:s.legacy,d=Math.hypot(p.x-s.x,p.z-s.z);
       post.enabled=shown;

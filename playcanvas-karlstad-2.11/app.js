@@ -1,26 +1,26 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.13.0';
-import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.13.0';
-import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.13.0';
-import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.13.0';
-import {createCityEnvironment} from './city-environment.mjs?v=2.13.0';
-import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.13.0';
-import {ColliderGrid} from './collider-grid.mjs?v=2.13.0';
-import {onVastraBron} from './city-water.mjs?v=2.13.0';
-import {createRiverArchitecture} from './river-architecture.js?v=2.13.0';
-import {createMallArchitecture} from './mall-architecture.js?v=2.13.0';
-import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.13.0';
-import {createParkArchitecture} from './park-architecture.js?v=2.13.0';
-import {atKil,KIL} from './scenic-transit.js?v=2.13.0';
-import {registerBridges,onBridge} from './bridges.mjs?v=2.13.0';
-import {createOuterCity,OUTER_AREAS} from './outer-city.js?v=2.13.0';
-import {moveSteps,TURBO} from './explore-fun.mjs?v=2.13.0';
-import {createSouthCity} from './city-south.js?v=2.13.0';
-import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage,OUTER_WATER,outerWaterBlocked} from './city-south-space.mjs?v=2.13.0';
-import {waterBlocked} from './park-space.mjs?v=2.13.0';
-import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.13.0';
-import {createAudioEngine} from './audio-engine.mjs?v=2.13.0';
-import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.13.0';
+import {createLastRound} from './last-round.js?v=2.14.0';
+import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.14.0';
+import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.14.0';
+import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.14.0';
+import {createCityEnvironment} from './city-environment.mjs?v=2.14.0';
+import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.14.0';
+import {ColliderGrid} from './collider-grid.mjs?v=2.14.0';
+import {onVastraBron} from './city-water.mjs?v=2.14.0';
+import {createRiverArchitecture} from './river-architecture.js?v=2.14.0';
+import {createMallArchitecture} from './mall-architecture.js?v=2.14.0';
+import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.14.0';
+import {createParkArchitecture} from './park-architecture.js?v=2.14.0';
+import {atKil,KIL} from './scenic-transit.js?v=2.14.0';
+import {registerBridges,onBridge} from './bridges.mjs?v=2.14.0';
+import {createOuterCity,OUTER_AREAS} from './outer-city.js?v=2.14.0';
+import {moveSteps,TURBO} from './explore-fun.mjs?v=2.14.0';
+import {createSouthCity} from './city-south.js?v=2.14.0';
+import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage,OUTER_WATER,outerWaterBlocked} from './city-south-space.mjs?v=2.14.0';
+import {waterBlocked} from './park-space.mjs?v=2.14.0';
+import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.14.0';
+import {createAudioEngine} from './audio-engine.mjs?v=2.14.0';
+import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.14.0';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -119,9 +119,21 @@ function musicResume(){
   else if(MUSIC_STATE.mode==='city')AUDIO.fade('main',.23,420);
 }
 function musicSetMuted(v){AUDIO.setMuted(v);}
+// 2.14 MusicPartner: en enkel jukebox på spelets egna spår. Musikläget 'jukebox' lämnas orört av paus/återuppta.
+const JUKE={playing:null};
+function jukeboxPlay(id){
+  if(!['main','zombie','arena'].includes(id))return false;
+  musicUnlock();clearTimeout(MUSIC_STATE.roundTimer);clearTimeout(MUSIC_STATE.arenaTimer);MUSIC_STATE.mode='jukebox';
+  for(const n of ['main','zombie','arena','transition'])if(n!==id)AUDIO.fade(n,0,300,{pauseAfter:true});
+  AUDIO.play(id,{restart:true});AUDIO.fade(id,.32,350);JUKE.playing=id;return true;
+}
+function jukeboxStop(){
+  if(!JUKE.playing)return;AUDIO.fade(JUKE.playing,0,400,{pauseAfter:true});JUKE.playing=null;musicCity(false);
+}
 const GAME_MUSIC=Object.freeze({
   init:musicInit,unlock:musicUnlock,city:musicCity,roundStart:musicRoundStart,roundEnd:musicRoundEnd,
   pause:musicPause,resume:musicResume,setMuted:musicSetMuted,
+  jukebox:Object.freeze({play:jukeboxPlay,stop:jukeboxStop,get playing(){return JUKE.playing;}}),
   get muted(){return AUDIO.muted;},
   // Spelets korta effektljud (last-round.js) delar samma AudioContext och mute.
   sfx:opts=>AUDIO.blip(opts),

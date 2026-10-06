@@ -1,3 +1,13 @@
+# Karlstad City — 2.14.0 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+
+* **BussQuiz på bussens skärm (City Explore):** 2–4 frågor per resa på en LED-skärm i bussen (tryck eller 1–3). Frågor ur en fast Karlstad-bank (`bus-quiz.mjs`), ur spelets eget linjenät (alltid rätt mot kartan) och, om det finns, ur riktiga avgångar. Snabbt rätt svar ger 40 poäng, rätt 30; resultatet läggs på ankomstbonusen. Märkena Busskunskap och Full pott på linjen. Utsikten rullar nu: mötande trafik, hus, vatten eller skog efter målet, LED-skylt med linje och en färdkarta.
+* **Värmlandstrafik-data:** `api/varmlandstrafik.mjs` hämtar avgångar från Karlstad Resecentrum via Trafiklab ResRobot. Den kräver miljövariabeln `TRAFIKLAB_KEY` (gratis nyckel på trafiklab.se); utan den svarar funktionen 503 och spelet använder sina inbyggda frågor. **Ej provad mot riktig nyckel** (kodad efter ResRobots dokumenterade format och testad med låtsasdata).
+* **Zombiebussen:** en zombiechaufför sitter vid ratten och klantar sig (`ZombieBus` med `incidents`). Vid 5,5 s och 22 s somnar han och bussen driver iväg: tryck SKAKA FÖRAREN tre gånger (Mellanslag). Vid 14,5 s ballar skärmen ur: texten garbleras, svaren byter plats och bussen vill åt fel håll; svara rätt för att starta om, fel svar skakar bussen. Löst ger 40 poäng var, olöst äter bussens skick efter 8 s. Utan `incidents` är reglerna som förut.
+* **Båtbussen:** stranden rullar förbi i två lager, med måsar, segelbåt och hoppande fisk. Tryck på dem för sjölivspoäng (lugn tur 10, räddningstur 5). När alla är räddade finns det fortfarande något att titta på och trycka på.
+* **MusicPartner, Kungsgatan 6D:** orange skylt och ring vid dörren (stämpel). E öppnar panelen: checka in (+100, en gång per dag, märket Incheckad), lyssna (jukebox med spelets tre spår, stoppas automatiskt 90 m bort) och ÅTERSTÄLL XP (två tryck; nollställer poäng och nivå, album, skatter och märken ligger kvar).
+
+## Föregående version
+
 # Karlstad City — 2.13.0 · City Explore: turbo, kombon, gömda skatter och busslinjer
 
 Bara City Explore (Clean City) är ändrat. Zombieläget, Termosrundan och spelplanen är orörda; de gamla termos-id:na och Halloween-urvalet är oförändrade. Bästa versionen före denna är 2.12.0.

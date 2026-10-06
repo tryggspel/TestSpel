@@ -1,13 +1,13 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.13.0';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.13.0';
-import {CityMission} from './city-missions.mjs?v=2.13.0';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.13.0';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.13.0';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.13.0';
-import {CITY_STREETS} from './city-streets.mjs?v=2.13.0';
-import {pedestrianAt} from './pedestrian.mjs?v=2.13.0';
-import {ExploreFun,segmentDistance,heatFor} from './explore-fun.mjs?v=2.13.0';
-import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS} from './explore-places.mjs?v=2.13.0';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.14.0';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.14.0';
+import {CityMission} from './city-missions.mjs?v=2.14.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.14.0';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.14.0';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.14.0';
+import {CITY_STREETS} from './city-streets.mjs?v=2.14.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.14.0';
+import {ExploreFun,segmentDistance,heatFor} from './explore-fun.mjs?v=2.14.0';
+import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.14.0';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
@@ -183,13 +183,22 @@ export class CityJourney extends CityMission {
   }
   // Turbo-kilometer räknas av spelet; här delas märken ut.
   noteTurbo(meters){if(this.rush?.mode!=='clean')return;for(const e of this.fun.addTurbo(meters))this.events.push(e);}
+  // MusicPartner på Kungsgatan: incheckning ger bonus en gång per dag. Bara i City Explore.
+  musicCheckIn(){
+    if(this.rush?.mode!=='clean')return null;const r=this.fun.checkIn();
+    if(r.first){this.events.push({type:'checkin',name:MUSIC_OFFICE.name,bonus:MUSIC_OFFICE.checkinBonus});for(const e of r.events)this.events.push(e);this.reward(MUSIC_OFFICE.checkinBonus);this.save();}
+    return {first:r.first,bonus:r.first?MUSIC_OFFICE.checkinBonus:0};
+  }
+  nearOffice(p){return Math.hypot(p.x-MUSIC_OFFICE.x,p.z-MUSIC_OFFICE.z)<MUSIC_OFFICE.radius;}
+  // Återställ poäng och nivå (inte album, skatter eller märken).
+  resetXp(){this.balance=0;this.lifetime=0;if(this.rush)this.rush.xp=0;this.fun.resetLevel();this.dirty=true;this.save();return {balance:0,lifetime:0};}
   // Framme med bussen: första besöket på en hållplats ger bonus, och märken kan låsas upp.
-  busArrive(stop){
+  busArrive(stop,quiz=null){
     if(this.rush?.mode!=='clean')return null;
-    const r=this.fun.ride(stop,BUS_FIRST_RIDE_BONUS);
-    this.events.push({type:'bus-arrive',id:stop.id,name:stop.name,first:r.first,bonus:r.bonus,visited:r.visited,total:r.total});
+    const r=this.fun.ride(stop,BUS_FIRST_RIDE_BONUS,quiz),qp=Math.max(0,Math.min(500,Math.round(quiz?.points||0)));
+    this.events.push({type:'bus-arrive',id:stop.id,name:stop.name,first:r.first,bonus:r.bonus,visited:r.visited,total:r.total,quiz:quiz?{correct:quiz.correct,total:quiz.total,points:qp}:null});
     for(const e of r.events)this.events.push(e);
-    if(r.bonus)this.reward(r.bonus);
+    if(r.bonus+qp)this.reward(r.bonus+qp);
     this.save();return r;
   }
   nearestBus(p){return (this.rush?.peaceful?this.busNetwork:this.busStops).map(s=>({...s,distance:Math.hypot(p.x-s.x,p.z-s.z)})).sort((a,b)=>a.distance-b.distance)[0];}
