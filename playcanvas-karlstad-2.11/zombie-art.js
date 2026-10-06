@@ -1,7 +1,7 @@
 // Four hand-drawn poses, baked at load. Animation only changes UVs on the existing card.
 export function drawZombiePose(c,kind,frame=0){
-  const ink='#1b3539',paper='#fff1ce',skin=kind==='tank'?'#a7b989':'#b4d58c';
-  c.lineCap='round';c.lineJoin='round';const phase=frame*Math.PI/2,swing=Math.sin(phase),shirt=kind==='runner'?'#e78a5c':kind==='tank'?'#9489bb':kind==='artist'?'#b6c8cf':kind==='boss'?'#d8ac44':'#64a9a3';
+  const ink='#1b3539',paper='#fff1ce',skin=kind==='tank'?'#a7b989':kind==='golden'?'#d8d58a':'#b4d58c';
+  c.lineCap='round';c.lineJoin='round';const phase=frame*Math.PI/2,swing=Math.sin(phase),shirt=kind==='golden'?'#f2c44e':kind==='runner'?'#e78a5c':kind==='tank'?'#9489bb':kind==='artist'?'#b6c8cf':kind==='boss'?'#d8ac44':'#64a9a3';
   const shape=(fill,path,width=5)=>{c.beginPath();path();c.fillStyle=fill;c.fill();c.strokeStyle=ink;c.lineWidth=width;c.stroke();};
   const oval=(x,y,rx,ry,col)=>shape(col,()=>c.ellipse(x,y,rx,ry,0,0,Math.PI*2));
   const box=(x,y,w,h,col,r=5)=>shape(col,()=>c.roundRect(x,y,w,h,r));
@@ -26,12 +26,18 @@ export function drawZombiePose(c,kind,frame=0){
   if(kind==='artist')for(let i=0;i<5;i++)oval(90+i*17,80,14,17,'#eee9d3');
   c.restore();
   box(94,176,70,16,paper,4);limb(104,182,56,.04+swing*.17,paper,17);
-  c.fillStyle=ink;c.textAlign='center';c.font='900 23px sans-serif';c.fillText(kind==='runner'?'SEN!':kind==='tank'?'PÅTÅR':kind==='boss'?'90+':kind==='artist'?'KONST':'KAFFE?',134,246,104);
+  c.fillStyle=ink;c.textAlign='center';c.font='900 23px sans-serif';c.fillText(kind==='golden'?'MIN!':kind==='runner'?'SEN!':kind==='tank'?'PÅTÅR':kind==='boss'?'90+':kind==='artist'?'KONST':'KAFFE?',134,246,104);
   // Props distinguish silhouettes from a distance; no extra meshes.
   if(kind==='tank'){box(201,189,34,66,'#d2ded2',6);box(198,183,39,13,'#4b6463');c.strokeStyle=paper;c.lineWidth=3;c.beginPath();c.moveTo(211,175);c.quadraticCurveTo(205,164,214,154);c.stroke();}
   if(kind==='runner'){box(211,196,27,22,paper,4);c.strokeStyle='#efc363';c.lineWidth=3;c.beginPath();c.moveTo(237,208);c.lineTo(247,219);c.stroke();}
   if(kind==='boss'){box(206,135,23,89,'#f3c453');oval(218,133,17,23,'#f3c453');c.fillStyle=ink;c.font='900 25px sans-serif';c.fillText('1',218,189);}
   if(kind==='artist'){box(220,144,8,90,'#aa7454',2);oval(224,140,9,18,'#a564a4');oval(42,251,28,19,'#dcb572');}
+  // Guld-Gunnar: crown, a stolen giant cinnamon bun and sparkles that read from far away.
+  if(kind==='golden'){
+    shape('#f6cf4f',()=>{c.moveTo(92,72);c.lineTo(100,42);c.lineTo(115,62);c.lineTo(128,36);c.lineTo(141,62);c.lineTo(156,42);c.lineTo(164,72);c.closePath();},4);
+    oval(222,212,30,24,'#c98a3f');c.strokeStyle='#7d4f22';c.lineWidth=4;c.beginPath();c.arc(222,212,15,0,Math.PI*1.6);c.stroke();
+    c.fillStyle='#fff6c8';for(const [x,y,r] of [[40,90,7],[226,70,6],[30,190,5],[238,282,7],[58,320,5]]){c.beginPath();c.moveTo(x,y-r*2);c.lineTo(x+r*.5,y-r*.5);c.lineTo(x+r*2,y);c.lineTo(x+r*.5,y+r*.5);c.lineTo(x,y+r*2);c.lineTo(x-r*.5,y+r*.5);c.lineTo(x-r*2,y);c.lineTo(x-r*.5,y-r*.5);c.closePath();c.fill();}
+  }
 }
 export function createZombieAtlases(texture){
   const cache=new Map();

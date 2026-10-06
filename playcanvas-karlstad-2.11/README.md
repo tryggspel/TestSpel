@@ -1,3 +1,19 @@
+# Karlstad City — 2.12.0 · Zombieläget: tydliga pilar, Guld-Gunnar och fältuppdrag
+
+Spelplanen är låst. Den här versionen ändrar bara spelupplevelsen i stadsjakten. Bästa versionen före denna är 2.11.30.
+
+* **Pilarna:** rutten räknas fortfarande på samma gångbara rutnät, men trappstegen och L-svängarna dras nu raka (`smoothPath`). Pilarna ligger med jämnt avstånd (3,5 m) och startar strax framför spelaren, så de pekar längs gatan i stället för åt sidan var tredje meter. Remsan överst säger mål, avstånd och nästa sväng: `HÄMTA KAFFEVÄSKAN · 52 M · ← OM 13 M`.
+* **Pilfärg = mål:** cyan gatuhändelse, lila termos, guld Guld-Gunnar eller guldtermos, grön tryggzon.
+* **Ingen dödtid:** mellan gatuhändelserna försvann pilarna tidigare i ungefär 11 s per jakt. Nu pekar de mot närmaste termos inom 45 m.
+* **Utfall:** en zombie som kommer nära stannar, laddar i 0,42 s (röd ring, hopsjunken figur) och gör sedan ett snabbt utfall. En solstöt under laddningen avbryter utfallet.
+* **Zombietyper syns på avstånd:** färgad ring under varje zombie (Påtårs-Pia grön, Sprint-Steffe orange, Termos-Torsten lila). Termos-Torsten kan dyka upp efter 45 s i stället för 75 s.
+* **Guld-Gunnar:** en sällsynt zombie per jakt, som i Pokémon GO:s shiny-jakt. Han flyr i stället för att anfalla och smiter efter 18 s. Fångst ger 120 XP, 12 s och full solenergi.
+* **Fältuppdrag:** tre små uppdrag per jakt (till exempel 3 Sprint-Steffe, 2 termosar på gågata, solbada 6 s), valda från jaktens frö så att Dagens Karlstad är lika för alla. Varje uppdrag ger 30 XP och 8 s, alla tre ger ett genombrott på 60 XP och 12 s. Raden syns i statusremsan.
+* **Målet är 1000 XP** (tidigare 800). Termosjakten mellan händelserna och de nya belöningarna gjorde annars jakten omkring en tredjedel kortare i simuleringen. Regelversionen är 8, så utmaningslänkar från 2.11 jämförs inte med 2.12.
+* Mätt med en bot på riktiga byggnadsdata (6 frön): pilarna saknades 11,4 s per jakt före, 0 s efter. Botens genomsnittliga tid till flykt: 66 s före, 51 s efter med det högre målet. En människa är långsammare, men förhållandet är detsamma.
+
+## Föregående version
+
 # Karlstad City — 2.11.30 · Broar och gångvägar
 
 Bästa versionen före denna är sparad som grenen `best/karlstad-city-2.11.29`.

@@ -43,7 +43,11 @@ test('stair side rails and the upper atrium edge prevent falling or instant chan
 test('upper-floor guidance walks around the open atrium and directs the return trip to the down escalator',()=>{
   const g=createMallGuidance(new CityGuidance(nav)),p={x:-148,z:118,y:7.08};
   const route=g.update(p,{...MALL_CACHE,id:'mall-cache',kind:'landmark'},forward,{height:5.4});
-  assert.ok(route.path.length>20);for(const q of route.path){assert.ok(mallWalkable(q.x,q.z,true));assert.equal(q.y,5.4);}
+  // 2.12: the route is string-pulled, so it has few corners; every leg must still stay on the gallery floor.
+  assert.ok(route.path.length>=3,'the atrium forces at least one corner');let walked=0;
+  for(let i=0;i<route.path.length;i++){const q=route.path[i];assert.ok(mallWalkable(q.x,q.z,true));assert.equal(q.y,5.4);if(!i)continue;const a=route.path[i-1],l=Math.hypot(q.x-a.x,q.z-a.z);walked+=l;
+    for(let t=0;t<=l;t+=.3)assert.ok(mallWalkable(a.x+(q.x-a.x)*t/l,a.z+(q.z-a.z)*t/l,true),'leg '+i+' leaves the gallery');}
+  assert.ok(walked>Math.hypot(MALL_CACHE.x-p.x,MALL_CACHE.z-p.z)+2,'route goes around the atrium, not across it');
   const exit=g.update(p,mallGoal(p,true),forward,{height:5.4});assert.equal(exit.goal.id,'mall-down');assert.ok(Math.abs(exit.path.at(-1).z-93.5)<1);
 });
 test('the upper-floor secret requires its actual floor and cannot be farmed or hit from below',()=>{

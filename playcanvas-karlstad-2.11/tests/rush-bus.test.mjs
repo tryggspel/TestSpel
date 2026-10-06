@@ -29,9 +29,9 @@ test('a hunt wave can be defeated through actual shots and reused actors do not 
   assert.equal(g.rush.contract,null);assert.ok(g.rush.xp>=180+45);assert.equal(g.drainEvents().filter(e=>e.type==='street-complete').length,1);
   const a=g.actors[0];g.spawn(a,{x:20,z:20},'walker');assert.equal(a.patrolId,null);assert.equal(a.contractId,null);
 });
-test('800 XP must be secured in a safe zone; victory has a time bonus and cannot pay twice',()=>{
-  const g=make();g.rush.start();g.reward(800);assert.equal(g.rush.exitReady,true);assert.equal(g.phase,'playing');
-  const before=g.balance;g.step(.1,g.safeZones[0]);assert.equal(g.phase,'won');assert.equal(g.rush.state,'escaped');assert.ok(g.rush.finalScore>800);assert.equal(g.balance,before+150);
+test('1000 XP must be secured in a safe zone; victory has a time bonus and cannot pay twice',()=>{
+  const g=make();g.rush.start();g.reward(1000);assert.equal(g.rush.exitReady,true);assert.equal(g.phase,'playing');
+  const before=g.balance;g.step(.1,g.safeZones[0]);assert.equal(g.phase,'won');assert.equal(g.rush.state,'escaped');assert.ok(g.rush.finalScore>1000);assert.equal(g.balance,before+150);
   g.rush.end(true);g.step(1,g.safeZones[0]);assert.equal(g.balance,before+150);assert.equal(g.drainEvents().filter(e=>e.type==='hunt-finish').length,1);
 });
 test('capture and timeout finish the hunt while a retry preserves the wallet and respawns ordinary finds',()=>{

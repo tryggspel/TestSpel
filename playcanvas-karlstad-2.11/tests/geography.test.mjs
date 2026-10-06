@@ -46,6 +46,6 @@ test('a chosen architectural destination stays selected during chaos, then yield
   const portals={'sista-rundan':{x:43,z:31,name:'O’Learys'},sandgrund:{x:-11,z:-365,name:'Sandgrund'}};
   const g=new CityJourney(nav,cityPoint(13.50055,59.37988),portals);g.rush.start('free');g.routeMode='landmark';g.landmarkGoal=landmarkDestination('domkyrkan',buildings);
   g.rush.beginStory('news',{x:0,z:14},{x:0,z:-1});assert.equal(g.objective().id,'place-domkyrkan');
-  g.rush.mode='timed';g.reward(800);assert.equal(g.objective().kind,'escape');
-  assert.equal(CHALLENGE_RULES,7);assert.ok(challengeRequest('?daily=2026-09-30&rules=6').error,'2.10-länkar (utan gatufynd, gågatsbonus och Ryde) får inte jämföras med 2.11');assert.ok(challengeRequest('?daily=2026-09-30&rules=5').error);assert.ok(challengeRequest('?daily=2026-09-30&rules=4').error);
+  g.rush.mode='timed';g.reward(1000);assert.equal(g.objective().kind,'escape');
+  assert.equal(CHALLENGE_RULES,8);assert.ok(challengeRequest('?daily=2026-09-30&rules=7').error,'2.11-länkar (800 XP, utan fältuppdrag och Guld-Gunnar) får inte jämföras med 2.12');assert.ok(challengeRequest('?daily=2026-09-30&rules=6').error,'2.10-länkar (utan gatufynd, gågatsbonus och Ryde) får inte jämföras med 2.11');assert.ok(challengeRequest('?daily=2026-09-30&rules=5').error);assert.ok(challengeRequest('?daily=2026-09-30&rules=4').error);
 });

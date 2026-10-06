@@ -3,7 +3,7 @@
 // set-back top storeys in white render and yellow timber cladding, and a copper dome with a ball finial.
 // Geometry only, drawn into a ComicMesh. The mall is made of axis-aligned boxes (the OSM footprints are cut by the
 // four street entrances), so every face here follows those boxes and leaves the entrance corridors open.
-import {MALL_BUILDING_IDS,MALL_CORRIDORS} from './mall-space.mjs?v=2.11.30';
+import {MALL_BUILDING_IDS,MALL_CORRIDORS} from './mall-space.mjs?v=2.12.0';
 
 export const MITT_I_CITY_DOME_OSM=107041955; // Västra Torggatan 7, the east entrance block facing Torget
 const C=Object.freeze({

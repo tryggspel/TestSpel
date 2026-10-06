@@ -1,5 +1,5 @@
-import {createCabinView} from './bus-cabin.js?v=2.11.30';
-import {ZombieBus} from './zombie-bus.mjs?v=2.11.30';
+import {createCabinView} from './bus-cabin.js?v=2.12.0';
+import {ZombieBus} from './zombie-bus.mjs?v=2.12.0';
 
 // Reuses the moving city behind a cached illustrated cabin.
 export function createBusRide(host,{driverTexture,passengerTextures=[driverTexture,driverTexture,driverTexture],onArrive,onCrash,onTick}){

@@ -1,13 +1,13 @@
-import {GAME_VERSION} from './build-info.mjs?v=2.11.30';
+import {GAME_VERSION} from './build-info.mjs?v=2.12.0';
 // Versioned, local challenge rules. Dates always follow Karlstad's calendar.
 // The corrected city geometry changes walkable routes and pickup paths.
 // Keep scores/replays from the previous map out of the new challenge comparison.
-export const CHALLENGE_RULES=7;
+export const CHALLENGE_RULES=8;
 export const DAILY_VARIANTS=Object.freeze([
-  {id:'no-super',title:'SOL UTAN SUPER',description:'800 XP och hem. Vanliga solstötar får göra hela jobbet.',seconds:180,noSuper:true},
-  {id:'espresso',title:'DUBBEL ESPRESSO',description:'800 XP och hem. Kaffet doftar starkare. Följ solen för att skaka av dig doften.',seconds:180,scentScale:1.6},
-  {id:'blackout',title:'SKYMNING ÖVER TORGET',description:'800 XP och hem. Panik från start och ett tidigt strömavbrott.',seconds:180,panic:50,firstChaos:'blackout'},
-  {id:'sun-chase',title:'JAKTEN PÅ SOLA',description:'800 XP på 2:30. Längre solpauser ger dig chans till dubbla zombiepoäng.',seconds:150,sunDuration:24}
+  {id:'no-super',title:'SOL UTAN SUPER',description:'1000 XP och hem. Vanliga solstötar får göra hela jobbet.',seconds:180,noSuper:true},
+  {id:'espresso',title:'DUBBEL ESPRESSO',description:'1000 XP och hem. Kaffet doftar starkare. Följ solen för att skaka av dig doften.',seconds:180,scentScale:1.6},
+  {id:'blackout',title:'SKYMNING ÖVER TORGET',description:'1000 XP och hem. Panik från start och ett tidigt strömavbrott.',seconds:180,panic:50,firstChaos:'blackout'},
+  {id:'sun-chase',title:'JAKTEN PÅ SOLA',description:'1000 XP på 2:30. Längre solpauser ger dig chans till dubbla zombiepoäng.',seconds:150,sunDuration:24}
 ].map(v=>Object.freeze(v)));
 export function stockholmDay(now=new Date()){
   const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
@@ -23,7 +23,7 @@ export function seededRandom(seed){let state=seed>>>0;return ()=>{state=(Math.im
 export function dailyFor(day=stockholmDay()){
   if(!validDay(day))throw new Error('Ogiltigt datum för Dagens Karlstad.');
   const seed=hashSeed('Karlstad:daily:'+CHALLENGE_RULES+':'+day),variant=DAILY_VARIANTS[Math.floor(Date.parse(day+'T12:00:00Z')/86400000)%DAILY_VARIANTS.length];
-  return Object.freeze({kind:'daily',day,seed,rules:CHALLENGE_RULES,target:800,...variant});
+  return Object.freeze({kind:'daily',day,seed,rules:CHALLENGE_RULES,target:1000,...variant});
 }
 const number=(s,max,fallback=0)=>/^\d{1,7}$/.test(String(s))?Math.min(max,Number(s)):fallback;
 export function parseKit(value){

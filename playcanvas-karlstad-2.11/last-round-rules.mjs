@@ -122,7 +122,7 @@ export class LastRound {
             this.events.push({type: 'boss'});
           } else if (this.captured === 4) this.finish(true);
         }
-        if (player && Math.abs((player.y??1.68)-1.68-(a.y??0))<2 && a.kind !== 'bin' && a.active && this.contactCooldown === 0 && Math.hypot(player.x - a.x, player.z - a.z) < a.radius + .5) {
+        if (player && Math.abs((player.y??1.68)-1.68-(a.y??0))<2 && a.kind !== 'bin' && a.kind !== 'golden' && a.active && this.contactCooldown === 0 && Math.hypot(player.x - a.x, player.z - a.z) < a.radius + .5) {
           this.contactCooldown = 2; this.energy = Math.max(0, this.energy - 8);
           this.score = Math.max(0, this.score - 15); this.events.push({type: 'bump'});
         }

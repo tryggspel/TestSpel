@@ -1,11 +1,11 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.11.30';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.11.30';
-import {CityMission} from './city-missions.mjs?v=2.11.30';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.11.30';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.11.30';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.11.30';
-import {CITY_STREETS} from './city-streets.mjs?v=2.11.30';
-import {pedestrianAt} from './pedestrian.mjs?v=2.11.30';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.12.0';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.12.0';
+import {CityMission} from './city-missions.mjs?v=2.12.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.12.0';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.12.0';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.12.0';
+import {CITY_STREETS} from './city-streets.mjs?v=2.12.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.12.0';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
@@ -87,12 +87,18 @@ export class CityJourney extends CityMission {
     if(this.rush?.peaceful||args.power&&this.rush?.challenge?.noSuper)return null;
     this.weakShot=!args.power&&this.energy<3;
     const before=this.energy,kills=this.captured;
-    const result=super.shoot(args);if(result){if(!args.power)this.energy=Math.min(100,Math.max(0,before-3)+8*(this.captured-kills));this.rush?.raisePanic(args.power?3.5:1.2);this.dirty=true;}return result;
+    this.fullEnergyFromShot=false;const result=super.shoot(args);if(result){if(!args.power)this.energy=Math.min(100,Math.max(0,before-3)+8*(this.captured-kills));if(this.fullEnergyFromShot){this.energy=100;this.fullEnergyFromShot=false;}this.rush?.raisePanic(args.power?3.5:1.2);this.dirty=true;}return result;
   }
   impulse(actor,dx,dz,strength,shot){
     const wasActive=actor.active;super.impulse(actor,dx,dz,this.weakShot?Math.min(9,strength):strength,shot);
     if(wasActive&&!actor.active&&actor.ambushId&&!this.cleared.has(actor.ambushId)){this.cleared.add(actor.ambushId);this.reward(30*(this.rush?.ecology.inSun?2:1));this.events.push({type:'ambush-clear'});}
-    if(wasActive&&!actor.active){if(actor.patrolId)this.reward(45*(this.rush?.ecology.inSun?2:1));this.rush?.kill(actor);}
+    if(wasActive&&!actor.active){if(actor.patrolId)this.reward(45*(this.rush?.ecology.inSun?2:1));if(actor.kind==='golden')this.rush?.catchGolden(actor);this.rush?.kill(actor);}
+  }
+  drainEvents(){
+    const events=super.drainEvents();if(!this.rush)return events;
+    const research=this.rush.observe(events);if(!research.length)return events;
+    // Rewards may themselves emit events (for example exit-open at 800 XP).
+    return events.concat(research,super.drainEvents());
   }
   finish(won){
     if(won)return;

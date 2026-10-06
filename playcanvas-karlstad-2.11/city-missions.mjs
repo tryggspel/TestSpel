@@ -1,4 +1,4 @@
-import {LastRound} from './last-round-rules.mjs?v=2.11.30';
+import {LastRound} from './last-round-rules.mjs?v=2.12.0';
 
 export const MISSIONS = Object.freeze([
   {id:'sista-rundan',name:'Sista rundan',place:'O’Learys',tag:'KNUFFA · 90 SEK',title:'SISTA<br><em>RUNDAN.</em>',lead:'Matchen är slut. Zombiefansen håller inte med.',description:'Knuffa tre fans till HEMGÅNG. Sedan kommer Kapten Övertid. Gå bakom figurerna och använd soptunnan för kedjeträffar.',win:'STÄNGT & KLART.'},
@@ -57,7 +57,10 @@ export class CityNavigation {
   point(p){const n=this.nearest(p);return {x:n.x,z:n.z};}
 }
 
-const types={walker:{name:'Påtårs-Pia',hp:2,speed:1.65},runner:{name:'Sprint-Steffe',hp:1,speed:3.0},tank:{name:'Termos-Torsten',hp:4,speed:1.15}};
+const types={walker:{name:'Påtårs-Pia',hp:2,speed:1.65},runner:{name:'Sprint-Steffe',hp:1,speed:3.0},tank:{name:'Termos-Torsten',hp:4,speed:1.15},golden:{name:'Guld-Gunnar',hp:2,speed:2.5}};
+// 2.12 lunge telegraph: a zombie that gets close stops, winds up (readable), then dashes.
+// A solstöt during the wind-up cancels it, so reacting is rewarded instead of face-tanking.
+export const LUNGE=Object.freeze({range:2.6,minRange:1.05,windup:.42,dash:.34,boost:2.6,cooldown:2.3});
 export class CityMission extends LastRound {
   constructor(id,nav,mall,seed=280926,site={x:-13,z:-397}){
     const spawn=nav.point({x:0,z:14}),edge=nav.point(mall);
@@ -89,7 +92,7 @@ export class CityMission extends LastRound {
     }
   }
   spawn(a,p,kind){
-    const spot=this.nav.point(p),t=types[kind];Object.assign(a,spot,t,{kind,maxHp:t.hp,active:true,vx:0,vz:0,shot:0,touchTime:-100,ambushId:null,patrolId:null,contractId:null,ambushAt:undefined,radius:kind==='tank'?.85:.65,mass:kind==='tank'?1.5:1});
+    const spot=this.nav.point(p),t=types[kind];Object.assign(a,spot,t,{kind,maxHp:t.hp,active:true,vx:0,vz:0,shot:0,touchTime:-100,ambushId:null,patrolId:null,contractId:null,ambushAt:undefined,radius:kind==='tank'?.85:.65,mass:kind==='tank'?1.5:1,windupUntil:0,lungeUntil:0,lungeReady:0,lungeX:0,lungeZ:0,golden:kind==='golden'});
   }
   spawnWave(){
     this.wave++;this.waveDelay=0;const count=4+this.wave*2;
@@ -104,11 +107,12 @@ export class CityMission extends LastRound {
   impulse(a,dx,dz,strength,shot){
     if(!a.active||!this.chains.has(shot)||this.chains.get(shot).has(a.id))return;
     super.impulse(a,dx,dz,strength,shot);
+    if(a.windupUntil>this.elapsed||a.lungeUntil>this.elapsed){a.windupUntil=a.lungeUntil=0;this.events.push({type:'lunge-broken',x:a.x,z:a.z});}
     a.hp-=strength>=23?2:1;
     if(a.hp<=0){
       a.active=false;a.vx=a.vz=0;this.captured++;this.chainRun=this.elapsed-this.lastZap<3?this.chainRun+1:1;this.lastZap=this.elapsed;
       this.score+=100+Math.min(5,this.chainRun)*20;this.energy=Math.min(100,this.energy+8);
-      this.events.push({type:'zap',name:a.name,combo:this.chainRun,x:a.x,z:a.z});
+      this.events.push({type:'zap',name:a.name,kind:a.kind,combo:this.chainRun,x:a.x,z:a.z});
     }
   }
   objective(player=this.layout.spawn){
@@ -130,6 +134,23 @@ export class CityMission extends LastRound {
         const distance=Math.hypot(player.x-a.x,player.z-a.z);
         if(this.id==='radda-fikat'&&distance>22)continue;
         if(distance>(this.pursuitRange??Infinity)){a.vx=a.vz=0;continue;}
+        const pace0=a.speed*(this.movementScale?.(a)??1);
+        if(a.kind==='golden'){
+          // Guld-Gunnar flees. He only stands still once the player has lost him (>26 m), so a chase is always possible.
+          if(distance>26){a.vx=a.vz=0;continue;}
+          const away=Math.max(.001,distance),flee=this.nav.point({x:a.x+(a.x-player.x)/away*7,z:a.z+(a.z-player.z)/away*7});
+          const aim=this.nav.waypoint(a,flee),l=Math.hypot(aim.x-a.x,aim.z-a.z)||1;a.vx=(aim.x-a.x)/l*pace0;a.vz=(aim.z-a.z)/l*pace0;continue;
+        }
+        if(a.lungeUntil>this.elapsed){a.vx=a.lungeX*pace0*LUNGE.boost;a.vz=a.lungeZ*pace0*LUNGE.boost;continue;}
+        if(a.windupUntil>this.elapsed){a.vx=a.vz=0;continue;}
+        if(a.windupUntil&&a.windupUntil<=this.elapsed){
+          // Wind-up finished: dash towards where the player is now.
+          const l=Math.max(.001,distance);a.windupUntil=0;a.lungeUntil=this.elapsed+LUNGE.dash;a.lungeX=(player.x-a.x)/l;a.lungeZ=(player.z-a.z)/l;
+          a.vx=a.lungeX*pace0*LUNGE.boost;a.vz=a.lungeZ*pace0*LUNGE.boost;continue;
+        }
+        if(a.kind!=='artist'&&distance<LUNGE.range&&distance>LUNGE.minRange&&this.elapsed>=(a.lungeReady||0)&&this.visible(a.x,a.z,player.x,player.z)){
+          a.windupUntil=this.elapsed+LUNGE.windup;a.lungeReady=this.elapsed+LUNGE.cooldown;a.vx=a.vz=0;continue;
+        }
         const victim=this.id==='sandgrund'&&a.kind==='artist'?this.visitors.filter(v=>!v.rescued).sort((v,w)=>Math.hypot(v.x-a.x,v.z-a.z)-Math.hypot(w.x-a.x,w.z-a.z))[0]:null;
         const target=victim&&distance>6?victim:player;
         const aim=this.nav.waypoint(a,target),length=Math.hypot(aim.x-a.x,aim.z-a.z)||1;

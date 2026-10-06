@@ -11,13 +11,13 @@ test('compass and floor route guide around a wall and change turning instruction
   const nav=new CityNavigation((x,z)=>x>-9&&x<9&&z>-15&&z<2),guide=new CityGuidance(nav),goal={x:0,z:-32,label:'MÅL',kind:'mission'};
   const out=guide.update(p,goal,f);assert.ok(out.distance>46);assert.ok(nav.clear(p,out.next));assert.equal(nav.clear(p,goal),false);
   for(let i=1;i<out.path.length;i++)assert.ok(nav.clear(out.path[i-1],out.path[i]));
-  const toward={x:out.next.x-p.x,z:out.next.z-p.z};assert.equal(guide.update(p,goal,toward).turn,'FÖLJ PILARNA FRAMÅT');assert.equal(guide.update(p,goal,{x:-toward.x,z:-toward.z}).turn,'VÄND DIG OM');
+  const toward={x:out.next.x-p.x,z:out.next.z-p.z};assert.match(guide.update(p,goal,toward).turn,/^RAKT FRAM · VÄNSTER OM \d+ M$/);assert.equal(guide.update(p,goal,{x:-toward.x,z:-toward.z}).turn,'VÄND DIG OM');
   const wait=guide.update(p,{...p,kind:'wait',label:'VÄNTA'},f);assert.equal(wait.path.length,0);
 });
 test('manual mission focus survives new stories and optional chaos, and the escape destination stays pinned',()=>{
   const g=make();g.routeMode='mission';g.destination='sandgrund';g.rush.beginStory('power',p,f);g.rush.chaosCount=2;g.rush.triggerChaos(p,f);
   assert.equal(g.objective(p).id,'mission-sandgrund');
-  g.rush.mode='timed';g.reward(800);const exit=g.objective(p);assert.equal(exit.kind,'escape');assert.deepEqual(g.objective({x:-160,z:100}),exit);
+  g.rush.mode='timed';g.reward(1000);const exit=g.objective(p);assert.equal(exit.kind,'escape');assert.deepEqual(g.objective({x:-160,z:100}),exit);
   const alternative=g.safeZones.find(s=>s.x!==exit.x||s.z!==exit.z);g.rush.step(.01,alternative,f);assert.equal(g.rush.state,'escaped','Every marked safe zone still accepts the escape');
 });
 test('a power outage requires three separate nearby interactions, pauses safely and restores the light once',()=>{

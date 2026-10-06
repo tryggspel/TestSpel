@@ -306,3 +306,7 @@ button:focus-visible{outline:3px solid #8df0ce;outline-offset:4px}
 }
 @media(max-width:370px) and (min-height:601px){.journey-playing #journeyPickupToast,.journey-playing.one-hand #journeyPickupToast{right:124px!important}}
 @media(max-height:600px){.journey-playing #journeyPickupToast,.journey-playing.one-hand #journeyPickupToast{top:77px!important;left:50%!important;right:auto!important;width:184px!important;transform:translateX(-50%)!important}.journey-playing #journeyPickupToast.visible,.journey-playing.one-hand #journeyPickupToast.visible{transform:translateX(-50%)!important}}
+/* 2.12 Fältuppdrag: one quiet row inside the status strip (the compact HUD hides the event panel). */
+#roundHud .research-row{grid-column:1/-1;margin:3px 0 2px;font:800 11px/1.3 system-ui;letter-spacing:.02em;color:#d8c7ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#roundHud .research-row.done{color:#b8ffd6}
+#roundHud .research-row[hidden]{display:none}

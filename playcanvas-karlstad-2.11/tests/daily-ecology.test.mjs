@@ -42,7 +42,7 @@ test('daily attempts have identical resources and events despite different saved
 
 test('daily victory records once, restores normal progress, and keeps each date separate',()=>{
   const g=make();g.balance=987;g.energy=85;g.save();const challenge=dailyFor('2026-09-29');
-  g.rush.start('timed',{challenge});g.health=48;g.rush.earn(800);g.rush.step(.1,g.safeZones[0],f);
+  g.rush.start('timed',{challenge});g.health=48;g.rush.earn(1000);g.rush.step(.1,g.safeZones[0],f);
   assert.equal(g.rush.state,'escaped');assert.equal(g.rush.resultHealth,48);assert.equal(g.balance,987);assert.equal(g.energy,85);
   const score=g.rush.finalScore;assert.equal(dailyRecord(g.storage,challenge.day).best,score);g.rush.end(true);
   assert.equal(dailyRecord(g.storage,challenge.day).attempts,1);
