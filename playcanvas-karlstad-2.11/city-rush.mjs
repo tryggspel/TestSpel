@@ -1,8 +1,8 @@
-import {nearestByRoute} from './city-guidance.mjs?v=2.12.0';
-import {beginStory,storyAction,stepStory,STREET_STORIES} from './street-stories.mjs?v=2.12.0';
-import {seededRandom,saveDailyResult,dailyRecord} from './daily-challenge.mjs?v=2.12.0';
-import {CityEcology} from './city-ecology.mjs?v=2.12.0';
-import {FieldResearch} from './field-research.mjs?v=2.12.0';
+import {nearestByRoute} from './city-guidance.mjs?v=2.13.0';
+import {beginStory,storyAction,stepStory,STREET_STORIES} from './street-stories.mjs?v=2.13.0';
+import {seededRandom,saveDailyResult,dailyRecord} from './daily-challenge.mjs?v=2.13.0';
+import {CityEcology} from './city-ecology.mjs?v=2.13.0';
+import {FieldResearch} from './field-research.mjs?v=2.13.0';
 export const RUSH=Object.freeze({seconds:180,target:1000,maxTime:210,maxEnemies:6});
 // 2.12 Guld-Gunnar: one rare, fleeing zombie per hunt. Catch him for a big reward.
 export const GOLDEN=Object.freeze({earliest:24,spread:26,seconds:18,points:120,time:12});
@@ -30,7 +30,7 @@ export class CityRush {
     this.mode=mode;this.state='playing';this.xp=0;this.time=this.challenge?.seconds||RUSH.seconds;this.spent=0;this.contract=null;this.contractSerial=0;this.patrolSerial=0;this.storySerial=0;this.escapeGoal=null;this.busGoal=null;
     this.nextContract=2;this.nextPatrol=6;this.alerted=false;this.exitReady=false;this.bonus=0;
     this.panic=0;this.panicTier=0;this.chaosCount=0;this.nextChaos=CHAOS.firstDelay;this.chaosTarget=null;this.fallUntil=0;this.nextFallSpawn=0;
-    const g=this.city;g.clerks?.reset();g.phase='playing';g.health=100;g.energy=Math.round(Math.max(45,g.energy));g.actors.forEach(a=>a.active=false);g.found.clear();g.pendingAmbush=null;g.contactCooldown=3;g.cooldown=0;g.chains.clear();g.events=[];g.elapsed=0;g.bestChain=g.chainRun=0;g.lastZap=-100;g.score=g.captured=g.shots=g.hitShots=0;g.lastAmbush=-100;g.lastSave=0;g.collectChain=0;g.lastCollect=-100;g.position={...g.layout.spawn};g.heading=0;g.routeMode='hunt';
+    const g=this.city;g.clerks?.reset();g.phase='playing';g.health=100;g.energy=Math.round(Math.max(45,g.energy));g.actors.forEach(a=>a.active=false);g.found.clear();g.pendingAmbush=null;g.contactCooldown=3;g.cooldown=0;g.chains.clear();g.events=[];g.elapsed=0;g.bestChain=g.chainRun=0;g.lastZap=-100;g.score=g.captured=g.shots=g.hitShots=0;g.lastAmbush=-100;g.lastSave=0;g.collectChain=0;g.lastCollect=-100;g.position={...g.layout.spawn};g.heading=0;g.routeMode='hunt';g.newExploreRun?.();
     // Research and Guld-Gunnar use their own seeded stream so they never shift the chaos order.
     const side=seededRandom((this.seed*7+13)>>>0);this.research.reset(side);this.golden={at:GOLDEN.earliest+Math.floor(side()*GOLDEN.spread),actor:null,until:0,done:false};
     this.chaosOrder=this.challenge?.firstChaos==='blackout'?[1,2,0]:[0,1,2];

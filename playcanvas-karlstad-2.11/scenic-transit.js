@@ -21,9 +21,9 @@ export function createScenicRide(host,{onTick,onArrive}){
   }
   function stop(){trip=null;$('scenicLayer').hidden=true;document.body.classList.remove('boat-riding');host.app.autoRender=true;host.resetInput();}
   function pause(value=true){if(!trip)return;paused=value;$('scenicPaused').hidden=!value;}
-  function start(from,to,kind='train'){
-    trip={from,to,kind,elapsed:0,duration:kind==='train'?20:10};paused=false;paint=0;host.resetInput();document.exitPointerLock?.();host.app.autoRender=false;document.body.classList.add('boat-riding');$('scenicLayer').hidden=false;$('scenicPaused').hidden=true;
-    $('scenicDestination').textContent=(kind==='train'?'TÅG 70 · ':'BUSS · ')+to.name.toUpperCase();$('scenicFrom').textContent=from.name.toUpperCase()+' → '+to.name.toUpperCase();draw();
+  function start(from,to,kind='train',opts={}){
+    trip={from,to,kind,elapsed:0,duration:opts.duration||(kind==='train'?20:10),line:opts.line||0};paused=false;paint=0;host.resetInput();document.exitPointerLock?.();host.app.autoRender=false;document.body.classList.add('boat-riding');$('scenicLayer').hidden=false;$('scenicPaused').hidden=true;
+    $('scenicDestination').textContent=(kind==='train'?'TÅG 70 · ':trip.line?'LINJE '+trip.line+' · ':'BUSS · ')+to.name.toUpperCase();$('scenicFrom').textContent=from.name.toUpperCase()+' → '+to.name.toUpperCase();draw();
   }
   function update(dt){if(!trip||paused)return;const d=Math.min(dt,.1);trip.elapsed=Math.min(trip.duration,trip.elapsed+d);onTick(d);if(!trip)return;paint+=dt;if(paint>1/24){paint=0;draw();}if(trip.elapsed>=trip.duration){const {to,kind}=trip;stop();host.teleport(to.x,to.z,0,-2);onArrive(to,kind);}}
   $('scenicPause').addEventListener('click',()=>pause());$('scenicResume').addEventListener('click',()=>pause(false));$('scenicAbort').addEventListener('click',()=>{if(!trip)return;const p=trip.from;stop();host.teleport(p.x,p.z,0,-2);});

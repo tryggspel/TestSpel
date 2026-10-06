@@ -1,4 +1,4 @@
-import {ComicMesh} from './city-architecture.js?v=2.12.0';
+import {ComicMesh} from './city-architecture.js?v=2.13.0';
 export function createBusModel(pc,host,draw,x,z){
   const mat=new pc.StandardMaterial();mat.useLighting=false;mat.diffuse.set(0,0,0);mat.emissive.set(1,1,1);mat.emissiveVertexColor=true;mat.update();
   const m=new ComicMesh(true);

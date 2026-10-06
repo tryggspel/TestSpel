@@ -4,6 +4,10 @@
 **Created:** 2026-09-29  
 **Current reference build:** `playcanvas-karlstad-next v2.9.0`
 
+## Implementation checkpoint — 2026-10-06 / City Explore 2.13.0
+
+City Explore gets a reason to keep playing, without touching the zombie game: a turbo toggle (2× speed on foot and on Ryde), a Candy Crush style combo chain with rising notes and praise, daily-shuffled silver/gold/rainbow thermoses (the rainbow one carries a Mario Kart style power-up), levels, a 13-area collection album, 19 badges, a daily goal with streak, thermos respawn after four minutes, 94 more thermoses and 24 more hidden treasures out to the edges of the map (with hot/cold hints), and an eight-line bus network from Torget to Sandgrund, Sandgrundsudden, Haga, Åttkanten, Inre hamn, Karlstad C, Mariebergsskogen and Domkyrkan. Details in `playcanvas-karlstad-2.11/README.md`.
+
 ## Implementation checkpoint — 2026-10-02 / City Explore 2.9.0
 
 The current playtest priorities add a peaceful branch of the city loop without replacing the action game:

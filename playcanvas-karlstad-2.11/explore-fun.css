@@ -1,0 +1,75 @@
+/* 2.13 City Explore: turbo, kombo-HUD, hållplatsväljare och fikaalbum. Allt här gäller bara City Explore (.clean-explore). */
+
+/* Turbo-knappen bor bland de övriga knapparna och syns bara i City Explore. */
+#turboBtn{display:none}
+.fun-explore #turboBtn{display:inline-block}
+#roundUtilities #turboBtn.on{background:#ffd56c;color:#183d2b;border-color:#fff3c4;box-shadow:0 0 0 2px #ffd56c66,0 0 16px #ffd56c88}
+#roundUtilities #turboBtn.on[aria-pressed="true"]{animation:turboBtn 1s ease-in-out infinite alternate}
+@keyframes turboBtn{from{box-shadow:0 0 0 2px #ffd56c44,0 0 8px #ffd56c66}to{box-shadow:0 0 0 3px #ffd56c88,0 0 20px #ffd56caa}}
+
+/* Fartlinjer i bildens kanter när turbon är igång. En enda fast ruta, ingen filtrering. */
+#turboFx{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .25s;overflow:hidden;background:radial-gradient(ellipse at center,transparent 56%,#ffe9a226 78%,#ffd56c55 100%)}
+#turboFx::before{content:'';position:absolute;inset:-12%;opacity:.5;background:repeating-conic-gradient(from 0deg at 50% 50%,#ffffff00 0 5deg,#ffffffaa 5deg 5.6deg,#ffffff00 5.6deg 11deg);-webkit-mask:radial-gradient(circle at center,transparent 42%,#000 88%);mask:radial-gradient(circle at center,transparent 42%,#000 88%);animation:turboSpin 1.4s linear infinite}
+body.turbo-on #turboFx{opacity:1}
+@keyframes turboSpin{to{transform:rotate(14deg) scale(1.05)}}
+@media(prefers-reduced-motion:reduce){#turboFx::before{animation:none}#roundUtilities #turboBtn.on[aria-pressed="true"]{animation:none}}
+
+/* Nivå, kombo, superkrafter, dagsmål och hett/kallt, under kompassraden till vänster. */
+#funHud{position:absolute;z-index:6;left:max(12px,env(safe-area-inset-left));top:max(160px,calc(env(safe-area-inset-top) + 154px));width:min(212px,58vw);display:grid;gap:5px;pointer-events:none;font:800 11px/1.25 system-ui,sans-serif;letter-spacing:.06em;color:#eaf6e4}
+#funHud[hidden]{display:none}
+#funHud>div{padding:6px 9px;border-radius:8px;background:#102c27d9;border:1px solid #abc7ad44}
+.fun-level{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;align-items:center}
+.fun-level b{color:#ffd56c;letter-spacing:.08em}
+.fun-level span{text-align:right;color:#cfe6d4}
+.fun-track{grid-column:1/-1;display:block;height:5px;border-radius:5px;background:#ffffff1f;overflow:hidden}
+.fun-track u{display:block;height:100%;width:0;text-decoration:none;background:linear-gradient(90deg,#ffd56c,#ffa94d);transition:width .12s}
+#funHud .fun-combo{display:grid;grid-template-columns:1fr auto;gap:3px 8px;align-items:center;background:#4b2b62ee;border:2px solid #d8b3ed;color:#fff0ce}
+#funHud .fun-combo[hidden]{display:none}
+.fun-combo b{font-size:15px;letter-spacing:.04em}
+.fun-combo.bump{animation:funBump .28s ease-out}
+@keyframes funBump{0%{transform:scale(1.18)}100%{transform:scale(1)}}
+.fun-combo[data-tier="2"]{border-color:#9ee6ff}.fun-combo[data-tier="3"]{border-color:#9bf0a7}
+.fun-combo[data-tier="4"]{border-color:#ffd56c}.fun-combo[data-tier="5"]{border-color:#ff9bd8;background:#5a2a55ee}
+.fun-combo .fun-time u{background:linear-gradient(90deg,#ff9bd8,#ffd56c)}
+.fun-combo.frozen .fun-time u{background:#9ee6ff}
+#funHud #funBoost{background:#0f3a4eee;border-color:#7fd8f0;color:#d7f6ff}
+#funHud #funBoost[hidden],#funHud #funHeat[hidden]{display:none}
+#funDaily{color:#bfe0c9}#funDaily.done{color:#8af5b8}
+#funHud #funHeat{font-weight:900;background:#243941ee;color:#d6e2ea}
+#funHeat[data-level="1"]{background:#244a63;color:#bfe6ff}
+#funHeat[data-level="2"]{background:#5a5a2a;color:#fff3a8}
+#funHeat[data-level="3"]{background:#7a4219;color:#ffd7a0}
+#funHeat[data-level="4"]{background:#8a1f1f;color:#ffe0e0;animation:funHeat .5s ease-in-out infinite alternate}
+@keyframes funHeat{to{filter:brightness(1.35)}}
+@media(prefers-reduced-motion:reduce){#funHeat[data-level="4"],.fun-combo.bump{animation:none}}
+/* Sällsynta termosar färgar pickup-texten. */
+#journeyPickupToast[data-rarity="silver"]{border-color:#dbe7f3;background:#43546aee}
+#journeyPickupToast[data-rarity="gold"]{border-color:#ffe08a;background:#7a5a10ee}
+#journeyPickupToast[data-rarity="rainbow"]{border-color:#ffd0f2;background:linear-gradient(90deg,#8b2d6bee,#2d5f8bee)}
+/* Låg skärm (mobil på sidan): nivå och kombo flyttar till höger, under radarn, så att de inte krockar med kompassraden. */
+@media(max-height:500px){#funHud{left:auto;right:max(12px,env(safe-area-inset-right));top:max(126px,calc(env(safe-area-inset-top) + 122px));width:min(176px,34vw)}#funHud>div{padding:4px 8px}.fun-combo b{font-size:13px}#funDaily{display:none}}
+@media(pointer:coarse) and (max-width:520px){#funHud{width:min(190px,52vw);top:max(150px,calc(env(safe-area-inset-top) + 146px))}}
+
+/* Fanfarer ligger över pickup-raden, inte på den. */
+.fun-explore #roundToast{bottom:calc(24% + 56px)}
+@media(max-height:500px){.fun-explore #roundToast{bottom:18%}}
+
+/* Hållplatsväljaren. */
+#round-bus-pick h2{font-size:34px;margin:12px 0 8px}
+@media(max-height:500px){#round-bus-pick{width:min(660px,92vw)}#round-bus-pick h2{font-size:24px;margin:6px 0}#round-bus-pick .round-fine{margin:4px 0}.bus-pick-list{grid-template-columns:1fr 1fr;max-height:52dvh;margin:8px 0 2px}.bus-line{min-height:48px;padding:6px 10px}}
+.bus-pick-list{display:grid;gap:7px;margin:14px 0 4px;max-height:50dvh;overflow:auto;overscroll-behavior:contain;touch-action:pan-y}
+.bus-line{display:flex;align-items:center;gap:12px;width:100%;padding:9px 12px;min-height:54px;text-align:left;border:1px solid #85aa8544;border-left:6px solid var(--line,#f59554);border-radius:5px;background:#1d4234;color:#f1eed2;cursor:pointer;font:900 13px/1.25 system-ui}
+.bus-line b{flex:0 0 34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--line,#f59554);color:#14231f!important;font-size:16px}
+.bus-line span{flex:1;display:block}
+.bus-line small{display:block;margin-top:3px;font:600 11px/1.35 system-ui;color:#b9d7b0}
+.bus-line.new{background:#4a3a14;border-color:#ffd56c;border-left-color:var(--line,#ffd56c)}.bus-line.new small{color:#ffe7a0}
+.bus-line:hover,.bus-line:focus-visible{background:#2a5a47;outline:none}
+
+/* Fikaalbumet i pausmenyn. */
+.fun-book h3{margin:14px 0 4px}.fun-book h3:first-child{margin-top:0}
+.fun-book .fun-track{margin-top:6px}
+.fun-list{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.fun-list.one{grid-template-columns:1fr}
+.fun-list li{padding:6px 7px;border-radius:4px;border:1px dashed #85aa8566;color:#9fb9a3;font:700 11px/1.25 system-ui,sans-serif;overflow-wrap:break-word;hyphens:auto}
+.fun-list li.stamped{border:1px solid #f5c860;background:#f5c86022;color:#ffe9a8}
+.fun-news{color:#ffe7a0!important}

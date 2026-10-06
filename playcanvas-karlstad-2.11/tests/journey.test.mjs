@@ -18,7 +18,7 @@ test('navigation treats actor and pickup IDs as world objects, not grid node ind
 
 test('city collections, five-item bonus and secrets are awarded once and survive reloading',()=>{
   const store=storage(),g=new CityJourney(nav,mall,portals,store);
-  assert.ok(g.items.length>=30&&g.items.length<320,'2.11: gatufynd var ~30 m ger fler termosar, men inventariet är fortfarande begränsat; vyn återanvänder 18 kort');assert.equal(g.actors.filter(a=>a.active).length,0);
+  assert.ok(g.items.length>=30&&g.items.length<520,'2.11: gatufynd var ~30 m ger fler termosar, men inventariet är fortfarande begränsat; vyn återanvänder 18 kort. 2.13 lade till cirka 100 termosar långt ut (Haga, Inre hamn, Mariebergsskogen, udden, Klara, Mitt i City).');assert.equal(g.actors.filter(a=>a.active).length,0);
   for(const p of g.items.slice(0,5)){g.step(.1,p);const balance=g.balance;g.step(.1,p);assert.equal(g.balance,balance);}
   assert.equal(g.found.size,5);assert.equal(g.balance,150);assert.equal(g.energy,100);
   g.step(.1,g.secrets[0]);assert.equal(g.balance,350);assert.equal(g.secretsFound.size,1);

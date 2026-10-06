@@ -30,13 +30,15 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:11px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.12.0">
-<link rel="stylesheet" href="./compact-hud.css?v=2.12.0">
+<link rel="stylesheet" href="./last-round.css?v=2.13.0">
+<link rel="stylesheet" href="./compact-hud.css?v=2.13.0">
+<link rel="stylesheet" href="./explore-fun.css?v=2.13.0">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
 <body>
 <canvas id="game"></canvas>
+<div id="turboFx" aria-hidden="true"></div>
 <div id="loading"><div class="loadbox"><strong>KARLSTAD CITY</strong><p id="loadText">Startar PlayCanvas…</p><div class="bar"><i id="loadBar"></i></div></div></div>
 <div class="hud">
   <div class="brand"><b>KARLSTAD CITY<span class="brand-sun">✳</span></b><span>EN HELT VANLIG DAG I VÄRMLAND.</span></div>
@@ -53,7 +55,7 @@
     <button id="fireBtn" class="fire" aria-label="Solstöt, tryck för att skjuta">SOLSTÖT<span>TRYCK / HÅLL</span></button>
   </div>
   <button id="fireLeftBtn" aria-label="Solstöt med vänster tumme">☀<span>SKJUT</span></button>
-  <div id="roundUtilities"><button id="aimAssistBtn" aria-pressed="false">SIKTHJÄLP PÅ</button><button id="mapBtn">KARTA</button><button id="useBtn">UPPDRAG</button></div>
+  <div id="roundUtilities"><button id="aimAssistBtn" aria-pressed="false">SIKTHJÄLP PÅ</button><button id="mapBtn">KARTA</button><button id="useBtn">UPPDRAG</button><button id="turboBtn" aria-pressed="false" aria-label="Turbo: dubbel fart till fots och på Ryde (T)">TURBO</button></div>
   <div id="lookHint" aria-hidden="true">DRA HÄR FÖR ATT SIKTA</div>
 </div>
 <div id="roundOverlay">
@@ -70,6 +72,13 @@
   <button id="refillBtn" aria-label="Växla 25 kaffepoäng till 40 solenergi">☀ +40 SOL · 25 P</button>
   <div id="journeyPickupToast" role="status" aria-live="polite"></div>
   <div id="ghostHud" hidden aria-live="off"></div>
+  <div id="funHud" hidden aria-live="off">
+    <div class="fun-level"><b id="funLevel">NIVÅ 1</b><span id="funTitle">TURIST</span><i class="fun-track"><u id="funXp"></u></i></div>
+    <div id="funCombo" class="fun-combo" hidden><b id="funChain">KOMBO 2</b><span id="funMult">POÄNG ×1</span><i class="fun-track fun-time"><u id="funComboTime"></u></i></div>
+    <div id="funBoost" hidden></div>
+    <div id="funDaily">DAGENS MÅL</div>
+    <div id="funHeat" hidden></div>
+  </div>
   <div id="rydeHud" aria-hidden="true"><div class="ryde-bar"><i class="grip"></i><span class="ryde-stem"></span><i class="grip"></i></div><div class="ryde-info"><b id="rydeMode">RYDE · 2× FART</b><span class="ryde-battery"><i id="rydeBattery"></i></span><small id="rydeBatteryText">100%</small></div></div>
   <div id="cityJourneyHud">
   <div id="cityEventHud"><small id="cityStreet">STORA TORGET</small><b id="cityEventTitle">1000 XP → TRYGGZON</b><span id="cityEventDetail">Gatuhändelser · zombie-buss · flykt</span><button id="cityChooseGoal">BYT MÅL ↗</button></div>
@@ -114,7 +123,7 @@
     <p class="round-lead">Promenera, hitta nya platser och samla termosar.</p>
     <div class="city-rules"><span><b>01 · SAMLA 1000 XP</b>Följ pilarna: cyan = gatuhändelse, lila = termos, guld = Guld-Gunnar. Texten säger var nästa sväng kommer.</span><span><b>02 · TA BUSS 666</b>Ta ratten. Rädda bussen. Upp till 350 XP.</span><span><b>03 · FLY TILL GRÖNT</b>Nå en tryggzon innan tiden tar slut. Livet får inte ta slut!</span></div>
     <p id="cityControlCopy" class="control-hint"></p>
-    <button id="cityClean" class="round-primary">CLEAN CITY EXPLORE →</button><p class="round-fine">Bara Karlstad och termosar. Inga fiender. Inga uppdrag.</p><button id="cityTrail" class="round-secondary">TERMOSRUNDAN · 3 MINUTER</button>
+    <button id="cityClean" class="round-primary">CLEAN CITY EXPLORE →</button><p class="round-fine">Bara Karlstad och termosar. Inga fiender. Inga uppdrag.</p><p id="cityFunStatus" class="round-fine fun-news"></p><p class="round-fine fun-news"><b>NYTT:</b> turbo (T), busslinjer från Torget till Haga, Mariebergsskogen och udden, kombon, sällsynta termosar och gömda skatter.</p><button id="cityTrail" class="round-secondary">TERMOSRUNDAN · 3 MINUTER</button>
     <button id="dailyOpen" class="daily-tile"><span id="dailyDate"></span><b id="dailyTitle"></b><small id="dailyTeaser"></small><strong>SPELA DAGENS →</strong></button>
     <button id="cityStart" class="round-secondary">ZOMBIEJAKTEN · 3:00 <span>→</span></button>
     <button id="cityFree" class="round-tertiary">Stadsvandring med zombies</button>
@@ -163,6 +172,13 @@
     <p id="roundIntroControls" class="control-hint"></p>
     <p id="roundSeed" class="round-fine"></p>
   </section>
+  <section id="round-bus-pick" class="round-card compact" hidden>
+    <div class="episode-label"><span>VÄRMLANDSTRAFIK</span><span id="busPickFrom">TORGET</span></div>
+    <h2>VART<br><em>SKA DU?</em></h2>
+    <p class="round-fine">Välj linje. Resan tar 8–15 sekunder. Första gången till en ny hållplats ger bonus, och du kan alltid ta bussen tillbaka.</p>
+    <div id="busPickList" class="bus-pick-list"></div>
+    <button id="busPickClose" class="round-tertiary">Stanna kvar</button>
+  </section>
   <section id="round-pause" class="round-card compact" hidden>
     <div class="episode-label">TIMEOUT / KLOCKAN STÅR STILL</div>
     <h2>TA EN<br><em>FIKAPAUS.</em></h2>
@@ -180,6 +196,15 @@
       <p class="round-fine">Gå till Karlstads riktiga platser. Stämplarna sparas mellan rundor.</p>
       <ul id="stampGrid"></ul>
       <div id="cursedRow" hidden><h3 id="cursedTitle">FÖRBANNADE TERMOSAR</h3><div class="cursed-meter"><i id="cursedFill"></i></div><p id="cursedClue"></p></div>
+    </section>
+    <section id="funBook" class="stamp-book fun-book" aria-labelledby="funBookTitle" hidden>
+      <h3 id="funBookTitle">FIKAALBUMET</h3>
+      <p id="funBookLevel" class="round-fine"></p><div class="fun-track"><u id="funBookXp"></u></div>
+      <p id="funBookDaily" class="round-fine"></p>
+      <h3>TERMOSAR PER OMRÅDE</h3><ul id="funAlbum" class="fun-list"></ul>
+      <h3 id="funTreasureTitle">GÖMDA SKATTER</h3><ul id="funTreasures" class="fun-list one"></ul>
+      <h3 id="funStopTitle">BUSSHÅLLPLATSER</h3><ul id="funStops" class="fun-list"></ul>
+      <h3 id="funBadgeTitle">MÄRKEN</h3><ul id="funBadges" class="fun-list one"></ul>
     </section>
     <div class="pause-footer"><button id="roundQuit">Utforska staden</button><button id="roundMute">LJUD PÅ</button></div>
     <p class="round-fine">Lokala varumärken (även Ryde) visas som sponsorkoncept. Inga samarbeten är bekräftade. Zombie-Lerin är en tecknad spelfantasi.</p>
@@ -232,6 +257,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.12.0"></script>
+<script type="module" src="./app.js?v=2.13.0"></script>
 </body>
 </html>

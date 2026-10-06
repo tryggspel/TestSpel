@@ -19,7 +19,7 @@ export function halloweenActive(date=new Date(),search=''){
 // Väljer 13 termosar långt ifrån varandra (farthest-point sampling). Deterministiskt: samma
 // karta ger samma platser för alla spelare. Fjärrplatserna Kil/Marieberg tas inte med.
 export function pickCursed(items,n=CURSED_COUNT){
-  const pool=items.filter(t=>t&&Number.isFinite(t.x)&&Number.isFinite(t.z)&&!/^(kil|marieberg)-/.test(t.id)).slice().sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+  const pool=items.filter(t=>t&&Number.isFinite(t.x)&&Number.isFinite(t.z)&&!/^(kil|marieberg|fx)-/.test(t.id)).slice().sort((a,b)=>String(a.id).localeCompare(String(b.id)));
   if(!pool.length)return [];
   let first=pool[0];for(const t of pool)if(Math.hypot(t.x,t.z)<Math.hypot(first.x,first.z))first=t;
   const picked=[first],dist=new Map(pool.map(t=>[t.id,Math.hypot(t.x-first.x,t.z-first.z)]));

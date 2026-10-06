@@ -1,14 +1,18 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.12.0';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.12.0';
-import {CityMission} from './city-missions.mjs?v=2.12.0';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.12.0';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.12.0';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.12.0';
-import {CITY_STREETS} from './city-streets.mjs?v=2.12.0';
-import {pedestrianAt} from './pedestrian.mjs?v=2.12.0';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.13.0';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.13.0';
+import {CityMission} from './city-missions.mjs?v=2.13.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.13.0';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.13.0';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.13.0';
+import {CITY_STREETS} from './city-streets.mjs?v=2.13.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.13.0';
+import {ExploreFun,segmentDistance,heatFor} from './explore-fun.mjs?v=2.13.0';
+import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS} from './explore-places.mjs?v=2.13.0';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
+// 2.13: en uppplockad termos dyker upp igen i City Explore efter fyra minuter, om man är minst 80 m därifrån. Då finns det alltid en runda att gå om.
+export const RESPAWN=Object.freeze({after:240,minDistance:80,every:2});
 
 export const JOURNEY_KEY='karlstad:journey:1';
 const bounded=(v,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max,Number(v))):fallback;
@@ -46,27 +50,37 @@ export class CityJourney extends CityMission {
       }
     }
     this.items=[...unique.values()].filter(p=>!this.secrets.some(s=>Math.hypot(p.x-s.x,p.z-s.z)<3));
+    // 2.13: fler termosar långt ut (Haga, Inre hamn, Mariebergsskogen, udden, Klara, Mitt i City) och gömda skatter.
+    // De läggs sist, så att de gamla termos-id:na och Halloween-urvalet inte påverkas.
+    this.treasures=TREASURES.map(t=>({...t}));
+    const extra=[];
+    for(const [area,list] of Object.entries(FX_THERMOS))list.forEach(([x,z,y],i)=>{if(!this.secrets.some(s=>Math.hypot(x-s.x,z-s.z)<3)&&!this.treasures.some(t=>Math.hypot(x-t.x,z-t.z)<3))extra.push({x,z,...(y?{y}:{}),id:`fx-${area}-${i}`});});
+    this.items.push(...extra);this.treasuresFound=new Set();
     this.ambushes=[];
     routes.forEach((route,ri)=>{for(let i=10;i<route.length-4;i+=22){const trigger=route[i],next=route[i+1],dx=next.x-trigger.x,dz=next.z-trigger.z;
       const spawn=nav.point({x:trigger.x-dz*1.5,z:trigger.z+dx*1.5});this.ambushes.push({id:`ambush-${ri}-${i}`,trigger,spawn});}});
     for(const p of [...PARK_ENCOUNTERS,{id:'mall-fight',name:'REAN ÄR ODÖDLIG',x:-127,z:104,spawnX:-151,spawnZ:116}])this.ambushes.push({id:p.id,name:p.name,trigger:nav.point(p),spawn:nav.point({x:p.spawnX,z:p.spawnZ})});
     this.busStops=[{id:'torget',name:'Torget',...nav.point({x:-19,z:35})},{id:'domkyrkan',name:'Domkyrkan',...nav.point({x:145,z:-117})},{id:'sandgrund',name:'Sandgrund',...nav.point({x:sg.x+9,z:sg.z+12})}];
+    // 2.13: linjenät från Torget i City Explore. Torget och Sandgrund återanvänder de gamla hållplatserna.
+    this.busNetwork=BUS_NETWORK.map(s=>{const old=this.busStops.find(b=>b.id===s.id);return old?{...s,x:old.x,z:old.z}:{...s};});
     this.safeZones=[{...nav.point({x:5,z:24}),name:'Torget'}, {...nav.point(this.delivery),name:'Mitt i City'},...this.busStops.slice(1)];
     this.postcards=POSTCARDS.map(p=>({...p,...nav.point(p)}));this.postcardsFound=new Set();this.routeMode='hunt';
-    this.position={...this.layout.spawn};this.heading=0;this.load();this.rush=new CityRush(this);
+    this.position={...this.layout.spawn};this.heading=0;this.load();
+    this.fun=new ExploreFun({storage,items:this.items,treasureIds:[...this.secrets.map(s=>s.id),...this.treasures.map(t=>t.id)],stopIds:this.busNetwork.filter(s=>!s.hub).map(s=>s.id),xp:this.lifetime});
+    this.lastStep=null;this.foundAt=new Map();this.lastRespawn=0;this.itemById=new Map(this.items.map(t=>[t.id,t]));this.rush=new CityRush(this);
   }
-  progress(){return {version:1,balance:this.balance,lifetime:this.lifetime,energy:this.energy,health:this.health,found:[...this.found],secrets:[...this.secretsFound],cleared:[...this.cleared],postcards:[...this.postcardsFound],position:{...this.position},heading:this.heading,destination:this.destination};}
+  progress(){return {version:1,balance:this.balance,lifetime:this.lifetime,energy:this.energy,health:this.health,found:[...this.found],secrets:[...this.secretsFound],treasures:[...this.treasuresFound],cleared:[...this.cleared],postcards:[...this.postcardsFound],position:{...this.position},heading:this.heading,destination:this.destination};}
   applyProgress(v){
     if(!v||v.version!==1)return;
     this.balance=bounded(v.balance,999999);this.lifetime=bounded(v.lifetime,9999999);this.energy=bounded(v.energy,100,45);this.health=bounded(v.health,100,100)||100;
     const pick=(list,valid)=>new Set(Array.isArray(list)?list.filter(id=>valid.some(p=>p.id===id)):[]);
-    this.found=pick(v.found,this.items);this.secretsFound=pick(v.secrets,this.secrets);this.cleared=pick(v.cleared,this.ambushes);this.postcardsFound=pick(v.postcards,this.postcards);
+    this.found=pick(v.found,this.items);this.secretsFound=pick(v.secrets,this.secrets);this.treasuresFound=pick(v.treasures,this.treasures);this.cleared=pick(v.cleared,this.ambushes);this.postcardsFound=pick(v.postcards,this.postcards);
     if(v.position&&Number.isFinite(v.position.x)&&Number.isFinite(v.position.z))this.position=atKil(v.position)?{x:KIL.x,z:KIL.z}:atMarieberg(v.position)?{x:MARIEBERG.x,z:MARIEBERG.z}:this.nav.point(v.position);
     if(Number.isFinite(v.heading))this.heading=v.heading;
     if(this.portals[v.destination])this.destination=v.destination;
   }
   load(){try{this.applyProgress(JSON.parse(this.storage?.getItem(JOURNEY_KEY)||'null'));}catch{}}
-  save(){try{this.storage?.setItem(JOURNEY_KEY,JSON.stringify(this.challengeArchive||this.progress()));this.dirty=false;}catch{}}
+  save(){try{this.storage?.setItem(JOURNEY_KEY,JSON.stringify(this.challengeArchive||this.progress()));this.dirty=false;}catch{}this.fun?.save();}
   runKit(){
     const mask=(list,found)=>list.reduce((bits,p,i)=>found.has(p.id)?(bits|2**i)>>>0:bits,0);
     return {balance:Math.floor(bounded(this.balance,999999)),energy:Math.round(Math.max(45,this.energy)),secrets:mask(this.secrets,this.secretsFound),cleared:mask(this.ambushes,this.cleared),postcards:mask(this.postcards,this.postcardsFound)};
@@ -78,7 +92,10 @@ export class CityJourney extends CityMission {
   }
   endChallenge(){if(this.challengeArchive){this.applyProgress(this.challengeArchive);this.challengeArchive=null;this.save();}}
   movementScale(actor){return this.rush?.ecology.contains(actor) ? .5 : 1;}
-  reward(points){this.balance+=points;this.lifetime+=points;this.rush?.earn(points);this.dirty=true;}
+  reward(points){
+    this.balance+=points;this.lifetime+=points;this.rush?.earn(points);this.dirty=true;
+    if(this.fun&&this.rush?.mode==='clean'&&this.rush.state==='playing')for(const e of this.fun.afterReward(this.lifetime))this.events.push(e);
+  }
   refill(target=this){
     if(target.phase!=='playing'||target.practice||this.balance<25||target.energy>60)return false;
     this.balance-=25;target.energy=Math.min(100,target.energy+40);this.energy=target.energy;this.dirty=true;target.events.push({type:'refill'});this.save();return true;
@@ -111,14 +128,71 @@ export class CityJourney extends CityMission {
     this.elapsed+=dt;this.position={x:p.x,z:p.z};this.heading=Math.atan2(-f.x,-f.z)*180/Math.PI;
     this.actors.forEach(a=>a.active=false);this.pendingAmbush=null;this.rush.clock(dt);
     if(this.rush.state!=='playing')return;
-    for(const item of this.items)if(!this.found.has(item.id)&&Math.abs((p.y??1.68)-1.68-(item.y||0))<1.5&&Math.hypot(p.x-item.x,p.z-item.z)<1.65){
-      const gagata=pedestrianAt(item);const pts=25+(gagata?GAGATA_BONUS:0);
-      this.found.add(item.id);this.reward(pts);this.energy=Math.min(100,this.energy+15);this.events.push({type:'thermos',points:pts,chain:0,x:item.x,z:item.z,id:item.id,gagata});
+    const fun=this.rush.mode==='clean'?this.fun:null,py=(p.y??1.68)-1.68;
+    // Sträckan sedan förra steget: med turbo och Ryde hinner man 1–3 m per bildruta, och en termos får inte missas mellan två steg.
+    const from=this.lastStep,sweep=from&&Math.hypot(p.x-from.x,p.z-from.z)<14?from:null;this.lastStep={x:p.x,z:p.z};
+    if(fun){const t=fun.tick(dt);if(t.lost>=3)this.events.push({type:'combo-lost',chain:t.lost});}
+    const reach=fun?fun.pickupRadius():1.65;let taken=0;
+    for(const item of this.items){
+      if(this.found.has(item.id)||Math.abs(py-(item.y||0))>=1.5)continue;
+      if((sweep?segmentDistance(item.x,item.z,sweep.x,sweep.z,p.x,p.z):Math.hypot(p.x-item.x,p.z-item.z))>=reach)continue;
+      if(reach>2&&++taken>3)break; // kaffemagneten tar högst tre per steg
+      const gagata=pedestrianAt(item);
+      this.found.add(item.id);this.energy=Math.min(100,this.energy+15);
+      if(fun){
+        this.foundAt.set(item.id,this.elapsed);
+        const r=fun.pickup(item,{gagata:!!gagata});
+        this.events.push({type:'thermos',points:r.points,chain:r.chain,mult:r.mult,rarity:r.rarity,first:r.first,doubled:r.doubled,fun:true,x:item.x,z:item.z,y:item.y||0,id:item.id,gagata});
+        for(const e of r.events)this.events.push(e);
+        this.reward(r.points+r.bonus);
+      }else{
+        const pts=25+(gagata?GAGATA_BONUS:0);this.reward(pts);
+        this.events.push({type:'thermos',points:pts,chain:0,x:item.x,z:item.z,id:item.id,gagata});
+      }
     }
-    if(this.rush.mode==='clean')for(const item of this.secrets)if(!this.secretsFound.has(item.id)&&Math.abs((p.y??1.68)-1.68-(item.y||0))<1.5&&Math.hypot(p.x-item.x,p.z-item.z)<1.8){this.secretsFound.add(item.id);this.reward(200);this.events.push({type:'secret',name:item.name});}
+    if(fun&&this.elapsed-this.lastRespawn>=RESPAWN.every){
+      this.lastRespawn=this.elapsed;
+      for(const [id,at] of this.foundAt){
+        if(this.elapsed-at<RESPAWN.after)continue;
+        const it=this.itemById.get(id);if(!it){this.foundAt.delete(id);continue;}
+        if(Math.hypot(p.x-it.x,p.z-it.z)<RESPAWN.minDistance)continue;
+        this.found.delete(id);this.foundAt.delete(id);
+      }
+    }
+    if(this.rush.mode==='clean'){
+      // De sju gamla hemligheterna och de nya gömda skatterna fungerar likadant: gå nära och plocka.
+      for(const [list,found,legacy] of [[this.secrets,this.secretsFound,true],[this.treasures,this.treasuresFound,false]])
+        for(const item of list){
+          if(found.has(item.id)||Math.abs(py-(item.y||0))>=1.5||Math.hypot(p.x-item.x,p.z-item.z)>=(legacy?1.8:2.2))continue;
+          found.add(item.id);const points=legacy?200:item.points,t=fun.treasure(item.id);
+          this.events.push({type:'secret',name:item.name,points,fun:true,id:item.id,x:item.x,z:item.z,found:t?.count??found.size,total:fun.treasureTotal});
+          for(const e of t?.events||[])this.events.push(e);
+          this.reward(points);this.save();
+        }
+    }
     if(this.elapsed-this.lastSave>=4){this.lastSave=this.elapsed;this.save();}
   }
-  nearestBus(p){return this.busStops.map(s=>({...s,distance:Math.hypot(p.x-s.x,p.z-s.z)})).sort((a,b)=>a.distance-b.distance)[0];}
+  // Ny City Explore-runda: ingen kedja, inga superkrafter, alla termosar tillbaka.
+  newExploreRun(){this.lastStep=null;this.lastRespawn=0;this.foundAt.clear();this.fun.newRun();}
+  // Närmaste ofunna skatt på samma våning, för hett/kallt-mätaren.
+  nearestHidden(p){
+    const py=(p.y??1.68)-1.68;let best=null,bd=Infinity;
+    for(const [list,found] of [[this.secrets,this.secretsFound],[this.treasures,this.treasuresFound]])
+      for(const t of list){if(found.has(t.id)||Math.abs(py-(t.y||0))>2.5)continue;const d=Math.hypot(p.x-t.x,p.z-t.z);if(d<bd){bd=d;best=t;}}
+    return best?{item:best,distance:bd,heat:heatFor(bd)}:null;
+  }
+  // Turbo-kilometer räknas av spelet; här delas märken ut.
+  noteTurbo(meters){if(this.rush?.mode!=='clean')return;for(const e of this.fun.addTurbo(meters))this.events.push(e);}
+  // Framme med bussen: första besöket på en hållplats ger bonus, och märken kan låsas upp.
+  busArrive(stop){
+    if(this.rush?.mode!=='clean')return null;
+    const r=this.fun.ride(stop,BUS_FIRST_RIDE_BONUS);
+    this.events.push({type:'bus-arrive',id:stop.id,name:stop.name,first:r.first,bonus:r.bonus,visited:r.visited,total:r.total});
+    for(const e of r.events)this.events.push(e);
+    if(r.bonus)this.reward(r.bonus);
+    this.save();return r;
+  }
+  nearestBus(p){return (this.rush?.peaceful?this.busNetwork:this.busStops).map(s=>({...s,distance:Math.hypot(p.x-s.x,p.z-s.z)})).sort((a,b)=>a.distance-b.distance)[0];}
   nearestPortal(p){return Object.entries(this.portals).map(([id,q])=>({id,...q,distance:Math.hypot(p.x-q.x,p.z-q.z)})).sort((a,b)=>a.distance-b.distance)[0];}
   step(dt,player,forward={x:0,z:-1}){
     if(this.phase!=='playing'||!player||!Number.isFinite(dt)||dt<=0)return;
