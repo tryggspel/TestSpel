@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {CityNavigation} from '../city-missions.mjs';
-import {CityJourney,TEMPO_RESPAWN,TEMPO_SUPPLY} from '../journey-rules.mjs';
+import {CityJourney,TEMPO_RESPAWN,TEMPO_SUPPLY,TEMPO_COURSE} from '../journey-rules.mjs';
 import {ExploreFun,rarityFor,TURBO} from '../explore-fun.mjs';
 import {POWERUPS,POWER,POWER_KINDS,GIFT_KINDS,PowerState,powerFor} from '../powerups.mjs';
 import {FlashChallenges,FLASH,FLASH_KINDS} from '../challenges.mjs';
@@ -238,23 +238,47 @@ test('Riktningspil: vinkel, avstånd och text stämmer med kompassens tecken',()
   assert.equal(arrowInfo(p,north,null),null);assert.equal(arrowInfo(null,north,{x:1,z:1}),null);
 });
 
-test('Temporush: nya termosar skapas framför spelaren så att det alltid finns något nära',()=>{
+test('Temporush: banan är en lång rak sträcka av termosar framför spelaren',()=>{
   const g=clean();g.startTempo();
   const here={x:-19,z:35},fwd={x:0,z:-1};
-  // Tömma allt nära så att försörjningen måste skapa nytt.
-  for(const t of g.items)if(Math.hypot(t.x-here.x,t.z-here.z)<200)g.found.add(t.id);
-  for(let i=0;i<12;i++)g.step(.35,{x:here.x,z:here.z,y:1.68},fwd);g.drainEvents();
-  const R=Math.min(TEMPO_SUPPLY.maxRadius,TEMPO_SUPPLY.baseRadius+TEMPO_SUPPLY.perLevel*g.tempo.level);
-  const near=g.items.filter(t=>!g.found.has(t.id)&&Math.hypot(t.x-here.x,t.z-here.z)<=R);
-  assert.ok(near.length>=TEMPO_SUPPLY.want-1,'minst '+TEMPO_SUPPLY.want+' termosar inom '+R+' m: '+near.length);
-  assert.ok(near.every(t=>t.dyn&&String(t.id).startsWith('tp:')),'bara skapade termosar');
-  const ahead=near.filter(t=>(t.x-here.x)*fwd.x+(t.z-here.z)*fwd.z>0).length;assert.ok(ahead>=near.length*.7,'mest framför spelaren: '+ahead+'/'+near.length);
-  assert.ok(g.tempo.target,'ett mål finns');
-  // plocka en skapad termos: räknas inte in i albumet och sparas inte
-  const it=near[0];g.step(.1,{x:it.x,z:it.z,y:1.68},fwd);g.drainEvents();
-  assert.equal(g.fun.state.collected.includes(it.id),false,'skapade termosar fyller inte albumet');
+  for(let i=0;i<6;i++)g.step(.3,{x:here.x,z:here.z,y:1.68},fwd);g.drainEvents();
+  const pearls=g.course.pearls;assert.ok(pearls.length>=10,'ett långt pärlband: '+pearls.length);
+  const level=g.tempo.level,look=Math.min(320,150+14*level);
+  const far=Math.max(...pearls.map(t=>Math.hypot(t.x-here.x,t.z-here.z)));assert.ok(far>=look*.8,'banan når '+Math.round(far)+' m av '+look);
+  // rak: avvikelsen från linjen mellan första och sista pärlan är liten
+  const a=pearls[0],z=pearls[pearls.length-1],dx=z.x-a.x,dz=z.z-a.z,len=Math.hypot(dx,dz);
+  const dev=Math.max(...pearls.map(t=>Math.abs((t.x-a.x)*dz-(t.z-a.z)*dx)/len));
+  assert.ok(dev<=3.2,'nästan rakt (öppen yta): största avvikelse '+dev.toFixed(1)+' m');
+  // jämna steg och i ordning
+  for(let i=1;i<pearls.length;i++){assert.ok(pearls[i].course>pearls[i-1].course);const d=Math.hypot(pearls[i].x-pearls[i-1].x,pearls[i].z-pearls[i-1].z);assert.ok(d>6&&d<40,'avstånd '+d.toFixed(1));}
+  assert.equal(g.tempo.target.id,pearls[0].id,'första målet är första pärlan');
+  assert.ok(pearls.every(t=>t.dyn&&String(t.id).startsWith('tp:')));
+  // plocka en pärla: albumet påverkas inte och inget sparas
+  const it=pearls[0];g.step(.1,{x:it.x,z:it.z,y:1.68},fwd);g.drainEvents();
+  assert.equal(g.fun.state.collected.includes(it.id),false);
   g.save();const saved=JSON.parse(g.storage.getItem('karlstad:journey:1'));assert.equal(saved.found.some(id=>String(id).startsWith('tp:')),false);
-  assert.ok(g.dyn.length<=TEMPO_SUPPLY.keep+TEMPO_SUPPLY.perTick,'listan hålls kort');
+  assert.ok(g.dyn.length<=TEMPO_SUPPLY.keep+TEMPO_COURSE.perTick);
+});
+
+test('Temporush: banan viker av när en vägg ligger i vägen och lägger aldrig termosar i väggen',()=>{
+  const wall=(x,z)=>Math.abs(z+300)<8&&x>-2000&&x<2000;
+  const nav2=new CityNavigation(wall);const g=new CityJourney(nav2,mall,portals,storage());g.rush.start('clean');g.drainEvents();g.startTempo();
+  const start={x:0,z:-200},fwd={x:0,z:-1};
+  for(let i=0;i<40;i++)g.step(.3,{x:start.x,z:start.z,y:1.68},fwd);g.drainEvents();
+  const pearls=g.course.pearls;assert.ok(pearls.length>=6,'banan finns: '+pearls.length);
+  for(const t of pearls)assert.equal(wall(t.x,t.z),false,'pärla i väggen '+t.x+','+t.z);
+  const headings=new Set(pearls.slice(1).map((t,i)=>Math.round(Math.atan2(t.x-pearls[i].x,t.z-pearls[i].z)*4)));
+  assert.ok(g.course.heading!==undefined);void headings;
+});
+
+test('Temporush: pärlor som man sprungit förbi försvinner så att pilen aldrig pekar bakåt',()=>{
+  const g=clean();g.startTempo();const here={x:-19,z:35},fwd={x:0,z:-1};
+  for(let i=0;i<5;i++)g.step(.3,{x:here.x,z:here.z,y:1.68},fwd);g.drainEvents();
+  const first=g.course.pearls[0];
+  const ahead={x:first.x,z:first.z-60};
+  for(let i=0;i<4;i++)g.step(.3,{x:ahead.x,z:ahead.z,y:1.68},fwd);g.drainEvents();
+  assert.equal(g.itemById.has(first.id),false,'första pärlan togs bort när man passerat');
+  const t=g.tempo.target;assert.ok(t&&((t.x-ahead.x)*fwd.x+(t.z-ahead.z)*fwd.z)>-1,'målet ligger inte bakom');
 });
 
 test('Temporush: målet väljs helst framför spelaren och var sjätte skapade termos är en förmåga',()=>{

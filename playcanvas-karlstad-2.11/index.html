@@ -30,9 +30,9 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:11px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.16.0">
-<link rel="stylesheet" href="./compact-hud.css?v=2.16.0">
-<link rel="stylesheet" href="./explore-fun.css?v=2.16.0">
+<link rel="stylesheet" href="./last-round.css?v=2.17.0">
+<link rel="stylesheet" href="./compact-hud.css?v=2.17.0">
+<link rel="stylesheet" href="./explore-fun.css?v=2.17.0">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
@@ -90,6 +90,7 @@
   <div id="roundTactic" hidden></div>
   <div id="roundCompass"><b id="roundBearing">N · 0°</b><span id="roundCompassArrow">↑</span><span id="roundCompassText">O’LEARYS</span></div>
   <button id="roundLaunch" hidden>VÄLJ UPPDRAG <span>4 UPPDRAG I KARLSTAD →</span></button>
+  <div id="tempoEdgeL" hidden aria-hidden="true"></div><div id="tempoEdgeR" hidden aria-hidden="true"></div>
   <div id="tempoArrow" hidden aria-hidden="true"><i id="tempoArrowIcon"></i><b id="tempoArrowDist"></b><small id="tempoArrowHint"></small></div>
   <div id="hudBanner" role="status" aria-live="polite" hidden><small id="hudBannerKicker"></small><b id="hudBannerTitle"></b><span id="hudBannerText"></span></div>
   <div id="flashBar" hidden aria-hidden="true"><i id="flashFill"></i></div>
@@ -278,6 +279,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.16.0"></script>
+<script type="module" src="./app.js?v=2.17.0"></script>
 </body>
 </html>

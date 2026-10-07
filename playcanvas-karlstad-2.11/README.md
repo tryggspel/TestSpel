@@ -1,4 +1,10 @@
-# Karlstad City — 2.16.0 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+# Karlstad City — 2.17.0 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+
+> **2.17.0 — Temporush: rak, lång bana och kantmarkörer**
+> - **Banan är långa raka sträckor.** Termosarna läggs ut som ett pärlband längs en fri rak linje (lätt slingring på ±1 m, så man kan springa rakt fram och plocka allt). Pärlbandet planeras 150–320 m framåt (längre ju högre nivå) och avståndet mellan pärlorna växer med nivån (11–28 m), så att man hinner få upp farten. Kommer en vägg eller byggnad i vägen väljer banan nästa långa fria sträcka från slutpunkten, med straff för tvära svängar. Banan använder spelets egen kollisionskarta, så inga pärlor hamnar i hus eller vatten.
+> - **Pilen följer banan.** Målet är alltid nästa pärla i ordning. Pärlor man sprungit förbi tas bort, så pilen pekar inte bakåt.
+> - **Kantmarkörer.** När ljusstrålen är utanför bilden lyser skärmkanten åt det håll du ska vända dig (blått), och båda kanterna blinkar rött när strålen ligger bakom dig.
+> - 3 nya banatester (292 totalt).
 
 > **2.16.0 — Temporush: tydlig pil, termosar som aldrig tar slut och sex nya förmågor**
 > - **Riktningspil.** En stor pil på skärmen visar åt vilket håll nästa termos ligger (grön = rakt fram, röd = vänd dig, blinkar när klockan är på väg att gå ut) med avstånd och text (HÖGER, VÄNSTER, VÄND DIG). Den uppdateras varje bildruta, så den följer med när man svänger i hög fart. Vid målet står en ljusstråle som syns över hustaken, och målet markeras i blått på radarn.
