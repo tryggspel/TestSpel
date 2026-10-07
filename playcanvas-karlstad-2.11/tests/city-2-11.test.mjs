@@ -5,6 +5,8 @@ import {cityBuildings,infillBuildings,LANDMARKS,PLACE_ROUTES,landmarkDestination
 import {onVastraBron,VASTRA_BRON} from '../city-water.mjs';
 import {waterBlocked} from '../park-space.mjs';
 import {southWaterBlocked,footprintContains} from '../city-south-space.mjs';
+import {rarityFor} from '../explore-fun.mjs';
+import {stockholmDay} from '../daily-challenge.mjs';
 import {PEDESTRIAN_NAMES,pedestrianAt,GAGATA_SIGNS} from '../pedestrian.mjs';
 import {RydeFleet,RYDE,RYDE_ZONES,RYDE_SPAWNS} from '../ryde.mjs';
 import {ColliderGrid} from '../collider-grid.mjs';
@@ -56,7 +58,8 @@ test('gågator: Drottninggatan och Västra Torggatan enligt OSM, med skyltar och
   const nav=new CityNavigation();
   const g=new CityJourney(nav,{x:-135,z:98},{'sista-rundan':{x:46,z:37},fikapanik:{x:8,z:6},'radda-fikat':{x:-135,z:55},sandgrund:{x:-12,z:-370}});
   g.rush.start('clean');
-  const onStreet=g.items.find(i=>pedestrianAt(i)),plain=g.items.find(i=>!pedestrianAt(i));
+  const common=i=>rarityFor(i.id,stockholmDay(new Date()))==='common'; // sällsynthet slumpas per dag
+  const onStreet=g.items.find(i=>pedestrianAt(i)&&common(i)),plain=g.items.find(i=>!pedestrianAt(i)&&common(i));
   assert.ok(onStreet,'det finns termosar på gågatorna');
   let b=g.balance;g.step(.1,{...plain,y:1.68});assert.equal(g.balance-b,25);
   b=g.balance;g.step(.1,{...onStreet,y:1.68});assert.equal(g.balance-b,25+GAGATA_BONUS);

@@ -63,6 +63,13 @@ test('fetchLiveBoard sväljer alla fel och rensar svaret',async()=>{
 test('API-funktionen: kräver nyckel, tolkar ResRobot och svarar bara på GET',()=>{
   const out=parseDepartures({Departure:[{name:'Buss 1',direction:'Skåre (Karlstad kn)',time:'14:32:00',ProductAtStop:{displayNumber:'1'}},{name:'Länstrafik - Buss 12',direction:'Kil',time:'14:40:00'},{name:'x',direction:'',time:'14:41:00'}]});
   assert.deepEqual(out,[{line:'1',direction:'Skåre',time:'14:32'},{line:'12',direction:'Kil',time:'14:40'}]);
+  const mix=parseDepartures({Departure:[
+    {direction:'Kristianstad Centralstation',time:'09:05:00',ProductAtStop:{displayNumber:'1959',operator:'Skånetrafiken'}},
+    {direction:'Lindemo',time:'09:07:00',ProductAtStop:{displayNumber:'1',operator:'Värmlandstrafik'}},
+    {direction:'Kil',time:'09:09:00',ProductAtStop:{displayNumber:'12',operator:'Värmlandstrafik'}}]});
+  assert.deepEqual(mix.map(d=>d.line),['1','12'],'bara Värmlandstrafik när operatör finns');
+  const noop=parseDepartures({Departure:[{direction:'Kristianstad',time:'09:05:00',ProductAtStop:{displayNumber:'1959'}},{direction:'Lindemo',time:'09:07:00',ProductAtStop:{displayNumber:'1'}}]});
+  assert.deepEqual(noop.map(d=>d.line),['1'],'utan operatörsdata släpps fyrsiffriga långväga linjer');
   const mk=(method)=>{const r={code:0,headers:{},body:null,status(c){this.code=c;return this;},setHeader(k,v){this.headers[k]=v;return this;},json(b){this.body=b;return this;}};return [{method},r];};
   delete process.env.TRAFIKLAB_KEY;
   return Promise.all([handler(...mk('POST')),handler(...mk('GET'))]).then(()=>{const [q,r]=mk('GET');return handler(q,r).then(()=>{assert.equal(r.code,503);assert.match(r.body.error,/TRAFIKLAB_KEY/);});});

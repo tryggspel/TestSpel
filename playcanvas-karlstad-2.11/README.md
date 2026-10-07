@@ -1,4 +1,6 @@
-# Karlstad City — 2.14.0 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+# Karlstad City — 2.14.1 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+
+> **2.14.1:** BussQuiz visar nu bara Värmlandstrafik. `api/varmlandstrafik.mjs` filtrerar bort andra länens avgångar (t.ex. Kristianstad) och svaret innehåller `operators` för felsökning. Datumberoende tester gjordes robusta.
 
 * **BussQuiz på bussens skärm (City Explore):** 2–4 frågor per resa på en LED-skärm i bussen (tryck eller 1–3). Frågor ur en fast Karlstad-bank (`bus-quiz.mjs`), ur spelets eget linjenät (alltid rätt mot kartan) och, om det finns, ur riktiga avgångar. Snabbt rätt svar ger 40 poäng, rätt 30; resultatet läggs på ankomstbonusen. Märkena Busskunskap och Full pott på linjen. Utsikten rullar nu: mötande trafik, hus, vatten eller skog efter målet, LED-skylt med linje och en färdkarta.
 * **Värmlandstrafik-data:** `api/varmlandstrafik.mjs` hämtar avgångar från Karlstad Resecentrum via Trafiklab ResRobot. Den kräver miljövariabeln `TRAFIKLAB_KEY` (gratis nyckel på trafiklab.se); utan den svarar funktionen 503 och spelet använder sina inbyggda frågor. **Ej provad mot riktig nyckel** (kodad efter ResRobots dokumenterade format och testad med låtsasdata).
