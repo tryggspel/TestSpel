@@ -1,4 +1,10 @@
-# Karlstad City — 2.17.0 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+# Karlstad City — 2.17.1 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+
+> **2.17.1 — Temporush: banan håller sig till gator och glesnar inte**
+> - **Inga hopp över hinder.** Banan kontrollerar nu hela sträckan mellan två pärlor (var 3:e meter) och en större frizon runt varje pärla, så att den inte längre kan hoppa över smala hinder eller vatten och inte hamnar vid strandkanten.
+> - **Håller sig till gator.** Nya `street-index.mjs` ger avstånd till närmaste gata ur OSM-geometrin. Banan väljer sträckor längs gator och bryter av när det blir 48 m i rad utan gata i närheten (stora gröna ytor, parker). Utanför de kartlagda kvarteren kräver den inga gator.
+> - **Inga glesa partier.** Pärlor togs tidigare bort utifrån kamerans riktning, vilket kunde ta bort pärlor efter en kurva. De tas nu bara bort när du passerat dem längs banans egen riktning. Hamnar du mer än 110 m från nästa mål (andra gator, bussresa) börjar banan om vid dig.
+> - 3 nya tester (294 totalt).
 
 > **2.17.0 — Temporush: rak, lång bana och kantmarkörer**
 > - **Banan är långa raka sträckor.** Termosarna läggs ut som ett pärlband längs en fri rak linje (lätt slingring på ±1 m, så man kan springa rakt fram och plocka allt). Pärlbandet planeras 150–320 m framåt (längre ju högre nivå) och avståndet mellan pärlorna växer med nivån (11–28 m), så att man hinner få upp farten. Kommer en vägg eller byggnad i vägen väljer banan nästa långa fria sträcka från slutpunkten, med straff för tvära svängar. Banan använder spelets egen kollisionskarta, så inga pärlor hamnar i hus eller vatten.

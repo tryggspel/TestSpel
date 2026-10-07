@@ -1,17 +1,18 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.17.0';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.17.0';
-import {CityMission} from './city-missions.mjs?v=2.17.0';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.17.0';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.17.0';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.17.0';
-import {CITY_STREETS} from './city-streets.mjs?v=2.17.0';
-import {pedestrianAt} from './pedestrian.mjs?v=2.17.0';
-import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.17.0';
-import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.17.0';
-import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.17.0';
-import {FlashChallenges} from './challenges.mjs?v=2.17.0';
-import {TempoRun} from './tempo-run.mjs?v=2.17.0';
-import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.17.0';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.17.1';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.17.1';
+import {CityMission} from './city-missions.mjs?v=2.17.1';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.17.1';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.17.1';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.17.1';
+import {CITY_STREETS} from './city-streets.mjs?v=2.17.1';
+import {pedestrianAt} from './pedestrian.mjs?v=2.17.1';
+import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.17.1';
+import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.17.1';
+import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.17.1';
+import {streetDistance,streetCovered} from './street-index.mjs?v=2.17.1';
+import {FlashChallenges} from './challenges.mjs?v=2.17.1';
+import {TempoRun} from './tempo-run.mjs?v=2.17.1';
+import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.17.1';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
@@ -23,7 +24,7 @@ const GIFTS=GIFT_KINDS;
 // Temporush: nya termosar skapas framför spelaren så att det alltid finns något nära att springa mot, även efter en lång runda.
 // 2.17: banan i Temporush är långa raka sträckor. Termosar läggs ut som ett pärlband längs en fri rak linje (med lätt slingring),
 // och när linjen tar slut planeras nästa sträcka från slutpunkten. Pilen pekar alltid på nästa pärla längs banan.
-export const TEMPO_COURSE=Object.freeze({step:2,maxRay:520,maxTurn:110,turnPenalty:.55,rays:24,minLeg:24,wobble:1,lookBase:150,lookPerLevel:14,lookMax:320,spacingBase:10,spacingPerLevel:1.5,spacingMax:28,behindDrop:12,perTick:14,every:.25,clearance:1.2});
+export const TEMPO_COURSE=Object.freeze({step:2,maxRay:520,maxTurn:110,turnPenalty:.55,rays:24,minLeg:30,wobble:1,streetNear:24,greenRun:48,maxGap:110,reanchorEvery:2.5,lookBase:150,lookPerLevel:14,lookMax:320,spacingBase:10,spacingPerLevel:1.5,spacingMax:28,behindDrop:12,perTick:14,every:.25,clearance:2});
 export const TEMPO_SUPPLY=Object.freeze({want:8,perTick:3,every:.3,baseRadius:70,perLevel:8,maxRadius:150,minAhead:16,keep:90,powerEvery:6,spread:.85});
 
 export const JOURNEY_KEY='karlstad:journey:1';
@@ -239,14 +240,17 @@ export class CityJourney extends CityMission {
     }
     const tg=this.tempo.target;if(this.tempo.running&&tg&&(!this.itemById.has(tg.id)||this.found.has(tg.id)))this.tempo.needTarget=true;
     if(this.tempo.running&&this.tempo.needTarget)this.pickTempoTarget(p);
+    // Ligger nästa mål för långt bort (man har lämnat banan) börjar banan om vid spelaren.
+    const t2=this.tempo.target;
+    if(this.tempo.running&&t2&&Math.hypot(t2.x-p.x,t2.z-p.z)>TEMPO_COURSE.maxGap&&this.elapsed-(this.lastAnchor||-99)>TEMPO_COURSE.reanchorEvery&&((p.y??1.68)-1.68)<.6){this.anchorCourse(p);this.pickTempoTarget(p);}
   }
   // Närmaste termos, men en bit framför spelaren väger lättare än en bakom, så att pilen sällan pekar bakåt när man springer fort.
   pickTempoTarget(p){
     const py=(p.y??1.68)-1.68;
     // Följ banan: nästa pärla i ordning. Finns ingen (inomhus, bara nyss startad) faller vi tillbaka på närmaste termos.
-    const f0=this.lastForward,l0=Math.hypot(f0.x,f0.z)||1,open=this.course?.pearls.filter(t=>!this.found.has(t.id)).sort((a,b)=>a.course-b.course)||[];
-    // Pärlor man precis sprungit förbi (bakom spelaren) hoppas över så länge det finns något framför.
-    const lane=open.find(t=>((t.x-p.x)*f0.x+(t.z-p.z)*f0.z)/l0>-1)||open[0];
+    const open=this.course?.pearls.filter(t=>!this.found.has(t.id)).sort((a,b)=>a.course-b.course)||[];
+    // Pärlor man precis sprungit förbi hoppas över så länge det finns något framför.
+    const lane=open.find(t=>!this.passed(t,p,1))||open[0];
     if(lane&&py<.6){this.tempo.setTarget(lane,Math.hypot(lane.x-p.x,lane.z-p.z));return;}
     const f=this.lastForward,fa=Math.atan2(f.x,f.z);let best=null,bs=Infinity,bd=0;
     for(const t of this.items){
@@ -283,72 +287,97 @@ export class CityJourney extends CityMission {
       else i++;
     }
   }
-  // Fri yta för en termos: mitten och fyra punkter runt omkring får inte vara blockerade.
+  // Fri yta för en termos: mitten och åtta punkter runt omkring får inte vara blockerade (håller banan borta från strandkanter och husväggar).
   freeSpot(x,z){
-    const c=TEMPO_COURSE.clearance,n=this.nav;
-    return !n.blocked(x,z)&&!n.blocked(x+c,z)&&!n.blocked(x-c,z)&&!n.blocked(x,z+c)&&!n.blocked(x,z-c);
+    const c=TEMPO_COURSE.clearance,d=c*.72,n=this.nav;
+    return !n.blocked(x,z)&&!n.blocked(x+c,z)&&!n.blocked(x-c,z)&&!n.blocked(x,z+c)&&!n.blocked(x,z-c)
+      &&!n.blocked(x+d,z+d)&&!n.blocked(x-d,z-d)&&!n.blocked(x+d,z-d)&&!n.blocked(x-d,z+d);
   }
-  // Hur långt det går att gå rakt fram från (x,z) i riktningen h (radianer, dx=sin, dz=cos).
-  rayLength(x,z,h){
-    const dx=Math.sin(h),dz=Math.cos(h);let d=0;
-    for(;d<TEMPO_COURSE.maxRay;d+=TEMPO_COURSE.step*1.5)if(!this.freeSpot(x+dx*(d+TEMPO_COURSE.step),z+dz*(d+TEMPO_COURSE.step)))break;
-    return d;
+  // Hela sträckan mellan två punkter ska vara fri, inte bara ändpunkterna (annars hoppar banan över smala hinder och vatten).
+  segmentFree(ax,az,bx,bz){
+    const d=Math.hypot(bx-ax,bz-az),n=Math.max(1,Math.ceil(d/3));
+    for(let i=1;i<=n;i++)if(!this.freeSpot(ax+(bx-ax)*i/n,az+(bz-az)*i/n))return false;
+    return true;
   }
-  // Välj nästa riktning: lång fri sträcka vinner, men stora svängar straffas så att banan fortsätter ungefär rakt fram.
-  planHeading(x,z,heading){
-    let best=null;
-    for(let i=0;i<TEMPO_COURSE.rays;i++){
-      let turn=(i/TEMPO_COURSE.rays)*2*Math.PI;if(turn>Math.PI)turn-=2*Math.PI;
-      if(Math.abs(turn)*180/Math.PI>TEMPO_COURSE.maxTurn)continue;
-      const h=heading+turn,len=this.rayLength(x,z,h),score=len*(1-TEMPO_COURSE.turnPenalty*Math.abs(turn)/Math.PI);
-      if(!best||score>best.score)best={h,len,score};
+  // Rakt fram från (x,z) i riktningen h (radianer, dx=sin, dz=cos). Returnerar den användbara längden och hur mycket av den som ligger vid gator.
+  // Sträckan tar slut vid första hindret, och i kvarter med gatudata även där det blir en lång grön/tom bit utan gator.
+  scanRay(x,z,h,urban){
+    const dx=Math.sin(h),dz=Math.cos(h),step=TEMPO_COURSE.step*1.5;let d=0,samples=0,near=0,green=0,len=0;
+    for(;d<TEMPO_COURSE.maxRay;d+=step){
+      const px=x+dx*(d+TEMPO_COURSE.step),pz=z+dz*(d+TEMPO_COURSE.step);
+      if(!this.freeSpot(px,pz))break;
+      len=d+step;
+      if(urban){
+        samples++;const on=streetDistance(px,pz,TEMPO_COURSE.streetNear+2)<=TEMPO_COURSE.streetNear;
+        if(on){near++;green=0;}else{green+=step;if(green>=TEMPO_COURSE.greenRun){len=Math.max(0,d-green+step);break;}}
+      }
     }
-    return best&&best.len>=TEMPO_COURSE.minLeg?best:null;
+    return {len,frac:samples?near/samples:1};
+  }
+  rayLength(x,z,h){return this.scanRay(x,z,h,false).len;}
+  // Välj nästa riktning: lång sträcka längs gator vinner, stora svängar straffas så att banan fortsätter ungefär rakt fram.
+  planHeading(x,z,heading){
+    const urban=streetCovered(x,z);
+    const run=(useUrban)=>{
+      let best=null;
+      for(let i=0;i<TEMPO_COURSE.rays;i++){
+        let turn=(i/TEMPO_COURSE.rays)*2*Math.PI;if(turn>Math.PI)turn-=2*Math.PI;
+        if(Math.abs(turn)*180/Math.PI>TEMPO_COURSE.maxTurn)continue;
+        const h=heading+turn,r=this.scanRay(x,z,h,useUrban),score=r.len*(.35+.65*r.frac)*(1-TEMPO_COURSE.turnPenalty*Math.abs(turn)/Math.PI);
+        if(!best||score>best.score)best={h,len:r.len,score};
+      }
+      return best&&best.len>=TEMPO_COURSE.minLeg?best:null;
+    };
+    return (urban?run(true):null)||run(false);
   }
   startCourse(p){
     const f=this.lastForward,h0=Math.atan2(f.x,f.z),o=this.freeSpot(p.x,p.z)?p:this.nav.point(p),plan=this.planHeading(o.x,o.z,h0);
-    this.course={x:o.x,z:o.z,heading:plan?plan.h:h0,idx:0,lat:0,leg:plan?plan.len:0,pearls:[]};
+    this.course={x:o.x,z:o.z,heading:plan?plan.h:h0,idx:0,leg:plan?plan.len:0,legStart:{x:o.x,z:o.z},pearls:[]};
     this.spawned=0;
   }
+  // Börja om banan vid spelaren (hamnat för långt från banan, till exempel efter en bussresa eller en omväg).
+  anchorCourse(p){this.dropPearls(true);this.course=null;this.tempo.needTarget=true;this.lastAnchor=this.elapsed;this.startCourse(p);}
   // Lägg ut pärlor längs banan tills det ligger tillräckligt långt framför spelaren. Pärlor som hamnat bakom spelaren tas bort.
   supplyTempo(dt,p){
     if(this.elapsed-this.lastSupply<TEMPO_COURSE.every)return;
     this.lastSupply=this.elapsed;
     const py=(p.y??1.68)-1.68;if(py>.6)return;
     if(!this.course)this.startCourse(p);
-    const c=this.course,level=this.tempo.level;
+    const level=this.tempo.level;
     const look=Math.min(TEMPO_COURSE.lookMax,TEMPO_COURSE.lookBase+TEMPO_COURSE.lookPerLevel*level);
     const spacing=Math.min(TEMPO_COURSE.spacingMax,TEMPO_COURSE.spacingBase+TEMPO_COURSE.spacingPerLevel*level);
-    // Är spelaren långt från banans slut (till exempel efter en bussresa) börjar banan om vid spelaren.
-    if(Math.hypot(c.x-p.x,c.z-p.z)>look*2.5){this.dropPearls(true);this.startCourse(p);}
+    if(Math.hypot(this.course.x-p.x,this.course.z-p.z)>look*2.5)this.anchorCourse(p);
     const cc=this.course;let laid=0,fails=0;
     while(Math.hypot(cc.x-p.x,cc.z-p.z)<look&&laid<TEMPO_COURSE.perTick&&fails<3){
       const nx=cc.x+Math.sin(cc.heading)*spacing,nz=cc.z+Math.cos(cc.heading)*spacing;
+      const legUsed=Math.hypot(nx-cc.legStart.x,nz-cc.legStart.z);
       cc.idx++;
       const lat=Math.sin(cc.idx*.55)*TEMPO_COURSE.wobble,px=nx+Math.cos(cc.heading)*lat,pz=nz-Math.sin(cc.heading)*lat;
-      if(!this.freeSpot(px,pz)||!this.freeSpot(nx,nz)){
+      // Sträckan är slut (hinder eller lång grön yta) eller något ligger i vägen mellan pärlorna: planera en ny sträcka härifrån.
+      if(legUsed>cc.leg||!this.segmentFree(cc.x,cc.z,px,pz)){
         const plan=this.planHeading(cc.x,cc.z,cc.heading);fails++;
-        if(!plan){cc.heading+=Math.PI/3;continue;}
-        cc.heading=plan.h;continue;
+        if(!plan){cc.heading+=Math.PI/3;cc.leg=0;cc.legStart={x:cc.x,z:cc.z};continue;}
+        cc.heading=plan.h;cc.leg=plan.len;cc.legStart={x:cc.x,z:cc.z};continue;
       }
       cc.x=nx;cc.z=nz;
       this.spawned=(this.spawned||0)+1;
       let id='tp:'+(++this.dynSerial);
       if(this.spawned%TEMPO_SUPPLY.powerEvery===0){const day=this.fun.day;for(let k=0;k<400&&!powerFor(id,day);k++)id='tp:'+this.dynSerial+':'+k;}
-      const it={id,x:+px.toFixed(1),z:+pz.toFixed(1),dyn:true,course:cc.idx};
+      const it={id,x:+px.toFixed(1),z:+pz.toFixed(1),dyn:true,course:cc.idx,hx:+Math.sin(cc.heading).toFixed(3),hz:+Math.cos(cc.heading).toFixed(3)};
       this.items.push(it);this.itemById.set(id,it);this.dyn.push(it);cc.pearls.push(it);laid++;
     }
     // Fastnar banan (inga pärlor lagda): börja om från närmaste gångbara punkt åt ett nytt håll.
-    if(!cc.pearls.length&&fails>=3){const o=this.nav.point(p);cc.x=o.x;cc.z=o.z;cc.heading+=Math.PI*.7;}
+    if(!cc.pearls.length&&fails>=3){const o=this.nav.point(p);cc.x=o.x;cc.z=o.z;cc.heading+=Math.PI*.7;cc.legStart={x:o.x,z:o.z};cc.leg=0;}
     this.dropPearls(false,p);
   }
-  // Ta bort pärlor som är passerade (långt bakom spelaren) eller, vid omstart, alla.
+  // En pärla är passerad när spelaren hamnat längre fram än den längs banans egen riktning där (inte kamerans riktning, som kan peka åt sidan i en kurva).
+  passed(t,p,margin){return ((p.x-t.x)*t.hx+(p.z-t.z)*t.hz)>margin;}
+  // Ta bort pärlor som är passerade (långt bakom spelaren längs banan) eller, vid omstart, alla.
   dropPearls(all,p=null){
     const c=this.course;if(!c)return;
-    const f=this.lastForward,len=Math.hypot(f.x,f.z)||1,fx=f.x/len,fz=f.z/len;
     c.pearls=c.pearls.filter(t=>{
-      const behind=all||(!this.found.has(t.id)&&p&&((t.x-p.x)*fx+(t.z-p.z)*fz)<-TEMPO_COURSE.behindDrop&&Math.hypot(t.x-p.x,t.z-p.z)>TEMPO_COURSE.behindDrop);
-      if(behind){const k=this.items.indexOf(t);if(k>=0)this.items.splice(k,1);this.itemById.delete(t.id);const j=this.dyn.indexOf(t);if(j>=0)this.dyn.splice(j,1);this.found.delete(t.id);this.foundAt.delete(t.id);return false;}
+      const gone=all||(!this.found.has(t.id)&&p&&this.passed(t,p,TEMPO_COURSE.behindDrop)&&Math.hypot(t.x-p.x,t.z-p.z)>TEMPO_COURSE.behindDrop);
+      if(gone){const k=this.items.indexOf(t);if(k>=0)this.items.splice(k,1);this.itemById.delete(t.id);const j=this.dyn.indexOf(t);if(j>=0)this.dyn.splice(j,1);this.found.delete(t.id);this.foundAt.delete(t.id);return false;}
       return true;
     });
     this.pruneDynamic();

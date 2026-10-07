@@ -275,10 +275,33 @@ test('Temporush: pärlor som man sprungit förbi försvinner så att pilen aldri
   const g=clean();g.startTempo();const here={x:-19,z:35},fwd={x:0,z:-1};
   for(let i=0;i<5;i++)g.step(.3,{x:here.x,z:here.z,y:1.68},fwd);g.drainEvents();
   const first=g.course.pearls[0];
-  const ahead={x:first.x,z:first.z-60};
+  // Spring 60 m längs banans egen riktning förbi första pärlan.
+  const ahead={x:first.x+first.hx*60,z:first.z+first.hz*60};
   for(let i=0;i<4;i++)g.step(.3,{x:ahead.x,z:ahead.z,y:1.68},fwd);g.drainEvents();
   assert.equal(g.itemById.has(first.id),false,'första pärlan togs bort när man passerat');
-  const t=g.tempo.target;assert.ok(t&&((t.x-ahead.x)*fwd.x+(t.z-ahead.z)*fwd.z)>-1,'målet ligger inte bakom');
+  const t=g.tempo.target;assert.ok(t,'ett mål finns');
+  const full=g.itemById.get(t.id);assert.equal(g.passed(full,ahead,1),false,'målet ligger inte bakom längs banan');
+});
+
+test('Temporush: en kurva tar inte bort pärlorna efter kurvan, även om kameran pekar åt ett annat håll',()=>{
+  const wall=(x,z)=>Math.abs(z+300)<8;
+  const g=new CityJourney(new CityNavigation(wall),mall,portals,storage());g.rush.start('clean');g.drainEvents();g.startTempo();
+  const start={x:0,z:-150};
+  // Kameran tittar åt fel håll hela tiden (bakåt): banan ska ändå ha pärlor kvar framför.
+  for(let i=0;i<30;i++)g.step(.3,{x:start.x,z:start.z,y:1.68},{x:0,z:1});g.drainEvents();
+  const n=g.course.pearls.length;assert.ok(n>=8,'pärlorna finns kvar: '+n);
+  for(const t of g.course.pearls)assert.equal(wall(t.x,t.z),false);
+});
+
+test('Temporush: banan startar om vid spelaren när nästa mål är för långt bort',()=>{
+  const g=clean();g.startTempo();const here={x:-19,z:35},fwd={x:0,z:-1};
+  for(let i=0;i<5;i++)g.step(.3,{x:here.x,z:here.z,y:1.68},fwd);g.drainEvents();
+  const oldFirst=g.course.pearls[0].id;
+  // Spelaren hamnar långt från banan.
+  const far={x:here.x+400,z:here.z+60};
+  for(let i=0;i<14;i++)g.step(.4,{x:far.x,z:far.z,y:1.68},fwd);g.drainEvents();
+  assert.equal(g.itemById.has(oldFirst),false,'gamla banan är borta');
+  const t=g.tempo.target;assert.ok(t);assert.ok(Math.hypot(t.x-far.x,t.z-far.z)<TEMPO_COURSE.maxGap,'nya målet är nära: '+Math.round(Math.hypot(t.x-far.x,t.z-far.z)));
 });
 
 test('Temporush: målet väljs helst framför spelaren och var sjätte skapade termos är en förmåga',()=>{
