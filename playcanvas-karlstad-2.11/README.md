@@ -560,3 +560,7 @@ Current chaos set:
 The new **KARLSTAD PANIK 0–100%** meter rises from time, thermos pickups, shooting and completed events. Thresholds at 25/50/75% warn the player and increase city pressure. At 100%, **KARLSTAD HAR FALLIT** starts a short survival spike with repeated horde pressure. Surviving the spike partially resets panic instead of ending the run.
 
 The director stays inside the existing six-active-enemy budget, reuses the navigation/actor pool, and does not alter the locked walking speed, collision radius, camera feel or render DPR policy.
+
+## 2.18.2 – blommor i rabatterna
+- Blommorna i rabatterna är nu små färgade blomhuvuden (kon) på tunna gröna stjälkar, inte lådor. De ligger bara inne i rabattens riktiga form.
+- Skrivbordsläsare kan ha gammal cache; ladda om hårt (Ctrl+Shift+R) om gamla klossar syns.

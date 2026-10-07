@@ -1,7 +1,7 @@
 // City Explore 2.15: blixtutmaningar. Ett kort meddelande dyker upp, försvinner efter någon sekund och lämnar bara en tunn
 // tidslinje i skärmens överkant, så att staden syns. Idén kommer från uppdragen i Subway Surfers och Crossy Road.
 // Ren logik utan DOM. Tiden räknas bara medan spelet går (dt kommer från spelloopen).
-import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.18.1';
+import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.18.2';
 
 export const FLASH=Object.freeze({firstDelay:[18,32],gap:[28,55],announce:3.4,minLevel:1});
 

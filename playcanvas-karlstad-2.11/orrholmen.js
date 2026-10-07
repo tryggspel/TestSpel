@@ -1,9 +1,9 @@
 // 2.18: Orrholmen och vattnet, Stadsträdgården, Bryggudden och Karlstad C. Allt här är dekor som ritas i en enda statisk mesh (inga kollisioner):
 // vågor och skum som gör vattnet tydligt, bojar och båtar, bänkar och lyktor, rabatter, träd, paviljong och fontän, kajer och hamnkran,
 // samt perronger, extra spår, tak och ett tåg vid stationen. Byggnader, vatten och vägar kommer från data/osm-outer-orrholmen.json.
-import {ComicMesh} from './city-architecture.js?v=2.18.1';
-import {cityPoint} from './city-geography.mjs?v=2.18.1';
-import {BAY_WEST,BAY_EAST,shoreE,pointIn,TRADGARD,TRADGARD_BEDS,bryggEdges,ORR_SIGNS} from './orrholmen-places.mjs?v=2.18.1';
+import {ComicMesh} from './city-architecture.js?v=2.18.2';
+import {cityPoint} from './city-geography.mjs?v=2.18.2';
+import {BAY_WEST,BAY_EAST,shoreE,pointIn,TRADGARD,TRADGARD_BEDS,bryggEdges,ORR_SIGNS} from './orrholmen-places.mjs?v=2.18.2';
 
 const rngFrom=(seed)=>()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
 
@@ -89,16 +89,23 @@ export function drawOrrholmen(m){
   for(let z=1000;z<1250;z+=36)bollard(m,shoreE(z)+5,z);
 }
 
+// Kon i en enda färg (ComicMesh.pyramid har fasta, mörka sidfärger som ser grå ut på små blommor).
+const shade=(hex,f)=>'#'+[1,3,5].map(i=>Math.max(0,Math.min(255,Math.round(parseInt(hex.slice(i,i+2),16)*f))).toString(16).padStart(2,'0')).join('');
+function cone(m,x,y,z,r,h,col){
+  const a=[x-r,y,z-r],b=[x+r,y,z-r],c=[x+r,y,z+r],e=[x-r,y,z+r],p=[x,y+h,z];
+  m.tri(a,p,b,shade(col,.78));m.tri(b,p,c,shade(col,.95));m.tri(c,p,e,col);m.tri(e,p,a,shade(col,.85));
+}
 // Rabatter: en grön yta och små blommor utspridda inuti ytans verkliga form (inte i en omslutande ruta, som lade klossar över gatorna).
 function flowerBeds(m,polys,R,cols,avoid=null){
   for(const poly of polys){
     const xs=poly.map(p=>p[0]),zs=poly.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),z0=Math.min(...zs),z1=Math.max(...zs);
     if((x1-x0)*(z1-z0)>6000)continue; // för stora ytor är parker, inte rabatter
     m.polygon(poly,.056,'#5d8f4a');
-    for(let x=x0+.5;x<x1;x+=1.2)for(let z=z0+.5;z<z1;z+=1.2){
-      const fx=x+(R()-.5)*.6,fz=z+(R()-.5)*.6;
+    for(let x=x0+.6;x<x1;x+=1.5)for(let z=z0+.6;z<z1;z+=1.5){
+      const fx=x+(R()-.5)*.8,fz=z+(R()-.5)*.8;
       if(!pointIn(fx,fz,poly)||(avoid&&avoid(fx,fz)))continue;
-      m.box(fx,.2,fz,.26,.28+R()*.16,.26,cols[Math.floor(R()*cols.length)]);
+      // En blomma: tunn grön stjälk och ett litet färgat blomhuvud (kon), inte en kloss.
+      const h=.3+R()*.2;m.box(fx,h/2+.05,fz,.05,h,.05,'#4f7d3f');cone(m,fx,h+.02,fz,.17,.3,cols[Math.floor(R()*cols.length)]);
     }
   }
 }

@@ -147,13 +147,13 @@ test('Platsutmaningar: tiden kan gå ut, då försvinner termosarna, och de star
   const f=clean();f.flash.start(1,'chain');step(f,{x:SITE_CHALLENGES[1].x,z:SITE_CHALLENGES[1].z});assert.equal(f.activeSite,null,'inte medan en blixtutmaning pågår');
 });
 
-test('Rabatter: blommorna ligger i rabattens form och är små, inte i omslutande rutor som täcker gatorna',()=>{
+test('Rabatter: blommorna är små blomhuvuden på stjälkar inne i rabattens form, inte klossar',()=>{
   const gardens=gardenPolygons(read('hamn'));assert.ok(gardens.length>=6,'rabatter i utdraget: '+gardens.length);
-  class Rec extends ComicMesh{constructor(){super();this.boxes=[];}box(x,y,z,w,h,d,...r){this.boxes.push([x,y,z,w,h,d]);return super.box(x,y,z,w,h,d,...r);}}
+  class Rec extends ComicMesh{constructor(){super();this.tris=[];this.boxes=[];}tri(a,b,c,col){this.tris.push([a,b,c]);return super.tri(a,b,c,col);}box(x,y,z,w,h,d,...r){this.boxes.push([x,y,z,w,h,d]);return super.box(x,y,z,w,h,d,...r);}}
   const m=new Rec();drawBryggudden(m,gardens);
-  const flowers=m.boxes.filter(b=>Math.abs(b[3]-.26)<.001&&Math.abs(b[5]-.26)<.001);
-  assert.ok(flowers.length>100,'många små blommor: '+flowers.length);
-  const outside=flowers.filter(b=>!gardens.some(g=>pointIn(b[0],b[2],g)));
-  assert.equal(outside.length,0,'blommor utanför rabatterna');
-  assert.ok(flowers.every(b=>b[4]<.5),'låga blommor');
+  const stems=m.boxes.filter(b=>Math.abs(b[3]-.05)<.001&&Math.abs(b[5]-.05)<.001);
+  assert.ok(stems.length>80,'många blommor med stjälk: '+stems.length);
+  assert.equal(stems.filter(b=>!gardens.some(g=>pointIn(b[0],b[2],g))).length,0,'blommor utanför rabatterna');
+  assert.ok(stems.every(b=>b[1]+b[4]/2<.65),'låga stjälkar');
+  assert.equal(m.boxes.filter(b=>Math.abs(b[3]-.26)<.001).length,0,'inga gamla blomklossar');
 });

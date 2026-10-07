@@ -1,5 +1,5 @@
-import {ComicMesh} from './city-architecture.js?v=2.18.1';
-import {cityPoint} from './city-geography.mjs?v=2.18.1';
+import {ComicMesh} from './city-architecture.js?v=2.18.2';
+import {cityPoint} from './city-geography.mjs?v=2.18.2';
 
 const isGreen=t=>t?.leisure==='park'||t?.leisure==='garden'||t?.landuse==='grass'||t?.landuse==='recreation_ground'||t?.natural==='wood'||t?.landuse==='forest'||t?.natural==='scrub';
 function area2(points){let n=0;for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+1)%points.length];n+=a[0]*b[1]-b[0]*a[1];}return n;}
