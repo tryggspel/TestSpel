@@ -1,18 +1,24 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.14.2';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.14.2';
-import {CityMission} from './city-missions.mjs?v=2.14.2';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.14.2';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.14.2';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.14.2';
-import {CITY_STREETS} from './city-streets.mjs?v=2.14.2';
-import {pedestrianAt} from './pedestrian.mjs?v=2.14.2';
-import {ExploreFun,segmentDistance,heatFor} from './explore-fun.mjs?v=2.14.2';
-import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.14.2';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.15.0';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.15.0';
+import {CityMission} from './city-missions.mjs?v=2.15.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.15.0';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.15.0';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.15.0';
+import {CITY_STREETS} from './city-streets.mjs?v=2.15.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.15.0';
+import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.15.0';
+import {POWER,POWER_KINDS} from './powerups.mjs?v=2.15.0';
+import {FlashChallenges} from './challenges.mjs?v=2.15.0';
+import {TempoRun} from './tempo-run.mjs?v=2.15.0';
+import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.15.0';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
 // 2.13: en uppplockad termos dyker upp igen i City Explore efter fyra minuter, om man är minst 80 m därifrån. Då finns det alltid en runda att gå om.
 export const RESPAWN=Object.freeze({after:240,minDistance:80,every:2});
+// Temporush: termosarna kommer tillbaka fort, annars tar jakten slut på närliggande termosar.
+export const TEMPO_RESPAWN=Object.freeze({after:45,minDistance:40,every:2});
+const GIFTS=Object.freeze(POWER_KINDS.filter(k=>k!=='clock'&&k!=='bomb'));
 
 export const JOURNEY_KEY='karlstad:journey:1';
 const bounded=(v,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max,Number(v))):fallback;
@@ -68,6 +74,7 @@ export class CityJourney extends CityMission {
     this.position={...this.layout.spawn};this.heading=0;this.load();
     this.fun=new ExploreFun({storage,items:this.items,treasureIds:[...this.secrets.map(s=>s.id),...this.treasures.map(t=>t.id)],stopIds:this.busNetwork.filter(s=>!s.hub).map(s=>s.id),xp:this.lifetime});
     this.lastStep=null;this.foundAt=new Map();this.lastRespawn=0;this.itemById=new Map(this.items.map(t=>[t.id,t]));this.rush=new CityRush(this);
+    this.flash=new FlashChallenges({seed:1});this.tempo=new TempoRun(storage);
   }
   progress(){return {version:1,balance:this.balance,lifetime:this.lifetime,energy:this.energy,health:this.health,found:[...this.found],secrets:[...this.secretsFound],treasures:[...this.treasuresFound],cleared:[...this.cleared],postcards:[...this.postcardsFound],position:{...this.position},heading:this.heading,destination:this.destination};}
   applyProgress(v){
@@ -131,31 +138,28 @@ export class CityJourney extends CityMission {
     const fun=this.rush.mode==='clean'?this.fun:null,py=(p.y??1.68)-1.68;
     // Sträckan sedan förra steget: med turbo och Ryde hinner man 1–3 m per bildruta, och en termos får inte missas mellan två steg.
     const from=this.lastStep,sweep=from&&Math.hypot(p.x-from.x,p.z-from.z)<14?from:null;this.lastStep={x:p.x,z:p.z};
-    if(fun){const t=fun.tick(dt);if(t.lost>=3)this.events.push({type:'combo-lost',chain:t.lost});}
+    if(fun){
+      const t=fun.tick(dt);if(t.lost>=3)this.events.push({type:'combo-lost',chain:t.lost});if(t.saved)this.events.push({type:'shield-save',chain:t.saved});
+      this.tickFlash(dt);this.tickTempo(dt,p);
+    }
     const reach=fun?fun.pickupRadius():1.65;let taken=0;
     for(const item of this.items){
       if(this.found.has(item.id)||Math.abs(py-(item.y||0))>=1.5)continue;
       if((sweep?segmentDistance(item.x,item.z,sweep.x,sweep.z,p.x,p.z):Math.hypot(p.x-item.x,p.z-item.z))>=reach)continue;
       if(reach>2&&++taken>3)break; // kaffemagneten tar högst tre per steg
+      if(fun){this.takeItem(item,p,fun);continue;}
       const gagata=pedestrianAt(item);
       this.found.add(item.id);this.energy=Math.min(100,this.energy+15);
-      if(fun){
-        this.foundAt.set(item.id,this.elapsed);
-        const r=fun.pickup(item,{gagata:!!gagata});
-        this.events.push({type:'thermos',points:r.points,chain:r.chain,mult:r.mult,rarity:r.rarity,first:r.first,doubled:r.doubled,fun:true,x:item.x,z:item.z,y:item.y||0,id:item.id,gagata});
-        for(const e of r.events)this.events.push(e);
-        this.reward(r.points+r.bonus);
-      }else{
-        const pts=25+(gagata?GAGATA_BONUS:0);this.reward(pts);
-        this.events.push({type:'thermos',points:pts,chain:0,x:item.x,z:item.z,id:item.id,gagata});
-      }
+      const pts=25+(gagata?GAGATA_BONUS:0);this.reward(pts);
+      this.events.push({type:'thermos',points:pts,chain:0,x:item.x,z:item.z,id:item.id,gagata});
     }
-    if(fun&&this.elapsed-this.lastRespawn>=RESPAWN.every){
+    const respawn=this.tempo.running?TEMPO_RESPAWN:RESPAWN;
+    if(fun&&this.elapsed-this.lastRespawn>=respawn.every){
       this.lastRespawn=this.elapsed;
       for(const [id,at] of this.foundAt){
-        if(this.elapsed-at<RESPAWN.after)continue;
+        if(this.elapsed-at<respawn.after)continue;
         const it=this.itemById.get(id);if(!it){this.foundAt.delete(id);continue;}
-        if(Math.hypot(p.x-it.x,p.z-it.z)<RESPAWN.minDistance)continue;
+        if(Math.hypot(p.x-it.x,p.z-it.z)<respawn.minDistance)continue;
         this.found.delete(id);this.foundAt.delete(id);
       }
     }
@@ -172,8 +176,69 @@ export class CityJourney extends CityMission {
     }
     if(this.elapsed-this.lastSave>=4){this.lastSave=this.elapsed;this.save();}
   }
+  // En termos plockas i City Explore. Poäng, kedja, förmåga, utmaning och Temporush hanteras här på ett ställe.
+  takeItem(item,p,fun,{blast=false}={}){
+    const gagata=pedestrianAt(item);
+    this.found.add(item.id);this.energy=Math.min(100,this.energy+15);this.foundAt.set(item.id,this.elapsed);
+    const r=fun.pickup(item,{gagata:!!gagata});
+    let extra=0;
+    if(this.tempo.running){
+      const t=this.tempo.pick(r.points);extra=t.extra;
+      this.events.push({type:'tempo-pick',mult:t.mult,flow:t.flow,extra:t.extra,picked:this.tempo.picked,score:this.tempo.score});
+    }
+    this.events.push({type:'thermos',points:r.points+extra,chain:r.chain,mult:r.mult,rarity:r.rarity,first:r.first,doubled:r.doubled,fun:true,x:item.x,z:item.z,y:item.y||0,id:item.id,gagata,power:r.power});
+    for(const e of r.events)this.events.push(e);
+    this.reward(r.points+r.bonus+extra);
+    for(const e of this.flash.noteThermos({chain:r.chain,rarity:r.rarity,power:!!r.power}))this.handleFlash(e);
+    if(r.power==='clock'){this.flash.extend(POWER.clockSeconds);this.tempo.extend(8);}
+    if(r.power==='bomb'&&!blast)this.blast(item,p,fun);
+    return r;
+  }
+  // Sockerbomben: alla termosar inom radien på samma våning plockas direkt, så att kedjan rusar iväg.
+  blast(center,p,fun){
+    const py=(p.y??1.68)-1.68;
+    const near=this.items.filter(t=>!this.found.has(t.id)&&Math.abs(py-(t.y||0))<1.5&&Math.hypot(t.x-center.x,t.z-center.z)<=POWER.bombRadius)
+      .sort((a,b)=>Math.hypot(a.x-center.x,a.z-center.z)-Math.hypot(b.x-center.x,b.z-center.z)).slice(0,POWER.bombMax);
+    for(const it of near)this.takeItem(it,p,fun,{blast:true});
+    this.events.push({type:'bomb',count:near.length,x:center.x,z:center.z});
+    return near.length;
+  }
+  // Blixtutmaningar: händelser från FlashChallenges. Klarade ger poäng, märken och ibland en förmåga.
+  handleFlash(e){
+    this.events.push(e);
+    if(e.type!=='challenge-done')return;
+    this.reward(e.points);
+    for(const b of this.fun.noteFlash())this.events.push(b);
+    if(e.giftPower){const kind=GIFTS[(this.flash.serial+e.points)%GIFTS.length];this.events.push(this.fun.applyPower(kind));}
+  }
+  tickFlash(dt){
+    this.flash.enabled=this.rush.mode==='clean'&&!this.tempo.running;
+    for(const e of this.flash.tick(dt,{level:levelFor(this.lifetime).level}))this.handleFlash(e);
+  }
+  // Temporush: tickar nivåer och fikaklocka, och pekar ut närmaste termos som nästa mål.
+  tickTempo(dt,p){
+    if(!this.tempo.running)return;
+    for(const e of this.tempo.tick(dt)){
+      this.events.push(e);
+      if(e.type==='tempo-level')for(const b of this.fun.noteTempo(e.level))this.events.push(b);
+      if(e.type==='tempo-over'){for(const b of this.fun.noteTempo(e.level))this.events.push(b);this.save();}
+    }
+    if(this.tempo.running&&this.tempo.needTarget)this.pickTempoTarget(p);
+  }
+  pickTempoTarget(p){
+    const py=(p.y??1.68)-1.68;let best=null,bd=Infinity;
+    for(const t of this.items){
+      if(this.found.has(t.id)||Math.abs(py-(t.y||0))>=1.5||/^(kil|marieberg)-/.test(t.id))continue;
+      const d=Math.hypot(t.x-p.x,t.z-p.z);if(d<bd){bd=d;best=t;}
+    }
+    if(best&&bd<500)this.tempo.setTarget(best,bd);
+  }
+  startTempo(){
+    if(this.rush?.mode!=='clean')return null;
+    this.flash.reset();const ev=this.tempo.start();for(const e of ev)this.events.push(e);return ev;
+  }
   // Ny City Explore-runda: ingen kedja, inga superkrafter, alla termosar tillbaka.
-  newExploreRun(){this.lastStep=null;this.lastRespawn=0;this.foundAt.clear();this.fun.newRun();}
+  newExploreRun(seed=Math.floor(Math.random()*1e6)){this.lastStep=null;this.lastRespawn=0;this.foundAt.clear();this.fun.newRun();this.flash.seed=seed;this.flash.reset();this.tempo.reset();}
   // Närmaste ofunna skatt på samma våning, för hett/kallt-mätaren.
   nearestHidden(p){
     const py=(p.y??1.68)-1.68;let best=null,bd=Infinity;
@@ -182,7 +247,7 @@ export class CityJourney extends CityMission {
     return best?{item:best,distance:bd,heat:heatFor(bd)}:null;
   }
   // Turbo-kilometer räknas av spelet; här delas märken ut.
-  noteTurbo(meters){if(this.rush?.mode!=='clean')return;for(const e of this.fun.addTurbo(meters))this.events.push(e);}
+  noteTurbo(meters){if(this.rush?.mode!=='clean')return;for(const e of this.fun.addTurbo(meters))this.events.push(e);for(const e of this.flash.noteMeters(meters))this.handleFlash(e);}
   // MusicPartner på Kungsgatan: incheckning ger bonus en gång per dag. Bara i City Explore.
   musicCheckIn(){
     if(this.rush?.mode!=='clean')return null;const r=this.fun.checkIn();

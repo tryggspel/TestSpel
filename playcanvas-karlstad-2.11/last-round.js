@@ -1,36 +1,38 @@
-import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.14.2';
-import {createSouthSigns} from './city-south.js?v=2.14.2';
-import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.14.2';
-import {createZombieAtlases} from './zombie-art.js?v=2.14.2';
-import {FriendlyClerks} from './friendly-clerks.mjs?v=2.14.2';
-import {createFriendlyView} from './friendly-view.js?v=2.14.2';
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.14.2';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.14.2';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.14.2';
-import {CityJourney} from './journey-rules.mjs?v=2.14.2';
-import {createJourneyView} from './journey-view.js?v=2.14.2';
-import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.14.2';
-import {createBoatRide} from './boat-ride.js?v=2.14.2';
-import {createBusRide} from './bus-ride.js?v=2.14.2';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.14.2';
-import {createPostcard} from './challenge-postcard.js?v=2.14.2';
-import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.14.2';
-import {RUSH} from './city-rush.mjs?v=2.14.2';
-import {StampBook} from './city-stamps.mjs?v=2.14.2';
-import {turboScale,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.14.2';
-import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.14.2';
-import {fetchLiveBoard} from './bus-quiz.mjs?v=2.14.2';
-import {GhostRun} from './ghost-run.mjs?v=2.14.2';
-import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.14.2';
-import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.14.2';
-import {pedestrianAt} from './pedestrian.mjs?v=2.14.2';
-import {createPedestrianSigns} from './pedestrian-view.js?v=2.14.2';
-import {drawMapLabels} from './city-geography.mjs?v=2.14.2';
-import {createCityIdentity} from './city-identity.js?v=2.14.2';
-import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.14.2';
+import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.15.0';
+import {createSouthSigns} from './city-south.js?v=2.15.0';
+import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.15.0';
+import {createZombieAtlases} from './zombie-art.js?v=2.15.0';
+import {FriendlyClerks} from './friendly-clerks.mjs?v=2.15.0';
+import {createFriendlyView} from './friendly-view.js?v=2.15.0';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.15.0';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.15.0';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.15.0';
+import {CityJourney} from './journey-rules.mjs?v=2.15.0';
+import {createJourneyView} from './journey-view.js?v=2.15.0';
+import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.15.0';
+import {createBoatRide} from './boat-ride.js?v=2.15.0';
+import {createBusRide} from './bus-ride.js?v=2.15.0';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.15.0';
+import {createPostcard} from './challenge-postcard.js?v=2.15.0';
+import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.15.0';
+import {RUSH} from './city-rush.mjs?v=2.15.0';
+import {StampBook} from './city-stamps.mjs?v=2.15.0';
+import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.15.0';
+import {POWERUPS} from './powerups.mjs?v=2.15.0';
+import {tempoName,TEMPO} from './tempo-run.mjs?v=2.15.0';
+import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.15.0';
+import {fetchLiveBoard} from './bus-quiz.mjs?v=2.15.0';
+import {GhostRun} from './ghost-run.mjs?v=2.15.0';
+import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.15.0';
+import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.15.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.15.0';
+import {createPedestrianSigns} from './pedestrian-view.js?v=2.15.0';
+import {drawMapLabels} from './city-geography.mjs?v=2.15.0';
+import {createCityIdentity} from './city-identity.js?v=2.15.0';
+import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.15.0';
 
-import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.14.2';
-import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.14.2';
+import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.15.0';
+import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.15.0';
 
 export function createLastRound(pc, host) {
   // 2.10: elementuppslag cachas, och HUD-text skrivs bara om när värdet faktiskt ändras.
@@ -391,7 +393,7 @@ export function createLastRound(pc, host) {
   function setPanel(name) {
     panel = name; document.body.classList.toggle('round-panel-open', !!name);
     $('roundPanel').hidden = !name;
-    for (const id of ['intro', 'pause', 'result', 'map','city-intro','city-result','album','daily-intro','moment','bus-intro','trail-result','boat-intro','bus-pick','musicpartner']) $('round-' + id).hidden = name !== id;
+    for (const id of ['intro', 'pause', 'result', 'map','city-intro','city-result','album','daily-intro','moment','bus-intro','trail-result','tempo-result','boat-intro','bus-pick','musicpartner']) $('round-' + id).hidden = name !== id;
     if(name==='city-intro'||name==='daily-intro')refreshDaily();
     if(name==='city-intro')renderFunStatus();
     if(name==='city-intro')$('cityControlCopy').textContent=host.oneHand?.()?'EN HAND: spaken går och svänger. Sikta mot zombien så skjuter du automatiskt. Byt till två händer i PAUS.':'WASD: gå · mus: sikta · klick: solstöt · E: uppdrag / buss · M: karta · T: turbo i City Explore. Samma snabba gång som tidigare.';
@@ -522,11 +524,16 @@ export function createLastRound(pc, host) {
   const cleanExplore=()=>isJourney()&&journey.rush.mode==='clean';
   function note(freq,type='triangle',length=.2,peak=.07){if(!soundEnabled)return;host.music?.sfx?.({type,from:freq,to:freq*1.004,peak,attack:.006,length});}
   function turboContext(p){return {mode:isJourney()?journey.rush.mode:'free',indoors:mallInside(p),upper:p.y>3.7,transport:busRide.active()||boatRide.active()||scenicRide.active()};}
-  function turboFactor(){return turbo&&isJourney()?turboScale(true,turboContext(host.player.getPosition())):1;}
+  // Farten utomhus i City Explore: turbo ×2, raketförmågan ×2 till och Temporush-nivåns fart ovanpå det.
+  function turboFactor(){
+    if(!isJourney())return 1;
+    if(!turboAllowed(turboContext(host.player.getPosition())))return 1;
+    return (turbo?TURBO.multiplier:1)*journey.fun.power.speedMul()*journey.tempo.speedMul();
+  }
   function renderTurbo(){
-    const on=turbo&&cleanExplore(),active=on&&turboFactor()>1,b=$('turboBtn');
-    if(b){const label=on?(active?'TURBO ×2 · PÅ':'TURBO · PAUS'):'TURBO';if(b.textContent!==label)b.textContent=label;b.setAttribute('aria-pressed',String(on));b.classList.toggle('on',on);}
-    document.body.classList.toggle('turbo-on',active);document.body.classList.toggle('fun-explore',cleanExplore());
+    const on=turbo&&cleanExplore(),tf=turboFactor(),active=cleanExplore()&&tf>1,b=$('turboBtn');
+    if(b){const label=on?(active?'TURBO ×'+Math.round(tf)+' · PÅ':'TURBO · PAUS'):'TURBO';if(b.textContent!==label)b.textContent=label;b.setAttribute('aria-pressed',String(on));b.classList.toggle('on',on);}
+    document.body.classList.toggle('turbo-on',active);document.body.classList.toggle('rocket-on',active&&journey.fun.power.speedMul()>1);document.body.classList.toggle('fun-explore',cleanExplore());document.body.classList.toggle('tempo-on',cleanExplore()&&journey.tempo.running);
   }
   function toggleTurbo(force){
     if(busRide.active()||boatRide.active()||scenicRide.active())return;
@@ -538,18 +545,56 @@ export function createLastRound(pc, host) {
   }
   function fanfare(title,text='',seconds=2.2,kind='win'){if(fanfareQueue.length>=4)fanfareQueue.shift();fanfareQueue.push({title,text,seconds,kind});}
   function pumpFanfare(now){if(!fanfareQueue.length||now<toastUntil)return;const f=fanfareQueue.shift();sound(f.kind);toast(f.title,f.text,f.seconds);}
+  // ── 2.15: kompakt HUD på mobil, utmaningsmeddelanden som försvinner, Temporush ─────────────────────────────────────
+  let liteUser=false,lastDailyText='',dailyShowUntil=0,lastHeatLevel=0,heatShowUntil=0,bannerTimer=0,lastTempoPick=null;
+  const liteHud=()=>coarse||liteUser;
+  function showBanner(kicker,title,text,cls=''){
+    const b=$('hudBanner');if(!b)return;
+    $('hudBannerKicker').textContent=kicker;$('hudBannerTitle').textContent=title;$('hudBannerText').textContent=text;
+    b.className=cls;b.hidden=false;void b.offsetWidth;b.classList.add('show');
+    clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>{b.hidden=true;b.classList.remove('show');},3700);
+  }
+  function setPickup(text,now,ms=1500,rarity='common'){const el=$('journeyPickupToast');el.textContent=text;el.dataset.rarity=rarity;el.classList.add('visible');pickupToastUntil=now+ms;}
+  const boostLine=s=>{
+    const parts=[];const b=s.boosters;
+    if(b.length===3&&Math.abs(b[0].left-b[1].left)<.3&&Math.abs(b[1].left-b[2].left)<.3)parts.push('SOLSTJÄRNA '+Math.ceil(b[0].left)+' S');
+    else for(const x of b)parts.push(x.label+' '+Math.ceil(x.left)+' S');
+    for(const x of s.power)parts.push(x.left>0?x.label+' '+Math.ceil(x.left)+' S':x.label);
+    return parts.join(' · ');
+  };
+  function updateFlashAndTempo(){
+    const fl=journey.flash.snapshot(),tr=journey.tempo,on=cleanExplore()&&game.phase==='playing'&&!panel;
+    const showFlash=on&&!!fl&&!tr.running;
+    $('flashBar').hidden=$('flashPill').hidden=!showFlash;
+    if(showFlash){
+      $('flashFill').style.width=Math.round(Math.max(0,Math.min(1,fl.left/fl.span))*100)+'%';
+      $('flashBar').classList.toggle('urgent',fl.left<8);
+      $('flashPill').textContent=fl.title+' · '+fl.progress+'/'+fl.target+(fl.kind==='turbo'?' M':'')+' · '+Math.ceil(fl.left)+' S';
+    }
+    const th=$('tempoHud');th.hidden=!(on&&tr.running);
+    if(on&&tr.running){
+      const t=tr.snapshot(),ratio=t.deadline>0?Math.max(0,Math.min(1,t.left/t.deadline)):0;
+      $('tempoLives').textContent='♥'.repeat(Math.max(0,t.lives))+'♡'.repeat(Math.max(0,TEMPO.lives-t.lives));
+      $('tempoLevel').textContent='TEMPO '+t.level;$('tempoScore').textContent=t.score.toLocaleString('sv-SE');
+      $('tempoFill').style.width=Math.round(ratio*100)+'%';th.classList.toggle('urgent',ratio<.3);
+    }
+  }
   function updateFunHud(p){
-    const box=$('funHud');if(!box)return;const on=cleanExplore()&&game.phase==='playing'&&!panel;box.hidden=!on;if(!on)return;
+    const box=$('funHud');if(!box)return;const on=cleanExplore()&&game.phase==='playing'&&!panel;box.hidden=!on;if(!on){updateFlashAndTempo();return;}
     const f=journey.fun,s=f.snapshot(journey.lifetime),c=s.combo;
     $('funLevel').textContent='NIVÅ '+s.level;$('funTitle').textContent=s.title.toUpperCase();$('funXp').style.width=Math.round(s.levelProgress*100)+'%';
     const combo=$('funCombo');combo.hidden=c.chain<2;
     if(c.chain!==lastChainShown){lastChainShown=c.chain;if(c.chain>=2){combo.classList.remove('bump');void combo.offsetWidth;combo.classList.add('bump');}}
     if(c.chain>=2){$('funChain').textContent='KOMBO '+c.chain;$('funMult').textContent='POÄNG ×'+c.mult;$('funComboTime').style.width=Math.round(Math.max(0,Math.min(1,c.left/c.span))*100)+'%';combo.classList.toggle('frozen',c.frozen);combo.dataset.tier=String(c.mult);}
-    const boost=$('funBoost');boost.hidden=!s.boosters.length;boost.textContent=s.boosters.map(b=>b.label+' '+Math.ceil(b.left)+' S').join(' · ');
+    const boostText=boostLine(s),boost=$('funBoost');boost.hidden=!boostText;if(boost.textContent!==boostText)boost.textContent=boostText;
     $('funDaily').textContent=s.daily.done?'DAGENS MÅL KLART'+(s.daily.streak>1?' · '+s.daily.streak+' DAGAR I RAD':''):'DAGENS MÅL '+s.daily.count+'/'+s.daily.goal+(s.daily.streak>0?' · '+s.daily.streak+' I RAD':'');
     $('funDaily').classList.toggle('done',s.daily.done);
-    const near=journey.nearestHidden(p),heat=$('funHeat');
-    if(near?.heat){heat.hidden=false;heat.textContent='GÖMD SKATT · '+near.heat.label;heat.dataset.level=String(near.heat.level);}else heat.hidden=true;
+    const near=journey.nearestHidden(p),heat=$('funHeat'),nowMs=performance.now(),lite=liteHud();
+    document.body.classList.toggle('hud-lite',lite);
+    const dailyText=$('funDaily').textContent;if(dailyText!==lastDailyText){lastDailyText=dailyText;dailyShowUntil=nowMs+4500;}
+    $('funDaily').classList.toggle('quiet',lite&&nowMs>dailyShowUntil);
+    if(near?.heat){heat.hidden=false;heat.textContent='GÖMD SKATT · '+near.heat.label;heat.dataset.level=String(near.heat.level);if(near.heat.level!==lastHeatLevel){lastHeatLevel=near.heat.level;heatShowUntil=nowMs+4000;}heat.classList.toggle('quiet',lite&&nowMs>heatShowUntil&&near.heat.level<3);}else{heat.hidden=true;lastHeatLevel=0;}
+    updateFlashAndTempo();
     // Områdesbanner, som i ett äventyrsspel: ny stadsdel, och hur många termosar där som är funna.
     const now=performance.now(),area=mallInside(p)?'mall':areaOf({id:'p',x:p.x,z:p.z});
     if(area!==areaSeen){areaSeen=area;areaSince=now;}
@@ -561,6 +606,7 @@ export function createLastRound(pc, host) {
   // Startkortet visar nivå, dagsmål och serie, så att det finns en anledning att komma tillbaka.
   function renderFunStatus(){
     const el=$('cityFunStatus');if(!el)return;const s=journey.fun.snapshot(journey.lifetime),d=s.daily;
+    {const tb=journey.tempo.best,tx=$('cityTempoBest');if(tx)tx.textContent='Samma stad, men farten och poängen ökar var 15:e sekund. Missa en termos för länge och du tappar ett liv.'+(tb.runs?' Bäst: '+tb.score+' poäng · tempo '+tb.level+'.':'');}
     el.textContent='NIVÅ '+s.level+' · '+s.title.toUpperCase()+' · '+(d.done?'DAGENS MÅL KLART':'DAGENS MÅL '+d.count+'/'+d.goal)+(d.streak>0?' · '+d.streak+(d.streak===1?' DAG':' DAGAR')+' I RAD':'');
   }
   // Fikaalbumet i pausmenyn: nivå, dagsmål, termosar per område, skatter med ledtrådar, hållplatser och märken.
@@ -857,6 +903,8 @@ export function createLastRound(pc, host) {
   $('boatChallengeStart').addEventListener('click',()=>{startCity('free');host.teleport(HARBOUR.x,HARBOUR.z,180,-2);journey.position={x:HARBOUR.x,z:HARBOUR.z};boardBoat();});
   $('busChallengeStart').addEventListener('click',()=>startBusChallenge());$('busChallengeBack').addEventListener('click',()=>startCity('free'));
   for(const id of ['cityFree','cityResultFree'])$(id).addEventListener('click',()=>startCity('free'));
+  function startTempoRun(){startCity('clean');journey.startTempo();host.music?.tempo?.(1);renderTurbo();toast('TEMPORUSH','Följ pilen till nästa termos. Tryck T för turbo.',2.6);}
+  $('cityTempo').addEventListener('click',startTempoRun);$('tempoRetry').addEventListener('click',startTempoRun);$('tempoExplore').addEventListener('click',()=>startCity('clean'));
   $('trailRetry').addEventListener('click',()=>startCity('trail'));$('trailExplore').addEventListener('click',()=>startCity('clean'));
   $('cityNewRun').addEventListener('click',()=>{if(game.phase==='playing')game.pause();setPanel('city-intro');});
   $('openAlbum').addEventListener('click',openAlbum);$('albumClose').addEventListener('click',()=>{if(game.phase==='paused')resume();else setPanel('city-result');});
@@ -926,6 +974,7 @@ export function createLastRound(pc, host) {
     if (e.code === 'KeyE') use();
     if (e.code === 'KeyM') showMap();
     if (e.code === 'KeyT') toggleTurbo();
+    if (e.code === 'KeyH'&&isJourney()){liteUser=!liteUser;toast(liteUser?'MINDRE TEXT PÅ SKÄRMEN':'FULL HUD','H växlar mellan kompakt och full text.',1.4);}
     if (e.code === 'KeyQ') {e.preventDefault(); fire(true);}
     if (e.code === 'KeyF') {e.preventDefault(); toggleAim();}
     if (e.code === 'KeyC') {e.preventDefault();buyEnergy();}
@@ -972,7 +1021,7 @@ export function createLastRound(pc, host) {
       note(chainFreq(event.chain));if(event.rarity!=='common')setTimeout(()=>note(chainFreq(event.chain)*1.5,'sine',.32,.05),70);
       journeyView.burst(event.x,event.y||0,event.z,event.rarity);
       const rar=RARITY[event.rarity].label;
-      $('journeyPickupToast').textContent='+'+event.points+(event.chain>=2?' · KOMBO '+event.chain+(event.mult>1?' (×'+event.mult+')':''):'')+(rar?' · '+rar:'')+(event.gagata?' · GÅGATSFIKA!':'')+(event.doubled?' · DUBBLA!':'');
+      $('journeyPickupToast').textContent='+'+event.points+(event.chain>=2?' · KOMBO '+event.chain+(event.mult>1?' (×'+event.mult+')':''):'')+(rar?' · '+rar:'')+(event.gagata?' · GÅGATSFIKA!':'')+(event.doubled?' · DUBBLA!':'')+(lastTempoPick?(lastTempoPick.flow?' · FLYT!':'')+(lastTempoPick.mult>1?' · TEMPO ×'+lastTempoPick.mult.toFixed(1):''):'');lastTempoPick=null;
       $('journeyPickupToast').dataset.rarity=event.rarity;
     }else{
       sound('energy');$('journeyPickupToast').textContent='+'+event.points+' KAFFEPOÄNG · +15 SOL'+(event.gagata?' · GÅGATSFIKA!':'')+(event.chain>0&&event.chain%5===0?' · FIKAKEDJA!':'');$('journeyPickupToast').dataset.rarity='common';
@@ -987,6 +1036,22 @@ export function createLastRound(pc, host) {
     'combo-praise':(event,now)=>{fanfare(event.text,'KOMBO '+event.chain+' · poäng ×'+event.mult,1.5,'chain');},
     'combo-lost':(event,now)=>{$('journeyPickupToast').textContent='KEDJAN BRÖTS · '+event.chain+' I RAD';$('journeyPickupToast').dataset.rarity='common';$('journeyPickupToast').classList.add('visible');pickupToastUntil=now+1500;},
     'booster':(event,now)=>{fanfare(event.label+'!',event.text+' '+event.seconds+' sekunder.',2.6,'energy');},
+    'power':(event,now)=>{sound('win');[659.25,880,1174.66].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.2,.07),i*70));fanfare(event.label+'!',event.text+(event.seconds?' '+event.seconds+' sekunder.':''),2.2,'energy');},
+    'bomb':(event,now)=>{sound('boss');fanfare('SOCKERBOMB · '+event.count+' TERMOSAR','Kedjan rusar iväg!',1.8,'chain');},
+    'shield-save':(event,now)=>{sound('capture');setPickup('KOMBOSKÖLDEN RÄDDADE DIN KEDJA · '+event.chain+' I RAD',now,2000,'silver');},
+    'challenge-start':(event,now)=>{sound('start');showBanner('BLIXTUTMANING',event.title,event.text+' · +'+event.points+' P','flash');},
+    'challenge-done':(event,now)=>{fanfare('UTMANING KLAR! +'+event.points,event.title+' på '+event.seconds+' sekunder.',2.2,'win');},
+    'challenge-fail':(event,now)=>{sound('bump');setPickup('UTMANINGEN GICK UT · '+event.title+' '+event.progress+'/'+event.target,now,1800);},
+    'tempo-start':(event,now)=>{showBanner('TEMPORUSH','TEMPO 1','Plocka nästa termos innan klockan går ut. Tempot stiger var 15:e sekund.','tempo');},
+    'tempo-level':(event,now)=>{sound('boss');showBanner('TEMPO '+event.level,event.name,'Fart ×'+event.speed.toFixed(2)+' · poäng ×'+event.mult.toFixed(1),'tempo');host.music?.tempo?.(1+.03*(event.level-1));},
+    'tempo-miss':(event,now)=>{sound('bump');damageFlash=.3;setPickup(event.lives>0?'FIKAKLOCKAN GICK UT · '+event.lives+' LIV KVAR':'FIKAKLOCKAN GICK UT',now,1800);},
+    'tempo-pick':(event,now)=>{lastTempoPick=event;},
+    'tempo-over':(event,now)=>{
+      if(game.phase==='playing')game.pause();host.music?.tempo?.(1);
+      $('tempoResultTitle').textContent=String(event.level);
+      $('tempoResultScore').textContent=event.score.toLocaleString('sv-SE')+' POÄNG · '+event.picked+' TERMOSAR · '+event.seconds+' S';
+      $('tempoResultBest').textContent=(event.record?'NYTT REKORD! ':'')+'BÄST: '+event.best.score.toLocaleString('sv-SE')+' POÄNG · TEMPO '+event.best.level;
+      sound(event.record?'win':'boss');setPanel('tempo-result');},
     'level-up':(event,now)=>{fanfare('NIVÅ '+event.level+' · '+event.title.toUpperCase(),'Kombofönstret är nu '+Math.round(event.window)+' sekunder. Fortsätt samla!',3.2,'win');},
     'daily-done':(event,now)=>{fanfare('DAGENS MÅL KLART!','+'+event.bonus+' poäng'+(event.streak>1?' · '+event.streak+' dagar i rad':'')+'. Nya mål och nya sällsynta termosar imorgon.',3.4,'win');},
     'area-done':(event,now)=>{fanfare('SAMLING KLAR · '+event.name.toUpperCase(),'Alla '+event.total+' termosar funna · +'+event.bonus+' poäng',3.4,'win');},
@@ -1164,13 +1229,15 @@ export function createLastRound(pc, host) {
         $('mission').textContent='KARLSTAD EFTER STÄNGNING · 3 UPPDRAG';
       } else $('mission').textContent = missionInfo().name.toUpperCase();
       $('status').textContent = `${DEBUG?'FPS '+Math.round(host.app.stats.frame.fps)+' · ':''}${isJourney()?journey.rush.challenge?.kind==='daily'?'DAGENS KARLSTAD '+GAME_VERSION:'STADSJAKTEN '+GAME_VERSION:missionInfo().place.toUpperCase()}`;
-      const destination = game.phase === 'playing' ? (isPush()?layout.goal:guidance.goal) : olearyLayout.guard;
-      const direction = !isPush()&&game.phase==='playing'?guidance.angle:Math.atan2(destination.x - p.x, destination.z - p.z) - Math.atan2(host.camera.forward.x, host.camera.forward.z);
+      const tempoGoal=isJourney()&&journey.tempo.running?journey.tempo.target:null;
+      const destination = tempoGoal?{x:tempoGoal.x,z:tempoGoal.z,kind:'landmark',id:'tempo-target',label:'NÄSTA TERMOS',radius:2}:game.phase === 'playing' ? (isPush()?layout.goal:guidance.goal) : olearyLayout.guard;
+      const direction = tempoGoal?Math.atan2(tempoGoal.x-p.x,tempoGoal.z-p.z)-Math.atan2(host.camera.forward.x,host.camera.forward.z):!isPush()&&game.phase==='playing'?guidance.angle:Math.atan2(destination.x - p.x, destination.z - p.z) - Math.atan2(host.camera.forward.x, host.camera.forward.z);
       $('roundCompassArrow').style.transform = `rotate(${-direction * 180 / Math.PI}deg)`;
       const bearing=(Math.atan2(host.camera.forward.x,-host.camera.forward.z)*180/Math.PI+360)%360;
       $('roundBearing').textContent=['N','NO','Ö','SO','S','SV','V','NV'][Math.round(bearing/45)%8]+' · '+Math.round(bearing)+'°';
       $('roundCompassText').textContent=game.phase==='playing'?(isPush()?'HEMGÅNG · '+Math.round(Math.hypot(p.x-destination.x,p.z-destination.z))+' M':(guidance.strip||guidance.goal.label+' · '+guidance.turn+(destination.kind==='wait'?'':' · '+guidance.distance+' M'))):`O’LEARYS ${Math.round(dist)} m`;
-      if(isJourney()&&journey.rush.peaceful&&destination.kind==='wait'){const next=stampBook.places.filter(s=>!stampBook.stamped.has(s.id)&&Math.hypot(s.x-p.x,s.z-p.z)<900).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z))[0];if(next){const ang=Math.atan2(next.x-p.x,next.z-p.z)-Math.atan2(host.camera.forward.x,host.camera.forward.z);$('roundCompassText').textContent='NÄSTA STÄMPEL · '+next.label+' · '+Math.round(Math.hypot(next.x-p.x,next.z-p.z))+' M';$('roundCompassArrow').style.transform=`rotate(${-ang*180/Math.PI}deg)`;$('roundCompassArrow').textContent='↑';}else{$('roundCompassText').textContent=streetAt(p)+' · VÄLJ PLATS PÅ KARTAN';$('roundCompassArrow').style.transform='none';$('roundCompassArrow').textContent='⌖';}}else $('roundCompassArrow').textContent='↑';
+      if(tempoGoal)$('roundCompassText').textContent='NÄSTA TERMOS · '+Math.round(Math.hypot(p.x-tempoGoal.x,p.z-tempoGoal.z))+' M';
+      else if(isJourney()&&journey.rush.peaceful&&destination.kind==='wait'){const next=stampBook.places.filter(s=>!stampBook.stamped.has(s.id)&&Math.hypot(s.x-p.x,s.z-p.z)<900).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z))[0];if(next){const ang=Math.atan2(next.x-p.x,next.z-p.z)-Math.atan2(host.camera.forward.x,host.camera.forward.z);$('roundCompassText').textContent='NÄSTA STÄMPEL · '+next.label+' · '+Math.round(Math.hypot(next.x-p.x,next.z-p.z))+' M';$('roundCompassArrow').style.transform=`rotate(${-ang*180/Math.PI}deg)`;$('roundCompassArrow').textContent='↑';}else{$('roundCompassText').textContent=streetAt(p)+' · VÄLJ PLATS PÅ KARTAN';$('roundCompassArrow').style.transform='none';$('roundCompassArrow').textContent='⌖';}}else $('roundCompassArrow').textContent='↑';
       updateRoute(p,destination);
       if (isPush() && game.phase === 'playing' && (p.x < b.minX - 5 || p.x > b.maxX + 5 || p.z < b.minZ - 5 || p.z > b.maxZ + 5)) $('roundPhase').textContent = game.practice ? 'FÖLJ RADARN TILL O’LEARYS' : 'TILLBAKA TILL O’LEARYS · TIDEN GÅR';
     }
@@ -1180,6 +1247,6 @@ export function createLastRound(pc, host) {
     ryde:()=>({riding:!!fleet.riding,battery:fleet.riding?.battery??null,nearest:(()=>{const p=host.player.getPosition(),n=fleet.nearest(p);return n?{id:n.id,x:n.x,z:n.z,d:Math.hypot(n.x-p.x,n.z-p.z)}:null;})(),speed:fleet.speedScale(host.player.getPosition())}),
     turbo:toggleTurbo,fun:()=>journey.fun.snapshot(journey.lifetime),journey:()=>journey,openBus:()=>{const p=host.player.getPosition(),from=journey.nearestBus(p);if(from)openBusPicker(from);return from?.id;},
     stamps:()=>({count:stampBook.count,total:stampBook.total}),street:()=>$('cityStreet').textContent,compass:()=>$('roundCompassText').textContent});
-  return {update, use, showMap, isJourney, turboScale:()=>turboFactor(), toggleTurbo, rideSpeed:()=>isJourney()&&fleet.riding?fleet.speedScale(host.player.getPosition()):0, ryde:()=>({riding:!!fleet.riding,scooters:fleet.scooters.length,rides:fleet.rides}), blocksInput: () => !!panel||busRide.active()||boatRide.active()||scenicRide.active(), playing: () => game.phase === 'playing',
+  return {update, use, showMap, isJourney, turboScale:()=>turboFactor(), jumpScale:()=>cleanExplore()&&!mallInside(host.player.getPosition())?journey.fun.power.jumpMul():1, toggleTurbo, rideSpeed:()=>isJourney()&&fleet.riding?fleet.speedScale(host.player.getPosition()):0, ryde:()=>({riding:!!fleet.riding,scooters:fleet.scooters.length,rides:fleet.rides}), blocksInput: () => !!panel||busRide.active()||boatRide.active()||scenicRide.active(), playing: () => game.phase === 'playing',
     onPickup: (type, value) => {if (game.phase === 'playing') {if(type === 'energy') game.energy = Math.min(100, game.energy + value); else game.score += value;}}};
 }

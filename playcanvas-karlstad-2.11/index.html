@@ -30,9 +30,9 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:11px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.14.2">
-<link rel="stylesheet" href="./compact-hud.css?v=2.14.2">
-<link rel="stylesheet" href="./explore-fun.css?v=2.14.2">
+<link rel="stylesheet" href="./last-round.css?v=2.15.0">
+<link rel="stylesheet" href="./compact-hud.css?v=2.15.0">
+<link rel="stylesheet" href="./explore-fun.css?v=2.15.0">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
@@ -73,6 +73,8 @@
   <div id="journeyPickupToast" role="status" aria-live="polite"></div>
   <div id="ghostHud" hidden aria-live="off"></div>
   <div id="funHud" hidden aria-live="off">
+    <div id="tempoHud" hidden aria-live="off"><span id="tempoLives">♥♥♥</span><b id="tempoLevel">TEMPO 1</b><span id="tempoScore">0</span><i class="tempo-bar"><u id="tempoFill"></u></i></div>
+    <div id="flashPill" hidden aria-live="off"></div>
     <div class="fun-level"><b id="funLevel">NIVÅ 1</b><span id="funTitle">TURIST</span><i class="fun-track"><u id="funXp"></u></i></div>
     <div id="funCombo" class="fun-combo" hidden><b id="funChain">KOMBO 2</b><span id="funMult">POÄNG ×1</span><i class="fun-track fun-time"><u id="funComboTime"></u></i></div>
     <div id="funBoost" hidden></div>
@@ -88,6 +90,9 @@
   <div id="roundTactic" hidden></div>
   <div id="roundCompass"><b id="roundBearing">N · 0°</b><span id="roundCompassArrow">↑</span><span id="roundCompassText">O’LEARYS</span></div>
   <button id="roundLaunch" hidden>VÄLJ UPPDRAG <span>4 UPPDRAG I KARLSTAD →</span></button>
+  <div id="hudBanner" role="status" aria-live="polite" hidden><small id="hudBannerKicker"></small><b id="hudBannerTitle"></b><span id="hudBannerText"></span></div>
+  <div id="flashBar" hidden aria-hidden="true"><i id="flashFill"></i></div>
+  
   <div id="roundToast" role="status" aria-live="polite"><strong id="roundToastTitle"></strong><span id="roundToastText"></span></div>
   <div id="solarFlash"></div><div id="damageFlash"></div>
   <div id="solarWeapon" aria-hidden="true" hidden><div class="weapon-top">SOL / 01</div><div class="weapon-barrel"><i>✳</i></div><div class="weapon-grip"></div></div>
@@ -124,7 +129,7 @@
     <p class="round-lead">Promenera, hitta nya platser och samla termosar.</p>
     <div class="city-rules"><span><b>01 · SAMLA 1000 XP</b>Följ pilarna: cyan = gatuhändelse, lila = termos, guld = Guld-Gunnar. Texten säger var nästa sväng kommer.</span><span><b>02 · TA BUSS 666</b>Ta ratten. Rädda bussen. Upp till 350 XP.</span><span><b>03 · FLY TILL GRÖNT</b>Nå en tryggzon innan tiden tar slut. Livet får inte ta slut!</span></div>
     <p id="cityControlCopy" class="control-hint"></p>
-    <button id="cityClean" class="round-primary">CLEAN CITY EXPLORE →</button><p class="round-fine">Bara Karlstad och termosar. Inga fiender. Inga uppdrag.</p><p id="cityFunStatus" class="round-fine fun-news"></p><p class="round-fine fun-news"><b>NYTT:</b> turbo (T), busslinjer från Torget till Haga, Mariebergsskogen och udden, kombon, sällsynta termosar och gömda skatter.</p><button id="cityTrail" class="round-secondary">TERMOSRUNDAN · 3 MINUTER</button>
+    <button id="cityClean" class="round-primary">CLEAN CITY EXPLORE →</button><p class="round-fine">Bara Karlstad och termosar. Inga fiender. Inga uppdrag.</p><p id="cityFunStatus" class="round-fine fun-news"></p><p class="round-fine fun-news"><b>NYTT:</b> turbo (T), busslinjer från Torget till Haga, Mariebergsskogen och Tingvalla, kombon, sällsynta termosar och gömda skatter.</p><p class="round-fine fun-news"><b>2.15:</b> förmågor i glittrande märken (raket, stjärna, stövlar, sköld, klocka, sockerbomb), blixtutmaningar och TEMPORUSH.</p><button id="cityTempo" class="round-primary tempo-btn">TEMPORUSH · TEMPOT STIGER <span>→</span></button><p id="cityTempoBest" class="round-fine">Samma stad, men farten och poängen ökar för varje 15 sekunder. Missa en termos för länge och du tappar ett liv.</p><button id="cityTrail" class="round-secondary">TERMOSRUNDAN · 3 MINUTER</button>
     <button id="dailyOpen" class="daily-tile"><span id="dailyDate"></span><b id="dailyTitle"></b><small id="dailyTeaser"></small><strong>SPELA DAGENS →</strong></button>
     <button id="cityStart" class="round-secondary">ZOMBIEJAKTEN · 3:00 <span>→</span></button>
     <button id="cityFree" class="round-tertiary">Stadsvandring med zombies</button>
@@ -138,6 +143,7 @@
     <button id="dailyStart" class="round-primary">SPELA UTMANINGEN →</button><button id="dailyBack" class="round-tertiary">Till vanliga stadsjakten</button>
   </section>
   <section id="round-boat-intro" class="round-card compact" hidden><div class="episode-label">BÅTBUSS / KOMPISUTMANING</div><h2>KAPTENEN<br><em>ÄR DÖD.</em></h2><p>36 sekunder på däck. Tryck på passagerarna: flytväst ombord, livboj i vattnet. Rädda minst 8 av 12 för ankomstbonus.</p><p id="boatChallengeTarget" class="record"></p><button id="boatChallengeStart" class="round-primary">KLIV OMBORD →</button></section>
+  <section id="round-tempo-result" class="round-card compact" hidden><div class="episode-label">TEMPORUSH / RUNDAN ÄR SLUT</div><h2>TEMPO<br><em id="tempoResultTitle">3</em></h2><p id="tempoResultScore" class="round-lead"></p><p id="tempoResultBest" class="record"></p><button id="tempoRetry" class="round-primary">EN RUSH TILL →</button><button id="tempoExplore" class="round-secondary">CLEAN CITY EXPLORE</button></section>
   <section id="round-trail-result" class="round-card compact" hidden><div class="episode-label">TERMOSRUNDAN / TIDEN ÄR SLUT</div><h2>KAFFET<br><em>ÄR DITT.</em></h2><p id="trailResultScore" class="round-lead"></p><p id="trailResultBest" class="record"></p><button id="trailRetry" class="round-primary">EN RUNDA TILL →</button><button id="trailExplore" class="round-secondary">CLEAN CITY EXPLORE</button></section>
   <section id="round-bus-intro" class="round-card compact" hidden>
     <div class="episode-label">KOMPISUTMANING / LINJE 666</div><h2>BILJETT TILL<br><em>KAOSET.</em></h2>
@@ -271,6 +277,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.14.2"></script>
+<script type="module" src="./app.js?v=2.15.0"></script>
 </body>
 </html>

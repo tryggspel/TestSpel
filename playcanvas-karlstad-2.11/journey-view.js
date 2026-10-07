@@ -1,8 +1,9 @@
-import {createBusModel} from './transit-art.js?v=2.14.2';
-import {createComicCity} from './comic-city.js?v=2.14.2';
-import {SUN} from './city-ecology.mjs?v=2.14.2';
-import {rarityFor,BOOSTERS} from './explore-fun.mjs?v=2.14.2';
-import {BUS_NETWORK,MUSIC_OFFICE} from './explore-places.mjs?v=2.14.2';
+import {createBusModel} from './transit-art.js?v=2.15.0';
+import {createComicCity} from './comic-city.js?v=2.15.0';
+import {SUN} from './city-ecology.mjs?v=2.15.0';
+import {rarityFor,BOOSTERS} from './explore-fun.mjs?v=2.15.0';
+import {powerFor,POWERUPS,POWER_KINDS} from './powerups.mjs?v=2.15.0';
+import {BUS_NETWORK,MUSIC_OFFICE} from './explore-places.mjs?v=2.15.0';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
   const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');
@@ -55,6 +56,37 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const glowMat=material('#ffe27a');glowMat.opacity=.5;glowMat.blendType=pc.BLEND_NORMAL;glowMat.depthWrite=false;glowMat.emissive=new pc.Color(.55,.42,.08);glowMat.update();
   const treasurePool=journey.treasures.map(t=>({t,e:card('Gömd skatt '+t.name,treasureTexFor(t.points),1.2,1.85,t.x,(t.y||0)+.2,t.z),glow:primitive('skatt-glimt','cylinder',t.x,(t.y||0)+.07,t.z,2.8,.03,2.8,glowMat)}));
   treasurePool.forEach(({e,glow})=>{e.enabled=glow.enabled=false;});
+  // 2.15: förmågor. Runda märken i stället för termosar, så att de syns på långt håll: rakett, stjärna, stövlar, sköld, klocka, bomb.
+  const POWER_LABEL={rocket:'RAKET',star:'STJÄRNA',boots:'HOPP',shield:'SKÖLD',clock:'KLOCKA',bomb:'BOMB'};
+  function glyph(c,kind,ink){
+    c.fillStyle=ink;c.strokeStyle=ink;c.lineWidth=8;c.lineJoin='round';c.lineCap='round';
+    if(kind==='rocket'){c.beginPath();c.moveTo(128,44);c.quadraticCurveTo(160,86,152,138);c.lineTo(104,138);c.quadraticCurveTo(96,86,128,44);c.fill();
+      c.beginPath();c.moveTo(104,118);c.lineTo(80,150);c.lineTo(106,142);c.fill();c.beginPath();c.moveTo(152,118);c.lineTo(176,150);c.lineTo(150,142);c.fill();
+      c.fillStyle='#ffd23f';c.beginPath();c.moveTo(112,146);c.lineTo(128,182);c.lineTo(144,146);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(128,92,10,0,6.3);c.fill();}
+    else if(kind==='star'){c.beginPath();for(let i=0;i<10;i++){const r=i%2?32:70,a=-Math.PI/2+i*Math.PI/5;c.lineTo(128+Math.cos(a)*r,112+Math.sin(a)*r);}c.closePath();c.fill();}
+    else if(kind==='boots'){c.beginPath();c.moveTo(96,52);c.lineTo(138,52);c.lineTo(138,112);c.lineTo(176,128);c.lineTo(176,150);c.lineTo(88,150);c.lineTo(88,128);c.lineTo(96,128);c.closePath();c.fill();
+      c.lineWidth=7;c.beginPath();for(let i=0;i<4;i++){c.moveTo(92+i*26,164);c.lineTo(104+i*26,176);}c.stroke();}
+    else if(kind==='shield'){c.beginPath();c.moveTo(128,44);c.lineTo(182,64);c.quadraticCurveTo(184,128,128,176);c.quadraticCurveTo(72,128,74,64);c.closePath();c.fill();
+      c.strokeStyle='#fff';c.lineWidth=11;c.beginPath();c.moveTo(102,106);c.lineTo(122,128);c.lineTo(158,84);c.stroke();}
+    else if(kind==='clock'){c.lineWidth=11;c.beginPath();c.arc(128,112,58,0,6.3);c.stroke();c.lineWidth=10;c.beginPath();c.moveTo(128,112);c.lineTo(128,74);c.moveTo(128,112);c.lineTo(156,126);c.stroke();c.beginPath();c.arc(128,112,7,0,6.3);c.fill();}
+    else{c.beginPath();c.arc(124,130,50,0,6.3);c.fill();c.lineWidth=9;c.beginPath();c.moveTo(150,92);c.quadraticCurveTo(168,70,184,64);c.stroke();
+      c.fillStyle='#ffd23f';c.beginPath();for(let i=0;i<8;i++){const r=i%2?7:16,a=i*Math.PI/4;c.lineTo(188+Math.cos(a)*r,60+Math.sin(a)*r);}c.closePath();c.fill();}
+  }
+  function powerTex(kind){
+    const d=POWERUPS[kind];
+    return texture((c,w,h)=>{
+      c.scale(w/256,h/256);
+      c.fillStyle='#193a35';c.beginPath();c.arc(128,128,122,0,6.3);c.fill();
+      c.fillStyle=d.color;c.beginPath();c.arc(128,128,108,0,6.3);c.fill();
+      c.fillStyle='#ffffff55';c.beginPath();c.ellipse(100,80,52,26,-.5,0,6.3);c.fill();
+      c.save();c.translate(0,-10);glyph(c,kind,d.ink);c.restore();
+      c.fillStyle=d.ink;c.textAlign='center';c.font='900 30px sans-serif';c.fillText(POWER_LABEL[kind],128,214,170);
+      sparkle(c,30,56,16);sparkle(c,226,70,12);sparkle(c,214,200,14);
+    },256,256);
+  }
+  const powerPools=Object.fromEntries(POWER_KINDS.map(kind=>{const tex=powerTex(kind);const pool=Array.from({length:3},()=>card('Förmåga '+kind,tex,1.35,1.35,0,0,0));pool.forEach(e=>e.enabled=false);return [kind,pool];}));
+  const powerCache=new Map();let powerDay='';
+  const powerOf=(id,day)=>{if(powerDay!==day){powerDay=day;powerCache.clear();}let k=powerCache.get(id);if(k===undefined){k=powerFor(id,day);powerCache.set(id,k);}return k;};
   const rarityPools={common:pickupPool};
   const raritySize={silver:[1.0,1.55,12],gold:[1.15,1.75,12],rainbow:[1.25,1.9,8]};
   for(const [kind,[w,h,n]] of Object.entries(raritySize))rarityPools[kind]=Array.from({length:n},()=>card('Termos '+kind,rarityTextures[kind],w,h,0,0,0));
@@ -146,14 +178,17 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     const roaming=game===journey;comicCity.update(p);
     const curse=journey.cursedHunt;
     const nearby=roaming?journey.items.filter(t=>!journey.found.has(t.id)&&!curse?.pending(t.id)&&Math.hypot(t.x-p.x,t.z-p.z)<44).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z)).slice(0,pickupPool.length):[];
-    const clean=roaming&&journey.rush.mode==='clean',day=clean?journey.fun.day:'',used={common:0,silver:0,gold:0,rainbow:0};
+    const clean=roaming&&journey.rush.mode==='clean',day=clean?journey.fun.day:'',used={common:0,silver:0,gold:0,rainbow:0},usedPower=Object.fromEntries(POWER_KINDS.map(k=>[k,0]));
     if(rarityDay!==day){rarityDay=day;rarityCache.clear();}
     nearby.forEach((t,i)=>{
+      const pw=clean?powerOf(t.id,day):null;
+      if(pw){const e=powerPools[pw][usedPower[pw]++];if(e){e.enabled=true;const s=1+Math.sin(now/240+i)*.08;e.setLocalScale(s,s,s);e.setPosition(t.x,(t.y||0)+.55+Math.sin(now/300+i)*.16,t.z);e.setEulerAngles(0,Math.atan2(p.x-t.x,p.z-t.z)*180/Math.PI,Math.sin(now/500+i)*6);}return;}
       let kind='common';if(clean){kind=rarityCache.get(t.id);if(!kind){kind=rarityFor(t.id,day);rarityCache.set(t.id,kind);}}
       const e=rarityPools[kind][used[kind]++];if(!e)return;e.enabled=true;
       e.setPosition(t.x,(t.y||0)+.28+Math.sin(now/350+i)*.12,t.z);e.setEulerAngles(0,Math.atan2(p.x-t.x,p.z-t.z)*180/Math.PI,Math.sin(now/650+i)*4);
     });
     for(const [kind,pool] of Object.entries(rarityPools))for(let k=used[kind];k<pool.length;k++)pool[k].enabled=false;
+    for(const [kind,pool] of Object.entries(powerPools))for(let k=usedPower[kind];k<pool.length;k++)pool[k].enabled=false;
     for(const [kind,pool] of Object.entries(flyCards))for(const f of pool){
       f.life=Math.max(0,f.life-dtView);f.e.enabled=roaming&&f.life>0;if(!f.e.enabled)continue;
       const k=1-f.life/FLY,ease=k*k;f.e.setPosition(f.x+(p.x-f.x)*ease,f.y+.3+(p.y-1.2-f.y)*ease,f.z+(p.z-f.z)*ease);
@@ -201,7 +236,8 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
 
   }
   function radar(c,point,roaming){if(!roaming)return;
-    c.fillStyle='#c994f1';for(const t of journey.items)if(!journey.found.has(t.id)){const [x,y]=point(t.x,t.z);if(x>0&&y>0&&x<256&&y<256)c.fillRect(x-2,y-2,4,4);}
+    const day=journey.rush.mode==='clean'?journey.fun.day:'';
+    c.fillStyle='#c994f1';for(const t of journey.items)if(!journey.found.has(t.id)){const [x,y]=point(t.x,t.z);if(x>0&&y>0&&x<256&&y<256){if(day&&powerOf(t.id,day)){c.fillStyle='#ffb347';c.fillRect(x-3.5,y-3.5,7,7);c.fillStyle='#c994f1';}else c.fillRect(x-2,y-2,4,4);}}
     c.fillStyle='#ffe18c';if(!journey.rush.peaceful)for(const p of Object.values(portals)){const [x,y]=point(p.x,p.z);c.fillRect(x-5,y-5,10,10);}
     c.fillStyle='#f79b68';for(const s of (journey.rush.peaceful?journey.busNetwork:journey.busStops)){const [x,y]=point(s.x,s.z);c.fillRect(x-4,y-4,8,8);}
     const sun=journey.rush.ecology.sun;if(sun){const [x,y]=point(sun.x,sun.z);c.beginPath();c.arc(x,y,13,0,Math.PI*2);c.fillStyle='#ffdd6680';c.fill();c.strokeStyle='#ffdf71';c.lineWidth=2;c.stroke();}

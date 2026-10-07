@@ -3,8 +3,9 @@
 // Idéerna är lånade: kombo och beröm från Candy Crush, regnbågstermosen från Mario Karts frågetecken-lådor,
 // dagsmål och streak från Duolingo och Pokémon GO, hett/kallt från geocaching, album från samlarkort.
 // Ren spellogik utan DOM och rendering, så att allt går att testa. Bara 'clean'-läget (City Explore) använder den.
-import {stockholmDay} from './daily-challenge.mjs?v=2.14.2';
-import {ALBUM_AREAS,areaOf} from './explore-places.mjs?v=2.14.2';
+import {stockholmDay} from './daily-challenge.mjs?v=2.15.0';
+import {ALBUM_AREAS,areaOf} from './explore-places.mjs?v=2.15.0';
+import {PowerState,powerFor,POWERUPS} from './powerups.mjs?v=2.15.0';
 
 export const FUN_KEY='karlstad:fun:1';
 export const BASE_POINTS=25;
@@ -111,7 +112,11 @@ export const BADGES=Object.freeze([
   {id:'area-1',name:'Områdeskungen',desc:'Samla alla termosar i ett område.',test:s=>s.areasDone>=1},
   {id:'streak-3',name:'Stammis',desc:'Nå dagsmålet tre dagar i rad.',test:s=>s.bestStreak>=3},
   {id:'streak-7',name:'Veckans fikavän',desc:'Nå dagsmålet sju dagar i rad.',test:s=>s.bestStreak>=7},
-  {id:'level-5',name:'Kaffeproffs',desc:'Nå nivå 5.',test:s=>s.level>=5}
+  {id:'level-5',name:'Kaffeproffs',desc:'Nå nivå 5.',test:s=>s.level>=5},
+  {id:'power-5',name:'Fyndare',desc:'Hitta 5 förmågor (glittrande märken).',test:s=>s.powerups>=5},
+  {id:'flash-5',name:'Blixtsnabb',desc:'Klara 5 blixtutmaningar.',test:s=>s.flashDone>=5},
+  {id:'tempo-5',name:'Rusningstid',desc:'Nå tempo 5 i Temporush.',test:s=>s.tempoLevel>=5},
+  {id:'tempo-10',name:'Vansinnesfart',desc:'Nå tempo 10 i Temporush.',test:s=>s.tempoLevel>=10}
 ]);
 
 // Hett/kallt för gömda skatter, som geocaching. Avstånd i meter.
@@ -120,14 +125,14 @@ export function heatFor(distance){for(const [d,label,level] of HEAT)if(distance<
 
 const freshState=()=>({version:1,collected:[],treasures:[],stops:[],badges:[],areasDone:[],day:'',dayCount:0,dayDone:false,
   streak:0,lastDone:'',bestStreak:0,bestChain:0,levelSeen:1,
-  checkinDay:'',stats:{thermos:0,silver:0,gold:0,rainbow:0,turboMeters:0,rides:0,treasures:0,quizCorrect:0,quizPerfect:0,checkins:0}});
+  checkinDay:'',stats:{thermos:0,silver:0,gold:0,rainbow:0,turboMeters:0,rides:0,treasures:0,quizCorrect:0,quizPerfect:0,checkins:0,powerups:0,flashDone:0,tempoLevel:0}});
 const idList=(v,max=2000)=>Array.isArray(v)?[...new Set(v.filter(x=>typeof x==='string'&&x.length>0&&x.length<64))].slice(0,max):[];
 
 export class ExploreFun{
   // items: alla termosar i spelet (för områdesräkningen). treasureIds: alla skatter. stopIds: hållplatser man kan besöka (utan navet).
   constructor({storage=null,clock=()=>new Date(),items=[],treasureIds=[],stopIds=[],xp=0}={}){
     this.storage=storage;this.clock=clock;this.state=freshState();this.dirty=false;
-    this.combo=new ComboMeter();this.boosters={magnet:0,double:0,freeze:0};this.run=0;
+    this.combo=new ComboMeter();this.boosters={magnet:0,double:0,freeze:0};this.power=new PowerState();this.run=0;
     this.areaById=new Map();this.areaTotals=new Map();
     for(const t of items){const a=areaOf(t);this.areaById.set(t.id,a);this.areaTotals.set(a,(this.areaTotals.get(a)||0)+1);}
     this.treasureTotal=treasureIds.length;this.treasureIds=new Set(treasureIds);
@@ -172,21 +177,26 @@ export class ExploreFun{
     return out;
   }
   // En ny runda börjar utan kedja och utan superkrafter. Nivå, album, märken och dagsmål ligger kvar.
-  newRun(){this.combo=new ComboMeter();this.run=0;for(const k of Object.keys(this.boosters))this.boosters[k]=0;}
+  newRun(){this.combo=new ComboMeter();this.run=0;this.power.reset();for(const k of Object.keys(this.boosters))this.boosters[k]=0;}
   tick(dt){
     if(!Number.isFinite(dt)||dt<=0)return {lost:0};
     for(const k of Object.keys(this.boosters))if(this.boosters[k]>0)this.boosters[k]=Math.max(0,this.boosters[k]-dt);
-    return {lost:this.combo.tick(dt,this.boosters.freeze>0)};
+    this.power.tick(dt);
+    const lost=this.combo.tick(dt,this.boosters.freeze>0);
+    // Kombosköld: en kedja på 2 eller mer räddas en gång och får tillbaka drygt halva tiden.
+    if(lost>=2&&this.power.useShield()){this.combo.chain=lost;this.combo.left=this.combo.span*.6;return {lost:0,saved:lost};}
+    return {lost};
   }
   // En termos plockas upp. Returnerar poäng, bonus och händelser; spelet delar ut poängen (reward) och skickar vidare händelserna.
   pickup(item,{gagata=false}={}){
     const day=this.rollDay(),s=this.state,events=[];
-    const rarity=rarityFor(item.id,day),chain=this.combo.hit(this.windowFor()),mult=multiplierFor(chain),doubled=this.boosters.double>0;
+    const power=powerFor(item.id,day),rarity=power?'common':rarityFor(item.id,day),chain=this.combo.hit(this.windowFor()),mult=multiplierFor(chain),doubled=this.boosters.double>0;
     const points=Math.round(BASE_POINTS*RARITY[rarity].mult*mult*(doubled?2:1))+(gagata?10:0);
     let bonus=0;
     s.stats.thermos++;this.run++;if(rarity!=='common')s.stats[rarity]++;
     if(chain>s.bestChain)s.bestChain=chain;
     if(rarity==='rainbow'){const kind=boosterFor(item.id,day);this.activate(kind);events.push({type:'booster',kind,label:BOOSTERS[kind].label,text:BOOSTERS[kind].text,seconds:BOOSTERS[kind].seconds});}
+    if(power){s.stats.powerups++;events.push(this.applyPower(power));}
     const praise=praiseFor(chain);if(praise)events.push({type:'combo-praise',chain,mult,text:praise});
     const first=!this.collectedSet.has(item.id);
     if(first){
@@ -208,7 +218,7 @@ export class ExploreFun{
     }
     this.dirty=true;
     events.push(...this.badgeEvents());
-    return {points,bonus,rarity,chain,mult,doubled,first,events};
+    return {points,bonus,rarity,chain,mult,doubled,first,power,events};
   }
   // En gömd skatt hittas (både de gamla hemligheterna och de nya skatterna).
   treasure(id){
@@ -229,6 +239,17 @@ export class ExploreFun{
     this.state.stats.turboMeters+=meters;this.dirty=true;
     return this.badgeEvents();
   }
+  // En förmåga plockas upp. Rakett, stövlar och sköld bor i PowerState, stjärnan i boosters; klocka och bomb hanteras av spelet.
+  applyPower(kind){
+    const def=POWERUPS[kind];
+    if(kind==='star'){for(const k of ['magnet','double','freeze'])this.boosters[k]=Math.max(this.boosters[k],def.seconds);}
+    else if(kind==='clock'){this.combo.left=this.combo.span;}
+    else this.power.grant(kind);
+    this.dirty=true;
+    return {type:'power',kind,label:def.label,text:def.text,seconds:def.seconds};
+  }
+  noteFlash(){this.state.stats.flashDone++;this.dirty=true;return this.badgeEvents();}
+  noteTempo(level){if(level>this.state.stats.tempoLevel){this.state.stats.tempoLevel=level;this.dirty=true;}return this.badgeEvents();}
   // Incheckning hos MusicPartner: en gång per dag.
   checkIn(){
     const s=this.state,day=this.rollDay();if(s.checkinDay===day)return {first:false,events:[]};
@@ -250,6 +271,7 @@ export class ExploreFun{
       level:lv.level,title:lv.title,levelProgress:lv.progress,levelFrom:lv.from,levelTo:lv.to,xp:lv.xp,
       combo:{chain:this.combo.chain,mult:multiplierFor(this.combo.chain),left:this.combo.left,span:this.combo.span,frozen:this.boosters.freeze>0},
       boosters:Object.entries(this.boosters).filter(([,v])=>v>0).map(([kind,left])=>({kind,label:BOOSTERS[kind].label,left})),
+      power:this.power.snapshot(),
       daily:{day,count:s.dayCount,goal:goalForDay(day),done:s.dayDone,streak:this.streakNow(),best:s.bestStreak},
       album:ALBUM_AREAS.map(a=>({id:a.id,name:a.name,found:this.areaCount.get(a.id)||0,total:this.areaTotals.get(a.id)||0,done:s.areasDone.includes(a.id),bonus:a.bonus})),
       treasures:{found:s.treasures.length,total:this.treasureTotal},

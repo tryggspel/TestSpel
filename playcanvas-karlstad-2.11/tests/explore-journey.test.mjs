@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {CityNavigation} from '../city-missions.mjs';
 import {CityJourney,JOURNEY_KEY,RESPAWN} from '../journey-rules.mjs';
 import {rarityFor,FUN_KEY,levelFor} from '../explore-fun.mjs';
+import {powerFor} from '../powerups.mjs';
 import {pickCursed} from '../halloween.mjs';
 import {stockholmDay} from '../daily-challenge.mjs';
 import {TREASURES,BUS_NETWORK} from '../explore-places.mjs';
@@ -13,7 +14,7 @@ const storage=()=>{const m=new Map();return {getItem:k=>m.get(k)??null,setItem:(
 const FAR={x:5000,z:5000};
 const clean=(store=storage())=>{const g=new CityJourney(nav,mall,portals,store);g.rush.start('clean');g.drainEvents();return g;};
 const day=()=>stockholmDay(new Date());
-const commonItems=g=>g.items.filter(t=>!t.y&&rarityFor(t.id,day())==='common'&&!/^(kil|marieberg)-/.test(t.id));
+const commonItems=g=>g.items.filter(t=>!t.y&&rarityFor(t.id,day())==='common'&&!powerFor(t.id,day())&&!/^(kil|marieberg)-/.test(t.id));
 const step=(g,p,dt=.1)=>{g.step(dt,{x:p.x,z:p.z,y:p.y??1.68},{x:0,z:-1});return g.drainEvents();};
 
 test('fler termosar långt ut och inne i Mitt i City, utan att de gamla id:na rubbas',()=>{
@@ -68,7 +69,7 @@ test('trail och zombieläget behåller de gamla reglerna: 25 poäng, ingen kombo
 
 test('rariteter: silver, guld och regnbåge ger mer, och regnbågen en superkraft',()=>{
   const g=clean();
-  const pick=r=>g.items.find(t=>!t.y&&!g.found.has(t.id)&&rarityFor(t.id,day())===r&&!/^(kil|marieberg)-/.test(t.id));
+  const pick=r=>g.items.find(t=>!t.y&&!g.found.has(t.id)&&rarityFor(t.id,day())===r&&!powerFor(t.id,day())&&!/^(kil|marieberg)-/.test(t.id));
   const s=step(g,pick('silver')).find(e=>e.type==='thermos');assert.equal(s.rarity,'silver');assert.equal(s.points,50);
   const gd=step(g,pick('gold')).find(e=>e.type==='thermos');assert.equal(gd.rarity,'gold');assert.equal(gd.points,125,'guld ×5 i kedja 2 (×1)');
   const rb=pick('rainbow');if(!rb){assert.ok(Array.from({length:3000},(_,i)=>'x'+i).some(id=>rarityFor(id,day())==='rainbow'),'regnbåge finns i fördelningen');return;} // inga regnbågstermosar bland dagens

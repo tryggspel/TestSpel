@@ -72,6 +72,8 @@ export function createAudioEngine({
     if(restart){try{t.el.currentTime=0;}catch{}}
     try{const p=t.el.play();p?.catch?.(()=>{});}catch{}
   }
+  // Uppspelningshastighet för ett spår (1 = normal). Tonhöjden hålls där webbläsaren stöder det.
+  function rate(name,r=1){const t=tracks.get(name);if(!t)return;const v=Math.max(.5,Math.min(2,Number(r)||1));try{t.el.preservesPitch=true;t.el.playbackRate=v;}catch{}}
   function stop(name){const t=tracks.get(name);if(!t)return;timers.clear(t.pauseTimer);t.level=0;if(t.gain)t.gain.gain.value=0;else t.el.volume=0;try{t.el.pause();t.el.currentTime=0;}catch{}}
   function setMuted(v){
     muted=!!v;
@@ -91,7 +93,7 @@ export function createAudioEngine({
     }catch{}
   }
   return Object.freeze({
-    context,resume,track,fade,play,stop,level,setMuted,blip,
+    context,resume,track,fade,play,stop,level,setMuted,blip,rate,
     get muted(){return muted;},
     get routed(){return [...tracks.values()].every(t=>!!t.gain);},
     snapshot:()=>({context:ctx?.state??'none',muted,routed:[...tracks.values()].every(t=>!!t.gain),levels:Object.fromEntries([...tracks].map(([k,t])=>[k,+t.level.toFixed(3)]))})

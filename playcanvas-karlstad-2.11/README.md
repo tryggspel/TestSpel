@@ -1,4 +1,11 @@
-# Karlstad City — 2.14.2 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+# Karlstad City — 2.15.0 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+
+> **2.15.0 — Förmågor, blixtutmaningar, Temporush och kompakt HUD (City Explore)**
+> - **Förmågor.** Ungefär var 24:e termos är ett glittrande märke som byter innehåll varje dag: **raket** (farten dubblas ytterligare, ×4 med turbo, 7 s), **solstjärna** (magnet + dubbla poäng + frusen kedja, 9 s), **hoppstövlar** (hoppar >2× så högt, 25 s, inte inomhus), **kombosköld** (räddar en bruten kedja, högst två), **fikaklocka** (+10 s på utmaning och full kedja) och **sockerbomb** (plockar allt inom 26 m och bygger en lång kedja). Förmågorna syns som orange rutor på radarn. Logik i `powerups.mjs`.
+> - **Blixtutmaningar.** Var 30–55:e sekund dyker ett kort meddelande upp (t.ex. "Hitta 6 termosar på 63 s"), försvinner efter ~3,6 s och lämnar bara en tunn tidslinje i överkanten och en rad i HUD:en. Fem typer (snabbfika, kedja, silverjakt, turbosprint, fyndare). Klarade ger poäng, märke och ibland en förmåga. Logik i `challenges.mjs`.
+> - **Temporush.** Ny knapp i startkortet. Samma stad, men tempot stiger var 15:e sekund (12 nivåer): fart upp till ×1,9, poäng upp till ×4,3 och allt kortare fikaklocka till nästa termos. Missar du klockan tappar du ett liv (3 liv). Snabb plockning ger flytbonus, musiken går fortare och rekordet sparas på enheten. Logik i `tempo-run.mjs`.
+> - **Kompakt HUD.** På mobil (och med **H** på dator) flyttas allt till en smal remsa uppe till vänster: HUD:en täckte tidigare cirka 35 % av stående skärm och täcker nu cirka 8 %. Dagsmål och skattvärme visas bara några sekunder när de ändras.
+> - Nya märken: Fyndare, Blixtsnabb, Rusningstid, Vansinnesfart. 18 nya tester (281 totalt).
 
 > **2.14.2:** Sandgrundsudden är gång- och cykelbana, så buss 2 går nu till **Tingvalla** (id `tingvalla`, kontrollerad fri och nåbar) i stället för ut på udden. Udden nås till fots eller med Ryde.
 
