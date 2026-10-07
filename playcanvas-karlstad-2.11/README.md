@@ -1,4 +1,15 @@
-# Karlstad City — 2.17.1 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+# Karlstad City — 2.18.0 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+
+> **2.18.0 — Orrholmen, vattnet mot Marieberg, Stadsträdgården, Bryggudden och stationen**
+> - **Orrholmen och vattnet.** Nytt område söder om Inre hamn: Tullholmen (operans Bageriet, magasin), Orrholmen med bostadskvarter och Orrholmsparken med skog, utsiktsplats och kiosk, en badplats med brygga, Gamla färjeläget med den gamla färjan, samt två vikar. **Orrholmsviken** (minst 300 m bred) skiljer Orrholmen från Marieberg och Mariebergsskogen, och **Östra viken** ligger öster om Orrholmen. Vattnet är kollisionsyta, mörkare än förut, med skum längs stränderna, vågstreck, bojlinjer (simlinje och farledsmärken), sju segelbåtar, roddbåtar och skyltar som förklarar vad som ligger på andra sidan ("→ ORRHOLMEN · 500 M ÖVER VATTNET", "← MARIEBERG · 400 M ÖVER VATTNET").
+> - **Källa och noggrannhet.** OSM-data för Orrholmen saknas i utdragen (de slutar vid x −427). Östra stranden följer därför den riktiga OSM-stigen **Orrholmsrundan** (id 38161777) och bebyggelsen ligger i OSM-ytan för Orrholmens bostäder (id 38161785); resten är **handritat** efter en Google Maps-bild och stämmer ungefär (±40 m), inte byggnad för byggnad. Filen `data/osm-outer-orrholmen.json` säger det uttryckligen i `source`. Den genereras av `tools/orrholmen/build.mjs`; geometrin delas via `orrholmen-places.mjs`.
+> - **Stadsträdgården.** Parken hade bara en tom gräsyta. Nu: stigar (både egna och de riktiga OSM-stigarna), omkring 130 träd, rosrabatter, en damm, Rosenpergolan, paviljong, fontän, bänkar och trädgårdsmästarens bod.
+> - **Bryggudden och Inre hamn.** Trädäck längs båda kajerna, pollare, bänkar, lyktor, en hamnkran på spetsen, förtöjda segelbåtar, en fiskarkiosk och blommande rabatter längs Hamnparken.
+> - **Tågstationen.** Perrong längs stationshuset, mittperrong, två extra spår med syllar, perrongtak, signaler, stationsklocka och ett gult-vitt tåg på spår 2.
+> - **Nya skatter och termosar.** 13 nya gömda skatter (Bageriets kanelbulle, Utsiktsplatsens kikare, Rosenpergolans gyllene ros, Hamnkranens kaffekopp, Perrongens biljett m.fl.), 68 nya termosar och fyra nya album-områden: **Orrholmen och viken**, **Stadsträdgården**, **Bryggudden** och **Tågstationen**. Alla platser är kontrollerade mot spelets verkliga kollisionskarta och nåbara från Torget (`tools/explore-spots/check.mjs`: 211 platser).
+> - **Platsutmaningar.** Gå in i cirkeln vid Orrholmsudden (**Fyrjakten**), Rosenpergolan (**Rosjakten**), perrongen (**Tåget går!**) eller Bryggudden (**Hamnrundan**) så läggs några termosar ut och en tidslinje startar, samma som blixtutmaningarna. En gång per runda och inte under Temporush.
+> - **Kartan.** En tredje kartvy, **Södra: Orrholmen**, visar bägge vikarna, Orrholmen, Tullholmen, Stadsträdgården och Bryggudden med namn. Vikarna syns även på radarn.
+> - 12 nya tester (306 totalt).
 
 > **2.17.1 — Temporush: banan håller sig till gator och glesnar inte**
 > - **Inga hopp över hinder.** Banan kontrollerar nu hela sträckan mellan två pärlor (var 3:e meter) och en större frizon runt varje pärla, så att den inte längre kan hoppa över smala hinder eller vatten och inte hamnar vid strandkanten.

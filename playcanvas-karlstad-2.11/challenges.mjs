@@ -1,7 +1,7 @@
 // City Explore 2.15: blixtutmaningar. Ett kort meddelande dyker upp, försvinner efter någon sekund och lämnar bara en tunn
 // tidslinje i skärmens överkant, så att staden syns. Idén kommer från uppdragen i Subway Surfers och Crossy Road.
 // Ren logik utan DOM. Tiden räknas bara medan spelet går (dt kommer från spelloopen).
-import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.17.1';
+import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.18.0';
 
 export const FLASH=Object.freeze({firstDelay:[18,32],gap:[28,55],announce:3.4,minLevel:1});
 
@@ -30,6 +30,12 @@ export class FlashChallenges{
     const def=KINDS[kind](Math.max(1,level));this.serial++;this.last=kind;
     this.active={id:'flash-'+this.serial,kind,...def,progress:0,left:def.seconds,span:def.seconds,announce:FLASH.announce};
     return {type:'challenge-start',id:this.active.id,kind,title:def.title,text:def.text,seconds:def.seconds,points:def.points,target:def.target};
+  }
+  // Egen utmaning (till exempel en platsutmaning): titel, text, antal, sekunder och belöning anges av spelet.
+  startCustom({title,text,target,seconds,points}){
+    this.serial++;this.last='site';
+    this.active={id:'flash-'+this.serial,kind:'site',title,text,target,seconds,points,progress:0,left:seconds,span:seconds,announce:FLASH.announce};
+    return {type:'challenge-start',id:this.active.id,kind:'site',title,text,seconds,points,target};
   }
   // Returnerar händelser: challenge-start, challenge-done, challenge-fail.
   tick(dt,{level=1,busy=false}={}){

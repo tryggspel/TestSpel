@@ -2,6 +2,8 @@
 // Koordinater är spelets lokala meter (x öst, z syd). Alla platser är kontrollerade mot spelets verkliga blocked() med
 // minst 1,1 m fritt runt om (termosar) respektive 1,6 m (skatter) och ligger på verkliga OSM-vägar och parkstigar.
 
+import {NEW_TREASURES,NEW_THERMOS} from './orrholmen-places.mjs?v=2.18.0';
+
 // Fler termosar långt ut: stigar och gator i Haga, Inre hamn, Mariebergsskogen, Sandgrundsparken och Klara.
 export const FX_THERMOS=Object.freeze({
   haga:Object.freeze([[349.8,21.7],[407.6,-255.8],[335.6,-304.2],[547.4,-234.6],[568.6,-135],[772.9,1.6],[863.4,65.7],[1006.8,-124.2],[1017,-315],[1161.6,178.3],[783.4,-270.7],[567.3,84.6],[1189,-27.2],[724.3,184.8],[982.4,190.9],[1147.1,-208.1],[1011.5,25.9],[439.5,178.4],[719,-136.3],[866.5,-100.5],[484.8,-23.2],[917.1,-227],[658.8,-312.7],[642.2,-31.2],[848.2,181.5],[1097,93],[445.9,75.1],[1105.2,-87.4],[713.4,88.6],[809.5,-177.7]]),
@@ -10,7 +12,9 @@ export const FX_THERMOS=Object.freeze({
   park:Object.freeze([[-174.1,-464.7],[-226.4,-554.9],[-247.1,-699.5],[-223.9,-753.7],[-96.8,-562],[-43.6,-445.7],[-113.1,-358.8],[-144.6,-619.7],[-107.2,-465.1],[-49.3,-510],[-146.6,-520.3],[-140.8,-412.7],[-248.8,-639.4],[-80.6,-405.5]]),
   klara:Object.freeze([[-238,-0.8],[-267.5,80.4],[-308.2,255.1],[-322.9,158.1],[-265.3,170.8],[-327.2,42.9]]),
   // Mitt i City: [x,z,våningshöjd]
-  mall:Object.freeze([[-108,100,0],[-124,88,0],[-150,100,0],[-148,100,5.4],[-110,108,5.4],[-118,120,5.4]])
+  mall:Object.freeze([[-108,100,0],[-124,88,0],[-150,100,0],[-148,100,5.4],[-110,108,5.4],[-118,120,5.4]]),
+  // 2.18: Orrholmen, Stadsträdgården, Bryggudden och stationen (orrholmen-places.mjs).
+  ...NEW_THERMOS
 });
 
 // Gömda skatter (utöver de sju gamla hemligheterna). Visas som guldtermos inom 30 m, bara i City Explore.
@@ -38,7 +42,8 @@ export const TREASURES=Object.freeze([
   {id:'t-tingvalla',name:"Tingvallas tysta hörn",x:80,z:-207,points:250,hint:"Norr om Torget, i ett kvarter bakom Tingvallagatan."},
   {id:'t-coop',name:'Coops frysdisk',x:-157,z:86,y:0,points:300,hint:'Inne på Mitt i City, där det är kallt och gott.'},
   {id:'t-cervera',name:'Cerveras provhytt',x:-147.5,z:127,y:0,points:300,hint:'Mitt i City, plan 0. Bakom hyllorna.'},
-  {id:'t-clas',name:'Clas Ohlsons verktygshylla',x:-135,z:80,y:5.4,points:400,hint:'Mitt i City, plan 1. Hitta rätt skruv.'}
+  {id:'t-clas',name:'Clas Ohlsons verktygshylla',x:-135,z:80,y:5.4,points:400,hint:'Mitt i City, plan 1. Hitta rätt skruv.'},
+  ...NEW_TREASURES
 ]);
 
 // Ledtrådar till de sju gamla hemligheterna (de nya skatterna har egna 'hint').
@@ -61,7 +66,7 @@ export const JUKEBOX=Object.freeze([
   {id:'arena',label:'Arenalagret',note:'Kort spår, 18 sekunder'}
 ]);
 
-// Fikaalbumet: tretton områden. Varje område har ett antal termosar; att hitta alla ger en samlingsbonus.
+// Fikaalbumet: sjutton områden. Varje område har ett antal termosar; att hitta alla ger en samlingsbonus.
 // Ordningen är avgörande: första träffen gäller.
 export const ALBUM_AREAS=Object.freeze([
   {id:'kil',name:'Kil station',bonus:200},
@@ -76,7 +81,12 @@ export const ALBUM_AREAS=Object.freeze([
   {id:'norr',name:'Tingvallastaden',bonus:350},
   {id:'soder',name:'Södra centrum och stationen',bonus:350},
   {id:'ost',name:'Östra stan',bonus:350},
-  {id:'vast',name:'Västra stan',bonus:350}
+  {id:'vast',name:'Västra stan',bonus:350},
+  // 2.18: ordningen spelar ingen roll här, areaOf() avgör vilket område en plats tillhör.
+  {id:'orrholmen',name:'Orrholmen och viken',bonus:700},
+  {id:'tradgard',name:'Stadsträdgården',bonus:450},
+  {id:'bryggudden',name:'Bryggudden',bonus:400},
+  {id:'station',name:'Tågstationen',bonus:350}
 ]);
 // Område för en termos eller skatt. Id-prefix först (fjärrplatserna och gallerian), sedan läge.
 export function areaOf(t){
@@ -87,6 +97,10 @@ export function areaOf(t){
   if(!Number.isFinite(x)||!Number.isFinite(z))return 'torget';
   if(x<-5000)return 'kil';
   if(x<-440&&z>900)return 'marieberg';
+  if((z>900||(z>850&&x<-150))&&x<=620)return 'orrholmen'; // Tullholmen, Orrholmen, parken och Östra viken
+  if(x>=-105&&x<=8&&z>=402&&z<=692)return 'tradgard';
+  if(x>=235&&x<=475&&z>=405&&z<=650)return 'bryggudden';
+  if(x>=-300&&x<=-130&&z>=280&&z<=350)return 'station';
   if(z<-600)return 'udden';
   if(z<-330)return 'sandgrund';
   if(x>330&&z<250)return 'haga';

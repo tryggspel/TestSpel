@@ -1,38 +1,39 @@
-import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.17.1';
-import {createSouthSigns} from './city-south.js?v=2.17.1';
-import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.17.1';
-import {createZombieAtlases} from './zombie-art.js?v=2.17.1';
-import {FriendlyClerks} from './friendly-clerks.mjs?v=2.17.1';
-import {createFriendlyView} from './friendly-view.js?v=2.17.1';
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.17.1';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.17.1';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.17.1';
-import {CityJourney} from './journey-rules.mjs?v=2.17.1';
-import {createJourneyView} from './journey-view.js?v=2.17.1';
-import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.17.1';
-import {createBoatRide} from './boat-ride.js?v=2.17.1';
-import {createBusRide} from './bus-ride.js?v=2.17.1';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.17.1';
-import {createPostcard} from './challenge-postcard.js?v=2.17.1';
-import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.17.1';
-import {RUSH} from './city-rush.mjs?v=2.17.1';
-import {StampBook} from './city-stamps.mjs?v=2.17.1';
-import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.17.1';
-import {POWERUPS} from './powerups.mjs?v=2.17.1';
-import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.17.1';
-import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.17.1';
-import {fetchLiveBoard} from './bus-quiz.mjs?v=2.17.1';
-import {GhostRun} from './ghost-run.mjs?v=2.17.1';
-import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.17.1';
-import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.17.1';
-import {pedestrianAt} from './pedestrian.mjs?v=2.17.1';
-import {createPedestrianSigns} from './pedestrian-view.js?v=2.17.1';
-import {drawMapLabels} from './city-geography.mjs?v=2.17.1';
-import {createCityIdentity} from './city-identity.js?v=2.17.1';
-import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.17.1';
+import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.18.0';
+import {createSouthSigns} from './city-south.js?v=2.18.0';
+import {createOrrholmenSigns} from './orrholmen.js?v=2.18.0';
+import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.18.0';
+import {createZombieAtlases} from './zombie-art.js?v=2.18.0';
+import {FriendlyClerks} from './friendly-clerks.mjs?v=2.18.0';
+import {createFriendlyView} from './friendly-view.js?v=2.18.0';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.18.0';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.18.0';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.18.0';
+import {CityJourney} from './journey-rules.mjs?v=2.18.0';
+import {createJourneyView} from './journey-view.js?v=2.18.0';
+import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.18.0';
+import {createBoatRide} from './boat-ride.js?v=2.18.0';
+import {createBusRide} from './bus-ride.js?v=2.18.0';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.18.0';
+import {createPostcard} from './challenge-postcard.js?v=2.18.0';
+import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.18.0';
+import {RUSH} from './city-rush.mjs?v=2.18.0';
+import {StampBook} from './city-stamps.mjs?v=2.18.0';
+import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.18.0';
+import {POWERUPS} from './powerups.mjs?v=2.18.0';
+import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.18.0';
+import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.18.0';
+import {fetchLiveBoard} from './bus-quiz.mjs?v=2.18.0';
+import {GhostRun} from './ghost-run.mjs?v=2.18.0';
+import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.18.0';
+import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.18.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.18.0';
+import {createPedestrianSigns} from './pedestrian-view.js?v=2.18.0';
+import {drawMapLabels} from './city-geography.mjs?v=2.18.0';
+import {createCityIdentity} from './city-identity.js?v=2.18.0';
+import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.18.0';
 
-import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.17.1';
-import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.17.1';
+import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.18.0';
+import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.18.0';
 
 export function createLastRound(pc, host) {
   // 2.10: elementuppslag cachas, och HUD-text skrivs bara om när värdet faktiskt ändras.
@@ -52,7 +53,7 @@ export function createLastRound(pc, host) {
   const target = Math.max(0, Math.min(999999, Number(params.get('target')) || 0));
   const olearyLayout = layoutFor(seed, host.origin);
   const navigation = new CityNavigation(host.blocked);
-  const cityGuide=new CityGuidance(navigation),mallGuide=createMallGuidance(cityGuide);let guidance=null,mapWide=false;
+  const cityGuide=new CityGuidance(navigation),mallGuide=createMallGuidance(cityGuide);let guidance=null,mapWide=false,mapSouth=false;
   const guideFor=(p,goal)=>{if(atMarieberg(p)||atKil(p)){const angle=Math.atan2(goal.x-p.x,goal.z-p.z)-Math.atan2(host.camera.forward.x,host.camera.forward.z);return {goal,path:[{x:p.x,z:p.z},goal],next:goal,angle,distance:Math.round(Math.hypot(goal.x-p.x,goal.z-p.z)),turn:atKil(p)?'TILL RETURTÅGET':'TILL RETURBÅTEN',color:'#81e9e3'};}return mallGuide.update(p,goal,host.camera.forward,host.mallWalk?.snapshot());};
   const rounds = {'sista-rundan':new LastRound(olearyLayout,host.blocked),fikapanik:new CityMission('fikapanik',navigation,host.mall,seed),'radda-fikat':new CityMission('radda-fikat',navigation,host.mall,seed)};
   const galleryBox=host.colliders.find(b=>/Sandgrund|Lars Lerin/i.test(b.name));
@@ -324,6 +325,7 @@ export function createLastRound(pc, host) {
   }
   const journeyView=createJourneyView(pc,host,{card,texture,labelTex,primitive,material,fanTex,root},journey,portals,rounds.sandgrund);
   createSouthSigns({card,labelTex},host.colliders);
+  createOrrholmenSigns({card,labelTex});
   const friendlyView=createFriendlyView({card,fanTex,labelTex},journey.clerks);
   const busRide=createBusRide(host,{driverTexture:fanTex('walker','#e79355'),passengerTextures:[fanTex('walker','#e79355'),fanTex('runner','#73b8ad'),fanTex('tank','#a184c1')],
     onTick:dt=>{journey.rush.clock(dt);if(journey.rush.state==='caught')busRide.stop();},
@@ -744,7 +746,7 @@ export function createLastRound(pc, host) {
     if(busRide.active()||boatRide.active()||scenicRide.active())return;
     if (panel === 'map') {game.phase === 'paused' ? resume() : setPanel(null); return;}
     if (panel) return;
-    if (game.phase === 'playing') {game.pause(); host.music?.pause?.();} mapWide=host.player.getPosition().z<-510||host.player.getPosition().z>200||(!isPush()&&game.objective(host.player.getPosition()).z<-510);setPanel('map'); drawMap();
+    if (game.phase === 'playing') {game.pause(); host.music?.pause?.();} mapSouth=host.player.getPosition().z>760&&!atKil(host.player.getPosition());mapWide=mapSouth||host.player.getPosition().z<-510||host.player.getPosition().z>200||(!isPush()&&game.objective(host.player.getPosition()).z<-510);setPanel('map'); drawMap();
   }
   function drawMap() {
     $('mapStatus').replaceChildren();
@@ -761,9 +763,9 @@ export function createLastRound(pc, host) {
     const c = $('roundMap').getContext('2d'), size = 500;
     c.fillStyle = '#142b29'; c.fillRect(0, 0, size, size);
     const pHere=host.player.getPosition(),remote=atKil(pHere)?KIL:atMarieberg(pHere)?MARIEBERG:null;
-    const indoor=mallInside(pHere)&&!mapWide,scale=remote?3.6:indoor?5.6:mapWide?.29:.68,center=remote|| (indoor?{x:-127,z:104}:mapWide?{x:20,z:-120}:{x:0,z:-145});
-    $('mapZoom').textContent=mapWide?'NÄRBILD CENTRUM':'HELA KARLSTAD';
-    $('mapArea').textContent=remote?remote.name.toUpperCase():indoor?'MITT I CITY · PLAN '+(host.mallWalk?.level||0):mapWide?'STADEN · UDDEN · INRE HAMN':'CENTRUM';
+    const indoor=mallInside(pHere)&&!mapWide,scale=remote?3.6:indoor?5.6:mapSouth?.27:mapWide?.29:.68,center=remote|| (indoor?{x:-127,z:104}:mapSouth?{x:-260,z:1150}:mapWide?{x:20,z:-120}:{x:0,z:-145});
+    $('mapZoom').textContent=mapSouth?'NÄRBILD CENTRUM':mapWide?'SÖDRA: ORRHOLMEN':'HELA KARLSTAD';
+    $('mapArea').textContent=remote?remote.name.toUpperCase():indoor?'MITT I CITY · PLAN '+(host.mallWalk?.level||0):mapSouth?'ORRHOLMEN · VIKEN · MARIEBERG':mapWide?'STADEN · UDDEN · INRE HAMN':'CENTRUM';
     const point = (x, z) => [(x - center.x) * scale + size / 2, (z - center.z) * scale + size / 2];
     drawCityGround(c,point,scale);drawCityStreets(c,point,scale,size);
     c.fillStyle = '#52695b';
@@ -783,6 +785,7 @@ export function createLastRound(pc, host) {
     }
     if(!indoor){
       dot(0,0,'TORGET','#f5ecd1',12,15,1,'torget');
+      if(mapSouth)for(const [t,x,z,dx,dy] of [['ORRHOLMEN',-230,1470,-20,0],['ORRHOLMSVIKEN · VATTEN',-540,1050,-70,0],['MARIEBERG',-900,1130,-20,0],['ÖSTRA VIKEN · VATTEN',230,1200,-60,0],['TULLHOLMEN',-130,1000,10,0],['STADSTRÄDGÅRDEN',-45,540,10,0],['BRYGGUDDEN',385,545,10,0],['ORRHOLMSPARKEN',-90,1550,10,0]])dot(x,z,t,t.includes('VATTEN')?'#8fd6e8':'#f4dab0',dx,dy,1);
       const places=mapWide?['mitticity','duvan','ahlens','stadshotellet','domkyrkan','biblioteket','sandgrund','museum','udden','opera',...SOUTH_PLACES.map(p=>p.id)]:['mitticity','radhuset','domkyrkan','biblioteket','sandgrund','duvan','ahlens','stadshotellet','residenset','biskopsgarden','opera'];
       const offsets={mitticity:[-12,-6],duvan:[8,23],ahlens:[-8,10],stadshotellet:[-12,-13],radhuset:[-12,-18],domkyrkan:[10,-1],biblioteket:[10,8],sandgrund:[12,0],museum:[-12,-9],udden:[12,-4]};
       for(const id of places){const place=landmarkDestination(id,host.colliders);if(place&&mapGoal.id!==place.id)dot(place.x,place.z,place.label.replace(' · TVÅ PLAN',''),'#f4dab0',...(offsets[id]||[9,-6]),1,id==='radhuset'?null:id);}
@@ -945,7 +948,7 @@ export function createLastRound(pc, host) {
     journey.rush.busGoal=null;journey.routeMode=mode;if(destination)journey.destination=destination;
     resume();toast('DITT MÅL ÄR VALT','Karta, kompass och cyanpilar visar samma väg.',1.6);
   }
-  $('mapZoom').addEventListener('click',()=>{mapWide=!mapWide;drawMap();});
+  $('mapZoom').addEventListener('click',()=>{if(!mapWide){mapWide=true;mapSouth=false;}else if(!mapSouth)mapSouth=true;else{mapWide=false;mapSouth=false;}drawMap();});
   $('route-event').addEventListener('click',()=>chooseRoute('hunt'));
   $('route-bus').addEventListener('click',()=>chooseRoute('bus'));
   $('route-sun').addEventListener('click',()=>chooseRoute('sun'));

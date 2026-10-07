@@ -1,18 +1,19 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.17.1';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.17.1';
-import {CityMission} from './city-missions.mjs?v=2.17.1';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.17.1';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.17.1';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.17.1';
-import {CITY_STREETS} from './city-streets.mjs?v=2.17.1';
-import {pedestrianAt} from './pedestrian.mjs?v=2.17.1';
-import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.17.1';
-import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.17.1';
-import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.17.1';
-import {streetDistance,streetCovered} from './street-index.mjs?v=2.17.1';
-import {FlashChallenges} from './challenges.mjs?v=2.17.1';
-import {TempoRun} from './tempo-run.mjs?v=2.17.1';
-import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.17.1';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.18.0';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.18.0';
+import {CityMission} from './city-missions.mjs?v=2.18.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.18.0';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.18.0';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.18.0';
+import {CITY_STREETS} from './city-streets.mjs?v=2.18.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.18.0';
+import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.18.0';
+import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.18.0';
+import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.18.0';
+import {streetDistance,streetCovered} from './street-index.mjs?v=2.18.0';
+import {SITE_CHALLENGES} from './orrholmen-places.mjs?v=2.18.0';
+import {FlashChallenges} from './challenges.mjs?v=2.18.0';
+import {TempoRun} from './tempo-run.mjs?v=2.18.0';
+import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.18.0';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
@@ -82,7 +83,7 @@ export class CityJourney extends CityMission {
     this.fun=new ExploreFun({storage,items:this.items,treasureIds:[...this.secrets.map(s=>s.id),...this.treasures.map(t=>t.id)],stopIds:this.busNetwork.filter(s=>!s.hub).map(s=>s.id),xp:this.lifetime});
     this.lastStep=null;this.foundAt=new Map();this.lastRespawn=0;this.itemById=new Map(this.items.map(t=>[t.id,t]));this.rush=new CityRush(this);
     this.flash=new FlashChallenges({seed:1});this.tempo=new TempoRun(storage);
-    this.dyn=[];this.dynSerial=0;this.dynRnd=seededRandom(hashSeed('dyn'));this.lastSupply=0;this.lastForward={x:0,z:-1};this.helper={active:false,x:0,z:0,target:null,t:0,cool:0};
+    this.sitesDone=new Set();this.activeSite=null;this.dyn=[];this.dynSerial=0;this.dynRnd=seededRandom(hashSeed('dyn'));this.lastSupply=0;this.lastForward={x:0,z:-1};this.helper={active:false,x:0,z:0,target:null,t:0,cool:0};
   }
   progress(){return {version:1,balance:this.balance,lifetime:this.lifetime,energy:this.energy,health:this.health,found:[...this.found].filter(id=>!String(id).startsWith('tp:')),secrets:[...this.secretsFound],treasures:[...this.treasuresFound],cleared:[...this.cleared],postcards:[...this.postcardsFound],position:{...this.position},heading:this.heading,destination:this.destination};}
   applyProgress(v){
@@ -148,7 +149,7 @@ export class CityJourney extends CityMission {
     const from=this.lastStep,sweep=from&&Math.hypot(p.x-from.x,p.z-from.z)<14?from:null;this.lastStep={x:p.x,z:p.z};
     if(fun){
       const t=fun.tick(dt);if(t.lost>=3)this.events.push({type:'combo-lost',chain:t.lost});if(t.saved)this.events.push({type:'shield-save',chain:t.saved});
-      this.tickFlash(dt);this.tickTempo(dt,p);this.tickGhost(dt,p,fun);
+      this.tickFlash(dt);this.tickTempo(dt,p);this.tickGhost(dt,p,fun);this.tickSites(p);
     }
     const reach=fun?fun.pickupRadius():1.65;let taken=0;
     for(const item of this.items){
@@ -197,6 +198,7 @@ export class CityJourney extends CityMission {
     this.events.push({type:'thermos',points:r.points+extra,chain:r.chain,mult:r.mult,rarity:r.rarity,first:r.first,doubled:r.doubled,lucky:r.lucky,fun:true,x:item.x,z:item.z,y:item.y||0,id:item.id,gagata,power:r.power});
     for(const e of r.events)this.events.push(e);
     this.reward(r.points+r.bonus+extra);
+    if(item.site&&this.activeSite?.def.id===item.site)for(const e of this.flash.bump('site',1))this.handleFlash(e);
     for(const e of this.flash.noteThermos({chain:r.chain,rarity:r.rarity,power:!!r.power}))this.handleFlash(e);
     if(r.power==='clock'){this.flash.extend(POWER.clockSeconds);this.tempo.extend(8);}
     if(!blast){
@@ -219,6 +221,7 @@ export class CityJourney extends CityMission {
   // Blixtutmaningar: händelser från FlashChallenges. Klarade ger poäng, märken och ibland en förmåga.
   handleFlash(e){
     this.events.push(e);
+    if((e.type==='challenge-done'||e.type==='challenge-fail')&&e.kind==='site')this.endSite();
     if(e.type!=='challenge-done')return;
     this.reward(e.points);
     for(const b of this.fun.noteFlash())this.events.push(b);
@@ -382,6 +385,24 @@ export class CityJourney extends CityMission {
     });
     this.pruneDynamic();
   }
+  // Platsutmaningar (Orrholmen, Stadsträdgården, stationen, Bryggudden): gå in i cirkeln så läggs några termosar ut och tiden går.
+  tickSites(p){
+    if(this.tempo.running||this.flash.active||this.activeSite||((p.y??1.68)-1.68)>.6)return;
+    for(const def of SITE_CHALLENGES){
+      if(this.sitesDone.has(def.id)||Math.hypot(p.x-def.x,p.z-def.z)>def.radius)continue;
+      this.startSite(def);break;
+    }
+  }
+  startSite(def){
+    this.sitesDone.add(def.id);
+    const items=def.points.map(([x,z],i)=>{const id='site:'+def.id+':'+i,it={id,x,z,dyn:true,site:def.id};this.items.push(it);this.itemById.set(id,it);this.dyn.push(it);this.found.delete(id);return it;});
+    this.activeSite={def,items};
+    this.events.push(this.flash.startCustom({title:def.name,text:def.text+' på '+def.seconds+' s',target:def.points.length,seconds:def.seconds,points:def.reward}));
+  }
+  endSite(){
+    const a=this.activeSite;if(!a)return;this.activeSite=null;
+    for(const it of a.items){const k=this.items.indexOf(it);if(k>=0)this.items.splice(k,1);this.itemById.delete(it.id);const j=this.dyn.indexOf(it);if(j>=0)this.dyn.splice(j,1);this.found.delete(it.id);this.foundAt.delete(it.id);}
+  }
   // Kanelstrålen: alla termosar i en rak, smal linje framför spelaren.
   strip(p,fun){
     const py=(p.y??1.68)-1.68,f=this.lastForward,len=Math.hypot(f.x,f.z)||1,fx=f.x/len,fz=f.z/len;
@@ -427,7 +448,7 @@ export class CityJourney extends CityMission {
     this.flash.reset();const ev=this.tempo.start();for(const e of ev)this.events.push(e);return ev;
   }
   // Ny City Explore-runda: ingen kedja, inga superkrafter, alla termosar tillbaka.
-  newExploreRun(seed=Math.floor(Math.random()*1e6)){this.lastStep=null;this.lastRespawn=0;this.foundAt.clear();this.fun.newRun();this.flash.seed=seed;this.flash.reset();this.tempo.reset();this.dropPearls?.(true);this.course=null;}
+  newExploreRun(seed=Math.floor(Math.random()*1e6)){this.lastStep=null;this.lastRespawn=0;this.foundAt.clear();this.fun.newRun();this.flash.seed=seed;this.flash.reset();this.tempo.reset();this.dropPearls?.(true);this.course=null;this.endSite?.();this.sitesDone?.clear();}
   // Närmaste ofunna skatt på samma våning, för hett/kallt-mätaren.
   nearestHidden(p){
     const py=(p.y??1.68)-1.68;let best=null,bd=Infinity;

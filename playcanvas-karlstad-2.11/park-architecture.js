@@ -1,6 +1,6 @@
-import {ComicMesh} from './city-architecture.js?v=2.17.1';
-import {PENINSULA_SHORE,PARK_PATHS,PARK_GARDENS,PARK_PIERS} from './city-sites.mjs?v=2.17.1';
-import {peninsulaBanks,waterBlocked} from './park-space.mjs?v=2.17.1';
+import {ComicMesh} from './city-architecture.js?v=2.18.0';
+import {PENINSULA_SHORE,PARK_PATHS,PARK_GARDENS,PARK_PIERS} from './city-sites.mjs?v=2.18.0';
+import {peninsulaBanks,waterBlocked} from './park-space.mjs?v=2.18.0';
 
 export function createParkArchitecture(pc,app){
   const mat=new pc.StandardMaterial();mat.useLighting=false;mat.diffuse.set(0,0,0);mat.emissive.set(1,1,1);mat.emissiveVertexColor=true;mat.update();

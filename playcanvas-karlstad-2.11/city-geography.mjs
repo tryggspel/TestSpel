@@ -1,15 +1,16 @@
-import {VASTRA_BRON} from './city-water.mjs?v=2.17.1';
-import {PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.17.1';
-import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.17.1';
-import {PHOTO_REFERENCE_IDS} from './photo-reference-pass3.mjs?v=2.17.1';
+import {VASTRA_BRON} from './city-water.mjs?v=2.18.0';
+import {PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.18.0';
+import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.18.0';
+import {PHOTO_REFERENCE_IDS} from './photo-reference-pass3.mjs?v=2.18.0';
 // One coordinate system for buildings, signs, the street mesh and the player map.
-export {CITY_STREETS} from './city-streets.mjs?v=2.17.1';
-import {CITY_STREETS} from './city-streets.mjs?v=2.17.1';
-import {MUSEUM_BUILDING,PENINSULA_SHORE,PARK_PATHS,PARK_PIERS} from './city-sites.mjs?v=2.17.1';
-import {MALL_ENTRANCES,MALL_CORRIDORS} from './mall-space.mjs?v=2.17.1';
-import {EXT_BUILDINGS,SOUTH_STREETS,RAIL_LINES} from './city-south-data.mjs?v=2.17.1';
-import {SOUTH_IDS,SOUTH_PLACES} from './city-south-space.mjs?v=2.17.1';
-import {drawSouthWater} from './city-south.js?v=2.17.1';
+export {CITY_STREETS} from './city-streets.mjs?v=2.18.0';
+import {CITY_STREETS} from './city-streets.mjs?v=2.18.0';
+import {MUSEUM_BUILDING,PENINSULA_SHORE,PARK_PATHS,PARK_PIERS} from './city-sites.mjs?v=2.18.0';
+import {MALL_ENTRANCES,MALL_CORRIDORS} from './mall-space.mjs?v=2.18.0';
+import {EXT_BUILDINGS,SOUTH_STREETS,RAIL_LINES} from './city-south-data.mjs?v=2.18.0';
+import {SOUTH_IDS,SOUTH_PLACES} from './city-south-space.mjs?v=2.18.0';
+import {drawSouthWater} from './city-south.js?v=2.18.0';
+import {BAY_WEST,BAY_EAST} from './orrholmen-places.mjs?v=2.18.0';
 export const CITY_ORIGIN=Object.freeze({lat:59.380767,lon:13.50295});
 export function cityPoint(lon,lat){return {x:(lon-CITY_ORIGIN.lon)*111320*Math.cos(CITY_ORIGIN.lat*Math.PI/180),z:-(lat-CITY_ORIGIN.lat)*110540};}
 export const LANDMARKS=Object.freeze([
@@ -137,6 +138,8 @@ export function drawCityStreets(c,point,scale,size=500){
 }
 export function drawCityGround(c,point,scale){
   c.save();drawSouthWater(c,point);
+  // 2.18: Orrholmsviken och Östra viken på kartan och radarn.
+  c.fillStyle='#2f91a5';for(const bay of [BAY_WEST,BAY_EAST]){c.beginPath();bay.forEach((q,i)=>i?c.lineTo(...point(...q)):c.moveTo(...point(...q)));c.closePath();c.fill();}
   for(const [x,z,w,d,col] of [[-836,1286,68,70,'#6f915b'],[-10583.24-65,-13678.36-45,130,90,'#6f915b'],[-10583.24-53,-13678.36-4,106,24,'#b6b7a0'],[-10583.24-21,-13678.36-22,42,14,'#506151']]){const a=point(x,z);c.fillStyle=col;c.fillRect(...a,w*scale,d*scale);}
   const [x,z]=point(-500,-950),[ex,ez]=point(240,-320);c.fillStyle='#286573';c.fillRect(x,z,ex-x,ez-z);
   c.fillStyle='#6f915b';c.beginPath();PENINSULA_SHORE.forEach((p,i)=>i?c.lineTo(...point(...p)):c.moveTo(...point(...p)));c.closePath();c.fill();
