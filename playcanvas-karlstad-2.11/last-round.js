@@ -1,38 +1,38 @@
-import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.15.0';
-import {createSouthSigns} from './city-south.js?v=2.15.0';
-import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.15.0';
-import {createZombieAtlases} from './zombie-art.js?v=2.15.0';
-import {FriendlyClerks} from './friendly-clerks.mjs?v=2.15.0';
-import {createFriendlyView} from './friendly-view.js?v=2.15.0';
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.15.0';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.15.0';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.15.0';
-import {CityJourney} from './journey-rules.mjs?v=2.15.0';
-import {createJourneyView} from './journey-view.js?v=2.15.0';
-import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.15.0';
-import {createBoatRide} from './boat-ride.js?v=2.15.0';
-import {createBusRide} from './bus-ride.js?v=2.15.0';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.15.0';
-import {createPostcard} from './challenge-postcard.js?v=2.15.0';
-import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.15.0';
-import {RUSH} from './city-rush.mjs?v=2.15.0';
-import {StampBook} from './city-stamps.mjs?v=2.15.0';
-import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.15.0';
-import {POWERUPS} from './powerups.mjs?v=2.15.0';
-import {tempoName,TEMPO} from './tempo-run.mjs?v=2.15.0';
-import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.15.0';
-import {fetchLiveBoard} from './bus-quiz.mjs?v=2.15.0';
-import {GhostRun} from './ghost-run.mjs?v=2.15.0';
-import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.15.0';
-import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.15.0';
-import {pedestrianAt} from './pedestrian.mjs?v=2.15.0';
-import {createPedestrianSigns} from './pedestrian-view.js?v=2.15.0';
-import {drawMapLabels} from './city-geography.mjs?v=2.15.0';
-import {createCityIdentity} from './city-identity.js?v=2.15.0';
-import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.15.0';
+import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.16.0';
+import {createSouthSigns} from './city-south.js?v=2.16.0';
+import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.16.0';
+import {createZombieAtlases} from './zombie-art.js?v=2.16.0';
+import {FriendlyClerks} from './friendly-clerks.mjs?v=2.16.0';
+import {createFriendlyView} from './friendly-view.js?v=2.16.0';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.16.0';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.16.0';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.16.0';
+import {CityJourney} from './journey-rules.mjs?v=2.16.0';
+import {createJourneyView} from './journey-view.js?v=2.16.0';
+import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.16.0';
+import {createBoatRide} from './boat-ride.js?v=2.16.0';
+import {createBusRide} from './bus-ride.js?v=2.16.0';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.16.0';
+import {createPostcard} from './challenge-postcard.js?v=2.16.0';
+import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.16.0';
+import {RUSH} from './city-rush.mjs?v=2.16.0';
+import {StampBook} from './city-stamps.mjs?v=2.16.0';
+import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.16.0';
+import {POWERUPS} from './powerups.mjs?v=2.16.0';
+import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.16.0';
+import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.16.0';
+import {fetchLiveBoard} from './bus-quiz.mjs?v=2.16.0';
+import {GhostRun} from './ghost-run.mjs?v=2.16.0';
+import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.16.0';
+import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.16.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.16.0';
+import {createPedestrianSigns} from './pedestrian-view.js?v=2.16.0';
+import {drawMapLabels} from './city-geography.mjs?v=2.16.0';
+import {createCityIdentity} from './city-identity.js?v=2.16.0';
+import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.16.0';
 
-import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.15.0';
-import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.15.0';
+import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.16.0';
+import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.16.0';
 
 export function createLastRound(pc, host) {
   // 2.10: elementuppslag cachas, och HUD-text skrivs bara om när värdet faktiskt ändras.
@@ -562,6 +562,20 @@ export function createLastRound(pc, host) {
     for(const x of s.power)parts.push(x.left>0?x.label+' '+Math.ceil(x.left)+' S':x.label);
     return parts.join(' · ');
   };
+  // Stor riktningspil i Temporush. Uppdateras varje bildruta så att den följer med när man svänger i hög fart.
+  let arrowDist=-1,arrowHint='',arrowCls='';
+  function updateTempoArrow(p){
+    const el=$('tempoArrow');if(!el)return;
+    const tr=journey.tempo,on=cleanExplore()&&tr.running&&!!tr.target&&game.phase==='playing'&&!panel;
+    if(!on){if(!el.hidden)el.hidden=true;return;}
+    const info=arrowInfo(p,host.camera.forward,tr.target);if(!info)return;
+    if(el.hidden)el.hidden=false;
+    $('tempoArrowIcon').style.transform='rotate('+(-info.angle).toFixed(1)+'deg)';
+    const d=Math.round(info.distance);if(d!==arrowDist){arrowDist=d;$('tempoArrowDist').textContent=d+' M';}
+    if(info.hint!==arrowHint){arrowHint=info.hint;$('tempoArrowHint').textContent=info.hint;}
+    const ratio=tr.deadline>0?tr.left/tr.deadline:1,cls=(info.ahead?'ahead ':info.behind?'behind ':'')+(ratio<.3?'urgent':'');
+    if(cls!==arrowCls){arrowCls=cls;el.className=cls;}
+  }
   function updateFlashAndTempo(){
     const fl=journey.flash.snapshot(),tr=journey.tempo,on=cleanExplore()&&game.phase==='playing'&&!panel;
     const showFlash=on&&!!fl&&!tr.running;
@@ -1021,7 +1035,7 @@ export function createLastRound(pc, host) {
       note(chainFreq(event.chain));if(event.rarity!=='common')setTimeout(()=>note(chainFreq(event.chain)*1.5,'sine',.32,.05),70);
       journeyView.burst(event.x,event.y||0,event.z,event.rarity);
       const rar=RARITY[event.rarity].label;
-      $('journeyPickupToast').textContent='+'+event.points+(event.chain>=2?' · KOMBO '+event.chain+(event.mult>1?' (×'+event.mult+')':''):'')+(rar?' · '+rar:'')+(event.gagata?' · GÅGATSFIKA!':'')+(event.doubled?' · DUBBLA!':'')+(lastTempoPick?(lastTempoPick.flow?' · FLYT!':'')+(lastTempoPick.mult>1?' · TEMPO ×'+lastTempoPick.mult.toFixed(1):''):'');lastTempoPick=null;
+      $('journeyPickupToast').textContent='+'+event.points+(event.chain>=2?' · KOMBO '+event.chain+(event.mult>1?' (×'+event.mult+')':''):'')+(rar?' · '+rar:'')+(event.gagata?' · GÅGATSFIKA!':'')+(event.doubled?' · DUBBLA!':'')+(event.lucky?' · LYCKOÄGG ×3':'')+(lastTempoPick?(lastTempoPick.flow?' · FLYT!':'')+(lastTempoPick.mult>1?' · TEMPO ×'+lastTempoPick.mult.toFixed(1):''):'');lastTempoPick=null;
       $('journeyPickupToast').dataset.rarity=event.rarity;
     }else{
       sound('energy');$('journeyPickupToast').textContent='+'+event.points+' KAFFEPOÄNG · +15 SOL'+(event.gagata?' · GÅGATSFIKA!':'')+(event.chain>0&&event.chain%5===0?' · FIKAKEDJA!':'');$('journeyPickupToast').dataset.rarity='common';
@@ -1038,11 +1052,13 @@ export function createLastRound(pc, host) {
     'booster':(event,now)=>{fanfare(event.label+'!',event.text+' '+event.seconds+' sekunder.',2.6,'energy');},
     'power':(event,now)=>{sound('win');[659.25,880,1174.66].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.2,.07),i*70));fanfare(event.label+'!',event.text+(event.seconds?' '+event.seconds+' sekunder.':''),2.2,'energy');},
     'bomb':(event,now)=>{sound('boss');fanfare('SOCKERBOMB · '+event.count+' TERMOSAR','Kedjan rusar iväg!',1.8,'chain');},
+    'strip':(event,now)=>{sound('chain');fanfare('KANELSTRÅLE · '+event.count+' TERMOSAR','Rakt fram!',1.6,'chain');},
+    'rain':(event,now)=>{sound('energy');fanfare('BÖNREGN!',event.count+' termosar runt dig. Plocka!',1.8,'energy');},
     'shield-save':(event,now)=>{sound('capture');setPickup('KOMBOSKÖLDEN RÄDDADE DIN KEDJA · '+event.chain+' I RAD',now,2000,'silver');},
     'challenge-start':(event,now)=>{sound('start');showBanner('BLIXTUTMANING',event.title,event.text+' · +'+event.points+' P','flash');},
     'challenge-done':(event,now)=>{fanfare('UTMANING KLAR! +'+event.points,event.title+' på '+event.seconds+' sekunder.',2.2,'win');},
     'challenge-fail':(event,now)=>{sound('bump');setPickup('UTMANINGEN GICK UT · '+event.title+' '+event.progress+'/'+event.target,now,1800);},
-    'tempo-start':(event,now)=>{showBanner('TEMPORUSH','TEMPO 1','Plocka nästa termos innan klockan går ut. Tempot stiger var 15:e sekund.','tempo');},
+    'tempo-start':(event,now)=>{showBanner('TEMPORUSH','TEMPO 1','Följ pilen och ljusstrålen till nästa termos innan klockan går ut. Tempot stiger var 15:e sekund.','tempo');},
     'tempo-level':(event,now)=>{sound('boss');showBanner('TEMPO '+event.level,event.name,'Fart ×'+event.speed.toFixed(2)+' · poäng ×'+event.mult.toFixed(1),'tempo');host.music?.tempo?.(1+.03*(event.level-1));},
     'tempo-miss':(event,now)=>{sound('bump');damageFlash=.3;setPickup(event.lives>0?'FIKAKLOCKAN GICK UT · '+event.lives+' LIV KVAR':'FIKAKLOCKAN GICK UT',now,1800);},
     'tempo-pick':(event,now)=>{lastTempoPick=event;},
@@ -1131,6 +1147,7 @@ export function createLastRound(pc, host) {
     if(busRide.active()||boatRide.active()||scenicRide.active())return;
     pumpFanfare(now);
     friendlyView.update(p,now,isJourney());
+    updateTempoArrow(p);
     // Do not remove and re-add live render components on every frame.
     for(const [id,v] of actorViews)if(id.startsWith('city-')===isPush()){v.e.enabled=false;v.shadow.enabled=false;}
     for (const a of game.actors) {

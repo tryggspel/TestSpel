@@ -1,9 +1,10 @@
-import {createBusModel} from './transit-art.js?v=2.15.0';
-import {createComicCity} from './comic-city.js?v=2.15.0';
-import {SUN} from './city-ecology.mjs?v=2.15.0';
-import {rarityFor,BOOSTERS} from './explore-fun.mjs?v=2.15.0';
-import {powerFor,POWERUPS,POWER_KINDS} from './powerups.mjs?v=2.15.0';
-import {BUS_NETWORK,MUSIC_OFFICE} from './explore-places.mjs?v=2.15.0';
+import {createBusModel} from './transit-art.js?v=2.16.0';
+import {createComicCity} from './comic-city.js?v=2.16.0';
+import {SUN} from './city-ecology.mjs?v=2.16.0';
+import {rarityFor,BOOSTERS} from './explore-fun.mjs?v=2.16.0';
+import {powerFor,POWERUPS,POWER_KINDS,POWER} from './powerups.mjs?v=2.16.0';
+const POWER_RADAR_RANGE=POWER.radarRange;
+import {BUS_NETWORK,MUSIC_OFFICE} from './explore-places.mjs?v=2.16.0';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
   const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');
@@ -57,7 +58,7 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const treasurePool=journey.treasures.map(t=>({t,e:card('Gömd skatt '+t.name,treasureTexFor(t.points),1.2,1.85,t.x,(t.y||0)+.2,t.z),glow:primitive('skatt-glimt','cylinder',t.x,(t.y||0)+.07,t.z,2.8,.03,2.8,glowMat)}));
   treasurePool.forEach(({e,glow})=>{e.enabled=glow.enabled=false;});
   // 2.15: förmågor. Runda märken i stället för termosar, så att de syns på långt håll: rakett, stjärna, stövlar, sköld, klocka, bomb.
-  const POWER_LABEL={rocket:'RAKET',star:'STJÄRNA',boots:'HOPP',shield:'SKÖLD',clock:'KLOCKA',bomb:'BOMB'};
+  const POWER_LABEL={rocket:'RAKET',star:'STJÄRNA',boots:'HOPP',shield:'SKÖLD',clock:'KLOCKA',bomb:'BOMB',pause:'PAUS',strip:'STRÅLE',rain:'BÖNOR',egg:'ÄGG',ghost:'SPÖKE',radar:'SONAR'};
   function glyph(c,kind,ink){
     c.fillStyle=ink;c.strokeStyle=ink;c.lineWidth=8;c.lineJoin='round';c.lineCap='round';
     if(kind==='rocket'){c.beginPath();c.moveTo(128,44);c.quadraticCurveTo(160,86,152,138);c.lineTo(104,138);c.quadraticCurveTo(96,86,128,44);c.fill();
@@ -68,6 +69,12 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
       c.lineWidth=7;c.beginPath();for(let i=0;i<4;i++){c.moveTo(92+i*26,164);c.lineTo(104+i*26,176);}c.stroke();}
     else if(kind==='shield'){c.beginPath();c.moveTo(128,44);c.lineTo(182,64);c.quadraticCurveTo(184,128,128,176);c.quadraticCurveTo(72,128,74,64);c.closePath();c.fill();
       c.strokeStyle='#fff';c.lineWidth=11;c.beginPath();c.moveTo(102,106);c.lineTo(122,128);c.lineTo(158,84);c.stroke();}
+    else if(kind==='pause'){c.fillRect(92,52,28,118);c.fillRect(136,52,28,118);c.lineWidth=7;c.beginPath();c.arc(128,111,76,0,6.3);c.stroke();}
+    else if(kind==='strip'){c.lineWidth=14;for(let i=0;i<3;i++){c.beginPath();c.moveTo(78,150-i*34);c.lineTo(128,112-i*34);c.lineTo(178,150-i*34);c.stroke();}}
+    else if(kind==='rain'){for(const [x,y,r] of [[84,70,13],[128,52,12],[172,72,13],[100,118,14],[156,126,14],[128,168,13]]){c.beginPath();c.ellipse(x,y,r,r*1.45,.5,0,6.3);c.fill();c.save();c.strokeStyle='#fff8';c.lineWidth=3;c.beginPath();c.moveTo(x-r*.5,y-r*.8);c.lineTo(x+r*.5,y+r*.8);c.stroke();c.restore();}}
+    else if(kind==='egg'){c.beginPath();c.ellipse(128,112,46,62,0,0,6.3);c.fill();c.strokeStyle='#ffd23f';c.lineWidth=9;c.beginPath();for(let i=0;i<6;i++)c.lineTo(86+i*17,i%2?112:134);c.stroke();}
+    else if(kind==='ghost'){c.beginPath();c.moveTo(80,170);c.lineTo(80,100);c.arc(128,98,48,Math.PI,0);c.lineTo(176,170);c.lineTo(160,154);c.lineTo(144,170);c.lineTo(128,154);c.lineTo(112,170);c.lineTo(96,154);c.closePath();c.fill();c.fillStyle='#fff';c.beginPath();c.arc(108,100,10,0,6.3);c.arc(148,100,10,0,6.3);c.fill();c.fillStyle=ink;c.beginPath();c.arc(111,102,5,0,6.3);c.arc(151,102,5,0,6.3);c.fill();}
+    else if(kind==='radar'){c.lineWidth=9;for(const r of [26,50,74]){c.beginPath();c.arc(128,118,r,Math.PI*1.05,Math.PI*1.95);c.stroke();}c.beginPath();c.arc(128,118,10,0,6.3);c.fill();c.beginPath();c.moveTo(128,118);c.lineTo(176,86);c.stroke();}
     else if(kind==='clock'){c.lineWidth=11;c.beginPath();c.arc(128,112,58,0,6.3);c.stroke();c.lineWidth=10;c.beginPath();c.moveTo(128,112);c.lineTo(128,74);c.moveTo(128,112);c.lineTo(156,126);c.stroke();c.beginPath();c.arc(128,112,7,0,6.3);c.fill();}
     else{c.beginPath();c.arc(124,130,50,0,6.3);c.fill();c.lineWidth=9;c.beginPath();c.moveTo(150,92);c.quadraticCurveTo(168,70,184,64);c.stroke();
       c.fillStyle='#ffd23f';c.beginPath();for(let i=0;i<8;i++){const r=i%2?7:16,a=i*Math.PI/4;c.lineTo(188+Math.cos(a)*r,60+Math.sin(a)*r);}c.closePath();c.fill();}
@@ -166,6 +173,13 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const sunPad=primitive('Sola över Karlstad','cylinder',0,.08,0,SUN.radius*2,.025,SUN.radius*2,sunMaterial);
   const sunSign=card('Följ solen',labelTex(['SOLA!','FÖLJ MIG · 2× XP'], '#f4d176','#224838'),2.7,.85,0,2.5,0);
   chaosFlask.enabled=sunPad.enabled=sunSign.enabled=false;
+  // 2.16: ljusstråle vid Temporush-målet, sonarstrålar vid de närmaste termosarna och det vänliga spöket.
+  const beamMat=material('#7fe3ff');beamMat.opacity=.34;beamMat.blendType=pc.BLEND_NORMAL;beamMat.depthWrite=false;beamMat.emissive=new pc.Color(.15,.65,.85);beamMat.update();
+  const sonarMat=material('#6ff0c8');sonarMat.opacity=.3;sonarMat.blendType=pc.BLEND_NORMAL;sonarMat.depthWrite=false;sonarMat.emissive=new pc.Color(.12,.7,.5);sonarMat.update();
+  const beam=primitive('Temporush-fyr','cylinder',0,30,0,.8,60,.8,beamMat),beamRing=primitive('Temporush-ring','cylinder',0,.1,0,3.6,.04,3.6,beamMat);
+  beam.enabled=beamRing.enabled=false;
+  const sonarBeams=Array.from({length:6},()=>{const e=primitive('Sonarstråle','cylinder',0,12,0,.5,24,.5,sonarMat);e.enabled=false;return e;});
+  const ghostTex=powerTex('ghost'),ghostHelper=card('Spöket',ghostTex,1.7,1.7,0,1.4,0);ghostHelper.enabled=false;
   const comicCity=createComicCity(pc,host,draw);
   // MusicPartner på Kungsgatan: orange skylt och ring vid dörren.
   const officeSign=card('MusicPartner',labelTex(['MUSICPARTNER','CHECKA IN · MUSIK · XP'],'#252729','#e78336'),3.2,1.0,MUSIC_OFFICE.x+2.6,.15,MUSIC_OFFICE.z+1.5,true);
@@ -200,6 +214,17 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
       if(e.enabled){e.setPosition(t.x,(t.y||0)+.3+Math.sin(now/380)*.14,t.z);e.setEulerAngles(0,Math.atan2(p.x-t.x,p.z-t.z)*180/Math.PI,Math.sin(now/500)*3);}
       if(glow.enabled){const pulse=1+Math.sin(now/300)*.12;glow.setLocalScale(2.8*pulse,.03,2.8*pulse);}
     });
+    {const tt=roaming&&journey.tempo.running&&journey.tempo.target;
+      beam.enabled=beamRing.enabled=!!tt;
+      if(tt){const pulse=1+Math.sin(now/180)*.18;beam.setPosition(tt.x,(tt.y||0)+30,tt.z);beam.setLocalScale(.8*pulse,60,.8*pulse);beamRing.setPosition(tt.x,(tt.y||0)+.1,tt.z);beamRing.setLocalScale(3.6*pulse,.04,3.6*pulse);}
+      const scan=roaming&&clean&&journey.fun.power.scanning();
+      let n=0;
+      if(scan){const near2=journey.items.filter(t=>!journey.found.has(t.id)&&Math.abs((p.y??1.68)-1.68-(t.y||0))<1.5).map(t=>({t,d:Math.hypot(t.x-p.x,t.z-p.z)})).filter(o=>o.d<POWER_RADAR_RANGE).sort((a,b)=>a.d-b.d).slice(0,sonarBeams.length);
+        for(const o of near2){const e=sonarBeams[n++];e.enabled=true;const pulse=1+Math.sin(now/220+n)*.2;e.setPosition(o.t.x,(o.t.y||0)+12,o.t.z);e.setLocalScale(.5*pulse,24,.5*pulse);}}
+      for(;n<sonarBeams.length;n++)sonarBeams[n].enabled=false;
+      const gh=journey.helper,ghOn=roaming&&clean&&journey.fun.power.ghosting()&&gh.active;
+      ghostHelper.enabled=ghOn;if(ghOn){ghostHelper.setPosition(gh.x,1.5+Math.sin(now/260)*.25,gh.z);ghostHelper.setEulerAngles(0,Math.atan2(p.x-gh.x,p.z-gh.z)*180/Math.PI,Math.sin(now/300)*8);}
+    }
     cursedPool.forEach(({t,e},i)=>{e.enabled=roaming&&!journey.found.has(t.id)&&curse.pending(t.id)&&Math.hypot(t.x-p.x,t.z-p.z)<52;if(e.enabled){e.setPosition(t.x,(t.y||0)+.32+Math.sin(now/260+i)*.18,t.z);e.setEulerAngles(0,Math.atan2(p.x-t.x,p.z-t.z)*180/Math.PI,Math.sin(now/180+i)*7);}});
     secretPool.forEach(({s,e})=>{e.enabled=roaming&&journey.rush.mode!=='trail'&&!journey.secretsFound.has(s.id)&&Math.hypot(p.x-s.x,p.z-s.z)<30;if(e.enabled){e.setPosition(s.x,(s.y??0)+.3+Math.sin(now/400)*.15,s.z);e.setEulerAngles(0,Math.atan2(p.x-s.x,p.z-s.z)*180/Math.PI,0);}});
     portalViews.forEach(v=>{v.e.enabled=v.ring.enabled=roaming&&!journey.rush.peaceful&&(Math.hypot(p.x-v.p.x,p.z-v.p.z)<38||(journey.routeMode==='mission'&&journey.destination===v.id));v.e.setEulerAngles(0,Math.atan2(p.x-v.p.x,p.z-v.p.z)*180/Math.PI,0);});
@@ -237,7 +262,11 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   }
   function radar(c,point,roaming){if(!roaming)return;
     const day=journey.rush.mode==='clean'?journey.fun.day:'';
+    const scanning=day&&journey.fun.power.scanning();
+    const tg=journey.tempo.running?journey.tempo.target:null;
     c.fillStyle='#c994f1';for(const t of journey.items)if(!journey.found.has(t.id)){const [x,y]=point(t.x,t.z);if(x>0&&y>0&&x<256&&y<256){if(day&&powerOf(t.id,day)){c.fillStyle='#ffb347';c.fillRect(x-3.5,y-3.5,7,7);c.fillStyle='#c994f1';}else c.fillRect(x-2,y-2,4,4);}}
+    if(scanning){c.strokeStyle='#6ff0c8';c.globalAlpha=.55;c.lineWidth=2;const ph=(performance.now()/900)%1;const [cx,cy]=point(journey.position.x,journey.position.z);c.beginPath();c.arc(cx,cy,10+ph*70,0,Math.PI*2);c.stroke();c.globalAlpha=1;}
+    if(tg){const [x,y]=point(tg.x,tg.z);c.fillStyle='#7fe3ff';c.beginPath();c.arc(x,y,6,0,Math.PI*2);c.fill();c.strokeStyle='#fff';c.lineWidth=2;c.stroke();}
     c.fillStyle='#ffe18c';if(!journey.rush.peaceful)for(const p of Object.values(portals)){const [x,y]=point(p.x,p.z);c.fillRect(x-5,y-5,10,10);}
     c.fillStyle='#f79b68';for(const s of (journey.rush.peaceful?journey.busNetwork:journey.busStops)){const [x,y]=point(s.x,s.z);c.fillRect(x-4,y-4,8,8);}
     const sun=journey.rush.ecology.sun;if(sun){const [x,y]=point(sun.x,sun.z);c.beginPath();c.arc(x,y,13,0,Math.PI*2);c.fillStyle='#ffdd6680';c.fill();c.strokeStyle='#ffdf71';c.lineWidth=2;c.stroke();}

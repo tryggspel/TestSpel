@@ -1,16 +1,17 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.15.0';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.15.0';
-import {CityMission} from './city-missions.mjs?v=2.15.0';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.15.0';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.15.0';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.15.0';
-import {CITY_STREETS} from './city-streets.mjs?v=2.15.0';
-import {pedestrianAt} from './pedestrian.mjs?v=2.15.0';
-import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.15.0';
-import {POWER,POWER_KINDS} from './powerups.mjs?v=2.15.0';
-import {FlashChallenges} from './challenges.mjs?v=2.15.0';
-import {TempoRun} from './tempo-run.mjs?v=2.15.0';
-import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.15.0';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.16.0';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.16.0';
+import {CityMission} from './city-missions.mjs?v=2.16.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.16.0';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.16.0';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.16.0';
+import {CITY_STREETS} from './city-streets.mjs?v=2.16.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.16.0';
+import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.16.0';
+import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.16.0';
+import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.16.0';
+import {FlashChallenges} from './challenges.mjs?v=2.16.0';
+import {TempoRun} from './tempo-run.mjs?v=2.16.0';
+import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.16.0';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
@@ -18,7 +19,9 @@ export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
 export const RESPAWN=Object.freeze({after:240,minDistance:80,every:2});
 // Temporush: termosarna kommer tillbaka fort, annars tar jakten slut på närliggande termosar.
 export const TEMPO_RESPAWN=Object.freeze({after:45,minDistance:40,every:2});
-const GIFTS=Object.freeze(POWER_KINDS.filter(k=>k!=='clock'&&k!=='bomb'));
+const GIFTS=GIFT_KINDS;
+// Temporush: nya termosar skapas framför spelaren så att det alltid finns något nära att springa mot, även efter en lång runda.
+export const TEMPO_SUPPLY=Object.freeze({want:8,perTick:3,every:.3,baseRadius:70,perLevel:8,maxRadius:150,minAhead:16,keep:90,powerEvery:6,spread:.85});
 
 export const JOURNEY_KEY='karlstad:journey:1';
 const bounded=(v,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max,Number(v))):fallback;
@@ -75,8 +78,9 @@ export class CityJourney extends CityMission {
     this.fun=new ExploreFun({storage,items:this.items,treasureIds:[...this.secrets.map(s=>s.id),...this.treasures.map(t=>t.id)],stopIds:this.busNetwork.filter(s=>!s.hub).map(s=>s.id),xp:this.lifetime});
     this.lastStep=null;this.foundAt=new Map();this.lastRespawn=0;this.itemById=new Map(this.items.map(t=>[t.id,t]));this.rush=new CityRush(this);
     this.flash=new FlashChallenges({seed:1});this.tempo=new TempoRun(storage);
+    this.dyn=[];this.dynSerial=0;this.dynRnd=seededRandom(hashSeed('dyn'));this.lastSupply=0;this.lastForward={x:0,z:-1};this.helper={active:false,x:0,z:0,target:null,t:0,cool:0};
   }
-  progress(){return {version:1,balance:this.balance,lifetime:this.lifetime,energy:this.energy,health:this.health,found:[...this.found],secrets:[...this.secretsFound],treasures:[...this.treasuresFound],cleared:[...this.cleared],postcards:[...this.postcardsFound],position:{...this.position},heading:this.heading,destination:this.destination};}
+  progress(){return {version:1,balance:this.balance,lifetime:this.lifetime,energy:this.energy,health:this.health,found:[...this.found].filter(id=>!String(id).startsWith('tp:')),secrets:[...this.secretsFound],treasures:[...this.treasuresFound],cleared:[...this.cleared],postcards:[...this.postcardsFound],position:{...this.position},heading:this.heading,destination:this.destination};}
   applyProgress(v){
     if(!v||v.version!==1)return;
     this.balance=bounded(v.balance,999999);this.lifetime=bounded(v.lifetime,9999999);this.energy=bounded(v.energy,100,45);this.health=bounded(v.health,100,100)||100;
@@ -132,7 +136,7 @@ export class CityJourney extends CityMission {
   }
   objective(player=this.position){if(atKil(player))return {...KIL,id:'return-train',kind:'landmark',label:'RETURTÅG · KARLSTAD C',radius:8,action:'KLIV OMBORD'};if(atMarieberg(player))return {...MARIEBERG,id:'return-boat',kind:'landmark',label:'RETURBÅT · INRE HAMN',radius:7,action:'KLIV OMBORD'};if(this.rush.peaceful&&this.routeMode==='bus'){const bus=this.nearestBus(player);return {...bus,id:'clean-bus-'+bus.id,kind:'landmark',label:'BUSSHÅLLPLATS · '+bus.name.toUpperCase(),radius:6};}if(this.rush.peaceful&&this.routeMode!=='landmark'){if(this.rush.mode==='trail'){const item=this.items.filter(t=>!this.found.has(t.id)).sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z))[0];if(item)return {...item,kind:'coffee',label:'NÄSTA TERMOS',radius:1.8};}return {...player,id:'explore',kind:'wait',label:'CITY EXPLORE · VÄLJ PLATS PÅ KARTAN',radius:2};}if(this.routeMode==='help'&&!this.rush?.exitReady){const help=this.clerks?.objective();if(help)return help;}const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;if(this.routeMode==='landmark'&&this.landmarkGoal)return this.landmarkGoal.id==='place-mitticity'?mallGoal(player,this.rush.mode==='trail'||this.secretsFound.has(MALL_CACHE.id)):this.landmarkGoal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
   stepExplore(dt,p,f){
-    this.elapsed+=dt;this.position={x:p.x,z:p.z};this.heading=Math.atan2(-f.x,-f.z)*180/Math.PI;
+    this.elapsed+=dt;this.position={x:p.x,z:p.z};this.heading=Math.atan2(-f.x,-f.z)*180/Math.PI;this.lastForward={x:f.x,z:f.z};
     this.actors.forEach(a=>a.active=false);this.pendingAmbush=null;this.rush.clock(dt);
     if(this.rush.state!=='playing')return;
     const fun=this.rush.mode==='clean'?this.fun:null,py=(p.y??1.68)-1.68;
@@ -140,7 +144,7 @@ export class CityJourney extends CityMission {
     const from=this.lastStep,sweep=from&&Math.hypot(p.x-from.x,p.z-from.z)<14?from:null;this.lastStep={x:p.x,z:p.z};
     if(fun){
       const t=fun.tick(dt);if(t.lost>=3)this.events.push({type:'combo-lost',chain:t.lost});if(t.saved)this.events.push({type:'shield-save',chain:t.saved});
-      this.tickFlash(dt);this.tickTempo(dt,p);
+      this.tickFlash(dt);this.tickTempo(dt,p);this.tickGhost(dt,p,fun);
     }
     const reach=fun?fun.pickupRadius():1.65;let taken=0;
     for(const item of this.items){
@@ -178,20 +182,25 @@ export class CityJourney extends CityMission {
   }
   // En termos plockas i City Explore. Poäng, kedja, förmåga, utmaning och Temporush hanteras här på ett ställe.
   takeItem(item,p,fun,{blast=false}={}){
-    const gagata=pedestrianAt(item);
+    const gagata=pedestrianAt(item),dyn=!!item.dyn;
     this.found.add(item.id);this.energy=Math.min(100,this.energy+15);this.foundAt.set(item.id,this.elapsed);
-    const r=fun.pickup(item,{gagata:!!gagata});
+    const r=fun.pickup(item,{gagata:!!gagata,dyn});
     let extra=0;
     if(this.tempo.running){
       const t=this.tempo.pick(r.points);extra=t.extra;
       this.events.push({type:'tempo-pick',mult:t.mult,flow:t.flow,extra:t.extra,picked:this.tempo.picked,score:this.tempo.score});
     }
-    this.events.push({type:'thermos',points:r.points+extra,chain:r.chain,mult:r.mult,rarity:r.rarity,first:r.first,doubled:r.doubled,fun:true,x:item.x,z:item.z,y:item.y||0,id:item.id,gagata,power:r.power});
+    this.events.push({type:'thermos',points:r.points+extra,chain:r.chain,mult:r.mult,rarity:r.rarity,first:r.first,doubled:r.doubled,lucky:r.lucky,fun:true,x:item.x,z:item.z,y:item.y||0,id:item.id,gagata,power:r.power});
     for(const e of r.events)this.events.push(e);
     this.reward(r.points+r.bonus+extra);
     for(const e of this.flash.noteThermos({chain:r.chain,rarity:r.rarity,power:!!r.power}))this.handleFlash(e);
     if(r.power==='clock'){this.flash.extend(POWER.clockSeconds);this.tempo.extend(8);}
-    if(r.power==='bomb'&&!blast)this.blast(item,p,fun);
+    if(!blast){
+      if(r.power==='bomb')this.blast(item,p,fun);
+      else if(r.power==='strip')this.strip(p,fun);
+      else if(r.power==='rain')this.rain(p);
+      else if(r.power==='ghost')this.startGhost(p);
+    }
     return r;
   }
   // Sockerbomben: alla termosar inom radien på samma våning plockas direkt, så att kedjan rusar iväg.
@@ -213,25 +222,108 @@ export class CityJourney extends CityMission {
   }
   tickFlash(dt){
     this.flash.enabled=this.rush.mode==='clean'&&!this.tempo.running;
+    if(this.fun.power.pausing())return;
     for(const e of this.flash.tick(dt,{level:levelFor(this.lifetime).level}))this.handleFlash(e);
   }
   // Temporush: tickar nivåer och fikaklocka, och pekar ut närmaste termos som nästa mål.
   tickTempo(dt,p){
     if(!this.tempo.running)return;
-    for(const e of this.tempo.tick(dt)){
+    this.supplyTempo(dt,p);
+    for(const e of this.tempo.tick(dt,{freeze:this.fun.power.pausing()})){
       this.events.push(e);
       if(e.type==='tempo-level')for(const b of this.fun.noteTempo(e.level))this.events.push(b);
       if(e.type==='tempo-over'){for(const b of this.fun.noteTempo(e.level))this.events.push(b);this.save();}
     }
     if(this.tempo.running&&this.tempo.needTarget)this.pickTempoTarget(p);
   }
+  // Närmaste termos, men en bit framför spelaren väger lättare än en bakom, så att pilen sällan pekar bakåt när man springer fort.
   pickTempoTarget(p){
-    const py=(p.y??1.68)-1.68;let best=null,bd=Infinity;
+    const py=(p.y??1.68)-1.68,f=this.lastForward,fa=Math.atan2(f.x,f.z);let best=null,bs=Infinity,bd=0;
     for(const t of this.items){
       if(this.found.has(t.id)||Math.abs(py-(t.y||0))>=1.5||/^(kil|marieberg)-/.test(t.id))continue;
-      const d=Math.hypot(t.x-p.x,t.z-p.z);if(d<bd){bd=d;best=t;}
+      const dx=t.x-p.x,dz=t.z-p.z,d=Math.hypot(dx,dz);
+      let a=Math.atan2(dx,dz)-fa;while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;
+      const score=d*(1+.6*Math.abs(a)/Math.PI);
+      if(score<bs){bs=score;best=t;bd=d;}
     }
     if(best&&bd<500)this.tempo.setTarget(best,bd);
+  }
+  // Skapar en ny termos (märkt dyn) på en fri plats. Varje N:te är en förmåga. Returnerar posten eller null.
+  spawnDynamic(p,{angle,minD=16,maxD=60,forcePower=false}={}){
+    const rnd=this.dynRnd;
+    for(let tries=0;tries<8;tries++){
+      const a=(angle??0)+(rnd()-.5)*2*TEMPO_SUPPLY.spread,d=minD+rnd()*(maxD-minD);
+      const raw={x:p.x+Math.sin(a)*d,z:p.z+Math.cos(a)*d};
+      if(this.nav.blocked(raw.x,raw.z))continue;
+      const n=this.nav.point(raw);if(Math.hypot(n.x-raw.x,n.z-raw.z)>6)continue;
+      if(this.dyn.some(t=>!this.found.has(t.id)&&Math.hypot(t.x-raw.x,t.z-raw.z)<4))continue;
+      let id='tp:'+(++this.dynSerial);
+      if(forcePower){const day=this.fun.day;for(let k=0;k<400&&!powerFor(id,day);k++)id='tp:'+this.dynSerial+':'+k;}
+      const it={id,x:+raw.x.toFixed(1),z:+raw.z.toFixed(1),dyn:true};
+      this.items.push(it);this.itemById.set(id,it);this.dyn.push(it);this.pruneDynamic();
+      return it;
+    }
+    return null;
+  }
+  pruneDynamic(){
+    if(this.dyn.length<=TEMPO_SUPPLY.keep)return;
+    for(let i=0;i<this.dyn.length&&this.dyn.length>TEMPO_SUPPLY.keep;){
+      const t=this.dyn[i];
+      if(this.found.has(t.id)){this.dyn.splice(i,1);this.found.delete(t.id);this.foundAt.delete(t.id);this.itemById.delete(t.id);const k=this.items.indexOf(t);if(k>=0)this.items.splice(k,1);}
+      else i++;
+    }
+  }
+  // Håll alltid minst några termosar inom räckhåll, framför spelaren.
+  supplyTempo(dt,p){
+    if(this.elapsed-this.lastSupply<TEMPO_SUPPLY.every)return;
+    this.lastSupply=this.elapsed;
+    const py=(p.y??1.68)-1.68;if(py>.6)return;
+    const R=Math.min(TEMPO_SUPPLY.maxRadius,TEMPO_SUPPLY.baseRadius+TEMPO_SUPPLY.perLevel*this.tempo.level);
+    let have=0;for(const t of this.items){if(this.found.has(t.id)||Math.abs(py-(t.y||0))>=1.5)continue;if(Math.hypot(t.x-p.x,t.z-p.z)<=R)have++;}
+    const f=this.lastForward,angle=Math.atan2(f.x,f.z);
+    for(let n=Math.min(TEMPO_SUPPLY.perTick,TEMPO_SUPPLY.want-have);n>0;n--){
+      this.spawned=(this.spawned||0)+1;
+      this.spawnDynamic(p,{angle,minD:TEMPO_SUPPLY.minAhead,maxD:R,forcePower:this.spawned%TEMPO_SUPPLY.powerEvery===0});
+    }
+  }
+  // Kanelstrålen: alla termosar i en rak, smal linje framför spelaren.
+  strip(p,fun){
+    const py=(p.y??1.68)-1.68,f=this.lastForward,len=Math.hypot(f.x,f.z)||1,fx=f.x/len,fz=f.z/len;
+    const hits=this.items.map(t=>{const dx=t.x-p.x,dz=t.z-p.z;return {t,along:dx*fx+dz*fz,side:Math.abs(dx*fz-dz*fx)};})
+      .filter(h=>!this.found.has(h.t.id)&&Math.abs(py-(h.t.y||0))<1.5&&h.along>0&&h.along<=POWER.stripLength&&h.side<=POWER.stripWidth)
+      .sort((a,b)=>a.along-b.along).slice(0,POWER.stripMax);
+    for(const h of hits)this.takeItem(h.t,p,fun,{blast:true});
+    this.events.push({type:'strip',count:hits.length,x:p.x,z:p.z});
+    return hits.length;
+  }
+  // Bönregn: tio termosar skapas i en ring runt spelaren.
+  rain(p){
+    const py=(p.y??1.68)-1.68;if(py>.6)return 0;
+    let n=0;for(let i=0;i<POWER.rainCount*3&&n<POWER.rainCount;i++){
+      const a=this.dynRnd()*Math.PI*2,d=3.5+this.dynRnd()*7;
+      const raw={x:p.x+Math.sin(a)*d,z:p.z+Math.cos(a)*d};
+      if(this.nav.blocked(raw.x,raw.z))continue;const q=this.nav.point(raw);if(Math.hypot(q.x-raw.x,q.z-raw.z)>6)continue;
+      const id='tp:'+(++this.dynSerial),it={id,x:+raw.x.toFixed(1),z:+raw.z.toFixed(1),dyn:true};
+      this.items.push(it);this.itemById.set(id,it);this.dyn.push(it);n++;
+    }
+    this.pruneDynamic();this.events.push({type:'rain',count:n});return n;
+  }
+  // Spöket: ett vänligt spöke flyger till närmaste termos och plockar den, tills tiden är slut.
+  startGhost(p){this.helper={active:true,x:p.x,z:p.z,target:null,t:0,cool:0};}
+  tickGhost(dt,p,fun){
+    const h=this.helper;
+    if(!fun.power.ghosting()){h.active=false;h.target=null;return;}
+    if(!h.active){h.active=true;h.x=p.x;h.z=p.z;h.target=null;h.t=0;}
+    if(!h.target){
+      h.cool-=dt;if(h.cool>0){h.x+=(p.x-h.x)*Math.min(1,dt*4);h.z+=(p.z-h.z)*Math.min(1,dt*4);return;}
+      const py=(p.y??1.68)-1.68;let best=null,bd=POWER.ghostRange;
+      for(const t of this.items){if(this.found.has(t.id)||Math.abs(py-(t.y||0))>=1.5)continue;const d=Math.hypot(t.x-p.x,t.z-p.z);if(d<bd){bd=d;best=t;}}
+      if(best){h.target=best;h.t=0;h.fromX=h.x;h.fromZ=h.z;}else h.cool=.4;
+      return;
+    }
+    h.t+=dt/POWER.ghostFly;const k=Math.min(1,h.t),t=h.target;
+    h.x=h.fromX+(t.x-h.fromX)*k;h.z=h.fromZ+(t.z-h.fromZ)*k;
+    if(k>=1){h.target=null;h.cool=POWER.ghostEvery-POWER.ghostFly>0?POWER.ghostEvery-POWER.ghostFly:.05;if(!this.found.has(t.id))this.takeItem(t,p,fun,{blast:true});}
   }
   startTempo(){
     if(this.rush?.mode!=='clean')return null;

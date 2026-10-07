@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {CityNavigation} from '../city-missions.mjs';
-import {CityJourney,TEMPO_RESPAWN} from '../journey-rules.mjs';
+import {CityJourney,TEMPO_RESPAWN,TEMPO_SUPPLY} from '../journey-rules.mjs';
 import {ExploreFun,rarityFor,TURBO} from '../explore-fun.mjs';
-import {POWERUPS,POWER,POWER_KINDS,PowerState,powerFor} from '../powerups.mjs';
+import {POWERUPS,POWER,POWER_KINDS,GIFT_KINDS,PowerState,powerFor} from '../powerups.mjs';
 import {FlashChallenges,FLASH,FLASH_KINDS} from '../challenges.mjs';
-import {TempoRun,TEMPO,tempoSpeed,tempoPoints,tempoSlack,deadlineFor,tempoName} from '../tempo-run.mjs';
+import {TempoRun,TEMPO,tempoSpeed,tempoPoints,tempoSlack,deadlineFor,tempoName,arrowInfo} from '../tempo-run.mjs';
 import {stockholmDay} from '../daily-challenge.mjs';
 
 const nav=new CityNavigation(),mall={x:-135,z:98};
@@ -25,15 +25,15 @@ const plain=(g,x,z)=>{
 };
 const FAR_AWAY={x:3000,z:3000};
 
-test('förmågor: dagens fördelning är stabil, ungefär 4 % och alla sex typer förekommer',()=>{
+test('förmågor: dagens fördelning är stabil, ungefär 5–6 % och alla tolv typer förekommer',()=>{
   assert.equal(powerFor('t:1:2','2026-10-07'),powerFor('t:1:2','2026-10-07'));
   const n=30000,count=Object.fromEntries(POWER_KINDS.map(k=>[k,0]));let any=0;
   for(let i=0;i<n;i++){const k=powerFor('x'+i,'2026-10-07');if(k){count[k]++;any++;}}
-  assert.ok(any/n>.03&&any/n<.055,'cirka '+POWER.rate/10+' %: '+any/n);
-  for(const k of POWER_KINDS)assert.ok(count[k]>n*.004,k+' förekommer');
+  assert.ok(any/n>.045&&any/n<.07,'cirka '+POWER.rate/10+' %: '+any/n);
+  for(const k of POWER_KINDS)assert.ok(count[k]>n*.002,k+' förekommer');
   let changed=0;for(let i=0;i<2000;i++)if(powerFor('t'+i,'2026-10-07')!==powerFor('t'+i,'2026-10-08'))changed++;
   assert.ok(changed>40,'olika termosar bär förmågor olika dagar');
-  assert.equal(POWER_KINDS.length,6);for(const k of POWER_KINDS){assert.ok(POWERUPS[k].label&&POWERUPS[k].text&&POWERUPS[k].color);}
+  assert.equal(POWER_KINDS.length,12);for(const k of GIFT_KINDS)assert.ok(POWERUPS[k],'gåva finns: '+k);for(const k of POWER_KINDS){assert.ok(POWERUPS[k].label&&POWERUPS[k].text&&POWERUPS[k].color);}
 });
 
 test('PowerState: rakett dubblar farten, stövlar höjer hoppet, skölden räcker en gång',()=>{
@@ -226,4 +226,100 @@ test('Ljudmotorn: tempo ändrar uppspelningshastighet utan att gå utanför grä
   engine.rate('main',1.25);assert.equal(els[0].playbackRate,1.25);assert.equal(els[0].preservesPitch,true);
   engine.rate('main',9);assert.equal(els[0].playbackRate,2);engine.rate('main',0);assert.equal(els[0].playbackRate,1,'ogiltigt värde ger normal fart');
   engine.rate('saknas',1.5);
+});
+
+test('Riktningspil: vinkel, avstånd och text stämmer med kompassens tecken',()=>{
+  const p={x:0,z:0},north={x:0,z:-1};
+  const ahead=arrowInfo(p,north,{x:0,z:-50});assert.equal(Math.round(ahead.distance),50);assert.ok(Math.abs(ahead.angle)<1);assert.equal(ahead.ahead,true);assert.equal(ahead.hint,'RAKT FRAM');
+  const right=arrowInfo(p,north,{x:50,z:0});assert.ok(right.angle<-80&&right.angle>-100,'höger är negativ vinkel: '+right.angle);assert.equal(right.hint,'HÖGER');
+  const left=arrowInfo(p,north,{x:-50,z:0});assert.ok(left.angle>80&&left.angle<100);assert.equal(left.hint,'VÄNSTER');
+  const back=arrowInfo(p,north,{x:0,z:50});assert.equal(back.behind,true);assert.equal(back.hint,'VÄND DIG');assert.ok(Math.abs(Math.abs(back.angle)-180)<1);
+  const turned=arrowInfo(p,{x:1,z:0},{x:50,z:0});assert.ok(Math.abs(turned.angle)<1,'blickar man åt målet är pilen rak');
+  assert.equal(arrowInfo(p,north,null),null);assert.equal(arrowInfo(null,north,{x:1,z:1}),null);
+});
+
+test('Temporush: nya termosar skapas framför spelaren så att det alltid finns något nära',()=>{
+  const g=clean();g.startTempo();
+  const here={x:-19,z:35},fwd={x:0,z:-1};
+  // Tömma allt nära så att försörjningen måste skapa nytt.
+  for(const t of g.items)if(Math.hypot(t.x-here.x,t.z-here.z)<200)g.found.add(t.id);
+  for(let i=0;i<12;i++)g.step(.35,{x:here.x,z:here.z,y:1.68},fwd);g.drainEvents();
+  const R=Math.min(TEMPO_SUPPLY.maxRadius,TEMPO_SUPPLY.baseRadius+TEMPO_SUPPLY.perLevel*g.tempo.level);
+  const near=g.items.filter(t=>!g.found.has(t.id)&&Math.hypot(t.x-here.x,t.z-here.z)<=R);
+  assert.ok(near.length>=TEMPO_SUPPLY.want-1,'minst '+TEMPO_SUPPLY.want+' termosar inom '+R+' m: '+near.length);
+  assert.ok(near.every(t=>t.dyn&&String(t.id).startsWith('tp:')),'bara skapade termosar');
+  const ahead=near.filter(t=>(t.x-here.x)*fwd.x+(t.z-here.z)*fwd.z>0).length;assert.ok(ahead>=near.length*.7,'mest framför spelaren: '+ahead+'/'+near.length);
+  assert.ok(g.tempo.target,'ett mål finns');
+  // plocka en skapad termos: räknas inte in i albumet och sparas inte
+  const it=near[0];g.step(.1,{x:it.x,z:it.z,y:1.68},fwd);g.drainEvents();
+  assert.equal(g.fun.state.collected.includes(it.id),false,'skapade termosar fyller inte albumet');
+  g.save();const saved=JSON.parse(g.storage.getItem('karlstad:journey:1'));assert.equal(saved.found.some(id=>String(id).startsWith('tp:')),false);
+  assert.ok(g.dyn.length<=TEMPO_SUPPLY.keep+TEMPO_SUPPLY.perTick,'listan hålls kort');
+});
+
+test('Temporush: målet väljs helst framför spelaren och var sjätte skapade termos är en förmåga',()=>{
+  const g=clean();g.startTempo();const p={x:-19,z:35};
+  for(const t of g.items)if(Math.hypot(t.x-p.x,t.z-p.z)<300)g.found.add(t.id);
+  const behind={id:'b',x:p.x,z:p.z+20},front={id:'f',x:p.x,z:p.z-28};
+  for(const it of [behind,front]){g.items.push(it);g.itemById.set(it.id,it);}
+  g.lastForward={x:0,z:-1};g.pickTempoTarget(p);assert.equal(g.tempo.target.id,'f','28 m framför slår 20 m bakom');
+  g.found.add('f');g.pickTempoTarget(p);assert.equal(g.tempo.target.id,'b');
+  const h=clean();h.startTempo();const day=h.fun.day;let powers=0;
+  for(let i=0;i<60;i++){h.spawned=i;const it=h.spawnDynamic({x:-19,z:35},{angle:0,minD:20,maxD:90,forcePower:(i+1)%TEMPO_SUPPLY.powerEvery===0});if(it&&powerFor(it.id,day))powers++;}
+  assert.ok(powers>=7,'minst var sjätte bär en förmåga: '+powers);
+});
+
+test('Fikapausen fryser klockan, kedjan och utmaningen men inte nivåerna',()=>{
+  const g=clean();g.startTempo();const p={x:-19,z:35};g.step(.1,p,{x:0,z:-1});g.drainEvents();
+  g.fun.applyPower('pause');assert.equal(g.fun.power.pausing(),true);
+  const left=g.tempo.left,lvl=g.tempo.levelClock;g.fun.combo.hit();const cl=g.fun.combo.left;
+  g.step(.5,p,{x:0,z:-1});g.drainEvents();
+  assert.equal(g.tempo.left,left,'klockan står still');assert.ok(g.tempo.levelClock>lvl,'nivåtiden går');assert.equal(g.fun.combo.left,cl,'kedjan står still');
+  g.fun.power.tick(10);assert.equal(g.fun.power.pausing(),false);g.step(.5,p,{x:0,z:-1});assert.ok(g.tempo.left<left);
+});
+
+test('Lyckoägget ger tre gånger poäng och syns på termos-händelsen',()=>{
+  const g=clean(),a=plain(g,100,-200),b=plain(g,140,-200);
+  const base=step(g,a).find(e=>e.type==='thermos').points;
+  g.fun.combo=new (g.fun.combo.constructor)();g.fun.applyPower('egg');
+  const ev=step(g,b).find(e=>e.type==='thermos');assert.equal(ev.lucky,true);assert.equal(ev.points,base*3);
+});
+
+test('Kanelstrålen plockar en rak linje framför spelaren, inte det som ligger vid sidan eller bakom',()=>{
+  const g=clean(),at={x:-60,z:-300};g.lastForward={x:0,z:-1};
+  const sp=powerItem(g,'strip',at.x,at.z);
+  const line=[1,2,3,4,5].map(i=>plain(g,at.x+(i%2?1:-1),at.z-i*10));
+  const side=plain(g,at.x+25,at.z-20),behind=plain(g,at.x,at.z+20),far=plain(g,at.x,at.z-120);
+  const ev=step(g,at);
+  const e=ev.find(x=>x.type==='strip');assert.ok(e&&e.count>=5);
+  for(const it of line)assert.ok(g.found.has(it.id));
+  assert.equal(g.found.has(side.id),false);assert.equal(g.found.has(behind.id),false);assert.equal(g.found.has(far.id),false);
+  void sp;
+});
+
+test('Bönregn skapar tio termosar runt spelaren som går att plocka',()=>{
+  const g=clean(),at={x:-19,z:35};const rain=powerItem(g,'rain',at.x+2,at.z);
+  const before=g.items.length;const ev=step(g,{x:rain.x,z:rain.z});
+  const r=ev.find(e=>e.type==='rain');assert.ok(r&&r.count>=6,'minst sex av tio fick plats: '+r?.count);
+  assert.equal(g.items.length,before+r.count);
+  const made=g.items.filter(t=>t.dyn);assert.ok(made.every(t=>Math.hypot(t.x-rain.x,t.z-rain.z)<12));
+});
+
+test('Spöket flyger till närmaste termos och plockar den tills tiden är slut',()=>{
+  const g=clean(),at={x:-60,z:-300};
+  const gp=powerItem(g,'ghost',at.x,at.z);
+  const a=plain(g,at.x+15,at.z+5),b=plain(g,at.x-20,at.z+10),far=plain(g,at.x+300,at.z);
+  step(g,at);assert.equal(g.fun.power.ghosting(),true);assert.equal(g.helper.active,true);
+  let taken=0;for(let i=0;i<40;i++){step(g,at,.1);}
+  assert.ok(g.found.has(a.id)&&g.found.has(b.id),'spöket plockade båda');assert.equal(g.found.has(far.id),false,'inte utanför räckvidden');
+  void gp;taken++;
+  g.fun.power.tick(POWERUPS.ghost.seconds+1);step(g,at,.1);assert.equal(g.helper.active,false,'spöket försvinner när tiden är slut');
+});
+
+test('Sonaren är en tidsstyrd förmåga och gåvolistan innehåller de nya',()=>{
+  const p=new PowerState();assert.equal(p.scanning(),false);p.grant('radar');assert.equal(p.scanning(),true);
+  p.grant('ghost');assert.equal(p.ghosting(),true);p.grant('egg');assert.equal(p.scoreMul(),POWER.eggMult);
+  p.tick(30);assert.equal(p.scanning()||p.ghosting()||p.pausing(),false);assert.equal(p.scoreMul(),1);
+  assert.ok(['pause','egg','ghost','radar'].every(k=>GIFT_KINDS.includes(k)));
+  assert.ok(['bomb','strip','rain','clock'].every(k=>!GIFT_KINDS.includes(k)),'direkta plockare ges inte som gåva');
 });

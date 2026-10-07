@@ -3,9 +3,9 @@
 // Idéerna är lånade: kombo och beröm från Candy Crush, regnbågstermosen från Mario Karts frågetecken-lådor,
 // dagsmål och streak från Duolingo och Pokémon GO, hett/kallt från geocaching, album från samlarkort.
 // Ren spellogik utan DOM och rendering, så att allt går att testa. Bara 'clean'-läget (City Explore) använder den.
-import {stockholmDay} from './daily-challenge.mjs?v=2.15.0';
-import {ALBUM_AREAS,areaOf} from './explore-places.mjs?v=2.15.0';
-import {PowerState,powerFor,POWERUPS} from './powerups.mjs?v=2.15.0';
+import {stockholmDay} from './daily-challenge.mjs?v=2.16.0';
+import {ALBUM_AREAS,areaOf} from './explore-places.mjs?v=2.16.0';
+import {PowerState,powerFor,POWERUPS} from './powerups.mjs?v=2.16.0';
 
 export const FUN_KEY='karlstad:fun:1';
 export const BASE_POINTS=25;
@@ -182,23 +182,23 @@ export class ExploreFun{
     if(!Number.isFinite(dt)||dt<=0)return {lost:0};
     for(const k of Object.keys(this.boosters))if(this.boosters[k]>0)this.boosters[k]=Math.max(0,this.boosters[k]-dt);
     this.power.tick(dt);
-    const lost=this.combo.tick(dt,this.boosters.freeze>0);
+    const lost=this.combo.tick(dt,this.boosters.freeze>0||this.power.pausing());
     // Kombosköld: en kedja på 2 eller mer räddas en gång och får tillbaka drygt halva tiden.
     if(lost>=2&&this.power.useShield()){this.combo.chain=lost;this.combo.left=this.combo.span*.6;return {lost:0,saved:lost};}
     return {lost};
   }
   // En termos plockas upp. Returnerar poäng, bonus och händelser; spelet delar ut poängen (reward) och skickar vidare händelserna.
-  pickup(item,{gagata=false}={}){
+  pickup(item,{gagata=false,dyn=false}={}){
     const day=this.rollDay(),s=this.state,events=[];
     const power=powerFor(item.id,day),rarity=power?'common':rarityFor(item.id,day),chain=this.combo.hit(this.windowFor()),mult=multiplierFor(chain),doubled=this.boosters.double>0;
-    const points=Math.round(BASE_POINTS*RARITY[rarity].mult*mult*(doubled?2:1))+(gagata?10:0);
+    const lucky=this.power.scoreMul()>1,points=Math.round(BASE_POINTS*RARITY[rarity].mult*mult*(doubled?2:1)*this.power.scoreMul())+(gagata?10:0);
     let bonus=0;
     s.stats.thermos++;this.run++;if(rarity!=='common')s.stats[rarity]++;
     if(chain>s.bestChain)s.bestChain=chain;
     if(rarity==='rainbow'){const kind=boosterFor(item.id,day);this.activate(kind);events.push({type:'booster',kind,label:BOOSTERS[kind].label,text:BOOSTERS[kind].text,seconds:BOOSTERS[kind].seconds});}
     if(power){s.stats.powerups++;events.push(this.applyPower(power));}
     const praise=praiseFor(chain);if(praise)events.push({type:'combo-praise',chain,mult,text:praise});
-    const first=!this.collectedSet.has(item.id);
+    const first=!dyn&&!this.collectedSet.has(item.id);
     if(first){
       this.collectedSet.add(item.id);s.collected.push(item.id);
       const area=this.areaById.get(item.id);
@@ -218,7 +218,7 @@ export class ExploreFun{
     }
     this.dirty=true;
     events.push(...this.badgeEvents());
-    return {points,bonus,rarity,chain,mult,doubled,first,power,events};
+    return {points,bonus,rarity,chain,mult,doubled,lucky,first,power,events};
   }
   // En gömd skatt hittas (både de gamla hemligheterna och de nya skatterna).
   treasure(id){

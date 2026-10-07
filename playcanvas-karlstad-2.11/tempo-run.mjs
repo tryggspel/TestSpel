@@ -52,7 +52,8 @@ export class TempoRun{
     return {mult,extra,flow};
   }
   extend(seconds){if(this.running&&seconds>0){this.left+=seconds;this.deadline+=seconds;}}
-  tick(dt){
+  // freeze: fikapausen står still med klockan till nästa termos, men nivåerna fortsätter.
+  tick(dt,{freeze=false}={}){
     if(!this.running||!(dt>0))return [];
     const out=[];this.elapsed+=dt;this.levelClock+=dt;
     if(this.levelClock>=TEMPO.levelSeconds&&this.level<TEMPO.levels){
@@ -60,7 +61,7 @@ export class TempoRun{
       out.push({type:'tempo-level',level:this.level,name:tempoName(this.level),speed:tempoSpeed(this.level),mult:tempoPoints(this.level)});
     }
     if(this.target){
-      this.left-=dt;
+      if(!freeze)this.left-=dt;
       if(this.left<=0){
         this.lives--;this.misses++;this.target=null;this.needTarget=true;
         out.push({type:'tempo-miss',lives:this.lives});
@@ -83,4 +84,15 @@ export class TempoRun{
     return {state:this.state,level:this.level,name:tempoName(this.level),lives:this.lives,elapsed:this.elapsed,levelLeft:Math.max(0,TEMPO.levelSeconds-this.levelClock),
       picked:this.picked,score:this.score,left:Math.max(0,this.left),deadline:this.deadline,target:this.target,speed:this.speedMul(),mult:this.pointMul(),best:{...this.best}};
   }
+}
+
+// Riktningspilen på skärmen. forward är kamerans framåtvektor, angle i grader (negativt = höger, samma tecken som kompassen).
+export function arrowInfo(p,forward,target){
+  if(!p||!forward||!target)return null;
+  const dx=target.x-p.x,dz=target.z-p.z,distance=Math.hypot(dx,dz);
+  let a=Math.atan2(dx,dz)-Math.atan2(forward.x,forward.z);
+  while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;
+  const angle=a*180/Math.PI,abs=Math.abs(angle);
+  const hint=abs<=18?'RAKT FRAM':abs>=120?'VÄND DIG':angle<0?'HÖGER':'VÄNSTER';
+  return {distance,angle,ahead:abs<=18,behind:abs>=120,hint};
 }

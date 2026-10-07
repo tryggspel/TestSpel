@@ -1,4 +1,10 @@
-# Karlstad City — 2.15.0 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+# Karlstad City — 2.16.0 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+
+> **2.16.0 — Temporush: tydlig pil, termosar som aldrig tar slut och sex nya förmågor**
+> - **Riktningspil.** En stor pil på skärmen visar åt vilket håll nästa termos ligger (grön = rakt fram, röd = vänd dig, blinkar när klockan är på väg att gå ut) med avstånd och text (HÖGER, VÄNSTER, VÄND DIG). Den uppdateras varje bildruta, så den följer med när man svänger i hög fart. Vid målet står en ljusstråle som syns över hustaken, och målet markeras i blått på radarn.
+> - **Fler termosar.** I Temporush skapas nya termosar framför dig så att minst åtta alltid ligger inom räckhåll (räckvidden växer med nivån), och var sjätte skapad termos bär en förmåga. Målet väljs helst framför dig så att pilen sällan pekar bakåt. Skapade termosar fyller inte albumet och sparas inte.
+> - **Nya förmågor (nu tolv):** **fikapaus** (klockan till nästa termos står still 7 s), **kanelstråle** (alla termosar i en rak linje framför dig), **bönregn** (tio termosar runt dig), **lyckoägg** (×3 poäng i 20 s), **spöket** (ett vänligt spöke flyger runt och plockar termosar åt dig i 10 s) och **sonar** (ljusstrålar vid de sex närmaste termosarna och en puls på radarn i 15 s). Förmågorna är vanligare (cirka 5,6 % av termosarna).
+> - 9 nya tester (290 totalt).
 
 > **2.15.0 — Förmågor, blixtutmaningar, Temporush och kompakt HUD (City Explore)**
 > - **Förmågor.** Ungefär var 24:e termos är ett glittrande märke som byter innehåll varje dag: **raket** (farten dubblas ytterligare, ×4 med turbo, 7 s), **solstjärna** (magnet + dubbla poäng + frusen kedja, 9 s), **hoppstövlar** (hoppar >2× så högt, 25 s, inte inomhus), **kombosköld** (räddar en bruten kedja, högst två), **fikaklocka** (+10 s på utmaning och full kedja) och **sockerbomb** (plockar allt inom 26 m och bygger en lång kedja). Förmågorna syns som orange rutor på radarn. Logik i `powerups.mjs`.
