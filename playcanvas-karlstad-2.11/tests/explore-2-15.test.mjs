@@ -386,3 +386,14 @@ test('Temporush 2.19: bred fångstradie som växer med tempot, och en stabil sik
   assert.equal(g.found.has(first.id),true,'pärlan 3 m från färdlinjen fångas');
   assert.ok(tg);
 });
+
+test('Temporush 2.19.1: banan lämnar aldrig det byggda kartområdet',async()=>{
+  const {ColliderGrid}=await import('../collider-grid.mjs');
+  const grid=new ColliderGrid([{minx:0,maxx:10,minz:0,maxz:10},{minx:300,maxx:310,minz:0,maxz:10}]);
+  assert.equal(grid.covered(5,5,150),true);assert.equal(grid.covered(5,600,150),false);assert.equal(grid.covered(450,5,150),true,'inom 150 m');
+  const g=clean();g.covered=(x,z)=>z>-40; // allt norr om z=-40 räknas som obyggt
+  g.startTempo();const here={x:-19,z:35},fwd={x:0,z:-1};
+  for(let i=0;i<8;i++)g.step(.3,{x:here.x,z:here.z,y:1.68},fwd);g.drainEvents();
+  assert.ok(g.course.pearls.length>0,'banan finns');
+  assert.ok(g.course.pearls.every(t=>t.z>-40),'inga pärlor i det obyggda');
+});

@@ -1,39 +1,39 @@
-import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.19.0';
-import {createSouthSigns} from './city-south.js?v=2.19.0';
-import {createOrrholmenSigns} from './orrholmen.js?v=2.19.0';
-import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.19.0';
-import {createZombieAtlases} from './zombie-art.js?v=2.19.0';
-import {FriendlyClerks} from './friendly-clerks.mjs?v=2.19.0';
-import {createFriendlyView} from './friendly-view.js?v=2.19.0';
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.19.0';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.19.0';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.19.0';
-import {CityJourney} from './journey-rules.mjs?v=2.19.0';
-import {createJourneyView} from './journey-view.js?v=2.19.0';
-import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.19.0';
-import {createBoatRide} from './boat-ride.js?v=2.19.0';
-import {createBusRide} from './bus-ride.js?v=2.19.0';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.19.0';
-import {createPostcard} from './challenge-postcard.js?v=2.19.0';
-import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.19.0';
-import {RUSH} from './city-rush.mjs?v=2.19.0';
-import {StampBook} from './city-stamps.mjs?v=2.19.0';
-import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.19.0';
-import {POWERUPS} from './powerups.mjs?v=2.19.0';
-import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.19.0';
-import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.19.0';
-import {fetchLiveBoard} from './bus-quiz.mjs?v=2.19.0';
-import {GhostRun} from './ghost-run.mjs?v=2.19.0';
-import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.19.0';
-import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.19.0';
-import {pedestrianAt} from './pedestrian.mjs?v=2.19.0';
-import {createPedestrianSigns} from './pedestrian-view.js?v=2.19.0';
-import {drawMapLabels} from './city-geography.mjs?v=2.19.0';
-import {createCityIdentity} from './city-identity.js?v=2.19.0';
-import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.19.0';
+import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.19.1';
+import {createSouthSigns} from './city-south.js?v=2.19.1';
+import {createOrrholmenSigns} from './orrholmen.js?v=2.19.1';
+import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.19.1';
+import {createZombieAtlases} from './zombie-art.js?v=2.19.1';
+import {FriendlyClerks} from './friendly-clerks.mjs?v=2.19.1';
+import {createFriendlyView} from './friendly-view.js?v=2.19.1';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.19.1';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.19.1';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.19.1';
+import {CityJourney} from './journey-rules.mjs?v=2.19.1';
+import {createJourneyView} from './journey-view.js?v=2.19.1';
+import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.19.1';
+import {createBoatRide} from './boat-ride.js?v=2.19.1';
+import {createBusRide} from './bus-ride.js?v=2.19.1';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.19.1';
+import {createPostcard} from './challenge-postcard.js?v=2.19.1';
+import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.19.1';
+import {RUSH} from './city-rush.mjs?v=2.19.1';
+import {StampBook} from './city-stamps.mjs?v=2.19.1';
+import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.19.1';
+import {POWERUPS} from './powerups.mjs?v=2.19.1';
+import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.19.1';
+import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.19.1';
+import {fetchLiveBoard} from './bus-quiz.mjs?v=2.19.1';
+import {GhostRun} from './ghost-run.mjs?v=2.19.1';
+import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.19.1';
+import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.19.1';
+import {pedestrianAt} from './pedestrian.mjs?v=2.19.1';
+import {createPedestrianSigns} from './pedestrian-view.js?v=2.19.1';
+import {drawMapLabels} from './city-geography.mjs?v=2.19.1';
+import {createCityIdentity} from './city-identity.js?v=2.19.1';
+import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.19.1';
 
-import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.19.0';
-import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.19.0';
+import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.19.1';
+import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.19.1';
 
 export function createLastRound(pc, host) {
   // 2.10: elementuppslag cachas, och HUD-text skrivs bara om när värdet faktiskt ändras.
@@ -71,7 +71,7 @@ export function createLastRound(pc, host) {
     return landmarkDestination(id,host.colliders);
   }
   let storage=null;try{storage=localStorage;}catch{}
-  const journey=new CityJourney(navigation,host.mall,portals,storage);
+  const journey=new CityJourney(navigation,host.mall,portals,storage);journey.covered=host.covered||null;
   journey.clerks=new FriendlyClerks(journey,host.colliders);
   let selectedMission = MISSIONS.some(m=>m.id===params.get('challenge')) ? params.get('challenge') : 'sista-rundan';
   let game = rounds['sista-rundan'], layout = olearyLayout;

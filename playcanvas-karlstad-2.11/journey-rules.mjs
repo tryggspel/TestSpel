@@ -1,19 +1,19 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.19.0';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.19.0';
-import {CityMission} from './city-missions.mjs?v=2.19.0';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.19.0';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.19.0';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.19.0';
-import {CITY_STREETS} from './city-streets.mjs?v=2.19.0';
-import {pedestrianAt} from './pedestrian.mjs?v=2.19.0';
-import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.19.0';
-import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.19.0';
-import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.19.0';
-import {streetDistance,streetCovered} from './street-index.mjs?v=2.19.0';
-import {SITE_CHALLENGES} from './orrholmen-places.mjs?v=2.19.0';
-import {FlashChallenges} from './challenges.mjs?v=2.19.0';
-import {TempoRun} from './tempo-run.mjs?v=2.19.0';
-import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.19.0';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.19.1';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.19.1';
+import {CityMission} from './city-missions.mjs?v=2.19.1';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.19.1';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.19.1';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.19.1';
+import {CITY_STREETS} from './city-streets.mjs?v=2.19.1';
+import {pedestrianAt} from './pedestrian.mjs?v=2.19.1';
+import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.19.1';
+import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.19.1';
+import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.19.1';
+import {streetDistance,streetCovered} from './street-index.mjs?v=2.19.1';
+import {SITE_CHALLENGES} from './orrholmen-places.mjs?v=2.19.1';
+import {FlashChallenges} from './challenges.mjs?v=2.19.1';
+import {TempoRun} from './tempo-run.mjs?v=2.19.1';
+import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.19.1';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
@@ -320,7 +320,7 @@ export class CityJourney extends CityMission {
     const dx=Math.sin(h),dz=Math.cos(h),step=TEMPO_COURSE.step*1.5;let d=0,samples=0,near=0,green=0,len=0;
     for(;d<TEMPO_COURSE.maxRay;d+=step){
       const px=x+dx*(d+TEMPO_COURSE.step),pz=z+dz*(d+TEMPO_COURSE.step);
-      if(!this.freeSpot(px,pz))break;
+      if(!this.freeSpot(px,pz)||(this.covered&&!this.covered(px,pz)))break; // 2.19.1: banan lämnar aldrig det byggda kartområdet (öppet vatten/obyggd mark utanför)
       len=d+step;
       if(urban){
         samples++;const on=streetDistance(px,pz,TEMPO_COURSE.streetNear+2)<=TEMPO_COURSE.streetNear;
