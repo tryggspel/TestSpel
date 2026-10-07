@@ -370,3 +370,19 @@ test('Sonaren är en tidsstyrd förmåga och gåvolistan innehåller de nya',()=
   assert.ok(['pause','egg','ghost','radar'].every(k=>GIFT_KINDS.includes(k)));
   assert.ok(['bomb','strip','rain','clock'].every(k=>!GIFT_KINDS.includes(k)),'direkta plockare ges inte som gåva');
 });
+
+test('Temporush 2.19: bred fångstradie som växer med tempot, och en stabil siktpunkt längs banan',async()=>{
+  const {tempoReach,TEMPO_CATCH}=await import('../journey-rules.mjs');
+  assert.ok(tempoReach(1)>=3.2&&tempoReach(1)<tempoReach(10),'växer med nivån');assert.ok(tempoReach(99)<=TEMPO_CATCH.max);
+  const g=clean();g.startTempo();const here={x:-19,z:35},fwd={x:0,z:-1};
+  for(let i=0;i<6;i++)g.step(.3,{x:here.x,z:here.z,y:1.68},fwd);g.drainEvents();
+  const first=g.course.pearls[0],tg=g.tempo.target;
+  const aim=g.tempoAim(here);assert.ok(aim);
+  assert.ok(Math.hypot(aim.x-here.x,aim.z-here.z)>=Math.min(30,Math.hypot(first.x-here.x,first.z-here.z)),'siktpunkten ligger längre fram än närmaste pärla');
+  // Ett steg som passerar 3 m vid sidan av pärlan (som i turbo) tar den ändå.
+  const off={x:first.x-first.hz*3,z:first.z+first.hx*3};
+  g.step(.05,{x:off.x-first.hx*4,z:off.z-first.hz*4,y:1.68},fwd);
+  g.step(.05,{x:off.x+first.hx*4,z:off.z+first.hz*4,y:1.68},fwd);
+  assert.equal(g.found.has(first.id),true,'pärlan 3 m från färdlinjen fångas');
+  assert.ok(tg);
+});

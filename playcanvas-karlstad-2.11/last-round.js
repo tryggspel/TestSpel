@@ -1,39 +1,39 @@
-import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.18.2';
-import {createSouthSigns} from './city-south.js?v=2.18.2';
-import {createOrrholmenSigns} from './orrholmen.js?v=2.18.2';
-import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.18.2';
-import {createZombieAtlases} from './zombie-art.js?v=2.18.2';
-import {FriendlyClerks} from './friendly-clerks.mjs?v=2.18.2';
-import {createFriendlyView} from './friendly-view.js?v=2.18.2';
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.18.2';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.18.2';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.18.2';
-import {CityJourney} from './journey-rules.mjs?v=2.18.2';
-import {createJourneyView} from './journey-view.js?v=2.18.2';
-import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.18.2';
-import {createBoatRide} from './boat-ride.js?v=2.18.2';
-import {createBusRide} from './bus-ride.js?v=2.18.2';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.18.2';
-import {createPostcard} from './challenge-postcard.js?v=2.18.2';
-import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.18.2';
-import {RUSH} from './city-rush.mjs?v=2.18.2';
-import {StampBook} from './city-stamps.mjs?v=2.18.2';
-import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.18.2';
-import {POWERUPS} from './powerups.mjs?v=2.18.2';
-import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.18.2';
-import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.18.2';
-import {fetchLiveBoard} from './bus-quiz.mjs?v=2.18.2';
-import {GhostRun} from './ghost-run.mjs?v=2.18.2';
-import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.18.2';
-import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.18.2';
-import {pedestrianAt} from './pedestrian.mjs?v=2.18.2';
-import {createPedestrianSigns} from './pedestrian-view.js?v=2.18.2';
-import {drawMapLabels} from './city-geography.mjs?v=2.18.2';
-import {createCityIdentity} from './city-identity.js?v=2.18.2';
-import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.18.2';
+import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.19.0';
+import {createSouthSigns} from './city-south.js?v=2.19.0';
+import {createOrrholmenSigns} from './orrholmen.js?v=2.19.0';
+import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.19.0';
+import {createZombieAtlases} from './zombie-art.js?v=2.19.0';
+import {FriendlyClerks} from './friendly-clerks.mjs?v=2.19.0';
+import {createFriendlyView} from './friendly-view.js?v=2.19.0';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.19.0';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.19.0';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.19.0';
+import {CityJourney} from './journey-rules.mjs?v=2.19.0';
+import {createJourneyView} from './journey-view.js?v=2.19.0';
+import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.19.0';
+import {createBoatRide} from './boat-ride.js?v=2.19.0';
+import {createBusRide} from './bus-ride.js?v=2.19.0';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.19.0';
+import {createPostcard} from './challenge-postcard.js?v=2.19.0';
+import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.19.0';
+import {RUSH} from './city-rush.mjs?v=2.19.0';
+import {StampBook} from './city-stamps.mjs?v=2.19.0';
+import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.19.0';
+import {POWERUPS} from './powerups.mjs?v=2.19.0';
+import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.19.0';
+import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.19.0';
+import {fetchLiveBoard} from './bus-quiz.mjs?v=2.19.0';
+import {GhostRun} from './ghost-run.mjs?v=2.19.0';
+import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.19.0';
+import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.19.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.19.0';
+import {createPedestrianSigns} from './pedestrian-view.js?v=2.19.0';
+import {drawMapLabels} from './city-geography.mjs?v=2.19.0';
+import {createCityIdentity} from './city-identity.js?v=2.19.0';
+import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.19.0';
 
-import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.18.2';
-import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.18.2';
+import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.19.0';
+import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.19.0';
 
 export function createLastRound(pc, host) {
   // 2.10: elementuppslag cachas, och HUD-text skrivs bara om när värdet faktiskt ändras.
@@ -573,11 +573,18 @@ export function createLastRound(pc, host) {
     if(qr!==edgeR){edgeR=qr;R.hidden=qr<=0;R.style.opacity=String(qr/10);}
     L.classList.toggle('behind',!!behind);R.classList.toggle('behind',!!behind);
   }
+  let arrowT=0,arrowAngle=0;
   function updateTempoArrow(p){
     const el=$('tempoArrow');if(!el)return;
     const tr=journey.tempo,on=cleanExplore()&&tr.running&&!!tr.target&&game.phase==='playing'&&!panel;
     if(!on){if(!el.hidden)el.hidden=true;edgeMarks(0,0,false);return;}
-    const info=arrowInfo(p,host.camera.forward,tr.target);if(!info)return;
+    // 2.19: pilen siktar längs banan (en bit bortom nästa pärla) och mjukas upp, så den inte snurrar när man susar förbi pärlor i turbo.
+    const aim=journey.tempoAim(p)||tr.target,raw=arrowInfo(p,host.camera.forward,aim),real=arrowInfo(p,host.camera.forward,tr.target);if(!raw||!real)return;
+    const now=performance.now(),dt=Math.min(.25,Math.max(0,(now-arrowT)/1000));arrowT=now;
+    let da=raw.angle-arrowAngle;while(da>180)da-=360;while(da<-180)da+=360;
+    arrowAngle+=da*Math.min(1,dt*7);
+    while(arrowAngle>180)arrowAngle-=360;while(arrowAngle<-180)arrowAngle+=360;
+    const ab0=Math.abs(arrowAngle),info={...real,angle:arrowAngle,ahead:ab0<=18,behind:ab0>=120,hint:ab0<=18?'RAKT FRAM':ab0>=120?'VÄND DIG':arrowAngle<0?'HÖGER':'VÄNSTER'};
     // Kantmarkörer: när ljusstrålen är utanför bilden lyser den sida du ska vända dig åt, och båda sidorna när den ligger bakom dig.
     const ab=Math.abs(info.angle),off=ab<22?0:.35+.65*Math.min(1,(ab-22)/50);
     edgeMarks(info.angle>0?off:(info.behind?off:0),info.angle<0?off:(info.behind?off:0),info.behind);
@@ -586,7 +593,7 @@ export function createLastRound(pc, host) {
     const d=Math.round(info.distance);if(d!==arrowDist){arrowDist=d;$('tempoArrowDist').textContent=d+' M';}
     if(info.hint!==arrowHint){arrowHint=info.hint;$('tempoArrowHint').textContent=info.hint;}
     const ratio=tr.deadline>0?tr.left/tr.deadline:1,cls=(info.ahead?'ahead ':info.behind?'behind ':'')+(ratio<.3?'urgent':'');
-    if(cls!==arrowCls){arrowCls=cls;el.className=cls;}
+    const calm=info.ahead||(real.distance<14&&Math.abs(real.angle)<70);const cls2=cls+(calm?' calm':'');if(cls2!==arrowCls){arrowCls=cls2;el.className=cls2;}
   }
   function updateFlashAndTempo(){
     const fl=journey.flash.snapshot(),tr=journey.tempo,on=cleanExplore()&&game.phase==='playing'&&!panel;

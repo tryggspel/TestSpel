@@ -1,6 +1,6 @@
 // Snabb uppslagning av avstånd till närmaste gata, för att Temporush-banan ska hålla sig till gator och inte ut i stora tomma gröna ytor.
 // Gatorna kommer från OSM-geometrin i city-streets.mjs. Punkterna läggs i ett rutnät så att en fråga bara tittar på närmaste rutor.
-import {VISUAL_STREETS} from './city-streets.mjs?v=2.18.2';
+import {VISUAL_STREETS} from './city-streets.mjs?v=2.19.0';
 
 const CELL=40,SAMPLE=10;
 let grid=null,count=0;

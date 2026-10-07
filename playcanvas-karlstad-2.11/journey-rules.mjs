@@ -1,19 +1,19 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.18.2';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.18.2';
-import {CityMission} from './city-missions.mjs?v=2.18.2';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.18.2';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.18.2';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.18.2';
-import {CITY_STREETS} from './city-streets.mjs?v=2.18.2';
-import {pedestrianAt} from './pedestrian.mjs?v=2.18.2';
-import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.18.2';
-import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.18.2';
-import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.18.2';
-import {streetDistance,streetCovered} from './street-index.mjs?v=2.18.2';
-import {SITE_CHALLENGES} from './orrholmen-places.mjs?v=2.18.2';
-import {FlashChallenges} from './challenges.mjs?v=2.18.2';
-import {TempoRun} from './tempo-run.mjs?v=2.18.2';
-import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.18.2';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.19.0';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.19.0';
+import {CityMission} from './city-missions.mjs?v=2.19.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.19.0';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.19.0';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.19.0';
+import {CITY_STREETS} from './city-streets.mjs?v=2.19.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.19.0';
+import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.19.0';
+import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.19.0';
+import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.19.0';
+import {streetDistance,streetCovered} from './street-index.mjs?v=2.19.0';
+import {SITE_CHALLENGES} from './orrholmen-places.mjs?v=2.19.0';
+import {FlashChallenges} from './challenges.mjs?v=2.19.0';
+import {TempoRun} from './tempo-run.mjs?v=2.19.0';
+import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.19.0';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
@@ -25,6 +25,9 @@ const GIFTS=GIFT_KINDS;
 // Temporush: nya termosar skapas framför spelaren så att det alltid finns något nära att springa mot, även efter en lång runda.
 // 2.17: banan i Temporush är långa raka sträckor. Termosar läggs ut som ett pärlband längs en fri rak linje (med lätt slingring),
 // och när linjen tar slut planeras nästa sträcka från slutpunkten. Pilen pekar alltid på nästa pärla längs banan.
+// 2.19: fångstradie i Temporush. I turbo hinner man inte sikta, så pärlor tas i ett brett fält längs hela banan (och längs hela steget, se sweep).
+export const TEMPO_CATCH=Object.freeze({base:3.6,perLevel:.35,max:6.5,aim:34,aimPerLevel:3,aimMax:70});
+export const tempoReach=level=>Math.min(TEMPO_CATCH.max,TEMPO_CATCH.base+TEMPO_CATCH.perLevel*(Math.max(1,level)-1));
 export const TEMPO_COURSE=Object.freeze({step:2,maxRay:520,maxTurn:110,turnPenalty:.55,rays:24,minLeg:30,wobble:1,streetNear:24,greenRun:48,maxGap:55,reanchorEvery:2.5,lookBase:150,lookPerLevel:14,lookMax:320,spacingBase:10,spacingPerLevel:1.5,spacingMax:28,behindDrop:12,perTick:14,every:.25,clearance:2});
 export const TEMPO_SUPPLY=Object.freeze({want:8,perTick:3,every:.3,baseRadius:70,perLevel:8,maxRadius:150,minAhead:16,keep:90,powerEvery:6,spread:.85});
 
@@ -151,7 +154,8 @@ export class CityJourney extends CityMission {
       const t=fun.tick(dt);if(t.lost>=3)this.events.push({type:'combo-lost',chain:t.lost});if(t.saved)this.events.push({type:'shield-save',chain:t.saved});
       this.tickFlash(dt);this.tickTempo(dt,p);this.tickGhost(dt,p,fun);this.tickSites(p);
     }
-    const reach=fun?fun.pickupRadius():1.65;let taken=0;
+    let reach=fun?fun.pickupRadius():1.65;let taken=0;
+    if(fun&&this.tempo.running)reach=Math.max(reach,tempoReach(this.tempo.level));
     for(const item of this.items){
       if(this.found.has(item.id)||Math.abs(py-(item.y||0))>=1.5)continue;
       if((sweep?segmentDistance(item.x,item.z,sweep.x,sweep.z,p.x,p.z):Math.hypot(p.x-item.x,p.z-item.z))>=reach)continue;
@@ -246,6 +250,14 @@ export class CityJourney extends CityMission {
     // Ligger nästa mål för långt bort (man har lämnat banan) börjar banan om vid spelaren.
     const t2=this.tempo.target;
     if(this.tempo.running&&t2&&Math.hypot(t2.x-p.x,t2.z-p.z)>TEMPO_COURSE.maxGap&&this.elapsed-(this.lastAnchor||-99)>TEMPO_COURSE.reanchorEvery&&((p.y??1.68)-1.68)<.6){this.anchorCourse(p);this.pickTempoTarget(p);}
+  }
+  // Pilens siktpunkt: en bit längre fram på banan än nästa pärla, så att pilen pekar längs banans riktning och inte svänger vilt när man susar förbi pärlorna.
+  tempoAim(p){
+    const tg=this.tempo.target;if(!tg)return null;
+    const want=Math.min(TEMPO_CATCH.aimMax,TEMPO_CATCH.aim+TEMPO_CATCH.aimPerLevel*(this.tempo.level-1));
+    const open=(this.course?.pearls||[]).filter(t=>!this.found.has(t.id)&&t.course>=(tg.course??-1)).sort((a,b)=>a.course-b.course);
+    for(const t of open)if(Math.hypot(t.x-p.x,t.z-p.z)>=want)return {x:t.x,z:t.z};
+    const last=open.at(-1)||tg;return {x:last.x,z:last.z};
   }
   // Närmaste termos, men en bit framför spelaren väger lättare än en bakom, så att pilen sällan pekar bakåt när man springer fort.
   pickTempoTarget(p){

@@ -1,10 +1,10 @@
-import {createBusModel} from './transit-art.js?v=2.18.2';
-import {createComicCity} from './comic-city.js?v=2.18.2';
-import {SUN} from './city-ecology.mjs?v=2.18.2';
-import {rarityFor,BOOSTERS} from './explore-fun.mjs?v=2.18.2';
-import {powerFor,POWERUPS,POWER_KINDS,POWER} from './powerups.mjs?v=2.18.2';
+import {createBusModel} from './transit-art.js?v=2.19.0';
+import {createComicCity} from './comic-city.js?v=2.19.0';
+import {SUN} from './city-ecology.mjs?v=2.19.0';
+import {rarityFor,BOOSTERS} from './explore-fun.mjs?v=2.19.0';
+import {powerFor,POWERUPS,POWER_KINDS,POWER} from './powerups.mjs?v=2.19.0';
 const POWER_RADAR_RANGE=POWER.radarRange;
-import {BUS_NETWORK,MUSIC_OFFICE} from './explore-places.mjs?v=2.18.2';
+import {BUS_NETWORK,MUSIC_OFFICE} from './explore-places.mjs?v=2.19.0';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
   const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');
@@ -176,8 +176,9 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   // 2.16: ljusstråle vid Temporush-målet, sonarstrålar vid de närmaste termosarna och det vänliga spöket.
   const beamMat=material('#7fe3ff');beamMat.opacity=.34;beamMat.blendType=pc.BLEND_NORMAL;beamMat.depthWrite=false;beamMat.emissive=new pc.Color(.15,.65,.85);beamMat.update();
   const sonarMat=material('#6ff0c8');sonarMat.opacity=.3;sonarMat.blendType=pc.BLEND_NORMAL;sonarMat.depthWrite=false;sonarMat.emissive=new pc.Color(.12,.7,.5);sonarMat.update();
-  const beam=primitive('Temporush-fyr','cylinder',0,30,0,.8,60,.8,beamMat),beamRing=primitive('Temporush-ring','cylinder',0,.1,0,3.6,.04,3.6,beamMat);
-  beam.enabled=beamRing.enabled=false;
+  const farMat=material('#bff6ff');farMat.opacity=.2;farMat.blendType=pc.BLEND_NORMAL;farMat.depthWrite=false;farMat.emissive=new pc.Color(.3,.8,.95);farMat.update();
+  const beam=primitive('Temporush-fyr','cylinder',0,60,0,1.3,120,1.3,beamMat),beamRing=primitive('Temporush-ring','cylinder',0,.1,0,5.4,.04,5.4,beamMat),beamFar=primitive('Temporush-bana','cylinder',0,90,0,.9,180,.9,farMat);
+  beam.enabled=beamRing.enabled=beamFar.enabled=false;
   const sonarBeams=Array.from({length:6},()=>{const e=primitive('Sonarstråle','cylinder',0,12,0,.5,24,.5,sonarMat);e.enabled=false;return e;});
   const ghostTex=powerTex('ghost'),ghostHelper=card('Spöket',ghostTex,1.7,1.7,0,1.4,0);ghostHelper.enabled=false;
   const comicCity=createComicCity(pc,host,draw);
@@ -216,7 +217,10 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     });
     {const tt=roaming&&journey.tempo.running&&journey.tempo.target;
       beam.enabled=beamRing.enabled=!!tt;
-      if(tt){const pulse=1+Math.sin(now/180)*.18;beam.setPosition(tt.x,(tt.y||0)+30,tt.z);beam.setLocalScale(.8*pulse,60,.8*pulse);beamRing.setPosition(tt.x,(tt.y||0)+.1,tt.z);beamRing.setLocalScale(3.6*pulse,.04,3.6*pulse);}
+      if(tt){const pulse=1+Math.sin(now/180)*.18;beam.setPosition(tt.x,(tt.y||0)+60,tt.z);beam.setLocalScale(1.3*pulse,120,1.3*pulse);beamRing.setPosition(tt.x,(tt.y||0)+.1,tt.z);beamRing.setLocalScale(5.4*pulse,.04,5.4*pulse);}
+      // Bortre strålen markerar banans riktning längre fram, så att man ser åt vilket håll det bär även mellan pärlorna.
+      const aim=tt?journey.tempoAim(p):null;beamFar.enabled=!!aim&&Math.hypot(aim.x-tt.x,aim.z-tt.z)>12;
+      if(beamFar.enabled)beamFar.setPosition(aim.x,(tt.y||0)+90,aim.z);
       const scan=roaming&&clean&&journey.fun.power.scanning();
       let n=0;
       if(scan){const near2=journey.items.filter(t=>!journey.found.has(t.id)&&Math.abs((p.y??1.68)-1.68-(t.y||0))<1.5).map(t=>({t,d:Math.hypot(t.x-p.x,t.z-p.z)})).filter(o=>o.d<POWER_RADAR_RANGE).sort((a,b)=>a.d-b.d).slice(0,sonarBeams.length);

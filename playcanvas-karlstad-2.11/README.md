@@ -564,3 +564,8 @@ The director stays inside the existing six-active-enemy budget, reuses the navig
 ## 2.18.2 – blommor i rabatterna
 - Blommorna i rabatterna är nu små färgade blomhuvuden (kon) på tunna gröna stjälkar, inte lådor. De ligger bara inne i rabattens riktiga form.
 - Skrivbordsläsare kan ha gammal cache; ladda om hårt (Ctrl+Shift+R) om gamla klossar syns.
+
+## 2.19.0 – Temporush: mjukare pil, tydligare stråle, förlåtande fångst
+- Riktning spelar mindre roll: pärlor fångas i ett brett fält (3,6 m på nivå 1, upp till 6,5 m) längs hela rörelsen, så man slipper vända om när man susar förbi i turbo.
+- Pilen siktar längs banan (en bit bortom nästa pärla, 34–70 m beroende på tempo), mjukas upp och tonas ner när pärlan är nära eller rakt fram. Den snurrar inte längre.
+- Ljusstrålen är bredare och högre med större ring, och en svag bortre stråle visar banans riktning längre fram.

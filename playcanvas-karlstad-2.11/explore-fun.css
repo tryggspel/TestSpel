@@ -175,6 +175,7 @@ body.rocket-on #turboFx::before{opacity:.9}
 #tempoArrowIcon{display:block;width:62px;height:62px;background:linear-gradient(#ffe27a,#ffb347);clip-path:polygon(50% 0,100% 58%,72% 58%,72% 100%,28% 100%,28% 58%,0 58%);filter:drop-shadow(0 3px 5px #000b);transition:transform .05s linear}
 #tempoArrow.ahead #tempoArrowIcon{background:linear-gradient(#b8ffc6,#4fe07d)}
 #tempoArrow.behind #tempoArrowIcon{background:linear-gradient(#ffb0a0,#ff5a4a)}
+#tempoArrow{transition:opacity .25s}#tempoArrow.calm{opacity:.35}#tempoArrow.calm.urgent{opacity:.7}
 #tempoArrow.urgent #tempoArrowIcon{animation:arrowPulse .35s ease-in-out infinite alternate}
 @keyframes arrowPulse{to{filter:drop-shadow(0 0 10px #ff5a4a) brightness(1.25)}}
 #tempoArrowDist{font:900 17px/1 system-ui;color:#fff;text-shadow:0 2px 4px #000c,0 0 2px #000;letter-spacing:.04em}
