@@ -1,4 +1,6 @@
-# Karlstad City — 2.14.1 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+# Karlstad City — 2.14.2 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+
+> **2.14.2:** Sandgrundsudden är gång- och cykelbana, så buss 2 går nu till **Tingvalla** (id `tingvalla`, kontrollerad fri och nåbar) i stället för ut på udden. Udden nås till fots eller med Ryde.
 
 > **2.14.1:** BussQuiz visar nu bara Värmlandstrafik. `api/varmlandstrafik.mjs` filtrerar bort andra länens avgångar (t.ex. Kristianstad) och svaret innehåller `operators` för felsökning. Datumberoende tester gjordes robusta.
 

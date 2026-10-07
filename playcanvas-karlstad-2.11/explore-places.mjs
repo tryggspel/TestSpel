@@ -104,7 +104,7 @@ export function areaOf(t){
 export const BUS_NETWORK=Object.freeze([
   {id:'torget',name:'Torget',line:0,hub:true,color:'#f59554'},
   {id:'sandgrund',name:'Sandgrund',line:1,color:'#a276d1',blurb:'Konsthallen och Klarälven'},
-  {id:'udden',name:'Sandgrundsudden',line:2,x:-205,z:-775,bus:[-6,2],color:'#4cc1c7',blurb:'Längst ut på udden'},
+  {id:'tingvalla',name:'Tingvalla',line:2,x:90,z:-210,bus:[-6,2],color:'#4cc1c7',blurb:'Sandgrundsudden är bilfri: gå eller cykla härifrån'},
   {id:'haga',name:'Haga',line:3,x:566,z:-100,bus:[6,2],color:'#e86f6f',blurb:'Hagahallen och östra Karlstad'},
   {id:'attkanten',name:'Åttkanten',line:4,x:1000,z:-100,bus:[6,2],color:'#e3b341',blurb:'Östra kanten av kartan'},
   {id:'hamn',name:'Inre hamn',line:5,x:218,z:532.1,bus:[-6,2],color:'#4a9ee0',blurb:'Båtbussen och Löfbergs'},

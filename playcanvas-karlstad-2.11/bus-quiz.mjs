@@ -2,8 +2,8 @@
 // Frågorna kommer från tre håll: en fast frågebank om Karlstad, frågor som spelet själv räknar fram ur linjenätet,
 // och (om /api/varmlandstrafik svarar) riktiga avgångar. Utan nätverk eller nyckel fungerar de två första.
 // I zombiebussen går skärmen sönder: texten garbleras och svarsalternativen byter plats tills rätt svar rebootar den.
-import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.14.1';
-import {BUS_NETWORK} from './explore-places.mjs?v=2.14.1';
+import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.14.2';
+import {BUS_NETWORK} from './explore-places.mjs?v=2.14.2';
 
 export const QUIZ=Object.freeze({perQuestion:5,points:30,fastBonus:10,fastWithin:2.4,wrongCost:0,glitchEvery:1.1});
 

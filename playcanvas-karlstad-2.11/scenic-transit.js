@@ -1,4 +1,4 @@
-import {QuizSession} from './bus-quiz.mjs?v=2.14.1';
+import {QuizSession} from './bus-quiz.mjs?v=2.14.2';
 export const KARLSTAD_C={x:-220,z:279,name:'Karlstad C'};
 // OSM way 100310623, projected with the same Karlstad origin as the city.
 export const KIL={x:-10583.24,z:-13678.36,name:'Kil station'};
@@ -9,7 +9,7 @@ export function createScenicRide(host,{onTick,onArrive}){
   const $=id=>document.getElementById(id),canvas=$('scenicCanvas'),c=canvas.getContext('2d');let trip=null,paused=false,paint=0,quiz=null,shown='',feedback=null;
   const rect=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
   const hash=n=>{let h=2166136261;for(const ch of String(n)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return (h>>>0)/4294967296;};
-  const THEMES={udden:'water',hamn:'water',sandgrund:'water',marieberg:'park',haga:'city',attkanten:'city',station:'city',domkyrkan:'city',torget:'city'};
+  const THEMES={tingvalla:'water',hamn:'water',sandgrund:'water',marieberg:'park',haga:'city',attkanten:'city',station:'city',domkyrkan:'city',torget:'city'};
   // Bussen: vägen, husen och träden rullar förbi i flera lager, med mötande trafik, och en LED-skylt i taket.
   function drawBus(w,h){
     const t=trip.elapsed,p=t/trip.duration,theme=THEMES[trip.to.id]||'city',v=210; // pixlar per sekund i närmaste lager

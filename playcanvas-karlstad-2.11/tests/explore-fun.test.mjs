@@ -141,14 +141,14 @@ test('dagsmål: klart en gång per dag, serie över dagar, bryts efter en missad
 });
 
 test('skatter, hållplatser, turbo och märken: dubletter ger inget, märken delas ut en gång',()=>{
-  const f=new ExploreFun({clock:clockAt(NOON),treasureIds:['a','b','c'],stopIds:['haga','udden']});
+  const f=new ExploreFun({clock:clockAt(NOON),treasureIds:['a','b','c'],stopIds:['haga','tingvalla']});
   let t=f.treasure('a');assert.equal(t.count,1);assert.equal(t.total,3);assert.ok(t.events.some(e=>e.id==='treasure-1'));
   assert.equal(f.treasure('a'),null,'samma skatt igen');
   let r=f.ride({id:'torget',hub:true});assert.equal(r.first,false);assert.equal(r.bonus,0);assert.equal(r.visited,0);
   r=f.ride({id:'haga'});assert.equal(r.first,true);assert.equal(r.bonus,150);assert.ok(r.events.some(e=>e.id==='bus-1'));
   r=f.ride({id:'haga'});assert.equal(r.first,false);assert.equal(r.bonus,0);
   r=f.ride({id:'okänd'});assert.equal(r.first,false,'okänd hållplats ger ingen bonus');
-  r=f.ride({id:'udden'});assert.ok(r.events.some(e=>e.id==='bus-all'),'alla hållplatser besökta');
+  r=f.ride({id:'tingvalla'});assert.ok(r.events.some(e=>e.id==='bus-all'),'alla hållplatser besökta');
   assert.deepEqual(f.addTurbo(1500),[]);assert.deepEqual(f.addTurbo(600).map(e=>e.id),['turbo-2k']);assert.deepEqual(f.addTurbo(1e6),[]);assert.deepEqual(f.addTurbo(-5),[]);assert.deepEqual(f.addTurbo(NaN),[]);
   f.treasure('b');assert.ok(f.treasure('c').events.some(e=>e.id==='treasure-all'));
   const ids=BADGES.map(b=>b.id);assert.equal(new Set(ids).size,ids.length,'märken har unika id');
@@ -197,7 +197,7 @@ test('data: skatter, termosar och hållplatser är hela, unika och inte på vara
   for(const t of TREASURES)for(const q of all)if(Math.hypot(t.x-q.x,t.z-q.z,(t.y||0)-q.y)<3)assert.fail(t.id+' ligger på en termos');
   const lines=BUS_NETWORK.filter(s=>!s.hub).map(s=>s.line);assert.deepEqual([...lines].sort((a,b)=>a-b),[1,2,3,4,5,6,7,8]);assert.equal(BUS_NETWORK.filter(s=>s.hub).length,1);assert.equal(BUS_NETWORK[0].id,'torget');
   for(const s of BUS_NETWORK)if(!['torget','sandgrund','domkyrkan'].includes(s.id))assert.ok(Number.isFinite(s.x)&&Number.isFinite(s.z),s.id);
-  const target=BUS_NETWORK.find(s=>s.id==='marieberg');assert.ok(BUS_NETWORK.some(s=>s.id==='haga')&&BUS_NETWORK.some(s=>s.id==='udden')&&target);
+  const target=BUS_NETWORK.find(s=>s.id==='marieberg');assert.ok(BUS_NETWORK.some(s=>s.id==='haga')&&BUS_NETWORK.some(s=>s.id==='tingvalla')&&target);
   assert.equal(BUS_FIRST_RIDE_BONUS,150);
   for(const k of ['secret-0','secret-1','secret-2','secret-3','secret-4','mall-upper','udden-cache'])assert.ok(LEGACY_HINTS[k],'ledtråd till '+k);
 });
