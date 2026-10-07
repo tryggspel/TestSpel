@@ -1,19 +1,19 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.18.0';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.18.0';
-import {CityMission} from './city-missions.mjs?v=2.18.0';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.18.0';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.18.0';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.18.0';
-import {CITY_STREETS} from './city-streets.mjs?v=2.18.0';
-import {pedestrianAt} from './pedestrian.mjs?v=2.18.0';
-import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.18.0';
-import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.18.0';
-import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.18.0';
-import {streetDistance,streetCovered} from './street-index.mjs?v=2.18.0';
-import {SITE_CHALLENGES} from './orrholmen-places.mjs?v=2.18.0';
-import {FlashChallenges} from './challenges.mjs?v=2.18.0';
-import {TempoRun} from './tempo-run.mjs?v=2.18.0';
-import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.18.0';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.18.1';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.18.1';
+import {CityMission} from './city-missions.mjs?v=2.18.1';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.18.1';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.18.1';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.18.1';
+import {CITY_STREETS} from './city-streets.mjs?v=2.18.1';
+import {pedestrianAt} from './pedestrian.mjs?v=2.18.1';
+import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.18.1';
+import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.18.1';
+import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.18.1';
+import {streetDistance,streetCovered} from './street-index.mjs?v=2.18.1';
+import {SITE_CHALLENGES} from './orrholmen-places.mjs?v=2.18.1';
+import {FlashChallenges} from './challenges.mjs?v=2.18.1';
+import {TempoRun} from './tempo-run.mjs?v=2.18.1';
+import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.18.1';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
@@ -25,7 +25,7 @@ const GIFTS=GIFT_KINDS;
 // Temporush: nya termosar skapas framför spelaren så att det alltid finns något nära att springa mot, även efter en lång runda.
 // 2.17: banan i Temporush är långa raka sträckor. Termosar läggs ut som ett pärlband längs en fri rak linje (med lätt slingring),
 // och när linjen tar slut planeras nästa sträcka från slutpunkten. Pilen pekar alltid på nästa pärla längs banan.
-export const TEMPO_COURSE=Object.freeze({step:2,maxRay:520,maxTurn:110,turnPenalty:.55,rays:24,minLeg:30,wobble:1,streetNear:24,greenRun:48,maxGap:110,reanchorEvery:2.5,lookBase:150,lookPerLevel:14,lookMax:320,spacingBase:10,spacingPerLevel:1.5,spacingMax:28,behindDrop:12,perTick:14,every:.25,clearance:2});
+export const TEMPO_COURSE=Object.freeze({step:2,maxRay:520,maxTurn:110,turnPenalty:.55,rays:24,minLeg:30,wobble:1,streetNear:24,greenRun:48,maxGap:55,reanchorEvery:2.5,lookBase:150,lookPerLevel:14,lookMax:320,spacingBase:10,spacingPerLevel:1.5,spacingMax:28,behindDrop:12,perTick:14,every:.25,clearance:2});
 export const TEMPO_SUPPLY=Object.freeze({want:8,perTick:3,every:.3,baseRadius:70,perLevel:8,maxRadius:150,minAhead:16,keep:90,powerEvery:6,spread:.85});
 
 export const JOURNEY_KEY='karlstad:journey:1';
@@ -339,7 +339,7 @@ export class CityJourney extends CityMission {
     this.spawned=0;
   }
   // Börja om banan vid spelaren (hamnat för långt från banan, till exempel efter en bussresa eller en omväg).
-  anchorCourse(p){this.dropPearls(true);this.course=null;this.tempo.needTarget=true;this.lastAnchor=this.elapsed;this.startCourse(p);}
+  anchorCourse(p){this.dropPearls(true);this.course=null;this.tempo.needTarget=true;this.lastAnchor=this.elapsed;this.startCourse(p);this.lastSupply=-99;this.supplyTempo(0,p);}
   // Lägg ut pärlor längs banan tills det ligger tillräckligt långt framför spelaren. Pärlor som hamnat bakom spelaren tas bort.
   supplyTempo(dt,p){
     if(this.elapsed-this.lastSupply<TEMPO_COURSE.every)return;
@@ -371,7 +371,20 @@ export class CityJourney extends CityMission {
     }
     // Fastnar banan (inga pärlor lagda): börja om från närmaste gångbara punkt åt ett nytt håll.
     if(!cc.pearls.length&&fails>=3){const o=this.nav.point(p);cc.x=o.x;cc.z=o.z;cc.heading+=Math.PI*.7;cc.legStart={x:o.x,z:o.z};cc.leg=0;}
+    // Finns inga pärlor kvar framför spelaren (trångt eller blockerat): lägg ut en kort kedja på närmaste gångbara noder rakt fram.
+    if(!cc.pearls.some(t=>!this.found.has(t.id)))this.nodePearls(p);
     this.dropPearls(false,p);
+  }
+  nodePearls(p){
+    const cc=this.course;if(!cc)return;const f=this.lastForward,len=Math.hypot(f.x,f.z)||1,fx=f.x/len,fz=f.z/len;
+    let last={x:p.x,z:p.z},n=0;
+    for(let k=1;k<=7&&n<6;k++){
+      const raw={x:p.x+fx*14*k,z:p.z+fz*14*k},q=this.nav.point(raw);
+      if(Math.hypot(q.x-raw.x,q.z-raw.z)>18||Math.hypot(q.x-last.x,q.z-last.z)<6)continue;
+      cc.idx++;const it={id:'tp:'+(++this.dynSerial),x:+q.x.toFixed(1),z:+q.z.toFixed(1),dyn:true,course:cc.idx,hx:+fx.toFixed(3),hz:+fz.toFixed(3)};
+      this.items.push(it);this.itemById.set(it.id,it);this.dyn.push(it);cc.pearls.push(it);last=q;n++;
+    }
+    if(n){cc.x=last.x;cc.z=last.z;cc.heading=Math.atan2(fx,fz);cc.legStart={x:last.x,z:last.z};cc.leg=0;}
   }
   // En pärla är passerad när spelaren hamnat längre fram än den längs banans egen riktning där (inte kamerans riktning, som kan peka åt sidan i en kurva).
   passed(t,p,margin){return ((p.x-t.x)*t.hx+(p.z-t.z)*t.hz)>margin;}

@@ -1,5 +1,5 @@
-import {BoatRescue} from './boat-rescue.mjs?v=2.18.0';
-import {HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.18.0';
+import {BoatRescue} from './boat-rescue.mjs?v=2.18.1';
+import {HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.18.1';
 
 const INK='#1c4249',CREAM='#fff0cb',YELLOW='#ffbe0a';
 // Illustrated first-person aft deck. Static environment is baked once per resize.

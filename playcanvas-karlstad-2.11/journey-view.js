@@ -1,10 +1,10 @@
-import {createBusModel} from './transit-art.js?v=2.18.0';
-import {createComicCity} from './comic-city.js?v=2.18.0';
-import {SUN} from './city-ecology.mjs?v=2.18.0';
-import {rarityFor,BOOSTERS} from './explore-fun.mjs?v=2.18.0';
-import {powerFor,POWERUPS,POWER_KINDS,POWER} from './powerups.mjs?v=2.18.0';
+import {createBusModel} from './transit-art.js?v=2.18.1';
+import {createComicCity} from './comic-city.js?v=2.18.1';
+import {SUN} from './city-ecology.mjs?v=2.18.1';
+import {rarityFor,BOOSTERS} from './explore-fun.mjs?v=2.18.1';
+import {powerFor,POWERUPS,POWER_KINDS,POWER} from './powerups.mjs?v=2.18.1';
 const POWER_RADAR_RANGE=POWER.radarRange;
-import {BUS_NETWORK,MUSIC_OFFICE} from './explore-places.mjs?v=2.18.0';
+import {BUS_NETWORK,MUSIC_OFFICE} from './explore-places.mjs?v=2.18.1';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
   const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');

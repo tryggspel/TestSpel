@@ -8,7 +8,7 @@ import {cityPoint} from '../city-geography.mjs';
 import {buildOuterModel,OUTER_AREAS} from '../outer-city.js';
 import {BAY_WEST,BAY_EAST,SHORE_E,SHORE_W,shoreE,shoreW,pointIn,inOrrWater,TRADGARD,TRADGARD_BEDS,HAMN_BEDS,NEW_TREASURES,NEW_THERMOS,SITE_CHALLENGES,ORR_SIGNS,bryggEdges} from '../orrholmen-places.mjs';
 import {FX_THERMOS,TREASURES,ALBUM_AREAS,areaOf} from '../explore-places.mjs';
-import {drawWater,drawOrrholmen,drawTradgard,drawBryggudden,drawStation,nearTradgardPath,rbox} from '../orrholmen.js';
+import {drawWater,drawOrrholmen,drawTradgard,drawBryggudden,drawStation,nearTradgardPath,rbox,gardenPolygons} from '../orrholmen.js';
 import {footprintContains} from '../city-south-space.mjs';
 
 const read=n=>JSON.parse(fs.readFileSync(new URL('../data/osm-outer-'+n+'.json',import.meta.url)));
@@ -95,7 +95,7 @@ test('Spelet: nya termosar och skatter nås från Torget i spelets egen karta (k
 test('Ritning: varje delritning ger ändliga hörn, rimligt antal trianglar och rörliga vågor, bojar, båtar och tåg',()=>{
   const sizes={};
   for(const [name,fn] of [['vatten',drawWater],['orrholmen',drawOrrholmen],['tradgard',drawTradgard],['bryggudden',drawBryggudden],['station',drawStation]]){
-    const m=new ComicMesh();fn(m);const n=m.positions.length/3;sizes[name]=n;
+    const m=new ComicMesh();fn(m,name==='bryggudden'?gardenPolygons(read('hamn')):undefined);const n=m.positions.length/3;sizes[name]=n;
     assert.ok(n>200&&n<400000,name+' hörn: '+n);assert.ok(m.positions.every(Number.isFinite),name+' NaN');
     assert.equal(m.indices.length%3,0);assert.equal(m.colors.length/4,n);
   }
@@ -145,4 +145,15 @@ test('Platsutmaningar: tiden kan gå ut, då försvinner termosarna, och de star
   assert.ok(out.some(e=>e.type==='challenge-fail'&&e.kind==='site'),'misslyckas när tiden går ut');assert.equal(g.activeSite,null);assert.equal(g.items.some(i=>i.site),false);
   const t=clean();t.startTempo();step(t,{x:SITE_CHALLENGES[0].x,z:SITE_CHALLENGES[0].z});assert.equal(t.activeSite,null,'inte under Temporush');
   const f=clean();f.flash.start(1,'chain');step(f,{x:SITE_CHALLENGES[1].x,z:SITE_CHALLENGES[1].z});assert.equal(f.activeSite,null,'inte medan en blixtutmaning pågår');
+});
+
+test('Rabatter: blommorna ligger i rabattens form och är små, inte i omslutande rutor som täcker gatorna',()=>{
+  const gardens=gardenPolygons(read('hamn'));assert.ok(gardens.length>=6,'rabatter i utdraget: '+gardens.length);
+  class Rec extends ComicMesh{constructor(){super();this.boxes=[];}box(x,y,z,w,h,d,...r){this.boxes.push([x,y,z,w,h,d]);return super.box(x,y,z,w,h,d,...r);}}
+  const m=new Rec();drawBryggudden(m,gardens);
+  const flowers=m.boxes.filter(b=>Math.abs(b[3]-.26)<.001&&Math.abs(b[5]-.26)<.001);
+  assert.ok(flowers.length>100,'många små blommor: '+flowers.length);
+  const outside=flowers.filter(b=>!gardens.some(g=>pointIn(b[0],b[2],g)));
+  assert.equal(outside.length,0,'blommor utanför rabatterna');
+  assert.ok(flowers.every(b=>b[4]<.5),'låga blommor');
 });

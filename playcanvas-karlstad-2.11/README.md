@@ -1,4 +1,9 @@
-# Karlstad City — 2.18.0 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+# Karlstad City — 2.18.1 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+
+> **2.18.1 — Rabatter utan klossar och stabilare Temporush-bana**
+> - **Blomrabatterna** ritades som omslutande rutor med stora kuber och täckte hela gator. De ritas nu inuti rabattens verkliga form (OSM `leisure=garden`) med små, låga blommor på en grön yta, och aldrig på stigarna i Stadsträdgården.
+> - **Temporush:** om banan blir tom (trångt eller blockerat) läggs en kort kedja av pärlor ut på närmaste gångbara noder rakt fram, och banan börjar om vid dig så fort nästa mål ligger mer än 55 m bort (förut 110 m). I en körning från tre startpunkter i Hamnparken låg nästa mål nästan alltid 11–35 m bort i stället för upp till 88 m. Banan läggs också ut direkt vid omstart, så den inte hamnar i en slinga.
+> - 1 nytt test (307 totalt).
 
 > **2.18.0 — Orrholmen, vattnet mot Marieberg, Stadsträdgården, Bryggudden och stationen**
 > - **Orrholmen och vattnet.** Nytt område söder om Inre hamn: Tullholmen (operans Bageriet, magasin), Orrholmen med bostadskvarter och Orrholmsparken med skog, utsiktsplats och kiosk, en badplats med brygga, Gamla färjeläget med den gamla färjan, samt två vikar. **Orrholmsviken** (minst 300 m bred) skiljer Orrholmen från Marieberg och Mariebergsskogen, och **Östra viken** ligger öster om Orrholmen. Vattnet är kollisionsyta, mörkare än förut, med skum längs stränderna, vågstreck, bojlinjer (simlinje och farledsmärken), sju segelbåtar, roddbåtar och skyltar som förklarar vad som ligger på andra sidan ("→ ORRHOLMEN · 500 M ÖVER VATTNET", "← MARIEBERG · 400 M ÖVER VATTNET").

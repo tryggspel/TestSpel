@@ -1,8 +1,9 @@
 // 2.18: Orrholmen och vattnet, Stadsträdgården, Bryggudden och Karlstad C. Allt här är dekor som ritas i en enda statisk mesh (inga kollisioner):
 // vågor och skum som gör vattnet tydligt, bojar och båtar, bänkar och lyktor, rabatter, träd, paviljong och fontän, kajer och hamnkran,
 // samt perronger, extra spår, tak och ett tåg vid stationen. Byggnader, vatten och vägar kommer från data/osm-outer-orrholmen.json.
-import {ComicMesh} from './city-architecture.js?v=2.18.0';
-import {BAY_WEST,BAY_EAST,shoreE,pointIn,TRADGARD,TRADGARD_BEDS,HAMN_BEDS,bryggEdges,ORR_SIGNS} from './orrholmen-places.mjs?v=2.18.0';
+import {ComicMesh} from './city-architecture.js?v=2.18.1';
+import {cityPoint} from './city-geography.mjs?v=2.18.1';
+import {BAY_WEST,BAY_EAST,shoreE,pointIn,TRADGARD,TRADGARD_BEDS,bryggEdges,ORR_SIGNS} from './orrholmen-places.mjs?v=2.18.1';
 
 const rngFrom=(seed)=>()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
 
@@ -88,10 +89,26 @@ export function drawOrrholmen(m){
   for(let z=1000;z<1250;z+=36)bollard(m,shoreE(z)+5,z);
 }
 
-function flowerBeds(m,beds,R,cols){
-  for(const [cx,cz,w,d] of beds){
-    const step=1.5;for(let x=-w/2+.7;x<w/2;x+=step)for(let z=-d/2+.7;z<d/2;z+=step){if(w>40||d>40){if(R()<.55)continue;}m.box(cx+x+(R()-.5)*.5,.25,cz+z+(R()-.5)*.5,.55,.4+R()*.25,.55,cols[Math.floor(R()*cols.length)]);}
+// Rabatter: en grön yta och små blommor utspridda inuti ytans verkliga form (inte i en omslutande ruta, som lade klossar över gatorna).
+function flowerBeds(m,polys,R,cols,avoid=null){
+  for(const poly of polys){
+    const xs=poly.map(p=>p[0]),zs=poly.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),z0=Math.min(...zs),z1=Math.max(...zs);
+    if((x1-x0)*(z1-z0)>6000)continue; // för stora ytor är parker, inte rabatter
+    m.polygon(poly,.056,'#5d8f4a');
+    for(let x=x0+.5;x<x1;x+=1.2)for(let z=z0+.5;z<z1;z+=1.2){
+      const fx=x+(R()-.5)*.6,fz=z+(R()-.5)*.6;
+      if(!pointIn(fx,fz,poly)||(avoid&&avoid(fx,fz)))continue;
+      m.box(fx,.2,fz,.26,.28+R()*.16,.26,cols[Math.floor(R()*cols.length)]);
+    }
   }
+}
+const rectPoly=([cx,cz,w,d])=>[[cx-w/2,cz-d/2],[cx+w/2,cz-d/2],[cx+w/2,cz+d/2],[cx-w/2,cz+d/2]];
+// Trädgårdsrabatter ur OSM-utdraget för Inre hamn (leisure=garden) i spelkoordinater.
+export function gardenPolygons(hamn){
+  const out=[];
+  for(const e of hamn?.environment||[]){const t=e.tags||{};if(t.leisure!=='garden'&&!t['garden:type'])continue;
+    const pts=e.geometry.map(g=>{const q=cityPoint(g.lon,g.lat);return [q.x,q.z];});if(pts.length>=4)out.push(pts);}
+  return out;
 }
 // ── Stadsträdgården: stigar, träd, rabatter, damm, pergola, paviljong, fontän ───────────────────────────────────────────
 const TRADGARD_PATHS=[
@@ -108,7 +125,7 @@ export function drawTradgard(m){
   const R=rngFrom(5151);
   for(const p of TRADGARD_PATHS){m.strip(p,3.4,.05,'#e0d1ad');m.strip(p,2.6,.054,'#d4c39b');}
   // Rosrabatter med blommor.
-  flowerBeds(m,TRADGARD_BEDS,R,['#e84a7f','#f7a8c0','#e74c3c','#f7f1d0','#f4c430']);
+  flowerBeds(m,TRADGARD_BEDS.map(rectPoly),R,['#e84a7f','#f7a8c0','#e74c3c','#f7f1d0','#f4c430'],(x,z)=>nearTradgardPath(x,z,2.6));
   // Träd: slumpade, inte på stigarna och inte i rabatterna.
   let placed=0;const spots=[];
   for(let tries=0;tries<2200&&placed<130;tries++){
@@ -139,8 +156,8 @@ export function drawTradgard(m){
 }
 
 // ── Bryggudden och Inre hamn: trädäck, pollare, bänkar, lyktor, hamnkran och förtöjda båtar ─────────────────────────────
-export function drawBryggudden(m){
-  flowerBeds(m,HAMN_BEDS,rngFrom(77),['#f4c430','#f08a24','#9b59b6','#e84a7f','#f7f1d0']);
+export function drawBryggudden(m,gardens=[]){
+  flowerBeds(m,gardens,rngFrom(77),['#f4c430','#f08a24','#9b59b6','#e84a7f','#f7f1d0']);
   const {west,east}=bryggEdges();
   const wp=west.map(([z,x])=>[x+4.5,z]),ep=east.map(([z,x])=>[x-4.5,z]);
   m.strip(wp,3.2,.05,'#b98f5b');m.strip(ep,3.2,.05,'#b98f5b');m.strip(wp,3.4,.047,'#8f6c40');m.strip(ep,3.4,.047,'#8f6c40');
@@ -193,9 +210,9 @@ export function createOrrholmenSigns({card,labelTex}){
   for(const [text,x,z,y,w,yaw] of ORR_SIGNS){const e=card(text,labelTex([text],'#214b49','#f5e5bd'),w,.62,x,y,z);e.setEulerAngles(0,yaw,0);}
 }
 
-export function createOrrholmen(pc,app){
+export function createOrrholmen(pc,app,{hamn=null}={}){
   const m=new ComicMesh();
-  drawWater(m);drawOrrholmen(m);drawTradgard(m);drawBryggudden(m);drawStation(m);
+  drawWater(m);drawOrrholmen(m);drawTradgard(m);drawBryggudden(m,gardenPolygons(hamn));drawStation(m);
   const material=new pc.StandardMaterial();material.useLighting=false;material.diffuse.set(0,0,0);material.emissive.set(1,1,1);material.emissiveVertexColor=true;material.update();
   m.finish(pc,app,'Karlstad · Orrholmen, vattnet, Stadsträdgården, Bryggudden och stationen',material);
   return {vertices:m.positions.length/3,triangles:m.indices.length/3};

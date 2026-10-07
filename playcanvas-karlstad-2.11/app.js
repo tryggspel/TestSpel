@@ -1,27 +1,27 @@
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.18.0';
-import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.18.0';
-import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.18.0';
-import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.18.0';
-import {createCityEnvironment} from './city-environment.mjs?v=2.18.0';
-import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.18.0';
-import {ColliderGrid} from './collider-grid.mjs?v=2.18.0';
-import {onVastraBron} from './city-water.mjs?v=2.18.0';
-import {createRiverArchitecture} from './river-architecture.js?v=2.18.0';
-import {createMallArchitecture} from './mall-architecture.js?v=2.18.0';
-import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.18.0';
-import {createParkArchitecture} from './park-architecture.js?v=2.18.0';
-import {atKil,KIL} from './scenic-transit.js?v=2.18.0';
-import {registerBridges,onBridge} from './bridges.mjs?v=2.18.0';
-import {createOuterCity,OUTER_AREAS} from './outer-city.js?v=2.18.0';
-import {createOrrholmen} from './orrholmen.js?v=2.18.0';
-import {moveSteps,TURBO} from './explore-fun.mjs?v=2.18.0';
-import {createSouthCity} from './city-south.js?v=2.18.0';
-import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage,OUTER_WATER,outerWaterBlocked} from './city-south-space.mjs?v=2.18.0';
-import {waterBlocked} from './park-space.mjs?v=2.18.0';
-import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.18.0';
-import {createAudioEngine} from './audio-engine.mjs?v=2.18.0';
-import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.18.0';
+import {createLastRound} from './last-round.js?v=2.18.1';
+import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.18.1';
+import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.18.1';
+import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.18.1';
+import {createCityEnvironment} from './city-environment.mjs?v=2.18.1';
+import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.18.1';
+import {ColliderGrid} from './collider-grid.mjs?v=2.18.1';
+import {onVastraBron} from './city-water.mjs?v=2.18.1';
+import {createRiverArchitecture} from './river-architecture.js?v=2.18.1';
+import {createMallArchitecture} from './mall-architecture.js?v=2.18.1';
+import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.18.1';
+import {createParkArchitecture} from './park-architecture.js?v=2.18.1';
+import {atKil,KIL} from './scenic-transit.js?v=2.18.1';
+import {registerBridges,onBridge} from './bridges.mjs?v=2.18.1';
+import {createOuterCity,OUTER_AREAS} from './outer-city.js?v=2.18.1';
+import {createOrrholmen} from './orrholmen.js?v=2.18.1';
+import {moveSteps,TURBO} from './explore-fun.mjs?v=2.18.1';
+import {createSouthCity} from './city-south.js?v=2.18.1';
+import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage,OUTER_WATER,outerWaterBlocked} from './city-south-space.mjs?v=2.18.1';
+import {waterBlocked} from './park-space.mjs?v=2.18.1';
+import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.18.1';
+import {createAudioEngine} from './audio-engine.mjs?v=2.18.1';
+import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.18.1';
 
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
@@ -500,7 +500,7 @@ function addBuildings(osm,environment,outerData={}){
     registerBridges(outer.model.roads);
     OUTER_WATER.length=0;for(const w of outer.water)OUTER_WATER.push(w);
   }catch(e){console.error('[Outer districts skipped]',e);}
-  try{window.KarlstadOrrholmen=Object.freeze(createOrrholmen(pc,app));}catch(e){console.error('[Orrholmen skipped]',e);}
+  try{window.KarlstadOrrholmen=Object.freeze(createOrrholmen(pc,app,{hamn:outerData.hamn}));}catch(e){console.error('[Orrholmen skipped]',e);}
   window.KarlstadOuter=Object.freeze(outer?outer.stats:{skipped:true});
   colliderGrid=new ColliderGrid(colliders);southGate=colliders.filter(b=>b.osm===80868525);
   const infillGraphics=createInfill(pc,app,infill,admitted),river=createRiverArchitecture(pc,app);
