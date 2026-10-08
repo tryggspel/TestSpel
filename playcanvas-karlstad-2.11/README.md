@@ -1,4 +1,9 @@
-# Karlstad City — 2.21.1 · Butiksuppdrag och Karlstadpasset
+# Karlstad City — 2.21.2 · Julknappen (förberedd)
+
+> **2.21.2 — knapp till Julklappsjakten (förberedd, avstängd)**
+> - Startmenyn har en knapp **JULKLAPPSJAKTEN 🎁** direkt under TempoRush som öppnar julversionen (en egen spelversion med egen adress, byggd från grenen `release/jul-2026`) **i samma flik**. Ingen iframe och ingen andra spelmotor. Julversionen har en knapp tillbaka hit.
+> - Knappen är **avstängd** (`enabled:false` i `julknapp.mjs`) och syns inte för spelarna förrän julversionens produktionsadress är verifierad och inkopplad. Så kopplar du in och stänger av den: `JULKNAPPEN.md`.
+> - Ändringen är bara knappen och navigeringen (`julknapp.mjs`, tre rader i `last-round.js`, knappen i `index.html`, några rader CSS) och 4 nya tester. Inga spelregler, sparfiler eller kartor är ändrade. Återställningspunkt före knappen: `fadc36ad65078401e1a751c9236c1577d1bc5de8` (2.21.1).
 
 > **2.21.1 — finputs i Karlstadpasset**
 > - Passet skriver **"1 digitalt besök"** i singular (förut "1 digitala besök"); fler besök heter fortfarande "digitala besök".
