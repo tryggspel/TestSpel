@@ -15,6 +15,7 @@
 .xmas-card .xmas-primary:active{transform:translateY(2px);box-shadow:0 2px 0 var(--xmas-red-dark)}
 .xmas-card .xmas-zombie{border-color:#b58ad688;color:#e7d6ff;min-height:52px}
 .xmas-card .xmas-zombie[disabled]{opacity:.5}
+.xmas-card .xmas-rush{border-color:#8fe3a888;color:#dcffe6;min-height:52px}
 .xmas-build{font:600 10px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#7f9a88;letter-spacing:.02em;word-break:break-all}
 #round-xmas-intro{max-height:calc(100dvh - 36px);overflow-y:auto;touch-action:pan-y}
 #round-xmas-result{max-height:calc(100dvh - 36px);overflow-y:auto;touch-action:pan-y;text-align:center}
@@ -55,6 +56,25 @@
 .xh-combo span{color:var(--xmas-gold)}
 .xh-combo-bar{display:block;width:34px;height:4px;border-radius:3px;background:#ffffff2a;overflow:hidden}
 .xh-combo-bar u{display:block;height:100%;width:100%;text-decoration:none;background:linear-gradient(90deg,#ff9bd8,var(--xmas-gold))}
+/* JulRushen: liv som hjärtan, brådskande klocka och gåvorna som små brickor */
+#xmasHud[data-mode="rush"] .xh-bar u{background:linear-gradient(90deg,#ffd23f,#7be495);transition:width .08s linear}
+#xmasHud[data-mode="rush"] .xh-count{min-width:1.1ch;text-align:center}
+/* Tempots namn och poängen får hela raden (långa namn som GLÖGGFART och poäng över 10 000 får inte klippas); kombon och gåvorna kommer på egna rader */
+#xmasHud[data-mode="rush"] .xh-points{grid-column:1/-1}
+#xmasHud[data-mode="rush"] .xh-points b{white-space:nowrap}
+#xmasHud[data-mode="rush"] .xh-combo{grid-column:1/-1;justify-self:start}
+.xh-hearts{font:900 15px/1 system-ui;font-style:normal;color:#ff7a8a;letter-spacing:1px;white-space:nowrap}
+.xh-hearts[hidden]{display:none}
+.xh-hearts[data-lives="1"]{color:#ff4b5c}
+.xh-hearts.hit{animation:xmasHit .6s ease-out}
+@keyframes xmasHit{0%{transform:scale(1.5);filter:brightness(2)}35%{transform:translateX(-3px) scale(1.25)}60%{transform:translateX(3px) scale(1.15)}100%{transform:none;filter:none}}
+#xmasHud.urgent{border-bottom-color:#ff5a4a;animation:xmasUrgent .45s ease-in-out infinite alternate}
+#xmasHud.urgent .xh-bar u{background:#ff5a4a}
+@keyframes xmasUrgent{to{filter:brightness(1.3)}}
+.xh-powers{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px}
+.xh-powers[hidden]{display:none}
+.xh-chip{padding:2px 8px;border-radius:10px;background:var(--xmas-gold);color:#3b2a00;font:900 11px/1.35 system-ui;letter-spacing:.05em;white-space:nowrap}
+.xh-chip[data-kind="sleigh"]{background:#ff8a6b;color:#3a0f05}.xh-chip[data-kind="pause"]{background:#9ad8ff;color:#06314a}.xh-chip[data-kind="shield"]{background:#7be495;color:#06301a}.xh-chip[data-kind="golden"]{background:#fff3a6}
 .xh-combo[data-tier="2"]{border-color:#9ee6ff}.xh-combo[data-tier="3"]{border-color:#9bf0a7}.xh-combo[data-tier="4"]{border-color:var(--xmas-gold);background:#6a2f58ee}
 
 /* Grundspelets spelval och samlingar som inte hör till julen göms i pausmenyn och på kartan */
@@ -81,7 +101,24 @@ body.xmas-on #mapStoryHint,body.xmas-on .map-story-buttons{display:none!importan
 /* ── Julläget döljer grundspelets termosdelar och lägger kompassen under julens HUD ────────────────────────────── */
 body.xmas-on #roundHud,body.xmas-on #funHud,body.xmas-on #cityEventHud,body.xmas-on #panicHud,body.xmas-on #sunHud,body.xmas-on #refillBtn,
 body.xmas-on #roundPhase,body.xmas-on #roundTactic,body.xmas-on #ghostHud,body.xmas-on #roundLaunch,body.xmas-on #flashBar,body.xmas-on #researchLine,
-body.xmas-on #tempoArrow,body.xmas-on #tempoEdgeL,body.xmas-on #tempoEdgeR,body.xmas-on #cityJourneyHud{display:none!important}
+body.xmas-on #cityJourneyHud{display:none!important}
+/* JulRushen använder grundspelets stora riktningspil och kantmarkörer (last-round.js updateTempoArrow) men visar dem inte i övriga julläget */
+body.xmas-on:not(.xmas-rush) #tempoArrow,body.xmas-on:not(.xmas-rush) #tempoEdgeL,body.xmas-on:not(.xmas-rush) #tempoEdgeR{display:none!important}
+body.xmas-rush #roundCompass{display:none!important}
+/* Pilen får en mörk platta: snön är nästan vit och vit text försvinner annars. Den lugna (ljusare) varianten från grundspelet används inte här. */
+body.xmas-rush #tempoArrow{padding:7px 16px 6px;border-radius:16px;background:#0f2a24d6;border:2px solid #ffd36b88;box-shadow:0 4px 12px #0007}
+body.xmas-rush #tempoArrow.calm,body.xmas-rush #tempoArrow.calm.urgent{opacity:.9}
+body.xmas-rush #tempoArrow.urgent{border-color:#ff7a6a}
+body.xmas-rush #tempoArrowIcon{width:52px;height:52px}
+body.xmas-rush #tempoArrowDist{font-size:19px;text-shadow:none}
+body.xmas-rush #tempoArrowHint{color:#ffe9b0;text-shadow:none}
+/* Målrutan ligger under HUD:en och ovanför pilen (annars döljer den pilen de första sekunderna) */
+@media(max-height:500px){body.xmas-rush #xmasPill{bottom:14%}body.xmas-rush #tempoArrow{top:16%}}
+@media(min-height:501px){
+ body.xmas-rush #xmasGoal{top:max(126px,calc(env(safe-area-inset-top) + 120px))}
+ /* poängpuffen ligger över gåvornas meddelanderuta (nederst) och under paketet, så att de inte skymmer varandra i det höga tempot */
+ body.xmas-rush #xmasPill{bottom:max(41%,calc(env(safe-area-inset-bottom) + 300px))}
+}
 body.xmas-cozy #solarWeapon,body.xmas-cozy #journeyPickupToast{display:none!important}
 body.xmas-on.round-playing #roundCompass{top:max(86px,calc(env(safe-area-inset-top) + 80px));left:max(10px,env(safe-area-inset-left));max-width:min(330px,calc(100vw - 132px));background:#0f2a24dd;border:1px solid #abc7ad44}
 body.xmas-on.round-playing #roundCompassText{font-weight:900}
@@ -101,4 +138,4 @@ body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
 @media(pointer:coarse) and (max-width:520px) and (min-height:501px){
  #xmasGoal{top:max(158px,calc(env(safe-area-inset-top) + 150px));font-size:16px}
 }
-@media(prefers-reduced-motion:reduce){#xmasPill.on{animation:none;opacity:1}.xmas-stamp{animation:none}}
+@media(prefers-reduced-motion:reduce){#xmasPill.on{animation:none;opacity:1}.xmas-stamp{animation:none}.xh-hearts.hit,#xmasHud.urgent{animation:none}}

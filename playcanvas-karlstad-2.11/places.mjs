@@ -2,7 +2,7 @@
 // Allt som skiljer en plats från en annan står här som data: namn, plats, entré, personal, uppdragstyp, föremål, belöning, stämpel,
 // godkänt erbjudande och status. Uppdragsmotorn (place-quests.mjs) och vyerna läser bara det här. Nästa plats = ett nytt objekt i PLACES.
 // Ren modul utan DOM och utan PlayCanvas, så att spelet, testerna och verktygen delar samma källa.
-import {MALL_ROOMS} from './mall-space.mjs?v=2.21.1-xmas.1';
+import {MALL_ROOMS} from './mall-space.mjs?v=2.21.1-xmas.2';
 
 export const PLACES_VERSION=1;
 // active  = samarbete bekräftat och godkänt innehåll (inget sådant finns än).

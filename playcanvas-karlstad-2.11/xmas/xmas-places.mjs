@@ -1,7 +1,7 @@
 // Julklappsjakten: butiksuppdragen i julversionen. Samma datamodell som grundspelets platser (places.mjs), samma uppdragsmotor
 // (place-quests.mjs) och samma interiörer, bara med julens texter och föremål. Nästa plats = ett nytt objekt här, ingen ny kod.
 // Inga erbjudanden, samarbeten eller avtal påstås: alla platser är demonstrationer (status demo) eller planerade (future, syns aldrig).
-import {PLACES} from '../places.mjs?v=2.21.1-xmas.1';
+import {PLACES} from '../places.mjs?v=2.21.1-xmas.2';
 
 const base=id=>PLACES.find(p=>p.id===id);
 const cervera=base('cervera'),pressbyran=base('pressbyran');

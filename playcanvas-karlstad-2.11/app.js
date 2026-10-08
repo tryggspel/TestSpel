@@ -1,32 +1,32 @@
-import './xmas/xmas-storage-install.mjs?v=2.21.1-xmas.1'; // julgrenen: egen sparning, måste utvärderas före alla andra moduler
+import './xmas/xmas-storage-install.mjs?v=2.21.1-xmas.2'; // julgrenen: egen sparning, måste utvärderas före alla andra moduler
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.21.1-xmas.1';
-import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.21.1-xmas.1';
-import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.21.1-xmas.1';
-import {createCityArchitecture,createInfill,coreContourBuildings,ComicMesh} from './city-architecture.js?v=2.21.1-xmas.1';
-import {installSnow,SNOW_MATERIALS,WINTER_SKY} from './xmas/xmas-snow.mjs?v=2.21.1-xmas.1';
-import {xmasColliders} from './xmas/xmas-decor-data.mjs?v=2.21.1-xmas.1';
-import {createCityEnvironment} from './city-environment.mjs?v=2.21.1-xmas.1';
-import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.21.1-xmas.1';
-import {ColliderGrid} from './collider-grid.mjs?v=2.21.1-xmas.1';
-import {partnerColliders} from './places-space.mjs?v=2.21.1-xmas.1';
-import {onVastraBron} from './city-water.mjs?v=2.21.1-xmas.1';
-import {createRiverArchitecture} from './river-architecture.js?v=2.21.1-xmas.1';
-import {createMallArchitecture} from './mall-architecture.js?v=2.21.1-xmas.1';
-import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.21.1-xmas.1';
-import {createParkArchitecture} from './park-architecture.js?v=2.21.1-xmas.1';
-import {atKil,KIL} from './scenic-transit.js?v=2.21.1-xmas.1';
-import {registerBridges,onBridge} from './bridges.mjs?v=2.21.1-xmas.1';
-import {createOuterCity,OUTER_AREAS} from './outer-city.js?v=2.21.1-xmas.1';
-import {createOrrholmen} from './orrholmen.js?v=2.21.1-xmas.1';
-import {moveSteps,TURBO} from './explore-fun.mjs?v=2.21.1-xmas.1';
-import {createSouthCity} from './city-south.js?v=2.21.1-xmas.1';
-import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage,OUTER_WATER,outerWaterBlocked} from './city-south-space.mjs?v=2.21.1-xmas.1';
-import {waterBlocked} from './park-space.mjs?v=2.21.1-xmas.1';
-import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.21.1-xmas.1';
-import {createAudioEngine} from './audio-engine.mjs?v=2.21.1-xmas.1';
-import {createXmasMusic} from './xmas/xmas-music.js?v=2.21.1-xmas.1';
-import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.21.1-xmas.1';
+import {createLastRound} from './last-round.js?v=2.21.1-xmas.2';
+import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.21.1-xmas.2';
+import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.21.1-xmas.2';
+import {createCityArchitecture,createInfill,coreContourBuildings,ComicMesh} from './city-architecture.js?v=2.21.1-xmas.2';
+import {installSnow,SNOW_MATERIALS,WINTER_SKY} from './xmas/xmas-snow.mjs?v=2.21.1-xmas.2';
+import {xmasColliders} from './xmas/xmas-decor-data.mjs?v=2.21.1-xmas.2';
+import {createCityEnvironment} from './city-environment.mjs?v=2.21.1-xmas.2';
+import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.21.1-xmas.2';
+import {ColliderGrid} from './collider-grid.mjs?v=2.21.1-xmas.2';
+import {partnerColliders} from './places-space.mjs?v=2.21.1-xmas.2';
+import {onVastraBron} from './city-water.mjs?v=2.21.1-xmas.2';
+import {createRiverArchitecture} from './river-architecture.js?v=2.21.1-xmas.2';
+import {createMallArchitecture} from './mall-architecture.js?v=2.21.1-xmas.2';
+import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.21.1-xmas.2';
+import {createParkArchitecture} from './park-architecture.js?v=2.21.1-xmas.2';
+import {atKil,KIL} from './scenic-transit.js?v=2.21.1-xmas.2';
+import {registerBridges,onBridge} from './bridges.mjs?v=2.21.1-xmas.2';
+import {createOuterCity,OUTER_AREAS} from './outer-city.js?v=2.21.1-xmas.2';
+import {createOrrholmen} from './orrholmen.js?v=2.21.1-xmas.2';
+import {moveSteps,TURBO} from './explore-fun.mjs?v=2.21.1-xmas.2';
+import {createSouthCity} from './city-south.js?v=2.21.1-xmas.2';
+import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage,OUTER_WATER,outerWaterBlocked} from './city-south-space.mjs?v=2.21.1-xmas.2';
+import {waterBlocked} from './park-space.mjs?v=2.21.1-xmas.2';
+import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.21.1-xmas.2';
+import {createAudioEngine} from './audio-engine.mjs?v=2.21.1-xmas.2';
+import {createXmasMusic} from './xmas/xmas-music.js?v=2.21.1-xmas.2';
+import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.21.1-xmas.2';
 
 installSnow(ComicMesh); // julgrenen: snön är ett färgfilter på stadens geometri (ingen extra yta)
 const canvas=document.getElementById('game');
@@ -100,10 +100,10 @@ function musicUnlock(){musicInit();AUDIO.context();AUDIO.resume();MUSIC_STATE.un
 function musicCity(withArena=false){
   musicUnlock();clearTimeout(MUSIC_STATE.roundTimer);clearTimeout(MUSIC_STATE.arenaTimer);MUSIC_STATE.mode='city';
   if(JUKE.playing)return;
-  XMUSIC.setPaused(false);XMUSIC.play(MUSIC_STATE.mood==='eerie'&&MUSIC_STATE.keepMood?'eerie':'cozy');
+  XMUSIC.setPaused(false);XMUSIC.play(MUSIC_STATE.keepMood&&MUSIC_STATE.mood?MUSIC_STATE.mood:'cozy');
 }
-// julgrenen: stämning (cozy | eerie) väljs av spelläget. keep = stämningen ligger kvar tills nästa läge väljer om.
-function musicMood(m,{keep=true}={}){MUSIC_STATE.mood=m;MUSIC_STATE.keepMood=keep&&m==='eerie';musicUnlock();if(!JUKE.playing)XMUSIC.play(m);}
+// julgrenen: stämning (cozy | eerie | rush) väljs av spelläget. keep = stämningen ligger kvar tills nästa läge väljer om.
+function musicMood(m,{keep=true}={}){MUSIC_STATE.mood=m;MUSIC_STATE.keepMood=keep&&(m==='eerie'||m==='rush');musicUnlock();if(!JUKE.playing)XMUSIC.play(m);}
 function musicRoundStart(){
   musicUnlock();clearTimeout(MUSIC_STATE.roundTimer);clearTimeout(MUSIC_STATE.arenaTimer);MUSIC_STATE.mode='round';
   if(!JUKE.playing)XMUSIC.play('eerie');
@@ -128,7 +128,7 @@ function jukeboxStop(){
   if(!JUKE.playing)return;AUDIO.fade(JUKE.playing,0,400,{pauseAfter:true});JUKE.playing=null;musicCity(false);
 }
 // 2.15 Temporush: stadens musik går fortare när tempot stiger (tonhöjden hålls, bara farten ändras).
-function musicTempo(rate){if(baseTracksReady)AUDIO.rate('main',rate);}
+function musicTempo(rate){XMUSIC.setRate(rate);if(baseTracksReady)AUDIO.rate('main',rate);} // julgrenen: julmusiken följer tempot (JulRushen) på samma sätt
 const GAME_MUSIC=Object.freeze({
   init:musicInit,unlock:musicUnlock,city:musicCity,mood:musicMood,roundStart:musicRoundStart,roundEnd:musicRoundEnd,
   pause:musicPause,resume:musicResume,setMuted:musicSetMuted,tempo:musicTempo,

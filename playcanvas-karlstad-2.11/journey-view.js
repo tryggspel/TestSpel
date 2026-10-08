@@ -1,10 +1,10 @@
-import {createBusModel} from './transit-art.js?v=2.21.1-xmas.1';
-import {createComicCity} from './comic-city.js?v=2.21.1-xmas.1';
-import {SUN} from './city-ecology.mjs?v=2.21.1-xmas.1';
-import {rarityFor,BOOSTERS} from './explore-fun.mjs?v=2.21.1-xmas.1';
-import {powerFor,POWERUPS,POWER_KINDS,POWER} from './powerups.mjs?v=2.21.1-xmas.1';
+import {createBusModel} from './transit-art.js?v=2.21.1-xmas.2';
+import {createComicCity} from './comic-city.js?v=2.21.1-xmas.2';
+import {SUN} from './city-ecology.mjs?v=2.21.1-xmas.2';
+import {rarityFor,BOOSTERS} from './explore-fun.mjs?v=2.21.1-xmas.2';
+import {powerFor,POWERUPS,POWER_KINDS,POWER} from './powerups.mjs?v=2.21.1-xmas.2';
 const POWER_RADAR_RANGE=POWER.radarRange;
-import {BUS_NETWORK,MUSIC_OFFICE} from './explore-places.mjs?v=2.21.1-xmas.1';
+import {BUS_NETWORK,MUSIC_OFFICE} from './explore-places.mjs?v=2.21.1-xmas.2';
 export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const {card,texture,labelTex,primitive,material,fanTex,root}=draw;
   const purple=material('#7848a8'),ink=material('#193d38'),gold=material('#ffd56c'),mint=material('#8be9b6');
@@ -192,7 +192,7 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     const dtView=lastNow?Math.min(.1,Math.max(0,(now-lastNow)/1000)):0;lastNow=now;
     const roaming=game===journey;comicCity.update(p);
     const curse=journey.cursedHunt;
-    const nearby=roaming?journey.items.filter(t=>!journey.found.has(t.id)&&!curse?.pending(t.id)&&Math.hypot(t.x-p.x,t.z-p.z)<44).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z)).slice(0,pickupPool.length):[];
+    const nearby=roaming&&!journey.xmas?.rushMode?journey.items.filter(t=>!journey.found.has(t.id)&&!curse?.pending(t.id)&&Math.hypot(t.x-p.x,t.z-p.z)<44).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z)).slice(0,pickupPool.length):[];
     const clean=roaming&&journey.rush.mode==='clean',day=clean?journey.fun.day:'',used={common:0,silver:0,gold:0,rainbow:0},usedPower=Object.fromEntries(POWER_KINDS.map(k=>[k,0]));
     if(rarityDay!==day){rarityDay=day;rarityCache.clear();}
     nearby.forEach((t,i)=>{
@@ -215,7 +215,7 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
       if(e.enabled){e.setPosition(t.x,(t.y||0)+.3+Math.sin(now/380)*.14,t.z);e.setEulerAngles(0,Math.atan2(p.x-t.x,p.z-t.z)*180/Math.PI,Math.sin(now/500)*3);}
       if(glow.enabled){const pulse=1+Math.sin(now/300)*.12;glow.setLocalScale(2.8*pulse,.03,2.8*pulse);}
     });
-    {const tt=roaming&&journey.tempo.running&&journey.tempo.target;
+    {const tt=roaming&&journey.tempo.running&&!journey.xmas?.rushMode&&journey.tempo.target; // julgrenen: JulRushen ritar sina egna paket och sin egen stråle (xmas/xmas-view.js)
       beam.enabled=beamRing.enabled=!!tt;
       if(tt){const pulse=1+Math.sin(now/180)*.18;beam.setPosition(tt.x,(tt.y||0)+60,tt.z);beam.setLocalScale(1.3*pulse,120,1.3*pulse);beamRing.setPosition(tt.x,(tt.y||0)+.1,tt.z);beamRing.setLocalScale(5.4*pulse,.04,5.4*pulse);}
       // Bortre strålen markerar banans riktning längre fram, så att man ser åt vilket håll det bär även mellan pärlorna.
@@ -267,8 +267,8 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   function radar(c,point,roaming){if(!roaming)return;
     const day=journey.rush.mode==='clean'?journey.fun.day:'';
     const scanning=day&&journey.fun.power.scanning();
-    const tg=journey.tempo.running?journey.tempo.target:null;
-    c.fillStyle='#c994f1';for(const t of journey.items)if(!journey.found.has(t.id)){const [x,y]=point(t.x,t.z);if(x>0&&y>0&&x<256&&y<256){if(day&&powerOf(t.id,day)){c.fillStyle='#ffb347';c.fillRect(x-3.5,y-3.5,7,7);c.fillStyle='#c994f1';}else c.fillRect(x-2,y-2,4,4);}}
+    const tg=journey.tempo.running&&!journey.xmas?.rushMode?journey.tempo.target:null;
+    c.fillStyle='#c994f1';for(const t of (journey.xmas?.rushMode?[]:journey.items))if(!journey.found.has(t.id)){const [x,y]=point(t.x,t.z);if(x>0&&y>0&&x<256&&y<256){if(day&&powerOf(t.id,day)){c.fillStyle='#ffb347';c.fillRect(x-3.5,y-3.5,7,7);c.fillStyle='#c994f1';}else c.fillRect(x-2,y-2,4,4);}}
     if(scanning){c.strokeStyle='#6ff0c8';c.globalAlpha=.55;c.lineWidth=2;const ph=(performance.now()/900)%1;const [cx,cy]=point(journey.position.x,journey.position.z);c.beginPath();c.arc(cx,cy,10+ph*70,0,Math.PI*2);c.stroke();c.globalAlpha=1;}
     if(tg){const [x,y]=point(tg.x,tg.z);c.fillStyle='#7fe3ff';c.beginPath();c.arc(x,y,6,0,Math.PI*2);c.fill();c.strokeStyle='#fff';c.lineWidth=2;c.stroke();}
     c.fillStyle='#ffe18c';if(!journey.rush.peaceful)for(const p of Object.values(portals)){const [x,y]=point(p.x,p.z);c.fillRect(x-5,y-5,10,10);}

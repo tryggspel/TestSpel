@@ -30,11 +30,11 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:11px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.21.1-xmas.1">
-<link rel="stylesheet" href="./compact-hud.css?v=2.21.1-xmas.1">
-<link rel="stylesheet" href="./explore-fun.css?v=2.21.1-xmas.1">
-<link rel="stylesheet" href="./places.css?v=2.21.1-xmas.1">
-<link rel="stylesheet" href="./xmas/xmas.css?v=2.21.1-xmas.1">
+<link rel="stylesheet" href="./last-round.css?v=2.21.1-xmas.2">
+<link rel="stylesheet" href="./compact-hud.css?v=2.21.1-xmas.2">
+<link rel="stylesheet" href="./explore-fun.css?v=2.21.1-xmas.2">
+<link rel="stylesheet" href="./places.css?v=2.21.1-xmas.2">
+<link rel="stylesheet" href="./xmas/xmas.css?v=2.21.1-xmas.2">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -131,6 +131,8 @@
     <p class="round-lead">Tomtarna har tappat julklapparna runt om i Karlstad. Hjälp dem hitta paketen!</p>
     <button id="xmasCozy" class="round-primary xmas-primary" type="button">JULKLAPPSJAKTEN 🎁 <span>→</span></button>
     <p id="xmasCozyNote" class="round-fine"></p>
+    <button id="xmasRushStart" class="round-secondary xmas-rush" type="button">JULRUSHEN <span>→</span></button>
+    <p id="xmasRushStartNote" class="round-fine"></p>
     <button id="xmasZombies" class="round-secondary xmas-zombie" type="button">TOMTEZOMBIES <span>→</span></button>
     <p class="round-fine">Ett separat julläge med zombier och kuslig julmusik. Julklappsjakten är helt utan zombier.</p>
     <p id="xmasStatus" class="round-fine fun-news"></p>
@@ -143,6 +145,8 @@
     <p id="xmasContinueStatus" class="round-fine"></p>
     <button id="xmasRound" class="round-primary xmas-primary" type="button">NY JULRUNDA · 2–3 MIN <span>→</span></button>
     <p id="xmasRoundNote" class="round-fine"></p>
+    <button id="xmasRushGo" class="round-secondary xmas-rush" type="button">JULRUSHEN <span>→</span></button>
+    <p id="xmasRushGoNote" class="round-fine"></p>
     <button id="xmasShops" class="round-secondary" type="button">BUTIKSUPPDRAG <span>→</span></button>
     <button id="xmasFree" class="round-secondary" type="button">FRI JULVANDRING <span>→</span></button>
     <ul id="xmasStampList" class="xmas-stamps"></ul>
@@ -316,6 +320,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.21.1-xmas.1"></script>
+<script type="module" src="./app.js?v=2.21.1-xmas.2"></script>
 </body>
 </html>

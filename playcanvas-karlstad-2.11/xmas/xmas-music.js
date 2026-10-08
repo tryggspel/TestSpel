@@ -1,7 +1,9 @@
 // Julklappsjakten: julens musik. Allt syntetiseras med Web Audio direkt i spelet (inga ljudfiler att ladda ner, ingen licens att oroa sig för,
-// musiken startar på första tryck). Två stämningar delar samma notmaskin:
+// musiken startar på första tryck). Tre stämningar delar samma notmaskin:
 //   cozy  – klockspel, celesta och mjuka klingande toner i G-dur, med en lugn pad och skramlande bjällror (Julklappsjakten, rundor, fri vandring)
 //   eerie – samma instrument men i e-moll, lägre tempo, lätt ostämda toner, bakvända klockor och en mörk puls (Tomtezombies)
+//   rush  – JulRushen: samma instrument i G-dur men med slädklockor på varje åttondel och en mjuk puls på varje slag. Tempot följer spelets
+//           nivå (setRate): musiken går fortare när tempot stiger, precis som grundspelets musik gör i TempoRush.
 // Musiken går genom spelets ordinarie ljudsystem (audio-engine.mjs): samma AudioContext, samma musikbuss, samma mute och samma återupptagning
 // efter bakgrund och låsskärm. Högst fyra lager klingar samtidigt, noterna planeras 0,6 s i förväg och efter bakgrund börjar notmaskinen om från "nu"
 // (ingen kö av gamla toner som kommer på en gång).
@@ -29,11 +31,23 @@ export const MOODS=Object.freeze({
       [[0,76,3]],[[2,75,3]],[[0,72,3],[5,71,2]],[[0,71,4]],[[0,76,3]],[[3,77,3]],[[0,72,2],[4,69,3]],[[0,71,2],[4,66,4]]
     ]),
     arp:Object.freeze([0,2,1,3,2,1,3,2]),detune:-18
+  }),
+  rush:Object.freeze({
+    bpm:116,level:.95,reverb:.22,
+    // G – D – Em – C, två varv (sista takten vilar på D för att dra tillbaka till början)
+    chords:Object.freeze([[43,47,50,55],[50,54,57,62],[40,43,47,52],[48,52,55,60],[43,47,50,55],[50,54,57,62],[48,52,55,60],[50,54,57,60]]),
+    melody:Object.freeze([
+      [[0,86,1],[1,83,1],[2,79,2],[4,83,1],[5,86,1],[6,88,2]],[[0,86,1],[1,81,1],[2,86,2],[4,90,1],[5,88,1],[6,86,2]],
+      [[0,83,2],[2,88,1],[3,86,1],[4,83,2],[6,79,2]],[[0,84,1],[1,88,1],[2,91,2],[4,88,1],[5,84,1],[6,79,2]],
+      [[0,86,1],[1,83,1],[2,79,2],[4,83,1],[5,86,1],[6,91,2]],[[0,90,1],[1,88,1],[2,86,2],[4,81,1],[5,86,1],[6,90,2]],
+      [[0,88,2],[2,84,1],[3,88,1],[4,91,2],[6,88,2]],[[0,86,2],[2,90,2],[4,93,3]]
+    ]),
+    arp:Object.freeze([0,1,2,1,3,2,1,2]),detune:0
   })
 });
 
 export function createXmasMusic({audio,storage=null,now=()=>performance.now()}={}){
-  let ctx=null,out=null,layerBus={},verbIn=null,started=false,timer=0,mode='off',target='off',nextTime=0,step=0,duck=1,paused=false,hiddenAt=0;
+  let ctx=null,out=null,layerBus={},verbIn=null,started=false,timer=0,mode='off',target='off',nextTime=0,step=0,duck=1,paused=false,hiddenAt=0,rate=1;
   const stats={notes:0,scheduled:0,restarts:0,mode:'off'};
   let rand=rng(7);
   const makeIR=(c,seconds=2.4)=>{const n=Math.floor(c.sampleRate*seconds),buf=c.createBuffer(2,n,c.sampleRate),r=rng(99);for(let ch=0;ch<2;ch++){const d=buf.getChannelData(ch);for(let i=0;i<n;i++){const t=i/n;d[i]=(r()*2-1)*Math.pow(1-t,2.6);}}return buf;};
@@ -89,9 +103,14 @@ export function createXmasMusic({audio,storage=null,now=()=>performance.now()}={
     g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.09*vel,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+.42);o.connect(g);g.connect(layerBus[m]);o.start(t);o.stop(t+.45);stats.notes++;
   }
 
+  function thump(m,t,vel=1){ // JulRushens puls: en mjuk, kort bastrumma på varje slag
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.setValueAtTime(120,t);o.frequency.exponentialRampToValueAtTime(52,t+.14);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.075*vel,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.2);o.connect(g);g.connect(layerBus[m]);o.start(t);o.stop(t+.22);stats.notes++;
+  }
+
   // ── Notmaskin: en åttondel i taget ──────────────────────────────────────────────────────────────────────────────────
   function scheduleStep(m,s,t){
-    const cfg=MOODS[m],bar=Math.floor(s/8)%8,eighth=s%8,beat=60/cfg.bpm,chord=cfg.chords[bar],eerie=m==='eerie',det=cfg.detune;
+    const cfg=MOODS[m],bar=Math.floor(s/8)%8,eighth=s%8,beat=60/cfg.bpm/rate,chord=cfg.chords[bar],eerie=m==='eerie',rushing=m==='rush',det=cfg.detune;
     if(eighth===0){
       pad(m,t,chord,beat*8,{dark:eerie,detune:det});
       if(!eerie||bar%2===0)bell(m,t,chord[0]+24,.8,det,eerie?4.2:2.8);
@@ -102,12 +121,15 @@ export function createXmasMusic({audio,storage=null,now=()=>performance.now()}={
     const idx=cfg.arp[eighth],note=chord[idx%chord.length]+(idx>=3?24:12)+12;
     if(!eerie||(eighth%2===0&&rand()<.55))celesta(m,t+(eerie?rand()*.04:0),clamp(note,64,96),(eighth%2?.55:.8)*(eerie?.7:1),det+(eerie?(rand()-.5)*22:0));
     for(const [at,midi,len] of cfg.melody[bar])if(at===eighth)bell(m,t,midi,.9,det,Math.min(3.4,len*beat*.6+1.6));
-    if(!eerie&&(eighth===2||eighth===6||(eighth===7&&bar%2===1)))jingle(m,t,eighth===7?.5:.9);
+    if(rushing){ // slädklockor på varje åttondel (starkast på slagen) och en puls på varje slag
+      jingle(m,t,eighth%2===0?.8:.45);
+      if(eighth%2===0)thump(m,t,eighth===0||eighth===4?1:.6);
+    }else if(!eerie&&(eighth===2||eighth===6||(eighth===7&&bar%2===1)))jingle(m,t,eighth===7?.5:.9);
     if(eerie&&eighth===6&&bar%4===3)swell(m,t,chord[2]+24,beat*2.4);
   }
   function tick(){
     if(!ctx||mode==='off')return;
-    const cfg=MOODS[mode],half=60/cfg.bpm/2,horizon=ctx.currentTime+.6;
+    const cfg=MOODS[mode],half=60/cfg.bpm/2/rate,horizon=ctx.currentTime+.6;
     if(nextTime<ctx.currentTime-.05){nextTime=ctx.currentTime+.05;stats.restarts++;} // efter bakgrund: börja om från nu, ingen kö av gamla toner
     while(nextTime<horizon){scheduleStep(mode,step,nextTime);nextTime+=half;step++;stats.scheduled++;}
   }
@@ -129,11 +151,11 @@ export function createXmasMusic({audio,storage=null,now=()=>performance.now()}={
     if(m===mode&&started)return true;
     const prev=mode;
     if(prev!=='off'&&prev!==m){
-      fadeBus(prev,0,m==='eerie'?1.2:2.4);
+      fadeBus(prev,0,m==='eerie'||m==='rush'?1.2:2.4);
       // det kusliga läget börjar med tre sjunkande klockor, så att bytet hörs
       if(m==='eerie'){const t=ctx.currentTime+.05;[88,85,80].forEach((n,i)=>bell('eerie',t+i*.32,n,.9,-22,3.4));}
     }
-    mode=m;started=true;step=0;rand=rng(m==='eerie'?31:7);nextTime=ctx.currentTime+.06;
+    mode=m;started=true;step=0;rand=rng(m==='eerie'?31:m==='rush'?53:7);nextTime=ctx.currentTime+.06;
     fadeBus(m,MOODS[m].level,prev==='off'?.6:2.0);applyDuck(.6);
     tick();startTimer();return true;
   }
@@ -143,6 +165,8 @@ export function createXmasMusic({audio,storage=null,now=()=>performance.now()}={
     const old=mode;mode='off';started=false;setTimeout(()=>{if(mode==='off')stopTimer();},secs*1000+100);stats.mode='off';return old;
   }
   function setPaused(v){paused=!!v;applyDuck(.3);}
+  // Tempot följer spelets nivå (1 = grundtempo). Gäller de toner som planeras härefter, så ändringen hörs inom en halv sekund.
+  function setRate(v){const r=Number(v);rate=Number.isFinite(r)?clamp(r,.8,1.6):1;return rate;}
   // Tillbaka från bakgrunden: vänta på att kontexten går igång och börja om notmaskinen från "nu".
   function onVisibility(){
     if(typeof document==='undefined')return;
@@ -150,10 +174,10 @@ export function createXmasMusic({audio,storage=null,now=()=>performance.now()}={
     if(mode!=='off'){audio.resume();if(ctx){nextTime=Math.max(nextTime,ctx.currentTime+.05);}startTimer();}
   }
   if(typeof document!=='undefined')document.addEventListener('visibilitychange',onVisibility);
-  return {play,stop,setPaused,ensure,tick,
+  return {play,stop,setPaused,setRate,ensure,tick,get rate(){return rate;},
     get mode(){return mode;},get started(){return started;},get ctx(){return ctx;},
     // Provkörning utan fördröjning: planerar sekunder av musik i taget (används av test med OfflineAudioContext).
-    renderTo(m,seconds){if(!ensure())return false;mode=m;started=true;step=0;rand=rng(m==='eerie'?31:7);nextTime=0;layerBus[m].gain.value=MOODS[m].level;out.gain.value=1;
-      const cfg=MOODS[m],half=60/cfg.bpm/2;while(nextTime<seconds){scheduleStep(m,step,nextTime);nextTime+=half;step++;stats.scheduled++;}return true;},
-    snapshot:()=>({mode,started,paused,ctx:ctx?.state??'none',...stats})};
+    renderTo(m,seconds){if(!ensure())return false;mode=m;started=true;step=0;rand=rng(m==='eerie'?31:m==='rush'?53:7);nextTime=0;layerBus[m].gain.value=MOODS[m].level;out.gain.value=1;
+      const cfg=MOODS[m],half=60/cfg.bpm/2/rate;while(nextTime<seconds){scheduleStep(m,step,nextTime);nextTime+=half;step++;stats.scheduled++;}return true;},
+    snapshot:()=>({mode,started,paused,rate,ctx:ctx?.state??'none',...stats})};
 }

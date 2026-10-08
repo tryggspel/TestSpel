@@ -1,10 +1,12 @@
 // Julklappsjakten: vyn för paketjakten. Ett fast antal renderobjekt återanvänds för de närmaste paketen (inga nya objekt under spelet),
 // bonuspaketen får en ljusstråle, tomten viftar och visar var paketen ska lämnas, och varje plockat paket ger en liten ljuspuff.
-// Ingen fysik, inga ljus: allt är platta bildkort och två genomskinliga cylindrar.
-import {drawBeam} from './xmas-art.js?v=2.21.1-xmas.1';
-export function createXmasView(pc,host,draw,sprites,hunt){
+// JulRushen använder samma paketkort och samma ljusstrålar: guldpaketen (som bär en julgåva) får en gyllene stråle, och nästa paket längs banan
+// markeras med en hög grön stråle och en ring på marken (grundspelets cyanfyr döljs i julbygget, se journey-view.js).
+// Ingen fysik, inga ljus: allt är platta bildkort och genomskinliga cylindrar.
+import {drawBeam} from './xmas-art.js?v=2.21.1-xmas.2';
+export function createXmasView(pc,host,draw,sprites,hunt,rush=null){
   const {labelTex,texture}=draw,root=draw.root;
-  const POOL=26,SHOW=54,BEAMS=4,BURSTS=6;
+  const POOL=26,SHOW=54,SHOW_RUSH=96,BEAMS=4,BURSTS=6;
   const pool=Array.from({length:POOL},(_,i)=>({e:sprites.spriteEntity('Julpaket '+i,sprites.packageMaterials[0],1.3,1.3,{enabled:false}),id:'',variant:-1,kind:''}));
   const glowMat=(r,g,b,a)=>{const m=new pc.StandardMaterial();m.useLighting=false;m.diffuse.set(0,0,0);m.emissive.set(r,g,b);m.opacity=a;m.blendType=pc.BLEND_NORMAL;m.depthWrite=false;m.cull=pc.CULLFACE_NONE;m.update();return m;};
   const beamMat=glowMat(1,.84,.32,.3),ringMat=glowMat(1,.82,.3,.42),treeRing=glowMat(1,.9,.5,.2);
@@ -23,28 +25,34 @@ export function createXmasView(pc,host,draw,sprites,hunt){
   };
   const bubbleMat=Object.fromEntries(Object.entries(bubbleTex).map(([k,t])=>[k,sprites.spriteMaterial(t,{alphaTest:.1})]));
   const tomte={e:sprites.spriteEntity('Tomten',sprites.tomteMaterials[1][0],2.2,3.3,{enabled:false}),bubble:sprites.spriteEntity('Tomtens bubbla',bubbleMat.help,3.3,1.03,{enabled:false}),ring:cyl('Tomtens ring',ringMat),pillar:sprites.spriteEntity('Tomtens stråle',beamGreen,3.4,26,{enabled:false}),mood:'help'};
+  // JulRushens mål: en hög grön stråle (bildkort som vänder sig mot spelaren) och en ring på marken vid nästa paket.
+  const goalRingMat=glowMat(.3,.9,.5,.42);
+  const goal={beam:sprites.spriteEntity('Målstråle',beamGreen,3.2,70,{enabled:false}),ring:cyl('Målring',goalRingMat)};
   const buf=[],bonusBuf=[];
-  let shown=0,beamsOn=0,lite=false;
+  let shown=0,beamsOn=0,lite=false,goalOn=false;
 
   function burst(x,z,{big=false,y=.6}={}){
     if(lite&&!big)return;
     const b=bursts[burstIndex++%BURSTS];Object.assign(b,{life:b.max,x,y,z,big});
   }
   function update(p,now,dt){
-    const r=hunt.run,live=!!r&&(r.phase==='collect'||r.phase==='deliver'||r.phase==='free');
+    const rr=!!rush&&rush.active,r=rr?null:hunt.run,live=rr||(!!r&&(r.phase==='collect'||r.phase==='deliver'||r.phase==='free'));
+    const goalPk=rr&&rush.running?rush.targetPackage():null;
     // paket
     shown=0;
     if(live){
-      hunt.nearby(p,lite?40:SHOW,lite?16:POOL,buf);
+      (rr?rush:hunt).nearby(p,rr?(lite?64:SHOW_RUSH):(lite?40:SHOW),lite?16:POOL,buf);
       for(let i=0;i<buf.length;i++){
         const k=buf[i],s=pool[i],e=s.e;
         if(s.id!==k.id){
           s.id=k.id;const v=sprites.packageVariant(k);
           if(s.variant!==v){s.variant=v;sprites.setMaterial(e,sprites.packageMaterials[v]);}
-          const big=k.kind==='bonus';e.setLocalScale(big?2.1:1.35,big?2.1:1.35,1);s.kind=k.kind;
+          s.kind=k.kind;
         }
-        const ph=(k.cluster*1.7+i)%6.28,bob=Math.sin(now/480+ph)*.1;
-        e.setPosition(k.x,(k.y||0)+.18+bob+(k.kind==='bonus'?.15:0),k.z);e.setEulerAngles(0,sprites.yawToward(k.x,k.z,p),Math.sin(now/700+ph)*5);
+        // Nästa paket längs JulRushens bana är större och guppar mer, så att det syns vilket man är på väg mot.
+        const big=k.kind==='bonus',isGoal=!!goalPk&&k.id===goalPk.id,sc=(big?2.1:1.35)*(isGoal?1.3:1);e.setLocalScale(sc,sc,1);
+        const ph=(k.cluster*1.7+i)%6.28,bob=Math.sin(now/(isGoal?300:480)+ph)*(isGoal?.18:.1);
+        e.setPosition(k.x,(k.y||0)+.18+bob+(big?.15:0),k.z);e.setEulerAngles(0,sprites.yawToward(k.x,k.z,p),Math.sin(now/700+ph)*5);
         if(!e.enabled)e.enabled=true;shown++;
       }
     }
@@ -52,12 +60,22 @@ export function createXmasView(pc,host,draw,sprites,hunt){
     // bonusstrålar
     beamsOn=0;
     if(live){
-      let n=0;for(const k of r.packages){if(k.collected||k.kind!=='bonus')continue;const d=Math.hypot(k.x-p.x,k.z-p.z);if(d<95&&n<BEAMS)bonusBuf[n++]=k;}
+      let n=0;
+      if(rr)n=rush.giftPackages(p,95,BEAMS,bonusBuf).length;
+      else for(const k of r.packages){if(k.collected||k.kind!=='bonus')continue;const d=Math.hypot(k.x-p.x,k.z-p.z);if(d<95&&n<BEAMS)bonusBuf[n++]=k;}
       for(let i=0;i<n;i++){const k=bonusBuf[i],b=beams[i],pulse=1+Math.sin(now/260+i)*.18;b.enabled=true;b.setPosition(k.x,0,k.z);b.setLocalScale(2.5*pulse,22,1);b.setEulerAngles(0,sprites.yawToward(k.x,k.z,p),0);beamsOn++;}
     }
     for(let i=beamsOn;i<BEAMS;i++)if(beams[i].enabled)beams[i].enabled=false;
+    // JulRushens mål: strålen är smal på nära håll (så att den inte täcker paketet) och blir bredare med avståndet, så att den syns även 300 m bort
+    goalOn=!!goalPk;
+    if(goalOn){
+      const d=Math.hypot(goalPk.x-p.x,goalPk.z-p.z),pulse=1+Math.sin(now/180)*.14,w=Math.max(1.1,Math.min(8,d*.03));
+      goal.beam.enabled=goal.ring.enabled=true;
+      goal.beam.setPosition(goalPk.x,0,goalPk.z);goal.beam.setLocalScale(w*pulse,70,1);goal.beam.setEulerAngles(0,sprites.yawToward(goalPk.x,goalPk.z,p),0);
+      goal.ring.setPosition(goalPk.x,.08,goalPk.z);goal.ring.setLocalScale(5.2*pulse,.04,5.2*pulse);
+    }else if(goal.beam.enabled){goal.beam.enabled=goal.ring.enabled=false;}
     // tomten
-    const t=live&&r.tomte?r.tomte:(r&&r.phase==='done'&&r.tomte?r.tomte:null);
+    const t=!rr&&live&&r.tomte?r.tomte:(!rr&&r&&r.phase==='done'&&r.tomte?r.tomte:null);
     if(t){
       const d=Math.hypot(t.x-p.x,t.z-p.z),near=d<75,deliver=r.phase==='deliver',done=r.phase==='done';
       tomte.e.enabled=near;tomte.bubble.enabled=near;
@@ -88,6 +106,7 @@ export function createXmasView(pc,host,draw,sprites,hunt){
   // Radarn (256 px, 3,2 px per meter): närliggande paket som prickar, bonuspaket större och guldfärgade, tomten som en röd ring.
   const radarBuf=[];
   function radar(c,point,p){
+    if(rush&&rush.active)return radarRush(c,point,p);
     const r=hunt.run;if(!r||!(r.phase==='collect'||r.phase==='deliver'||r.phase==='free'))return;
     hunt.nearby(p,46,60,radarBuf);
     for(const k of radarBuf){
@@ -100,6 +119,19 @@ export function createXmasView(pc,host,draw,sprites,hunt){
       c.beginPath();c.arc(x,y,deliver?9:6,0,6.283);c.fillStyle=deliver?'#d9473fcc':'#d9473f77';c.fill();c.strokeStyle='#fff6d6';c.lineWidth=deliver?3:2;c.stroke();
     }
   }
-  function clear(){for(const s of pool){s.e.enabled=false;s.id='';}for(const b of beams)b.enabled=false;tomte.e.enabled=tomte.bubble.enabled=tomte.ring.enabled=tomte.pillar.enabled=false;for(const b of bursts){b.life=0;b.ring.enabled=b.spark.enabled=false;}shown=0;beamsOn=0;}
-  return {update,burst,clear,radar,setLite:v=>{lite=!!v;},get lite(){return lite;},tomteEntity:tomte.e,snapshot:()=>({shown,beams:beamsOn,tomte:tomte.e.enabled,bubble:tomte.mood,ring:tomte.ring.enabled,pool:POOL,bursts:bursts.filter(b=>b.life>0).length}),drawCalls:()=>shown+beamsOn+(tomte.e.enabled?2:0)+(tomte.ring.enabled?2:0)+bursts.filter(b=>b.life>0).length*2};
+  // JulRushens radar: paketen som prickar och nästa paket som en grön ring. Ligger det utanför radarn visas ringen på kanten, åt rätt håll.
+  function radarRush(c,point,p){
+    rush.nearby(p,46,60,radarBuf);
+    for(const k of radarBuf){
+      const [x,y]=point(k.x,k.z);c.beginPath();c.arc(x,y,k.kind==='bonus'?5.5:3.2,0,6.283);
+      c.fillStyle=k.kind==='bonus'?'#ffd36b':'#ff6b5e';c.fill();
+      if(k.kind==='bonus'){c.strokeStyle='#ffffff';c.lineWidth=2;c.stroke();}
+    }
+    const tg=rush.running?rush.target(p):null;if(!tg)return;
+    let [x,y]=point(tg.x,tg.z);const dx=x-128,dy=y-128,d=Math.hypot(dx,dy),lim=112;
+    if(d>lim){x=128+dx/d*lim;y=128+dy/d*lim;}
+    c.beginPath();c.arc(x,y,d>lim?6:8,0,6.283);c.fillStyle='#4cc784cc';c.fill();c.strokeStyle='#ffffff';c.lineWidth=3;c.stroke();
+  }
+  function clear(){for(const s of pool){s.e.enabled=false;s.id='';}for(const b of beams)b.enabled=false;goal.beam.enabled=goal.ring.enabled=false;goalOn=false;tomte.e.enabled=tomte.bubble.enabled=tomte.ring.enabled=tomte.pillar.enabled=false;for(const b of bursts){b.life=0;b.ring.enabled=b.spark.enabled=false;}shown=0;beamsOn=0;}
+  return {update,burst,clear,radar,setLite:v=>{lite=!!v;},get lite(){return lite;},tomteEntity:tomte.e,snapshot:()=>({shown,beams:beamsOn,goal:goalOn,tomte:tomte.e.enabled,bubble:tomte.mood,ring:tomte.ring.enabled,pool:POOL,bursts:bursts.filter(b=>b.life>0).length}),drawCalls:()=>shown+beamsOn+(goalOn?2:0)+(tomte.e.enabled?2:0)+(tomte.ring.enabled?2:0)+bursts.filter(b=>b.life>0).length*2};
 }

@@ -1,5 +1,5 @@
-import {MALL_ROOMS,mallRoom} from './mall-space.mjs?v=2.21.1-xmas.1';
-import {STOREFRONTS,storefrontAnchor} from './city-geography.mjs?v=2.21.1-xmas.1';
+import {MALL_ROOMS,mallRoom} from './mall-space.mjs?v=2.21.1-xmas.2';
+import {STOREFRONTS,storefrontAnchor} from './city-geography.mjs?v=2.21.1-xmas.2';
 const stories={
   coop:{name:'Kvittot-Kjell',itemName:'KVITTOT',request:'Kassan vägrar ta emot gurkan. Hämta kvittot så kan jag reklamera mig själv.',thanks:'Kvittot säger att jag varit utgången sedan tisdag. Men du får bonus!',panic:'Det PIPER! Är det kassan? Är det jag?!'},
   cervera:{name:'Rut i returen',itemName:'KOPPEN',request:'Jag har lagt kaffekoppen bland returerna. Hämta den? Jag vågar inte fråga mig själv.',thanks:'Tack! Jag skulle erbjuda kaffe, men glömde vilken ände av koppen man använder.',panic:'Tänk om allt porslin går sönder samtidigt!'},

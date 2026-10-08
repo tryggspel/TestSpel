@@ -42,7 +42,8 @@ export const STAMPS=Object.freeze([
   Object.freeze({id:'round-drottninggatan',label:'DROTTNINGGATANS JULRUNDA',sub:'Julrunda 3'}),
   Object.freeze({id:'cervera',label:'TOMTARNAS FIKABORD',sub:'Cervera'}),
   Object.freeze({id:'pressbyran',label:'TOMTARNAS FIKAORDER',sub:'Pressbyrån'}),
-  Object.freeze({id:'zombies',label:'TOMTEZOMBIES',sub:'Överlev en tomtejakt'})
+  Object.freeze({id:'zombies',label:'TOMTEZOMBIES',sub:'Överlev en tomtejakt'}),
+  Object.freeze({id:'julrush',label:'JULRUSHEN',sub:'Nå tempo 5'})
 ]);
 export const TITLES=Object.freeze([[0,'NYFIKEN'],[250,'PAKETJÄGARE'],[900,'TOMTEHJÄLPARE'],[2400,'JULENS VÄN'],[6000,'ÖVERTOMTE']]);
 export const titleFor=points=>TITLES.reduce((t,[min,name])=>points>=min?name:t,TITLES[0][1]);

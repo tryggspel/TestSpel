@@ -2,7 +2,7 @@
 // Koordinater är spelets lokala meter (x öst, z syd). Alla platser är kontrollerade mot spelets verkliga blocked() med
 // minst 1,1 m fritt runt om (termosar) respektive 1,6 m (skatter) och ligger på verkliga OSM-vägar och parkstigar.
 
-import {NEW_TREASURES,NEW_THERMOS} from './orrholmen-places.mjs?v=2.21.1-xmas.1';
+import {NEW_TREASURES,NEW_THERMOS} from './orrholmen-places.mjs?v=2.21.1-xmas.2';
 
 // Fler termosar långt ut: stigar och gator i Haga, Inre hamn, Mariebergsskogen, Sandgrundsparken och Klara.
 export const FX_THERMOS=Object.freeze({

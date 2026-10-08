@@ -18,17 +18,18 @@ function fakeContext(){
 }
 const audioFor=ctx=>({context:()=>ctx,bus:()=>ctx.destination,resume(){}});
 
-test('båda stämningarna är åtta takter med fyra ackordstoner och rimliga tempon',()=>{
+test('alla tre stämningar är åtta takter med fyra ackordstoner och rimliga tempon',()=>{
   for(const [name,m] of Object.entries(MOODS)){
     assert.equal(m.chords.length,8,name);assert.equal(m.melody.length,8,name);
     for(const c of m.chords)assert.equal(c.length,4);
     for(const bar of m.melody)for(const [at,midi,len] of bar){assert.ok(at>=0&&at<8&&midi>=55&&midi<=100&&len>=1);}
-    assert.ok(m.bpm>=60&&m.bpm<=100);
+    assert.ok(m.bpm>=60&&m.bpm<=130);
   }
   assert.ok(MOODS.eerie.bpm<MOODS.cozy.bpm,'det kusliga läget går långsammare');
+  assert.ok(MOODS.rush.bpm>MOODS.cozy.bpm,'JulRushens musik går fortare än det lugna läget');
 });
 test('en hel slinga (åtta takter) planeras utan fel och med begränsat antal ljudnoder',()=>{
-  for(const mood of ['cozy','eerie']){
+  for(const mood of ['cozy','eerie','rush']){
     const ctx=fakeContext(),music=createXmasMusic({audio:audioFor(ctx)});
     const seconds=8*4*60/MOODS[mood].bpm;
     assert.equal(music.renderTo(mood,seconds),true);
@@ -60,5 +61,16 @@ test('efter bakgrund börjar notmaskinen om från nu i stället för att köa ga
   music.tick();const s=music.snapshot();
   assert.equal(s.restarts>=1,true);
   assert.ok(s.notes-n1<120,'högst ett par takter planeras på en gång: '+(s.notes-n1));
+  music.stop(.05);
+});
+
+test('JulRushen: musiken går fortare när tempot stiger, med gränser, och ogiltiga värden ger normalt tempo',()=>{
+  const ctx=fakeContext(),music=createXmasMusic({audio:audioFor(ctx)});
+  assert.equal(music.rate,1);
+  assert.equal(music.setRate(1.18),1.18);assert.equal(music.setRate(9),1.6);assert.equal(music.setRate(.1),.8);assert.equal(music.setRate('x'),1);assert.equal(music.setRate(undefined),1);
+  // Samma antal takter tar kortare tid i ett högre tempo: fler åttondelar planeras på samma sekunder.
+  const steps=r=>{const c=fakeContext(),m=createXmasMusic({audio:audioFor(c)});m.setRate(r);m.renderTo('rush',20);return m.snapshot().scheduled;};
+  const slow=steps(1),fast=steps(1.33);assert.ok(fast>slow*1.25&&fast<slow*1.4,'1,33× tempo ger ungefär 1,33× så många åttondelar: '+slow+' → '+fast);
+  assert.equal(music.play('rush'),true);assert.equal(music.mode,'rush');assert.equal(music.snapshot().rate,1);
   music.stop(.05);
 });

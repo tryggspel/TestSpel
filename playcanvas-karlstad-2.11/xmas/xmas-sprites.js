@@ -1,6 +1,6 @@
 // Julklappsjakten: delade bildkort (paket, tomtar, stjärnor, sken). En enda fyrkantsmesh och ett fåtal material används av alla paket
 // och alla tomtar i staden, så antalet texturer och material beror på antalet varianter, inte på antalet föremål.
-import {drawPackageAtlas,PACKAGE_STYLES,PACKAGE_CELL,drawTomteAtlas,TOMTE_STYLES,TOMTE_ATLAS,TOMTE_CELL,drawStar,drawSnowflake,drawSparkle,drawGlow} from './xmas-art.js?v=2.21.1-xmas.1';
+import {drawPackageAtlas,PACKAGE_STYLES,PACKAGE_CELL,drawTomteAtlas,TOMTE_STYLES,TOMTE_ATLAS,TOMTE_CELL,drawStar,drawSnowflake,drawSparkle,drawGlow} from './xmas-art.js?v=2.21.1-xmas.2';
 
 export const hash32=s=>{let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;};
 
