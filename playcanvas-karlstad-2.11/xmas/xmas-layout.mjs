@@ -30,7 +30,7 @@ function atArc(s){
   return {x,z,tx:dx/l,tz:dz/l,nx:-dz/l,nz:dx/l};
 }
 // Gruppformer: [båglängd framåt, sidoförskjutning]. Sidoförskjutningen är max 1,2 m så att man tar alla genom att gå längs spåret.
-const SHAPES=Object.freeze({
+export const SHAPES=Object.freeze({
   line3:[[0,0],[1.9,.4],[3.8,0]],
   pair:[[0,-.6],[1.8,.6]],
   arc4:[[0,-1.2],[1.5,-.4],[3,.4],[4.5,1.2]],

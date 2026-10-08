@@ -1,5 +1,6 @@
 // Julklappsjakten: kopplar ihop motorn, vyn, gränssnittet och grundspelets system. Anropas en gång från last-round.js (bara i julbygget).
 // Allt här är fail-soft: om något i julkoden skulle kasta stängs jultilläggen av och grundspelet lever vidare (som platskoden i 2.21).
+import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.1';
 import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.1';
 import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.1';
 import {INTRO,TREE} from './xmas-layout.mjs?v=2.21.1-xmas.1';
@@ -9,6 +10,8 @@ import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.1';
 import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.1';
 import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.1';
 import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.1';
+import {nextRound,roundById,buildRound} from './xmas-rounds.mjs?v=2.21.1-xmas.1';
+import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.1';
 
 // Julbygget har inga termosar, hemligheter eller skatter: paketen ersätter dem. Anropas direkt efter att resan skapats, innan någon vy ritas.
 export function prepareXmasJourney(journey){
@@ -17,12 +20,15 @@ export function prepareXmasJourney(journey){
 }
 
 export function installXmas(ctx){
-  const {pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,isPlaying,placeActive,indoors,params,storage}=ctx;
+  const {pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,isPlaying,placeActive,indoors,openPass,params,storage}=ctx;
+  registerXmasProps();
   const save=new XmasSave(storage);
   let fault=false;
   const guard=(fn,fallback)=>{if(fault)return fallback;try{return fn();}catch(e){fault=true;console.error('[Jultillägget stängdes av efter fel]',e);try{hunt.cancel('fel');ui.showHud(false);view.clear();document.body.classList.remove('xmas-cozy');}catch{}return fallback;}};
 
   const nav={blocked:(x,z)=>host.blocked(x,z),snap:p=>{try{const q=journey.nav.point(p);return {x:q.x,z:q.z};}catch{return null;}}};
+  // Spelets egen gångbara karta för rundorna (rutter, hinder, fri sikt).
+  const roundNav={point:p=>journey.nav.point(p),path:(a,b)=>journey.nav.path(a,b),clear:(a,b)=>journey.nav.clear(a,b),blocked:(x,z)=>host.blocked(x,z),smooth:p=>smoothPath(journey.nav,p)};
   const hunt=new XmasHunt({save,nav});
   const sprites=createSprites(pc,host,{texture,root});
   const view=createXmasView(pc,host,{labelTex,root,texture},sprites,hunt);
@@ -37,10 +43,10 @@ export function installXmas(ctx){
     location.assign(baseUrl);
   }
   // ── Vad som händer när en körning startar ─────────────────────────────────────────────────────────────────────
-  function enter(kind){
+  function enter(kind,spawn=null){
     mode='cozy';document.body.classList.add('xmas-on','xmas-cozy');
     startCity('clean');
-    const {x,z,yaw}=kind==='intro'?INTRO.spawn:kind==='free'?freeSpawn():INTRO.spawn;
+    const {x,z,yaw}=spawn||(kind==='intro'?INTRO.spawn:kind==='free'?freeSpawn():INTRO.spawn);
     host.teleport(x,z,yaw,-4);journey.position={x,z};journey.lastStep=null;journey.heading=yaw;journey.routeMode='hunt';
     ui.showHud(true);
   }
@@ -51,6 +57,52 @@ export function installXmas(ctx){
       toast('JULKLAPPSJAKTEN','Följ paketen runt granen. De syns på långt håll.',3);
       ui.showGoal('Hjälp tomten! Samla 20 paket.',7000);
       ui.setProgress(hunt.run);view.clear();
+    });
+  }
+  function startRound(id=null){
+    guard(()=>{
+      const def=(id&&roundById(id))||nextRound(save);
+      const run=buildRound(def,roundNav);
+      enter('round',run.spawn);
+      hunt.startRun({kind:'round',id:run.id,title:run.title,goal:run.goal,packages:run.packages,tomte:run.tomte,spawn:run.spawn,tree:run.tree,windowSec:run.windowSec,soft:run.soft,stampId:run.stampId});
+      toast(def.title,def.blurb,3.6);
+      ui.showGoal('Samla '+run.goal+' paket och lämna dem hos tomten.',7500);
+      ui.setProgress(hunt.run);view.clear();
+    });
+  }
+  // ── Butiksuppdrag: stämplar och leverans till tomten ────────────────────────────────────────────────────────────────
+  // En runda eller introduktionen går före butikerna (annars skulle två uppdrag tävla om samma pil och samma knapp).
+  const runBusy=()=>!!hunt.run&&hunt.active&&(hunt.run.kind==='intro'||hunt.run.kind==='round');
+  function tomteSpotFor(place){
+    const t=place.talk||place.where;
+    for(const r of [12,9,15,7])for(let k=0;k<12;k++){
+      const a=k*30*Math.PI/180,x=t.x+Math.sin(a)*r,z=t.z+Math.cos(a)*r;if(host.blocked(x,z))continue;
+      let q=null;try{q=journey.nav.point({x,z});}catch{}
+      if(q&&Math.hypot(q.x-x,q.z-z)<1.5&&journey.nav.clear(t,q))return {x:+q.x.toFixed(2),z:+q.z.toFixed(2)};
+    }
+    return {x:+(t.x+8).toFixed(2),z:+t.z.toFixed(2)};
+  }
+  function startDelivery(place){
+    const spot=tomteSpotFor(place);
+    hunt.startRun({kind:'delivery',id:'delivery-'+place.id,title:place.activity.title,goal:0,packages:[],tomte:{x:spot.x,z:spot.z,radius:3.2},phase:'deliver',stampId:place.id,windowSec:3.6});
+    ui.setProgress(hunt.run);ui.showHud(true);view.clear();
+    ui.showGoal('Bär fikat till tomten som väntar utanför!',7000);
+    toast('TOMTEN VÄNTAR','Följ pilen och lämna fikat. Tomten står '+Math.round(Math.hypot(spot.x-host.player.getPosition().x,spot.z-host.player.getPosition().z))+' m bort.',3.4);
+  }
+  function onPlaceEvent(e){
+    if(!e||e.type!=='place-complete')return;
+    guard(()=>{
+      const place=journey.places?.get?.(e.placeId);if(!place)return;
+      if(e.placeId==='pressbyran'){startDelivery(place);return;}
+      const first=save.stamp(e.placeId);
+      save.addTotals({points:e.points||0});
+      if(first){ui.showPill('JULSTÄMPEL! '+(e.stamp?.label||place.name),2600,performance.now());sound('win');}
+    });
+  }
+  function openShops(){
+    guard(()=>{
+      startFree();
+      setTimeout(()=>guard(()=>{try{openPass?.();}catch(err){console.error(err);}}),60);
     });
   }
   function startFree(){
@@ -73,7 +125,7 @@ export function installXmas(ctx){
 
   const ui=createXmasUi({save,fx:{
     cozy:()=>{if(save.introDone)openContinue();else startIntro();},
-    intro:()=>startIntro(),round:()=>ctx.startRound?.(),shops:()=>ctx.openShops?.(),free:()=>startFree(),zombies:()=>ctx.startZombies?.(),
+    intro:()=>startIntro(),round:()=>startRound(),shops:()=>openShops(),free:()=>startFree(),zombies:()=>ctx.startZombies?.(),
     openMenu,openContinue,goBase,setWeather
   }});
 
@@ -88,7 +140,7 @@ export function installXmas(ctx){
       if(e.praise){fanfare(e.praise,'+'+e.tierBonus+' poäng',1.3,'chain');}
       ui.setProgress(hunt.run);
     },
-    'xmas-goal':(e,now)=>{sound('win');[523.25,659.25,783.99,1046.5].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.28,.08),i*90));ui.showGoal('Bra! Lämna paketen hos tomten.',5500,now);fanfare('20 PAKET!','Följ pilen till tomten och lämna dem.',2.4,'win');ui.setProgress(hunt.run);},
+    'xmas-goal':(e,now)=>{sound('win');[523.25,659.25,783.99,1046.5].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.28,.08),i*90));ui.showGoal('Bra! Lämna paketen hos tomten.',5500,now);fanfare(e.goal+' PAKET!','Följ pilen till tomten och lämna dem.',2.4,'win');ui.setProgress(hunt.run);},
     'xmas-chain-lost':(e,now)=>{ui.showPill('KEDJAN BRÖTS · '+e.chain+' I RAD',1200,now,'lost');},
     'xmas-rain':(e,now)=>{sound('energy');ui.showGoal('Tomtarna tappade fler paket! Följ pilen.',5200,now);fanfare('PAKETREGN!',e.count+' paket och ett bonuspaket. Följ pilen.',2.6,'energy');},
     'xmas-rain-gone':(e,now)=>{if(e.missed>0)ui.showPill('PAKETREGNET FÖRSVANN',1400,now,'lost');},
@@ -126,7 +178,7 @@ export function installXmas(ctx){
   const api={
     hunt,save,view,ui,sprites,handlers,decor,
     get active(){return hunt.active;},get cozy(){return mode==='cozy';},
-    update,hudText,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
+    update,hudText,startRound,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
     step:(dt,p,sweep,speed)=>guard(()=>hunt.step(dt,p,sweep,speed)),
     objective:p=>fault?null:hunt.objective(p),
     snapshot:()=>({mode,fault,hunt:hunt.snapshot(),view:view.snapshot(),decor:decor?decor.snapshot():null,build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone}}),

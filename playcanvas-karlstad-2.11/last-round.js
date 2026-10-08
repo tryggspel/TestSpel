@@ -39,6 +39,7 @@ import {createPlacesView} from './places-view.js?v=2.21.1-xmas.1';
 import {createPlacesUi} from './places-ui.js?v=2.21.1-xmas.1';
 import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.21.1-xmas.1';
 import {installXmas,prepareXmasJourney} from './xmas/xmas-boot.js?v=2.21.1-xmas.1'; // julgrenen: Julklappsjakten (allt jul bor under xmas/)
+import {XMAS_PLACES} from './xmas/xmas-places.mjs?v=2.21.1-xmas.1';
 
 export function createLastRound(pc, host) {
   // 2.10: elementuppslag cachas, och HUD-text skrivs bara om när värdet faktiskt ändras.
@@ -85,11 +86,11 @@ export function createLastRound(pc, host) {
   const placeSite=placeAnchors(host.colliders);
   // Fail-soft som övriga förbättringspass: om något i platskoden skulle kasta på en enhet vi inte testat ska grundspelet leva vidare.
   try{
-    journey.places=new PlaceQuests({anchors:placeSite.anchors,faces:placeSite.faces,storage,host:{
-      push:e=>journey.events.push(e),
+    journey.places=new PlaceQuests({places:XMAS_PLACES,anchors:placeSite.anchors,faces:placeSite.faces,storage,host:{
+      push:e=>{journey.events.push(e);try{xmas?.onPlaceEvent(e);}catch(err){console.error(err);}},
       reward:points=>journey.reward(points),
       onStamp:(count,total)=>{for(const b of journey.fun.notePartnerStamps(count,total))journey.events.push(b);journey.save();},
-      available:()=>journey.rush.mode==='clean'&&journey.rush.state==='playing'&&!journey.tempo.running&&!journey.rush.challenge
+      available:()=>journey.rush.mode==='clean'&&journey.rush.state==='playing'&&!journey.tempo.running&&!journey.rush.challenge&&!xmas?.runBusy()
     }});
     journey.fun.notePartnerStamps(journey.places.stampCount(),journey.places.stampTotal());
   }catch(e){console.error('[Platsuppdrag hoppades över]',e);journey.places=new PlaceQuests({places:[]});}
@@ -1084,7 +1085,7 @@ export function createLastRound(pc, host) {
     actors: game.actors.map(a => ({id: a.id, x: a.x, z: a.z, active: a.active, hp:a.hp, kind:a.kind})), goal: {...layout.goal}, objective:isPush()?layout.goal:game.objective(host.player.getPosition())})});
   // Julgrenen: Julklappsjakten kopplas in här. Alla hjälpfunktioner som julkoden behöver ges som argument, den rör inga andra moduler.
   xmas=installXmas({pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,params,storage,
-    isPlaying:()=>game.phase==='playing'&&!panel,placeActive:()=>!!journey.places?.run,indoors:p=>mallInside(p)});
+    isPlaying:()=>game.phase==='playing'&&!panel,placeActive:()=>!!journey.places?.run,indoors:p=>mallInside(p),openPass:()=>openPass()});
   journey.xmas=xmas;
   explore(true);
   if(xmas){xmas.openMenu();}

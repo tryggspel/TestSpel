@@ -32,7 +32,7 @@ export class XmasHunt{
   startRun(def){
     const packages=def.packages.map(p=>({id:p.id,x:p.x,z:p.z,y:p.y||0,kind:p.kind==='bonus'?'bonus':'regular',cluster:p.cluster??0,collected:false,at:0}));
     const regular=packages.filter(p=>p.kind==='regular').length,bonus=packages.length-regular;
-    this.run={serial:++this.serial,kind:def.kind,id:def.id,title:def.title||'',phase:def.kind==='free'?'free':'collect',goal:def.goal||0,packages,byId:new Map(packages.map(p=>[p.id,p])),
+    this.run={serial:++this.serial,kind:def.kind,id:def.id,title:def.title||'',phase:def.phase||(def.kind==='free'?'free':'collect'),goal:def.goal||0,packages,byId:new Map(packages.map(p=>[p.id,p])),
       collected:0,bonusCollected:0,regularTotal:regular,bonusTotal:bonus,points:0,chain:0,bestChain:0,lastPickAt:-1e9,t:0,tomte:def.tomte||null,spawn:def.spawn||null,tree:def.tree||null,
       windowSec:def.windowSec||COMBO.window,soft:def.soft||0,late:false,stampId:def.stampId||null,lastPickT:0,nextRainAt:def.kind==='free'?FREE_RAIN.first:Infinity,rains:[],rainSerial:0,result:null};
     this.lastStep=null;

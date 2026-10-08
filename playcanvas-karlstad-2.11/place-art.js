@@ -89,6 +89,9 @@ const PROPS={
   }
 };
 
+// Julgrenen: andra moduler (xmas/) kan lägga till egna föremål utan att ändra den här filen. Samma ruta (256×256) och samma stil.
+export function registerProp(kind,fn){if(typeof fn==='function'&&!PROPS[kind])PROPS[kind]=fn;return kind in PROPS;}
+export const hasProp=kind=>kind in PROPS;
 // Ritar ett föremål i en kvadratisk ruta (w×h). Transparent bakgrund.
 export function drawProp(c,kind,w=256,h=w){
   const f=PROPS[kind];if(!f)return false;

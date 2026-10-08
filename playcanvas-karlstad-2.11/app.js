@@ -510,7 +510,9 @@ function addBuildings(osm,environment,outerData={}){
   colliderGrid=new ColliderGrid(colliders);southGate=colliders.filter(b=>b.osm===80868525);
   const infillGraphics=createInfill(pc,app,infill,admitted),river=createRiverArchitecture(pc,app);
   const geometry=createCityArchitecture(pc,app,admitted,infill),environmentGraphics=createCityEnvironment(pc,app,environment),south=createSouthCity(pc,app,admitted);
-  mallGraphics=createMallArchitecture(pc,app,admitted);const {update:animateMall,...mall}=mallGraphics,park=createParkArchitecture(pc,app);
+  // julgrenen: ingen snö inomhus (köpcentrumets golv och tak ritas utan snöfilter)
+  {const keepSnow=ComicMesh.snow;ComicMesh.snow=null;try{mallGraphics=createMallArchitecture(pc,app,admitted);}finally{ComicMesh.snow=keepSnow;}}
+  const {update:animateMall,...mall}=mallGraphics,park=createParkArchitecture(pc,app);
   window.KarlstadArchitecture=Object.freeze({...geometry,buildings:admitted.length,infill:infillGraphics,environment:environmentGraphics,river,mall,park,south,staticDrawCalls:geometry.staticDrawCalls+mall.staticDrawCalls+park.staticDrawCalls+south.staticDrawCalls+infillGraphics.staticDrawCalls+environmentGraphics.staticDrawCalls+river.staticDrawCalls});
   return admitted.length+infill.length;
 }

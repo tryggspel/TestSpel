@@ -37,7 +37,7 @@ export function createPlacesView(pc,host,draw,engine){
     ent.enabled=false;
     // tavlor: meny och skylt
     const [bx,bz]=P(0,.2),[sx,sz]=P(0,D/2+.62);
-    const board=card('Pressbyrån · menytavla',texture((c,w,h)=>drawMenuBoard(c,w,h,place.activity.menu.map(i=>i.art),'FIKA PÅ MINUTEN'),768,384),1.86,.93,bx,1.16,bz);
+    const board=card('Pressbyrån · menytavla',texture((c,w,h)=>drawMenuBoard(c,w,h,place.activity.menu.map(i=>i.art),place.activity.title),768,384),1.86,.93,bx,1.16,bz);
     const sign=card('Pressbyrån · skylt',labelTex(['PRESSBYRÅN','KAFFE · BULLAR · TIDNINGAR'],'#1e4f91','#fff3d0'),3.4,.88,sx,2.82,sz,true);
     board.setEulerAngles(0,s>0?0:180,0);
     board.enabled=sign.enabled=false;

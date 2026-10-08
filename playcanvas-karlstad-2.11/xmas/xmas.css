@@ -37,15 +37,18 @@
 /* ── HUD under spelets gång ───────────────────────────────────────────────────────────────────────────────────── */
 #xmasHud{position:absolute;z-index:6;top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));width:min(290px,calc(100vw - 132px));display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;padding:7px 10px 8px;border-radius:10px;background:#0f2a24e8;border:1px solid #abc7ad55;border-bottom:3px solid var(--xmas-red);color:var(--paper);pointer-events:none;font-family:system-ui,sans-serif}
 #xmasHud[hidden]{display:none}
-.xh-row{grid-column:1/-1;display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:center}
+.xh-row{grid-column:1/-1;display:grid;grid-template-columns:auto auto 1fr auto;gap:8px;align-items:center}
 .xh-label{font:800 11px/1 system-ui;letter-spacing:.14em;color:#b3c7b7}
 .xh-count{font:1000 24px/1 system-ui;letter-spacing:-.03em;color:var(--xmas-gold)}
 .xh-bar{display:block;height:7px;border-radius:5px;background:#ffffff22;overflow:hidden}
 .xh-bar u{display:block;height:100%;width:0;text-decoration:none;background:linear-gradient(90deg,var(--xmas-red),var(--xmas-gold));transition:width .18s}
 #xmasHud[data-phase="deliver"] .xh-count,#xmasHud[data-phase="done"] .xh-count{color:#9bf0a7}
 #xmasHud[data-phase="deliver"] .xh-bar u,#xmasHud[data-phase="done"] .xh-bar u{background:linear-gradient(90deg,#4cc784,#9bf0a7)}
-.xh-points{display:flex;align-items:baseline;gap:6px}
+.xh-points{display:flex;align-items:baseline;gap:6px;min-width:0}
 .xh-points b{font:900 17px/1 system-ui;color:var(--paper)}
+.xh-time{font:900 14px/1 system-ui;font-style:normal;color:var(--xmas-gold);letter-spacing:.04em;padding:2px 6px;border-radius:8px;background:#ffffff14}
+.xh-time.late{color:#ffb4a8}
+.xh-time[hidden]{display:none}
 .xh-points span{font:800 10px/1 system-ui;letter-spacing:.12em;color:#9fc0a8}
 .xh-combo{display:flex;align-items:center;gap:6px;white-space:nowrap;padding:3px 7px;border-radius:12px;background:#4b2b62ee;border:1px solid #d8b3ed;font:900 11px/1 system-ui;letter-spacing:.04em;color:#fff0ce}
 .xh-combo[hidden]{display:none}
