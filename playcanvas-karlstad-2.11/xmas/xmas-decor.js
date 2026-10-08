@@ -156,19 +156,23 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
   });
 
   // ── Tomtar och tomtefönster (pooler) ─────────────────────────────────────────────────────────────────────────────
-  const POOL_T=6,POOL_W=5,spots=[...TOMTE_SPOTS,...facade.roofs];
-  const tPool=Array.from({length:POOL_T},(_,i)=>({e:place(sprites.spriteEntity('Tomte '+i,sprites.tomteMaterials[0][0],1.35,2,{enabled:false}),'Tomte '+i),id:'',v:-1,f:-1}));
+  const POOL_G=4,POOL_R=2,POOL_T=POOL_G+POOL_R,POOL_W=5,groundSpots=TOMTE_SPOTS,roofSpots=facade.roofs;
+  const tPool=Array.from({length:POOL_T},(_,i)=>({e:place(sprites.spriteEntity('Tomte '+i,sprites.tomteMaterials[0][0],1.35,2,{enabled:false}),'Tomte '+i),id:'',v:-1,f:-1,roof:i>=POOL_G}));
   const winTex=texture((c)=>drawWindowAtlas(c),WINDOW_CELL.w*WINDOW_STYLES.length,WINDOW_CELL.h);
   const winMats=WINDOW_STYLES.map((_,i)=>sprites.spriteMaterial(winTex,{tiling:[1/WINDOW_STYLES.length,1],offset:[i/WINDOW_STYLES.length,0],alphaTest:.1}));
   const wPool=Array.from({length:POOL_W},(_,i)=>({e:place(sprites.spriteEntity('Tomtefönster '+i,winMats[0],2.3,3.45,{enabled:false}),'Tomtefönster '+i),id:'',v:-1}));
   const dist2=(a,p)=>(a.x-p.x)*(a.x-p.x)+(a.z-p.z)*(a.z-p.z);
   let lastPick=-1e9,tShown=0,wShown=0;
   function pick(p){
-    const cand=[];for(const s of spots){const d=Math.sqrt(dist2(s,p));if(d<(s.kind==='roof'?105:62))cand.push({s,d});}
-    cand.sort((a,b)=>a.d-b.d);const want=cand.slice(0,POOL_T),ids=new Set(want.map(w=>w.s.id));
-    for(const slot of tPool)if(slot.id&&!ids.has(slot.id)){slot.id='';slot.e.enabled=false;}
-    for(const w of want){if(tPool.some(sl=>sl.id===w.s.id))continue;const free=tPool.find(sl=>!sl.id);if(!free)break;free.id=w.s.id;free.spot=w.s;
-      const sc=w.s.scale||1;free.e.setLocalScale(1.35*sc,2*sc,1);free.e.setPosition(w.s.x,w.s.y||0,w.s.z);free.e.enabled=true;}
+    // Marktomtar (vid granen, granarna och stånden) och taktomtar har var sin pool, så att de nära tomtarna inte tränger bort de på taken.
+    const fill=(list,maxDist,roof,count)=>{
+      const cand=[];for(const s of list){const d=Math.sqrt(dist2(s,p));if(d<maxDist)cand.push({s,d});}
+      cand.sort((a,b)=>a.d-b.d);const want=cand.slice(0,count),ids=new Set(want.map(w=>w.s.id)),slots=tPool.filter(sl=>sl.roof===roof);
+      for(const slot of slots)if(slot.id&&!ids.has(slot.id)){slot.id='';slot.e.enabled=false;}
+      for(const w of want){if(slots.some(sl=>sl.id===w.s.id))continue;const free=slots.find(sl=>!sl.id);if(!free)break;free.id=w.s.id;free.spot=w.s;
+        const sc=w.s.scale||1;free.e.setLocalScale(1.35*sc,2*sc,1);free.e.setPosition(w.s.x,w.s.y||0,w.s.z);free.e.enabled=true;}
+    };
+    fill(groundSpots,62,false,POOL_G);fill(roofSpots,115,true,auto>=1?1:POOL_R);
     tShown=tPool.filter(sl=>sl.id).length;
     const wc=[];if(auto===0)for(const s of facade.windows){const d=Math.sqrt(dist2(s,p));if(d<88)wc.push({s,d});}
     wc.sort((a,b)=>a.d-b.d);const ww=wc.slice(0,POOL_W),wids=new Set(ww.map(w=>w.s.id));
