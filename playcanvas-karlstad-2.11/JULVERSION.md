@@ -112,7 +112,7 @@ Fångstfältet är detsamma som för termosar i 2.20.0 (växer med farten, ingen
 
 ## 7. Prestanda och mätningar
 
-**Mätt här (headless Chromium med SwiftShader, 414×896, programvaruritning): relativa jämförelser, inte mobilprestanda.**
+**Mätt här (headless Chromium med SwiftShader, 414×896, programvaruritning): relativa jämförelser, inte mobilprestanda.** Mätningarna är gjorda på commit `39f30d8` och har inte upprepats efter slutjusteringarna (startpunkt, mindre upplockningspuff, resultatkort), som inte ökar kostnaden.
 
 | Mått (samma rutt, samma upplägg) | Grundspelet (Clean City Explore) | Julklappsjakten (introduktionen) |
 |---|---|---|
@@ -139,10 +139,10 @@ mobilformat 414×896 med emulerad tryckskärm, liggande telefon 896×414 och skr
 
 | Verktyg | Vad | Resultat |
 |---|---|---|
-| `tools/xmas-flow/flow.mjs` (mobil 414×896) | startvy och version → introduktionen (mål 20, 30 + 3 paket, paketen syns, målet visas, leverans, resultatkort, stämpel) → sparning i egna nycklar och efter omladdning → tre rundor (Kungsgatan spelad hela vägen) → miljön (8 stånd, granar, ljusslingor, snö utomhus men inte inomhus, ~6 tomtar nära) → Pressbyrån (beställning och leverans) och Cervera → Tomtezombies (4 typer, högst sex aktiva, tagen, försök igen) → inga zombier i Julklappsjakten → väder av/på, mute → tillbaka-knapparna → inga konsolfel | **37/37 OK** (kod som i `94bb3ca`; senare commits ändrar bara dokumentation) |
+| `tools/xmas-flow/flow.mjs` (mobil 414×896) | startvy och version → introduktionen (mål 20, 30 + 3 paket, paketen syns, målet visas, leverans, resultatkort, stämpel) → sparning i egna nycklar och efter omladdning → tre rundor (Kungsgatan spelad hela vägen) → miljön (8 stånd, granar, ljusslingor, snö utomhus men inte inomhus, ~6 tomtar nära) → Pressbyrån (beställning och leverans) och Cervera → Tomtezombies (4 typer, högst sex aktiva, tagen, försök igen) → inga zombier i Julklappsjakten → väder av/på, mute → tillbaka-knapparna → inga konsolfel | **37/37 OK** (kod som i `b0c81cc`; senare commits ändrar bara dokumentation) |
 | `tools/xmas-flow/flow.mjs` (skrivbord 1000×640) | samma | **37/37 OK** |
 | `tools/xmas-flow/switch.mjs` | grundspelet (med julknappen) → julversionen → tillbaka, i samma flik, grundspelets sparade framsteg kvar | **8/8 OK** |
-| engångsskript (ej incheckade) | fritt paketregn (6 paket på 43–47 m håll, alla nåbara, inga dubbla poäng, försvinner efter sin tid), liggande telefon, A/B-prestanda, musik renderad och analyserad | körda, se avsnitt 7 |
+| engångsskript (ej incheckade) | fritt paketregn (5–6 paket på 43–48 m håll, alla nåbara, inga dubbla poäng, försvinner efter sin tid), liggande telefon, A/B-prestanda, musik renderad och analyserad | körda, se avsnitt 7 |
 
 Verktygen körs mot en lokal server (se rubriken i varje fil). Ett fel som först syntes (Cervera efter Pressbyrån) berodde på att grundspelets resultatkort ligger kvar i 14 s och tar det första knapptrycket vid nästa plats: grundspelets eget beteende, inte ett fel i julkoden.
 Testet trycker nu FORTSÄTT som en spelare gör, och julversionen stänger kortet själv när ett nytt läge startar.
@@ -160,7 +160,7 @@ Testet trycker nu FORTSÄTT som en spelare gör, och julversionen stänger korte
 3. Ljud: musiken ska starta efter första trycket, mute ska tysta den, den ska tystna när sidan läggs i bakgrunden eller skärmen låses och komma tillbaka. Prova även med iPhonens tysta läge på (iOS tystar Web Audio med ringreglaget).
 4. `?perf` på båda byggena (grundspelet och julversionen): gå samma rutt, tryck KOPIERA RESULTAT och jämför bildrutetid (p95), ritanrop och minne.
 5. Byt grundspel → julversion → grundspel med knapparna: det ska ske i samma flik och grundspelets framsteg ska finnas kvar.
-6. Spela en hel Tomtezombies-omgång och en butiksuppdrag (Pressbyrån).
+6. Spela en hel Tomtezombies-omgång och ett butiksuppdrag (Pressbyrån).
 7. Vrid telefonen (liggande) och öppna pausmenyn; prova VÄDEREFFEKTER: LÄTT/AV.
 
 ## 9. Julknappen i grundspelet
@@ -177,3 +177,4 @@ Stäng av den igen genom att sätta `enabled:false`. Se `JULKNAPPEN.md` på den 
 - Butiksuppdragens personal är grundspelets figurer (inte tomteklädda).
 - Förberedda butiker (Kjell & Company, Åhléns, Duvan, Värmlands Museum, Sandgrund) har data men ingen interiör eller något godkänt innehåll.
 - Julmiljön finns främst runt Stora Torget och utmed fasaderna däromkring; övriga delar av staden har snö men inte egna julföremål.
+- På skrivbord syns grundspelets båtbusshållplats (en låg platta med skylten BÅTBUSS) i högerkanten av första bilden. Det är grundspelets eget föremål och är inte ändrat.
