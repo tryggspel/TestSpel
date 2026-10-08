@@ -90,6 +90,9 @@ await click('#roundPause');await wait(800);await ev(()=>document.getElementById(
 check('Karlstadpasset visas i pausmenyn',await ev(()=>!!document.querySelector('#placePass .pass-row.stamped')));
 const passText=await ev(()=>[...document.querySelectorAll('#placePass .pass-status')].map(e=>e.textContent));
 check('Karlstadpasset: "1 digitalt besök" i singular, aldrig "1 digitala"',passText.length===2&&passText.every(t=>/ 1 digitalt besök$/.test(t)),JSON.stringify(passText));
+const fit=await ev(()=>{const box=document.querySelector('#placePass .pass-local');if(!box||box.hidden)return null;const R=box.getBoundingClientRect(),cells=[...box.querySelectorAll('.pl-cell')];
+  return {cells:cells.length,utanför:cells.filter(c=>{const b=c.getBoundingClientRect();return b.right>R.right+1||b.left<R.left-1;}).length,sidled:box.scrollWidth-box.clientWidth};});
+check('Karlstadpasset: den lokala mätningen ryms i bredd (inget klipps)',!!fit&&fit.cells===10&&fit.utanför===0&&fit.sidled<=1,JSON.stringify(fit));
 for(const [row,label,btn] of [[2,'Pressbyrån','TA EMOT ORDER'],[1,'Cervera','HJÄLP RUT']]){
   await click(`#placePass .pass-row:nth-child(${row}) .pass-tp`);await wait(1800);s=await S();
   const open=await ev(()=>document.body.classList.contains('round-panel-open'));

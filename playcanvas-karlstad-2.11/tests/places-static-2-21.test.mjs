@@ -48,12 +48,12 @@ test('spelet startar inga platsuppdrag utanför Clean City Explore (kontroll i k
   assert.match(src,/available:\(\)=>journey\.rush\.mode==='clean'&&journey\.rush\.state==='playing'&&!journey\.tempo\.running&&!journey\.rush\.challenge/);
 });
 
-test('2.21.1: singular i passet, rullande mätningstabell och replikruta ovanför beställningsremsan',()=>{
+test('2.21.1: singular i passet, mätvärden i rutor som ryms i bredd och replikruta ovanför beställningsremsan',()=>{
   const ui=read('places-ui.js'),css=read('places.css');
   assert.ok(ui.includes('visitsLabel(r.visits)'),'passet använder visitsLabel');
   assert.ok(!ui.includes('PASS_TEXT.visitWord)'),'ingen hårdkodad pluralform kvar');
-  assert.match(css,/\.pl-scroll\{[^}]*overflow-x:auto/,'mätningstabellen rullar i sidled');
-  assert.ok(ui.includes("'pl-scroll'"));
+  assert.match(css,/\.pl-vals\{[^}]*auto-fit/,'mätvärdena bryter rad i stället för att klippas');
+  assert.ok(ui.includes("'pl-vals'")&&!/el\('table'|createElement\('table'\)/.test(ui),'ingen bred tabell med sex kolumner');
   // Beställningsremsan är högre än uppdragsremsan: replikrutan ligger högre, men mobilreglerna (senare i filen) går före.
   const order=css.indexOf('body.place-order-on.round-playing #roundToast');
   assert.ok(order>0,'regeln för beställning finns');

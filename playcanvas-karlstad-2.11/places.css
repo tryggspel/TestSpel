@@ -70,9 +70,12 @@
 .pass-btns{display:grid;gap:6px}
 .pass-go{min-height:44px;padding:0 12px;border:1px solid #ffe18c88;border-radius:8px;background:#173a31;color:#ffe18c;font:900 11px system-ui;letter-spacing:.05em;cursor:pointer;touch-action:manipulation}
 .pass-local{margin-top:10px;padding-top:8px;border-top:1px solid #85aa8544}.pl-head{display:block;color:#ffe18c;font:900 12px system-ui;letter-spacing:.08em}
-.pl-scroll{margin:6px 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.pl-table{width:100%;border-collapse:collapse;font:700 11px/1.3 system-ui;color:#cfe0c8}.pl-table th,.pl-table td{padding:4px 5px;text-align:right;border-bottom:1px solid #85aa8533}.pl-table th:first-child,.pl-table td:first-child{text-align:left}
-@media(max-width:430px){.pl-table th,.pl-table td{padding:4px 3px}}
+.pl-list{display:grid;gap:8px;margin:6px 0}
+.pl-place{padding:6px 8px 8px;border:1px solid #85aa8544;border-radius:8px;background:#ffffff0a}
+.pl-name{display:block;margin-bottom:5px;font:900 12px/1.2 system-ui;letter-spacing:.06em;color:#ffe9a8}
+.pl-vals{display:grid;grid-template-columns:repeat(auto-fit,minmax(56px,1fr));gap:6px 4px}
+.pl-cell{display:grid;justify-items:center;align-content:start;gap:1px;text-align:center}
+.pl-cell b{font:900 17px/1.1 system-ui;font-variant-numeric:tabular-nums;color:#fff}.pl-cell small{font:700 11px/1.2 system-ui;color:#9fb9a3}
 @media(prefers-reduced-motion:reduce){.ph-chip.next,.place-hud.urgent .ph-time,.place-result.in,.place-hud.shake,.place-hud.pop,.ph-btn.wrong{animation:none}}
 
 /* Dialogtexten (personalens repliker) ligger ovanför remsan, aldrig bakom den. */

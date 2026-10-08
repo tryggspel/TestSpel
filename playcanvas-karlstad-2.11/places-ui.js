@@ -7,6 +7,8 @@ import {PASS_TEXT,visitsLabel} from './places.mjs?v=2.21.1';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 const mmss=s=>{const n=Math.max(0,Math.ceil(s));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};
+// Mätvärdena i den lokala verifieringsvyn, i visningsordning.
+const LOCAL_METRICS=Object.freeze([['Digitala besök',EVENT_TYPES.visit],['Start',EVENT_TYPES.start],['Klara',EVENT_TYPES.complete],['Avbrutna',EVENT_TYPES.abort],['Länkklick',EVENT_TYPES.link]]);
 const iconCache=new Map();
 function iconFor(kind,size=72){
   const key=kind+size;if(iconCache.has(key))return iconCache.get(key);
@@ -187,14 +189,14 @@ export function createPlacesUi({engine,mount,pauseAnchor,fx,showLocalReport=fals
     pLocal.replaceChildren();
     const snap=engine.events.snapshot();
     pLocal.append(el('b','pl-head','LOKAL MÄTNING · VERIFIERING'),el('p','round-fine',LOCAL_SCOPE_NOTE));
-    const tbl=el('table','pl-table'),hr=el('tr');
-    for(const h of ['Plats','Digitala besök','Start','Klara','Avbrutna','Länkklick'])hr.append(el('th',null,h));tbl.append(hr);
+    // En ruta per plats med siffra över etikett: ryms alltid i bredd (en tabell med sex kolumner blev 20–30 px för bred på 414 px).
+    const list=el('div','pl-list');
     for(const r of engine.pass()){
-      const c=snap.perPlace[r.id]||{},tr=el('tr');
-      for(const v of [r.name,c[EVENT_TYPES.visit]||0,c[EVENT_TYPES.start]||0,c[EVENT_TYPES.complete]||0,c[EVENT_TYPES.abort]||0,c[EVENT_TYPES.link]||0])tr.append(el('td',null,String(v)));
-      tbl.append(tr);
+      const c=snap.perPlace[r.id]||{},box=el('div','pl-place'),vals=el('div','pl-vals');
+      for(const [label,type] of LOCAL_METRICS){const cell=el('span','pl-cell');cell.append(el('b',null,String(c[type]||0)),el('small',null,label));vals.append(cell);}
+      box.append(el('b','pl-name',r.name.toUpperCase()),vals);list.append(box);
     }
-    const scroll=el('div','pl-scroll');scroll.append(tbl);pLocal.append(scroll); // smal skärm: tabellen rullar i sidled i stället för att klippas
+    pLocal.append(list);
     const reset=el('button','round-secondary','NOLLSTÄLL LOKAL MÄTNING');reset.type='button';reset.addEventListener('click',()=>{engine.events.reset();renderLocal();});pLocal.append(reset);
   }
   return {handle,sync,handleDigit,pick,dismissResult,renderPass,render,hud,result,pass,get resultOpen(){return !result.hidden;},get hudOpen(){return !hud.hidden;}};
