@@ -1,5 +1,12 @@
 {
-  "version": "2.21.1",
+  "version": "2.21.1-xmas.1",
   "rules": 8,
-  "dataSnapshot": "karlstad-city-mobile/data, kopierad 2026-10-02"
+  "dataSnapshot": "karlstad-city-mobile/data, kopierad 2026-10-02",
+  "flavor": "xmas",
+  "title": "Julklappsjakten – 2.21-XMS",
+  "base": {
+    "version": "2.21.1",
+    "commit": "fadc36ad65078401e1a751c9236c1577d1bc5de8",
+    "branch": "main"
+  }
 }

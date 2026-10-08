@@ -1,8 +1,8 @@
 // 2.21: koppling mellan platsmodellen (places.mjs) och stadens verkliga byggnader. Ren modul utan PlayCanvas.
 // Fasadplatser (Pressbyrån) får sina koordinater ur samma fasadankare som övriga butiksskyltar, så att serviceytan alltid
 // står framför rätt entré. Fasaden ändras aldrig; bara en fristående disk läggs framför den.
-import {STOREFRONTS,storefrontAnchor} from './city-geography.mjs?v=2.21.1';
-import {PLACES,resolvePlaces} from './places.mjs?v=2.21.1';
+import {STOREFRONTS,storefrontAnchor} from './city-geography.mjs?v=2.21.1-xmas.1';
+import {PLACES,resolvePlaces} from './places.mjs?v=2.21.1-xmas.1';
 
 export function placeAnchors(buildings){
   const anchors={},faces={};

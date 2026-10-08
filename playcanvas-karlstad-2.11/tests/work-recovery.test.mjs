@@ -99,7 +99,7 @@ test('Frimurarelogen uses one Street View renderer',()=>{
   assert.match(branch,/addPhotoReferenceFacade\(town,b\)/);
   assert.doesNotMatch(branch,/addFrimurareExplicitHero\(town,b\)/);
   assert.match(arch,/frimurareRenderer:'photo-reference-mainmesh'/);
-  assert.match(arch,/photo-reference-pass3\.mjs\?v=\d+\.\d+\.\d+'/);
+  assert.match(arch,/photo-reference-pass3\.mjs\?v=\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?'/);
   assert.match(photo,/101608925:Object\.freeze/);
   assert.match(photo,/wall:'#a58d84'/);
   assert.match(photo,/ground:'#8a8982'/);

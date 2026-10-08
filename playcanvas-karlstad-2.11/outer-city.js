@@ -2,8 +2,8 @@
 // OpenStreetMap data fetched by .github/workflows/fetch-karlstad-outer-osm.yml (data/osm-outer-*.json, ODbL).
 // Real footprints with the same window grammar as the rest of the city, roads, lawns, woods, water and trees.
 // The model is pure data (testable in Node); createOuterCity() turns it into static batches and colliders.
-import {ComicMesh,exposedFaces,meshChunkRanges} from './city-architecture.js?v=2.21.1';
-import {cityPoint} from './city-geography.mjs?v=2.21.1';
+import {ComicMesh,exposedFaces,meshChunkRanges} from './city-architecture.js?v=2.21.1-xmas.1';
+import {cityPoint} from './city-geography.mjs?v=2.21.1-xmas.1';
 
 export const OUTER_AREAS=Object.freeze(['haga','hamn','marieberg','orrholmen']);
 const WALLS=['#e2cfa7','#d8b48b','#c98f6a','#e6dcc4','#b9a68a','#d7c39b','#c7a07a','#e9d9b6','#d9c4a0','#cf9a78'];

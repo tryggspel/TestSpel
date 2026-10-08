@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Sätter en enda cache-nyckel (?v=X.Y.Z) i alla moduler, HTML och CSS.
 // Användning: node tools/set-version.mjs 2.10.1   (utan argument: kontrollera bara)
+// Julgrenen använder förhandsbeteckningen X.Y.Z-xmas.N (till exempel 2.21.1-xmas.1): samma bas som grundspelet, egen byggräknare.
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -25,7 +26,7 @@ export function scan(){
 if(process.argv[1]===fileURLToPath(import.meta.url)){
   const next=process.argv[2];
   if(next){
-    if(!/^\d+\.\d+\.\d+$/.test(next)){console.error('Version måste vara X.Y.Z');process.exit(2);}
+    if(!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:\.[0-9A-Za-z]+)*)?$/.test(next)){console.error('Version måste vara X.Y.Z eller X.Y.Z-xmas.N');process.exit(2);}
     let n=0;for(const f of sourceFiles()){const s=fs.readFileSync(f,'utf8'),t=s.replace(KEY,'?v='+next);if(t!==s){fs.writeFileSync(f,t);n++;}}
     const bi=path.join(root,'build-info.mjs');fs.writeFileSync(bi,fs.readFileSync(bi,'utf8').replace(/GAME_VERSION='[^']*'/,`GAME_VERSION='${next}'`));
     const vf=path.join(root,'version.json'),v=JSON.parse(fs.readFileSync(vf,'utf8'));v.version=next;fs.writeFileSync(vf,JSON.stringify(v,null,2)+'\n');

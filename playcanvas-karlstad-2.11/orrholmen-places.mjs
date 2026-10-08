@@ -2,7 +2,7 @@
 // (förutom vattenraderna), så att spelet, generatorn (tools/orrholmen/build.mjs) och testerna delar samma källa.
 // Koordinater: spelets lokala meter, x öster och z söder om Stora Torget. Orrholmens form är handritad efter en Google Maps-bild
 // och kalibrerad mot OSM-stigen Orrholmsrundan (se tools/orrholmen/build.mjs); läget stämmer ungefär (±40 m).
-import {WATER_ROWS} from './city-south-data.mjs?v=2.21.1';
+import {WATER_ROWS} from './city-south-data.mjs?v=2.21.1-xmas.1';
 
 // ── Vatten ───────────────────────────────────────────────────────────────────────────────────────────────────────
 // Orrholmsviken: östra stranden följer OSM-stigen Orrholmsrundan, västra stranden Marieberg. [z,x]

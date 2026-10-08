@@ -8,7 +8,7 @@ on:
       - 'playcanvas-karlstad-2.11/**'
       - 'karlstad-city-mobile/data/**'
   push:
-    branches: [main]
+    branches: [main, 'release/**', 'claude/**']
     paths:
       - 'playcanvas-karlstad-2.11/**'
   workflow_call:
