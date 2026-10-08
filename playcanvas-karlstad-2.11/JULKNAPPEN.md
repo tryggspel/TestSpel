@@ -9,14 +9,18 @@ och några rader CSS. Inga spelregler, inga sparfiler och ingen karta är ändra
 
 ## Läge just nu
 
-Knappen är **förberedd men avstängd** (`enabled:false` i `julknapp.mjs`) och syns därför inte för spelarna. Den kopplas in först när julversionens
-stabila adress är verifierad (se `JULVERSION.md` på branchen `release/jul-2026`).
+Knappen är **förberedd men avstängd** (`enabled:false` i `julknapp.mjs`) och syns därför inte för spelarna. Julversionens stabila adress är
+**förifylld**: https://karlstad-julklappsjakten.vercel.app/ (Vercel-projektet `karlstad-julklappsjakten`, produktion, byggd från `release/jul-2026`).
+Adressen är kontrollerad mot Vercels API (deployen är klar, rätt commit och gren) men har inte öppnats på någon enhet av den som byggde den (se `JULVERSION.md`
+på branchen `release/jul-2026`). Därför är knappen fortfarande avstängd.
 
 ## Koppla in
 
-1. Kontrollera att julversionens produktionsadress öppnar rätt spel och visar rätt version och commit (längst ned i startvyn).
-2. I `julknapp.mjs`: sätt `url` till adressen (https, utan användaruppgifter) och `enabled` till `true`.
-3. `node --test tests/*.mjs`, förhandsvisa på Vercel, kontrollera att knappen syns och leder rätt, slå ihop till `main`.
+1. Öppna https://karlstad-julklappsjakten.vercel.app/ på riktiga enheter (iPhone 11/Safari, MacBook Air 2018): kontrollera att rätt spel startar, att version och commit
+   längst ned i startvyn stämmer med `release/jul-2026`, att `/api/build-info` visar `release/jul-2026`, och att knappen Tillbaka leder hit.
+2. I `julknapp.mjs`: sätt `enabled` till `true` (adressen finns redan).
+3. `node tools/set-version.mjs 2.21.3`, `node --test tests/*.mjs` (testet som kräver `enabled:false` byts mot ett som kräver `enabled:true`), förhandsvisa på Vercel,
+   kontrollera att knappen syns och leder rätt, slå ihop till `main`.
 
 ## Stäng av knappen igen (utan att röra något annat)
 

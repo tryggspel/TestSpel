@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import {JULKNAPP,julTarget} from '../julknapp.mjs';
 
 test('knappen är avstängd som standard och går inte att slå på av misstag',()=>{
-  assert.equal(JULKNAPP.enabled,false);assert.equal(JULKNAPP.url,'');
+  assert.equal(JULKNAPP.enabled,false);
+  assert.equal(JULKNAPP.url,'https://karlstad-julklappsjakten.vercel.app/','adressen är förifylld men knappen är ändå avstängd');
   assert.equal(julTarget(JULKNAPP,{search:'',host:'karlstad-city-visual-twin.vercel.app'}),null);
 });
 test('en aktiverad knapp leder bara till en https-adress utan användaruppgifter',()=>{
