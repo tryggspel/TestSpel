@@ -24,8 +24,9 @@ export const COMBO=Object.freeze({window:3.4,introWindow:4.6,tiers:Object.freeze
 export const comboMult=chain=>COMBO.tiers.reduce((m,t)=>chain>=t.chain?t.mult:m,1);
 
 // Leverans hos tomten. Tidsbonus: ju snabbare, desto mer, men det finns ingen tidsgräns som gör att man misslyckas.
-export const DELIVERY=Object.freeze({points:100,fast:60,slow:120,maxTimeBonus:100});
-export const timeBonus=seconds=>Math.max(0,Math.min(DELIVERY.maxTimeBonus,Math.round((DELIVERY.slow-seconds)/(DELIVERY.slow-DELIVERY.fast)*DELIVERY.maxTimeBonus)));
+// Gångfarten är 7,2 m/s (grundspelet), så introduktionens 252 m tar ~40 s utan avbrott och 60–90 s för den som tittar sig omkring. Rundor skalar med sin mjuka tid.
+export const DELIVERY=Object.freeze({points:100,fast:45,slow:110,maxTimeBonus:100});
+export const timeBonus=(seconds,{fast=DELIVERY.fast,slow=DELIVERY.slow}={})=>Math.max(0,Math.min(DELIVERY.maxTimeBonus,Math.round((slow-seconds)/(slow-fast)*DELIVERY.maxTimeBonus)));
 
 // Fortsättning: nya paketregn i fri julvandring. Varje regn har egna paket-ID, så inget paket kan ge poäng två gånger.
 export const FREE_RAIN=Object.freeze({first:18,every:Object.freeze([70,110]),minDistance:42,maxDistance:105,count:Object.freeze([7,10]),life:240,maxActive:2});

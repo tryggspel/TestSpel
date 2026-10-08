@@ -7,7 +7,7 @@ import {TREE} from './xmas-layout.mjs?v=2.21.1-xmas.1';
 import {STALLS,STALL,FIRS,TOMTE_SPOTS,ARCH,facadeSpots,stringBulbs,FACADE} from './xmas-decor-data.mjs?v=2.21.1-xmas.1';
 import {WEATHER} from './xmas-config.mjs?v=2.21.1-xmas.1';
 import {createSnowfall} from './xmas-snowfall.js?v=2.21.1-xmas.1';
-import {drawWindowAtlas,WINDOW_CELL,WINDOW_STYLES,drawGlow} from './xmas-art.js?v=2.21.1-xmas.1';
+import {drawWindowAtlas,WINDOW_CELL,WINDOW_STYLES} from './xmas-art.js?v=2.21.1-xmas.1';
 import {hash32} from './xmas-sprites.js?v=2.21.1-xmas.1';
 
 const TAU=Math.PI*2;
@@ -145,11 +145,9 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
   for(const g of ['A','B','C'])place(L.mesh[g].finish(pc,app,'Julljus '+g,lightMats[g]),'Julljus '+g);
   stats.bulbs=L.n;stats.windows=facade.windows.length;stats.roofs=facade.roofs.length;
   const starEntity=place(T.finish(pc,app,'Granens stjärna',starMat),'Granens stjärna');starEntity.setPosition(TREE.x,TREE_TOP,TREE.z);
-  const starGlow=sprites.spriteEntity('Stjärnans sken',sprites.glowGold,5,5,{});decorRoot.addChild(starGlow);starGlow.setPosition(TREE.x,TREE_TOP-2.5,TREE.z);
+  const starGlow=sprites.spriteEntity('Stjärnans sken',sprites.glowGold,4.2,4.2,{});decorRoot.addChild(starGlow);starGlow.setPosition(TREE.x,TREE_TOP-2.5,TREE.z);
   const banner=sprites.spriteEntity('Portalens banderoll',sprites.spriteMaterial(labelTex(['GOD JUL','STORA TORGET'],'#b0302f','#fff1ce'),{alphaTest:.1}),2*ARCH.half-.2,2.4,{});decorRoot.addChild(banner);banner.setPosition(ARCH.x,ARCH.h-2.7,ARCH.z+.28);
-  // mjukt varmt sken i snön kring granen (vanlig blandning, så det syns mot vit snö)
-  const spillTex=texture((c,w,h)=>drawGlow(c,w,h,'#ff9f45'),128,128),spillMat=sprites.spriteMaterial(spillTex,{alphaTest:0});spillMat.opacity=.42;spillMat.update();
-  const spill=sprites.spriteEntity('Sken i snön',spillMat,30,30,{});decorRoot.addChild(spill);spill.setEulerAngles(-90,0,0);spill.setPosition(TREE.x,.07,TREE.z+15);
+  // (Ett mjukt sken i snön kring granen provades men kostade mer fyllnad än det gav: se JULVERSION.md, mätningar.)
   // skyltar
   const signs=STALLS.map(s=>{
     const tex=labelTex([s.kind.sign],'#3a2a22','#ffe7a0'),mat=sprites.spriteMaterial(tex,{alphaTest:.1});
@@ -172,7 +170,7 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
     for(const w of want){if(tPool.some(sl=>sl.id===w.s.id))continue;const free=tPool.find(sl=>!sl.id);if(!free)break;free.id=w.s.id;free.spot=w.s;
       const sc=w.s.scale||1;free.e.setLocalScale(1.35*sc,2*sc,1);free.e.setPosition(w.s.x,w.s.y||0,w.s.z);free.e.enabled=true;}
     tShown=tPool.filter(sl=>sl.id).length;
-    const wc=[];for(const s of facade.windows){const d=Math.sqrt(dist2(s,p));if(d<88)wc.push({s,d});}
+    const wc=[];if(auto===0)for(const s of facade.windows){const d=Math.sqrt(dist2(s,p));if(d<88)wc.push({s,d});}
     wc.sort((a,b)=>a.d-b.d);const ww=wc.slice(0,POOL_W),wids=new Set(ww.map(w=>w.s.id));
     for(const slot of wPool)if(slot.id&&!wids.has(slot.id)){slot.id='';slot.e.enabled=false;}
     for(const w of ww){if(wPool.some(sl=>sl.id===w.s.id))continue;const free=wPool.find(sl=>!sl.id);if(!free)break;free.id=w.s.id;
@@ -182,25 +180,28 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
 
   // ── Snöfall och väder ──────────────────────────────────────────────────────────────────────────────────────────
   const snow=createSnowfall(pc,host,{root:decorRoot,material:sprites.flakeMat,max:100});
-  let weather='full',wasInside=false,twinkleAt=0,starK=1;
-  function setWeather(level){weather=WEATHER[level]?level:'full';snow.setCount(WEATHER[weather].flakes);if(!WEATHER[weather].decor){for(const g of 'ABC'){lightMats[g].emissiveIntensity=1;lightMats[g].update();}}}
+  let weather='full',wasInside=false,twinkleAt=0,starK=1,auto=0;
+  const flakesNow=()=>Math.round(WEATHER[weather].flakes*(auto===0?1:auto===1?.5:0));
+  // Automatisk lättnad (0 = full, 1 = lätt, 2 = minimal): spelet mäter riktiga bildrutetider och tar bort det som är dyrast först. Sparas inte.
+  function setAuto(level){auto=Math.max(0,Math.min(2,level|0));snow.setCount(flakesNow());if(auto>=1){starGlow.enabled=false;for(const s of wPool){s.id='';s.e.enabled=false;}wShown=0;}else starGlow.enabled=true;}
+  function setWeather(level){weather=WEATHER[level]?level:'full';snow.setCount(flakesNow());if(!WEATHER[weather].decor){for(const g of 'ABC'){lightMats[g].emissiveIntensity=1;lightMats[g].update();}}}
   setWeather(params?.weather||'full');
 
   function update(p,now,dt){
     const inside=!!indoors?.(p);
     if(inside!==wasInside){wasInside=inside;decorRoot.enabled=!inside;}
     if(inside){snow.update(dt,false);return;}
-    const w=WEATHER[weather];
-    if(w.decor>0&&now-twinkleAt>120){
+    const w=WEATHER[weather],twinkleEvery=auto===0?120:auto===1?400:1e9;
+    if(w.decor>0&&now-twinkleAt>twinkleEvery){
       twinkleAt=now;
       lightMats.A.emissiveIntensity=.62+.38*Math.sin(now/310)*w.decor+(1-w.decor)*.38;
       lightMats.B.emissiveIntensity=.62+.38*Math.sin(now/420+2.1)*w.decor+(1-w.decor)*.38;
       lightMats.C.emissiveIntensity=.62+.38*Math.sin(now/370+4.2)*w.decor+(1-w.decor)*.38;
       for(const g of 'ABC')lightMats[g].update();
       starK=1+.07*Math.sin(now/520)*w.decor;starEntity.setLocalScale(starK,starK,starK);starEntity.setEulerAngles(0,(now/22)%360,0);
-      const gs=5*(1+.08*Math.sin(now/600)*w.decor);starGlow.setLocalScale(gs,gs,1);
+      const gs=4.2*(1+.08*Math.sin(now/600)*w.decor);starGlow.setLocalScale(gs,gs,1);
     }
-    starGlow.setEulerAngles(0,Math.atan2(host.camera.getPosition().x-TREE.x,host.camera.getPosition().z-TREE.z)*180/Math.PI,0);
+    if(auto===0)starGlow.setEulerAngles(0,Math.atan2(host.camera.getPosition().x-TREE.x,host.camera.getPosition().z-TREE.z)*180/Math.PI,0);
     if(now-lastPick>260){lastPick=now;pick(p);}
     for(const slot of tPool){
       if(!slot.id)continue;const s=slot.spot,v=((s.v??0)+6)%6,f=Math.floor(now/(520+(hash32(slot.id)%5)*90))%2;
@@ -210,7 +211,7 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
     snow.update(dt,true);
   }
   setWeather(params?.weather||'full');
-  return {update,setWeather,decorRoot,snow,facade,
-    snapshot:()=>({weather,flakes:snow.shown,tomte:tShown,windows:wShown,bulbs:stats.bulbs,strings:stats.strings,facadeWindows:stats.windows,facadeRoofs:stats.roofs,stalls:STALLS.length,firs:FIRS.length,decor:WEATHER[weather].decor}),
+  return {update,setWeather,setAuto,get auto(){return auto;},decorRoot,snow,facade,
+    snapshot:()=>({weather,auto,flakes:snow.shown,tomte:tShown,windows:wShown,bulbs:stats.bulbs,strings:stats.strings,facadeWindows:stats.windows,facadeRoofs:stats.roofs,stalls:STALLS.length,firs:FIRS.length,decor:WEATHER[weather].decor}),
     drawCalls:()=>3+1+1+3+2+signs.length+tShown+wShown+(snow.shown?1:0)};
 }

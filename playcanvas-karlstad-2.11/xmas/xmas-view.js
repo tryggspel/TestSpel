@@ -24,9 +24,10 @@ export function createXmasView(pc,host,draw,sprites,hunt){
   const bubbleMat=Object.fromEntries(Object.entries(bubbleTex).map(([k,t])=>[k,sprites.spriteMaterial(t,{alphaTest:.1})]));
   const tomte={e:sprites.spriteEntity('Tomten',sprites.tomteMaterials[1][0],2.2,3.3,{enabled:false}),bubble:sprites.spriteEntity('Tomtens bubbla',bubbleMat.help,3.3,1.03,{enabled:false}),ring:cyl('Tomtens ring',ringMat),pillar:sprites.spriteEntity('Tomtens stråle',beamGreen,3.4,26,{enabled:false}),mood:'help'};
   const buf=[],bonusBuf=[];
-  let shown=0,beamsOn=0;
+  let shown=0,beamsOn=0,lite=false;
 
   function burst(x,z,{big=false,y=.6}={}){
+    if(lite&&!big)return;
     const b=bursts[burstIndex++%BURSTS];Object.assign(b,{life:b.max,x,y,z,big});
   }
   function update(p,now,dt){
@@ -34,7 +35,7 @@ export function createXmasView(pc,host,draw,sprites,hunt){
     // paket
     shown=0;
     if(live){
-      hunt.nearby(p,SHOW,POOL,buf);
+      hunt.nearby(p,lite?40:SHOW,lite?16:POOL,buf);
       for(let i=0;i<buf.length;i++){
         const k=buf[i],s=pool[i],e=s.e;
         if(s.id!==k.id){
@@ -96,5 +97,5 @@ export function createXmasView(pc,host,draw,sprites,hunt){
     }
   }
   function clear(){for(const s of pool){s.e.enabled=false;s.id='';}for(const b of beams)b.enabled=false;tomte.e.enabled=tomte.bubble.enabled=tomte.ring.enabled=tomte.pillar.enabled=false;for(const b of bursts){b.life=0;b.ring.enabled=b.spark.enabled=false;}shown=0;beamsOn=0;}
-  return {update,burst,clear,radar,tomteEntity:tomte.e,snapshot:()=>({shown,beams:beamsOn,tomte:tomte.e.enabled,bubble:tomte.mood,ring:tomte.ring.enabled,pool:POOL,bursts:bursts.filter(b=>b.life>0).length}),drawCalls:()=>shown+beamsOn+(tomte.e.enabled?2:0)+(tomte.ring.enabled?2:0)+bursts.filter(b=>b.life>0).length*2};
+  return {update,burst,clear,radar,setLite:v=>{lite=!!v;},get lite(){return lite;},tomteEntity:tomte.e,snapshot:()=>({shown,beams:beamsOn,tomte:tomte.e.enabled,bubble:tomte.mood,ring:tomte.ring.enabled,pool:POOL,bursts:bursts.filter(b=>b.life>0).length}),drawCalls:()=>shown+beamsOn+(tomte.e.enabled?2:0)+(tomte.ring.enabled?2:0)+bursts.filter(b=>b.life>0).length*2};
 }

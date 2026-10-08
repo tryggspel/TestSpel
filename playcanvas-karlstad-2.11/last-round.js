@@ -432,7 +432,7 @@ export function createLastRound(pc, host) {
     if(name==='city-intro'||name==='daily-intro')refreshDaily();
     if(name==='city-intro')renderFunStatus();
     if(name==='city-intro')$('cityControlCopy').textContent=host.oneHand?.()?'EN HAND: spaken går och svänger. Sikta mot zombien så skjuter du automatiskt. Byt till två händer i PAUS.':'WASD: gå · mus: sikta · klick: solstöt · E: uppdrag / buss · M: karta · T: turbo i City Explore. Samma snabba gång som tidigare.';
-    if(name==='pause')$('pauseControlSummary').textContent=isJourney()&&journey.rush.peaceful?'CLEAN CITY: gå, hoppa och samla termosar i kedjor. T = turbo (dubbel fart). Kartan visar vägen och busshållplatserna.':'';
+    if(name==='pause')$('pauseControlSummary').textContent=isJourney()&&journey.rush.peaceful?'JULSTADEN: gå, hoppa och samla paket i kedjor. T = turbo (dubbel fart). Kartan visar vägen och busshållplatserna.':'';
     if(name==='intro'||name==='pause')for(const id of ['roundIntroControls','roundPauseControls'])$(id).textContent=isJourney()&&journey.rush.peaceful?'En spak för att gå och svänga. HOPPA tar dig över låga hinder. TURBO (eller T) ger dubbel fart. Tryck på kartan för att välja nästa plats.':host.oneHand?.()?'EN HAND: en spak för gång och sväng. Autoeld när du siktar på en zombie. Byt läge i PAUS.':controlText;
     host.resetInput(); triggerPointer = null;
     if (name) {document.exitPointerLock?.(); queueMicrotask(() => $('round-' + name).querySelector('button')?.focus({preventScroll: true}));}

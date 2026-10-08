@@ -37,6 +37,21 @@ export function installXmas(ctx){
   const baseUrl=baseGameUrl(location.search,location.hostname);
   let stamp=baseStamp,mode='menu'; // menu | cozy | zombies
   let caughtAt=0;
+  // Automatisk lättnad vid segt spel: mäter riktiga bildrutetider (inte spelets klippta dt) och minskar julens effekter ett steg i taget.
+  // Av i automatiska tester (navigator.webdriver) och med ?nogov; ?gov tvingar på den. Sparas inte: nästa start prövar full kvalitet igen.
+  const gov={ema:16,last:0,slowSec:0,cool:0,on:!!(params&&params.has('gov'))||(!(typeof navigator!=='undefined'&&navigator.webdriver)&&!(params&&params.has('nogov'))),level:0};
+  function govern(now){
+    if(!gov.on||hunt.run==null)return;
+    const d=gov.last?now-gov.last:0;gov.last=now;if(!(d>0&&d<250))return;
+    gov.ema+=(d-gov.ema)*.05;
+    if(now<gov.cool)return;
+    if(gov.ema>40){gov.slowSec+=d/1000;}else gov.slowSec=Math.max(0,gov.slowSec-d/500);
+    if(gov.slowSec>=3&&gov.level<2){
+      gov.level++;gov.slowSec=0;gov.cool=now+6000;gov.ema=22;
+      try{decor?.setAuto(gov.level);view.setLite(true);}catch(e){console.error(e);}
+      ui.showPill(gov.level===1?'FÄRRE EFFEKTER FÖR JÄMNARE SPEL':'MINIMALA EFFEKTER FÖR JÄMNARE SPEL',2400,now,'lost');
+    }
+  }
   let resultTimer=0,resultOpen=false;
 
   function goBase(){
@@ -191,7 +206,7 @@ export function installXmas(ctx){
       view.update(p,now,dt);
       ui.tick(hunt.run,now);
       if(mode==='zombies')ui.setVitals(journey.health,journey.energy);
-      decor?.update(p,now,dt);
+      decor?.update(p,now,dt);govern(now);
     });
   }
   // Grundspelets HUD (var 80:e ms): julens text för mål, poäng och kompass skrivs över efter grundspelets.
@@ -212,7 +227,8 @@ export function installXmas(ctx){
     update,hudText,startRound,startZombies,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
     step:(dt,p,sweep,speed)=>guard(()=>hunt.step(dt,p,sweep,speed)),
     objective:p=>fault?null:hunt.objective(p),
-    snapshot:()=>({mode,fault,hunt:hunt.snapshot(),view:view.snapshot(),decor:decor?decor.snapshot():null,build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone}}),
+    gov,
+    snapshot:()=>({mode,fault,gov:{level:gov.level,ema:+gov.ema.toFixed(1),on:gov.on},hunt:hunt.snapshot(),view:view.snapshot(),decor:decor?decor.snapshot():null,build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone}}),
     onResultClosed:()=>{resultOpen=false;}
   };
   return api;

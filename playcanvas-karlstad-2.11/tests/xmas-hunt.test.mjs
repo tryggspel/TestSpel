@@ -156,7 +156,9 @@ test('bonuspaket ger extra belöning men krävs inte för att klara uppdraget',(
 
 test('timeBonus: snabbare ger mer, ingen tidsgräns som misslyckas',()=>{
   assert.equal(timeBonus(DELIVERY.fast),DELIVERY.maxTimeBonus);assert.equal(timeBonus(DELIVERY.slow),0);assert.equal(timeBonus(900),0);
-  assert.ok(timeBonus(75)>timeBonus(100));assert.equal(timeBonus(10),DELIVERY.maxTimeBonus);
+  assert.ok(timeBonus(60)>timeBonus(90));assert.equal(timeBonus(10),DELIVERY.maxTimeBonus);
+  // rundor skalar med sin mjuka tid: halva tiden ger nästan full bonus, hela tiden ingen
+  assert.equal(timeBonus(60,{fast:150*.45,slow:150}),100);assert.equal(timeBonus(90,{fast:150*.45,slow:150}),Math.round((150-90)/(150-67.5)*100));assert.equal(timeBonus(150,{fast:67.5,slow:150}),0);
   const h=new XmasHunt({save:new XmasSave(mem())});h.startIntro();h.drain();
   for(let i=0;i<4000;i++)h.step(.5,{x:0,z:60,y:1.68},null,0);// 2000 sekunder långt från paketen
   assert.equal(h.active,true,'ingen förlust av att vara långsam');

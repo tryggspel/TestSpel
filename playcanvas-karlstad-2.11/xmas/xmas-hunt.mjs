@@ -93,7 +93,7 @@ export class XmasHunt{
   deliver(){
     const r=this.run;if(!r||r.phase!=='deliver')return null;
     r.phase='done';
-    const seconds=Math.round(r.t),tb=r.late?0:timeBonus(r.t),total=r.points+DELIVERY.points+tb;
+    const seconds=Math.round(r.t),tb=r.late?0:(r.soft?timeBonus(r.t,{fast:r.soft*.45,slow:r.soft}):timeBonus(r.t)),total=r.points+DELIVERY.points+tb;
     const stamp=r.stampId?this.save?.stamp(r.stampId)??false:false;
     const recordId=r.id;const record=this.save?this.save.record(recordId,{points:total,seconds,packages:r.collected,bonus:r.bonusCollected}):false;
     this.save?.addTotals({packages:r.collected,bonus:r.bonusCollected,points:total});
