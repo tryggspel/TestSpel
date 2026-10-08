@@ -9,7 +9,8 @@
 export const TREE={x:0,z:0,radius:2.6,collider:1.5,height:15};
 export const INTRO_GOAL=20;
 const SPIRAL=Object.freeze({turns:2.25,r0:27,r1:8.5,bearing0:180});
-const LEAD=3; // meter från spiralens början till startpunkten (på linjen mot granen)
+// Startpunkten ligger 3 m utanför spiralens början och 3 m åt väster, så att grundspelets båtbusshållplats (öster om x=4) inte fyller den första bilden.
+const START_OFFSET=Object.freeze({x:-3,z:3});
 // Platser i grundspelets torgmiljö som paket inte får ligga i (bänkar, planteringar, lyktor, träd). Se app.js addPlazaPattern/addStreetProps.
 export const TORGET_PROPS=Object.freeze([
   [-18,-18],[18,-18],[-18,17],[18,17],[-25,-20],[25,-20],[-25,20],[25,20],
@@ -42,7 +43,7 @@ export const SHAPES=Object.freeze({
 // och ser både granen och de första paketen på samma bild; i stående läge på en telefon syns bara ungefär 40° i sidled, så en grupp på spiralens
 // sida (90° från granen) hade hamnat utanför bilden. Övriga grupper följer spiralen.
 const CLUSTERS=Object.freeze([
-  ['line3',3],['pair',21],['arc4',43],['zig3',66],['pair',86],['line3',104],['arc4',124],['zig3',146],['pair',168],['pair',188],['pair',212]
+  ['line3',3],['pair',19],['arc4',41],['zig3',64],['pair',86],['line3',104],['arc4',124],['zig3',146],['pair',168],['pair',188],['pair',212]
 ]);
 // Bonuspaket ligger några meter vid sidan av spåret (valfria avstickare) och är större, guldiga och har en ljusstråle.
 // [båglängd längs spåret, föredragen sida (+1 utåt / −1 inåt)]. Själva platsen väljs så att den ligger 5–11 m från den väg man går
@@ -53,10 +54,10 @@ export const BONUS_DETOUR=Object.freeze({min:5,max:11});
 export function buildIntroLayout(){
   const pkgs=[];let n=0;
   const push=(x,z,kind,cluster)=>pkgs.push({id:kind==='bonus'?'i:b'+(pkgs.filter(p=>p.kind==='bonus').length+1):'i:'+String(++n).padStart(2,'0'),x:+x.toFixed(2),z:+z.toFixed(2),kind,cluster});
-  // Spelaren startar LEAD m utanför spiralens början, på linjen mot granen, och går rakt mot granen genom den första gruppen.
-  const spiral0=atArc(0),dTree=Math.hypot(TREE.x-spiral0.x,TREE.z-spiral0.z)||1,rad0={tx:(TREE.x-spiral0.x)/dTree,tz:(TREE.z-spiral0.z)/dTree};
+  // Spelaren startar utanför spiralens början, vänd mot granen, och går rakt mot den genom den första gruppen.
+  const spiral0=atArc(0),start={x:spiral0.x+START_OFFSET.x,z:spiral0.z+START_OFFSET.z};
+  const dTree=Math.hypot(TREE.x-start.x,TREE.z-start.z)||1,rad0={tx:(TREE.x-start.x)/dTree,tz:(TREE.z-start.z)/dTree};
   rad0.nx=-rad0.tz;rad0.nz=rad0.tx;
-  const start={x:spiral0.x-rad0.tx*LEAD,z:spiral0.z-rad0.tz*LEAD};
   const radialAt=s=>({x:start.x+rad0.tx*s,z:start.z+rad0.tz*s,nx:rad0.nx,nz:rad0.nz});
   CLUSTERS.forEach(([shape,s0],ci)=>{
     for(const [ds,lat] of SHAPES[shape]){

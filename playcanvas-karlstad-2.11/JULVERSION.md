@@ -48,7 +48,8 @@ i `?debug` och i `/api/build-info`.
 ## 4. Vercel-projektet för julversionen
 
 Projektet kunde **inte skapas av Claude**: Vercel-anslutningen i byggmiljön hade ingen behörighet på teamets scope (HTTP 403 vid `create_project`, `list_deployments`,
-loggar och domäner). Skapa det så här (några minuter):
+loggar och domäner; `list_teams` gav en tom lista, men en tidigare session kunde lista projekten den 5 oktober). Det går att lösa genom att koppla om Vercel-anslutningen med åtkomst till teamet
+(claude.ai → Customize → Connectors) och starta en ny session. Eller skapa projektet själv så här (några minuter):
 
 1. Vercel → *Add New… → Project* → importera `tryggspel/TestSpel` i teamet `kmauritz-7561`.
 2. Projektnamn `karlstad-julklappsjakten` (adressen blir https://karlstad-julklappsjakten.vercel.app/ om namnet är ledigt).
@@ -138,9 +139,9 @@ mobilformat 414×896 med emulerad tryckskärm, liggande telefon 896×414 och skr
 
 | Verktyg | Vad | Resultat |
 |---|---|---|
-| `tools/xmas-flow/flow.mjs` (mobil 414×896) | startvy och version → introduktionen (mål 20, 30 + 3 paket, paketen syns, målet visas, leverans, resultatkort, stämpel) → sparning i egna nycklar och efter omladdning → tre rundor (Kungsgatan spelad hela vägen) → miljön (8 stånd, granar, ljusslingor, snö utomhus men inte inomhus, ~6 tomtar nära) → Pressbyrån (beställning och leverans) och Cervera → Tomtezombies (4 typer, högst sex aktiva, tagen, försök igen) → inga zombier i Julklappsjakten → väder av/på, mute → tillbaka-knapparna → inga konsolfel | körs om efter varje ändring; senaste resultat redovisas i slutrapporten |
-| `tools/xmas-flow/flow.mjs` (skrivbord 1000×640) | samma | körs om efter varje ändring; senaste resultat redovisas i slutrapporten |
-| `tools/xmas-flow/switch.mjs` | grundspelet (med julknappen) → julversionen → tillbaka, i samma flik, grundspelets sparade framsteg kvar | körs om efter varje ändring; senaste resultat redovisas i slutrapporten |
+| `tools/xmas-flow/flow.mjs` (mobil 414×896) | startvy och version → introduktionen (mål 20, 30 + 3 paket, paketen syns, målet visas, leverans, resultatkort, stämpel) → sparning i egna nycklar och efter omladdning → tre rundor (Kungsgatan spelad hela vägen) → miljön (8 stånd, granar, ljusslingor, snö utomhus men inte inomhus, ~6 tomtar nära) → Pressbyrån (beställning och leverans) och Cervera → Tomtezombies (4 typer, högst sex aktiva, tagen, försök igen) → inga zombier i Julklappsjakten → väder av/på, mute → tillbaka-knapparna → inga konsolfel | **37/37 OK** (kod som i `94bb3ca`; senare commits ändrar bara dokumentation) |
+| `tools/xmas-flow/flow.mjs` (skrivbord 1000×640) | samma | **37/37 OK** |
+| `tools/xmas-flow/switch.mjs` | grundspelet (med julknappen) → julversionen → tillbaka, i samma flik, grundspelets sparade framsteg kvar | **8/8 OK** |
 | engångsskript (ej incheckade) | fritt paketregn (6 paket på 43–47 m håll, alla nåbara, inga dubbla poäng, försvinner efter sin tid), liggande telefon, A/B-prestanda, musik renderad och analyserad | körda, se avsnitt 7 |
 
 Verktygen körs mot en lokal server (se rubriken i varje fil). Ett fel som först syntes (Cervera efter Pressbyrån) berodde på att grundspelets resultatkort ligger kvar i 14 s och tar det första knapptrycket vid nästa plats: grundspelets eget beteende, inte ett fel i julkoden.
