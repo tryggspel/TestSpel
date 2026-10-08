@@ -3,7 +3,7 @@
 import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.1';
 import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.1';
 import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.1';
-import {INTRO,TREE} from './xmas-layout.mjs?v=2.21.1-xmas.1';
+import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.1';
 import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.1';
 import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.1';
 import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.1';
@@ -36,6 +36,7 @@ export function installXmas(ctx){
   try{decor=createXmasDecor(pc,host,{root,texture,labelTex,indoors,params:{weather:save.weather}},sprites);}catch(e){console.error('[Julmiljön hoppades över]',e);}
   const baseUrl=baseGameUrl(location.search,location.hostname);
   let stamp=baseStamp,mode='menu'; // menu | cozy | zombies
+  let caughtAt=0;
   let resultTimer=0,resultOpen=false;
 
   function goBase(){
@@ -44,8 +45,14 @@ export function installXmas(ctx){
   }
   // ── Vad som händer när en körning startar ─────────────────────────────────────────────────────────────────────
   function enter(kind,spawn=null){
-    mode='cozy';document.body.classList.add('xmas-on','xmas-cozy');
-    startCity('clean');
+    const zombies=kind==='zombies';
+    mode=zombies?'zombies':'cozy';caughtAt=0;
+    document.body.classList.add('xmas-on');document.body.classList.toggle('xmas-cozy',!zombies);document.body.classList.toggle('xmas-zombies',zombies);
+    startCity(zombies?'free':'clean');
+    if(zombies){ // grundspelets zombieregler (patruller, ambushar, Guld-Nisse, max sex aktiva) men utan kontrakt, kaos, strömavbrott och sol: paketen är målet
+      const r=journey.rush;r.nextContract=1e9;r.nextChaos=1e9;r.nextBlackout=1e9;r.ecology.nextSun=1e9;r.nextPatrol=Math.max(r.nextPatrol,9);
+    }
+    ui.setMode(zombies?'zombies':'cozy');
     const {x,z,yaw}=spawn||(kind==='intro'?INTRO.spawn:kind==='free'?freeSpawn():INTRO.spawn);
     host.teleport(x,z,yaw,-4);journey.position={x,z};journey.lastStep=null;journey.heading=yaw;journey.routeMode='hunt';
     ui.showHud(true);
@@ -58,6 +65,27 @@ export function installXmas(ctx){
       ui.showGoal('Hjälp tomten! Samla 20 paket.',7000);
       ui.setProgress(hunt.run);view.clear();
     });
+  }
+  function startZombies(){
+    guard(()=>{
+      enter('zombies',INTRO.spawn);
+      hunt.startRun({kind:'zombies',id:'zombies',title:'TOMTEZOMBIES',goal:INTRO_GOAL,packages:INTRO.packages,tomte:INTRO.tomte,spawn:INTRO.spawn,tree:INTRO.tree,windowSec:4.6,soft:0,stampId:'zombies'});
+      toast('TOMTEZOMBIES','Samla '+INTRO_GOAL+' paket och lämna dem hos tomten. Tomtezombierna jagar dig: skjut med SOLSTÖT.',4.4);
+      ui.showGoal('Samla '+INTRO_GOAL+' paket. Tomtezombierna jagar dig!',7500);
+      ui.setProgress(hunt.run);view.clear();
+    });
+  }
+  // Grundspelet anropar detta när liven tar slut i zombieläget. true = hanterat här (ingen återhämtning, run avslutas med ett eget kort).
+  function caught(){
+    if(mode!=='zombies')return false;
+    if(caughtAt)return true;
+    const r=hunt.run;if(!r||!hunt.active)return true;
+    caughtAt=performance.now();
+    const res={kind:'zombies',failed:true,collected:r.collected,goal:r.goal,regularTotal:r.regularTotal,bonusCollected:r.bonusCollected,bonusTotal:r.bonusTotal,bestChain:r.bestChain,seconds:Math.round(r.t),points:r.points};
+    hunt.cancel('tagen');journey.pause?.();journey.actors.forEach(a=>{a.active=false;});
+    clearTimeout(resultTimer);
+    resultTimer=setTimeout(()=>guard(()=>{ui.showResult(res);setPanel('xmas-result');resultOpen=true;}),900);
+    return true;
   }
   function startRound(id=null){
     guard(()=>{
@@ -116,7 +144,7 @@ export function installXmas(ctx){
   }
   function openMenu(){
     guard(()=>{
-      hunt.cancel('meny');view.clear();ui.showHud(false);journey.pause?.();
+      hunt.cancel('meny');view.clear();ui.showHud(false);journey.pause?.();mode='menu';caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies');
       ui.renderStart(buildDetail(stamp));setPanel('xmas-intro');
     });
   }
@@ -125,7 +153,7 @@ export function installXmas(ctx){
 
   const ui=createXmasUi({save,fx:{
     cozy:()=>{if(save.introDone)openContinue();else startIntro();},
-    intro:()=>startIntro(),round:()=>startRound(),shops:()=>openShops(),free:()=>startFree(),zombies:()=>ctx.startZombies?.(),
+    intro:()=>startIntro(),round:()=>startRound(),shops:()=>openShops(),free:()=>startFree(),zombies:()=>startZombies(),
     openMenu,openContinue,goBase,setWeather
   }});
 
@@ -134,6 +162,7 @@ export function installXmas(ctx){
   const handlers={
     'xmas-start':(e,now)=>{ui.setProgress(hunt.run);},
     'xmas-pick':(e,now)=>{
+      if(mode==='zombies')journey.energy=Math.min(100,(journey.energy||0)+(e.kind==='bonus'?30:8)); // paketen är ammunition i Tomtezombies
       const mult=e.mult>1?' ×'+e.mult:'';
       if(e.kind==='bonus'){[659.25,880,1174.66,1568].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.22,.08),i*70));view.burst(e.x,e.z,{big:true});ui.showPill('BONUSPAKET! +'+e.points,1500,now,'bonus');}
       else{note(chainFreq(e.chain),'triangle',.16,.075);setTimeout(()=>note(chainFreq(e.chain)*1.5,'sine',.2,.04),55);view.burst(e.x,e.z);ui.showPill('+'+e.points+(e.chain>=2?' · KOMBO '+e.chain+mult:''),1000,now);}
@@ -160,12 +189,13 @@ export function installXmas(ctx){
       handle(now);
       view.update(p,now,dt);
       ui.tick(hunt.run,now);
+      if(mode==='zombies')ui.setVitals(journey.health,journey.energy);
       decor?.update(p,now,dt);
     });
   }
   // Grundspelets HUD (var 80:e ms): julens text för mål, poäng och kompass skrivs över efter grundspelets.
   function hudText(p,els){
-    if(fault||mode!=='cozy'||!hunt.run||placeActive?.())return;
+    if(fault||mode==='menu'||!hunt.run||placeActive?.())return;
     const r=hunt.run,t=hunt.target(p);
     els.score.textContent=r.points.toLocaleString('sv-SE');
     if(t){const ang=Math.atan2(t.x-p.x,t.z-p.z)-Math.atan2(host.camera.forward.x,host.camera.forward.z);els.compassArrow.style.transform='rotate('+(-ang*180/Math.PI)+'deg)';els.compassArrow.textContent='↑';els.compassText.textContent=t.kind==='tomte'?'TILL TOMTEN · '+Math.round(t.distance)+' M':t.label+' · '+Math.round(t.distance)+' M';}
@@ -177,8 +207,8 @@ export function installXmas(ctx){
   ui.renderStart(buildDetail(stamp));
   const api={
     hunt,save,view,ui,sprites,handlers,decor,
-    get active(){return hunt.active;},get cozy(){return mode==='cozy';},
-    update,hudText,startRound,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
+    get active(){return hunt.active;},get cozy(){return mode==='cozy';},get zombieMode(){return mode==='zombies';},
+    update,hudText,startRound,startZombies,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
     step:(dt,p,sweep,speed)=>guard(()=>hunt.step(dt,p,sweep,speed)),
     objective:p=>fault?null:hunt.objective(p),
     snapshot:()=>({mode,fault,hunt:hunt.snapshot(),view:view.snapshot(),decor:decor?decor.snapshot():null,build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone}}),

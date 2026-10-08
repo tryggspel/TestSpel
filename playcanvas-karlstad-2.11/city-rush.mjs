@@ -76,7 +76,7 @@ export class CityRush {
     if(this.city.routeMode==='bus'){this.busGoal ||= nearestByRoute(this.city.nav,p,this.city.busStops);return {...this.busGoal,id:'bus-stop',kind:'bus',label:'BUSS 666 · '+this.busGoal.name.toUpperCase(),radius:6,action:'KLIV PÅ BUSSEN'};}
     if(this.city.routeMode==='sun'&&this.ecology.sun)return {...this.ecology.sun,id:'sun',kind:'sun',label:'FÖLJ SOLA',radius:4.2};
     if(this.city.routeMode==='sun')this.city.routeMode='hunt';
-    if(this.golden?.actor?.active)return {x:this.golden.actor.x,z:this.golden.actor.z,id:'golden',kind:'golden',label:'JAGA GULD-GUNNAR · '+Math.max(0,Math.ceil(this.golden.until-this.spent))+' S',radius:2.4};
+    if(this.golden?.actor?.active)return {x:this.golden.actor.x,z:this.golden.actor.z,id:'golden',kind:'golden',label:'JAGA GULD-NISSE · '+Math.max(0,Math.ceil(this.golden.until-this.spent))+' S',radius:2.4};
     const c=this.contract;
     if(c){
       const enemy=c.kind==='hunt'?this.city.actors.find(a=>a.active&&a.contractId===c.id):null;

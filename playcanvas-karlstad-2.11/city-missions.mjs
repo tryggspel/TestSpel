@@ -57,7 +57,7 @@ export class CityNavigation {
   point(p){const n=this.nearest(p);return {x:n.x,z:n.z};}
 }
 
-const types={walker:{name:'Påtårs-Pia',hp:2,speed:1.65},runner:{name:'Sprint-Steffe',hp:1,speed:3.0},tank:{name:'Termos-Torsten',hp:4,speed:1.15},golden:{name:'Guld-Gunnar',hp:2,speed:2.5}};
+const types={walker:{name:'Paket-Pelle',hp:2,speed:1.65},runner:{name:'Stress-Nisse',hp:1,speed:3.0},tank:{name:'Gröt-Gunnar',hp:4,speed:1.15},golden:{name:'Guld-Nisse',hp:2,speed:2.5}};
 // 2.12 lunge telegraph: a zombie that gets close stops, winds up (readable), then dashes.
 // A solstöt during the wind-up cancels it, so reacting is rewarded instead of face-tanking.
 export const LUNGE=Object.freeze({range:2.6,minRange:1.05,windup:.42,dash:.34,boost:2.6,cooldown:2.3});
@@ -74,7 +74,7 @@ export class CityMission extends LastRound {
   }
   start(options={}){
     super.start(options);this.health=100;this.wave=0;this.waveDelay=0;this.collected=0;this.pickups=this.pickupSpots.map((p,i)=>({...p,id:i,collected:false}));this.chainRun=0;this.lastZap=-100;this.damageUntil=0;
-    this.actors=Array.from({length:12},(_,i)=>({id:'city-'+i,name:'Påtårs-Pia',kind:'walker',x:0,z:0,radius:.65,mass:1,hp:2,maxHp:2,speed:1.65,phase:i*1.7,active:false,vx:0,vz:0,shot:0,touchTime:-100}));
+    this.actors=Array.from({length:12},(_,i)=>({id:'city-'+i,name:'Paket-Pelle',kind:'walker',x:0,z:0,radius:.65,mass:1,hp:2,maxHp:2,speed:1.65,phase:i*1.7,active:false,vx:0,vz:0,shot:0,touchTime:-100}));
     if(this.id==='sandgrund'){
       this.layout.spawn=this.nav.point({x:this.site.x,z:this.site.z+26});this.safe=this.nav.point({x:this.site.x+8,z:this.site.z+31});this.rescued=0;
       this.visitors=[[-16,8],[14,8],[-2,17]].map(([x,z],i)=>({...this.nav.point({x:this.site.x+x,z:this.site.z+z}),id:i,following:false,rescued:false,health:100}));

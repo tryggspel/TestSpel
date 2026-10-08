@@ -57,6 +57,13 @@
 .xh-combo-bar u{display:block;height:100%;width:100%;text-decoration:none;background:linear-gradient(90deg,#ff9bd8,var(--xmas-gold))}
 .xh-combo[data-tier="2"]{border-color:#9ee6ff}.xh-combo[data-tier="3"]{border-color:#9bf0a7}.xh-combo[data-tier="4"]{border-color:var(--xmas-gold);background:#6a2f58ee}
 
+/* Liv och solenergi i Tomtezombies */
+.xh-vitals{grid-column:1/-1;display:grid;grid-template-columns:auto 1fr auto 1fr;gap:6px;align-items:center;font:800 10px/1 system-ui;letter-spacing:.12em;color:#9fc0a8}
+.xh-vitals[hidden]{display:none}
+.xh-hp,.xh-sun{display:block;height:7px;border-radius:5px;background:#ffffff22;overflow:hidden}
+.xh-hp u,.xh-sun u{display:block;height:100%;width:100%;text-decoration:none;transition:width .12s}
+.xh-hp u{background:linear-gradient(90deg,#e8554e,#7be3a0)}.xh-hp[data-low="1"]{outline:1px solid #ff8f84}.xh-sun u{background:linear-gradient(90deg,#ffb347,#ffe27a)}
+
 /* Målrad och poängpuffar */
 #xmasGoal{position:absolute;z-index:7;left:50%;top:max(150px,calc(env(safe-area-inset-top) + 144px));transform:translate(-50%,-6px);max-width:min(430px,calc(100vw - 28px));padding:11px 16px;border-radius:12px;background:var(--xmas-snow);color:#17352b;border:3px solid var(--xmas-red);box-shadow:0 5px 0 #0a1f1a88;font:900 17px/1.25 system-ui,sans-serif;letter-spacing:-.01em;text-align:center;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s}
 #xmasGoal.on{opacity:1;transform:translate(-50%,0)}
@@ -67,18 +74,22 @@
 @keyframes xmasPill{0%{opacity:0;transform:translate(-50%,12px) scale(.85)}14%{opacity:1;transform:translate(-50%,0) scale(1.08)}30%{transform:translate(-50%,0) scale(1)}80%{opacity:1;transform:translate(-50%,-10px)}100%{opacity:0;transform:translate(-50%,-18px)}}
 
 /* ── Julläget döljer grundspelets termosdelar och lägger kompassen under julens HUD ────────────────────────────── */
-body.xmas-cozy #roundHud,body.xmas-cozy #funHud,body.xmas-cozy #cityEventHud,body.xmas-cozy #panicHud,body.xmas-cozy #sunHud,body.xmas-cozy #refillBtn,
-body.xmas-cozy #roundPhase,body.xmas-cozy #roundTactic,body.xmas-cozy #ghostHud,body.xmas-cozy #roundLaunch,body.xmas-cozy #solarWeapon,body.xmas-cozy #flashBar,
-body.xmas-cozy #journeyPickupToast,body.xmas-cozy #tempoArrow,body.xmas-cozy #tempoEdgeL,body.xmas-cozy #tempoEdgeR,body.xmas-cozy #cityJourneyHud{display:none!important}
-body.xmas-cozy.round-playing #roundCompass{top:max(86px,calc(env(safe-area-inset-top) + 80px));left:max(10px,env(safe-area-inset-left));max-width:min(330px,calc(100vw - 132px));background:#0f2a24dd;border:1px solid #abc7ad44}
-body.xmas-cozy.round-playing #roundCompassText{font-weight:900}
-body.xmas-cozy.round-playing #roundCompassArrow{color:var(--xmas-gold)}
-body.xmas-cozy.round-playing #roundToast{bottom:30%}
+body.xmas-on #roundHud,body.xmas-on #funHud,body.xmas-on #cityEventHud,body.xmas-on #panicHud,body.xmas-on #sunHud,body.xmas-on #refillBtn,
+body.xmas-on #roundPhase,body.xmas-on #roundTactic,body.xmas-on #ghostHud,body.xmas-on #roundLaunch,body.xmas-on #flashBar,body.xmas-on #researchLine,
+body.xmas-on #tempoArrow,body.xmas-on #tempoEdgeL,body.xmas-on #tempoEdgeR,body.xmas-on #cityJourneyHud{display:none!important}
+body.xmas-cozy #solarWeapon,body.xmas-cozy #journeyPickupToast{display:none!important}
+body.xmas-on.round-playing #roundCompass{top:max(86px,calc(env(safe-area-inset-top) + 80px));left:max(10px,env(safe-area-inset-left));max-width:min(330px,calc(100vw - 132px));background:#0f2a24dd;border:1px solid #abc7ad44}
+body.xmas-on.round-playing #roundCompassText{font-weight:900}
+body.xmas-on.round-playing #roundCompassArrow{color:var(--xmas-gold)}
+body.xmas-on.round-playing #roundToast{bottom:30%}
+body.xmas-zombies.round-playing #roundCompass{top:max(106px,calc(env(safe-area-inset-top) + 100px))}
+body.xmas-zombies #xmasHud{width:min(250px,calc(100vw - 168px))}
+body.xmas-zombies.round-playing #roundCompass{max-width:min(300px,calc(100vw - 168px))}
 body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
 @media(max-height:500px){
  #xmasHud{width:min(236px,36vw)}
  #xmasGoal{top:max(16px,env(safe-area-inset-top));left:50%;max-width:40vw;font-size:14px;padding:8px 12px}
- body.xmas-cozy.round-playing #roundCompass{top:max(80px,calc(env(safe-area-inset-top) + 74px));max-width:36vw}
+ body.xmas-on.round-playing #roundCompass{top:max(80px,calc(env(safe-area-inset-top) + 74px));max-width:36vw}
  #xmasPill{bottom:24%}
  .xmas-stamp{width:96px;height:96px}
 }

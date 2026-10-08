@@ -3,6 +3,7 @@ import {createSouthSigns} from './city-south.js?v=2.21.1-xmas.1';
 import {createOrrholmenSigns} from './orrholmen.js?v=2.21.1-xmas.1';
 import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.21.1-xmas.1';
 import {createZombieAtlases} from './zombie-art.js?v=2.21.1-xmas.1';
+import {createXmasZombieAtlases} from './xmas/xmas-zombie-art.js?v=2.21.1-xmas.1'; // julgrenen: tomtezombier ersätter grundspelets zombiebilder
 import {FriendlyClerks} from './friendly-clerks.mjs?v=2.21.1-xmas.1';
 import {createFriendlyView} from './friendly-view.js?v=2.21.1-xmas.1';
 import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.21.1-xmas.1';
@@ -162,7 +163,7 @@ export function createLastRound(pc, host) {
       lines.forEach((text, i) => {c.font = `900 ${lines.length === 1 ? 64 : 46}px sans-serif`; c.fillText(text, w / 2, (i + .5) * h / lines.length, w - 40);});
     }, 512, 160);
   }
-  const fanTextures = new Map(),zombieAtlas=createZombieAtlases(texture);
+  const fanTextures = new Map(),zombieAtlas=createXmasZombieAtlases(texture);
   function fanTex(kind, shirt = '#f6bd42') {
     const key=kind+shirt;if(fanTextures.has(key))return fanTextures.get(key);
     const result=texture((c, w, h) => {
@@ -498,7 +499,7 @@ export function createLastRound(pc, host) {
     const r=journey.rush,daily=r.challenge?.kind==='daily';
     $('cityResultTitle').textContent=event.escaped?'DU KOM UNDAN!':'TILLFÅNGATAGEN!';$('cityResultScore').textContent=String(event.score);
     $('cityResultDetail').textContent=event.escaped?`${r.xp} XP + ${r.bonus} tidsbonus. ${r.challenge?'Dina vanliga resurser är återställda.':'+150 kaffepoäng sparade.'}`:event.reason+' Dina sparade kaffepoäng och vykort finns kvar.';
-    $('cityResultDetail').textContent+=` Fältuppdrag ${r.resultResearch??0}/3`+(r.golden?.caught?' · Guld-Gunnar fångad.':'.');
+    $('cityResultDetail').textContent+=` Fältuppdrag ${r.resultResearch??0}/3`+(r.golden?.caught?' · Guld-Nisse fångad.':'.');
     $('cityResultBest').textContent=(daily?'DAGENS REKORD PÅ DENNA ENHET: ':'BÄSTA FLYKT: ')+(daily?r.dailyBest:r.best)+' XP';
     $('cityResultTarget').textContent=request.target?event.escaped&&event.score>request.target?'DU SLOG KOMPISENS '+request.target+' XP!':'ATT SLÅ: '+request.target+' XP · en fullbordad flykt räknas.':'';
     $('cityRetry').textContent=daily?'SAMMA DAG EN GÅNG TILL →':'EN JAKT TILL →';$('cityShare').hidden=false;$('cityShare').textContent='UTMANA EN VÄN';
@@ -1189,15 +1190,15 @@ export function createLastRound(pc, host) {
     'sun-bonus':(event,now)=>{sound('win');toast('SOLBAD KLART · +100 XP','Karlstads friskvårdsbidrag. Fortsätt följa solen!',2);},
     'pursuit':(event,now)=>{sound('boss');$('journeyPickupToast').textContent='DU ÄR FÖRFÖLJD · '+event.count+' ZOMBIES';$('journeyPickupToast').classList.add('visible');pickupToastUntil=now+1600;},
     'postcard':(event,now)=>{sound('capture');toast('VYKORT HITTAT · +100 XP',event.name+' · Se bilden i PAUS → VYKORT.',2);},
-    'golden-spawn':(event,now)=>{sound('boss');toast('GULD-GUNNAR SYNS!','Han har stulit Karlstads största kanelbulle. Fånga honom innan han smiter: +120 XP, +12 s, full sol.',3.2);},
-    'golden-caught':(event,now)=>{sound('win');shotFlash=.3;spawnPop(event.x,event.z);toast('GULD-GUNNAR FÅNGAD!','+'+event.points+' XP · +'+event.seconds+' sekunder · full solenergi.',2.6);},
-    'golden-escaped':(event,now)=>{toast('GULD-GUNNAR SMET','Bullen är borta. Han syns igen nästa jakt.',2);},
+    'golden-spawn':(event,now)=>{sound('boss');toast('GULD-NISSE SYNS!','Han har snott julens största pepparkaka. Fånga honom innan han smiter: +120 XP, +12 s, full sol.',3.2);},
+    'golden-caught':(event,now)=>{sound('win');shotFlash=.3;spawnPop(event.x,event.z);toast('GULD-NISSE FÅNGAD!','+'+event.points+' XP · +'+event.seconds+' sekunder · full solenergi.',2.6);},
+    'golden-escaped':(event,now)=>{toast('GULD-NISSE SMET','Pepparkakan är borta. Han syns igen nästa jakt.',2);},
     'lunge-broken':(event,now)=>{$('journeyPickupToast').textContent='AVBRUTET UTFALL · SNYGGT';$('journeyPickupToast').classList.add('visible');pickupToastUntil=now+900;},
     'research-complete':(event,now)=>{sound('capture');toast('FÄLTUPPDRAG '+event.completed+'/'+event.total+' KLART','✓ '+event.text+' · +'+event.points+' XP · +'+event.seconds+' s',2.2);},
     'research-breakthrough':(event,now)=>{sound('win');toast('GENOMBROTT!','Alla tre fältuppdrag klara: +'+event.points+' XP · +'+event.seconds+' s.',2.8);},
     'exit-open':(event,now)=>{sound('win');toast(''+RUSH.target+' XP! NU HEM MED DIG.','Ta dig till en grön tryggzon. Tiden som är kvar ger bonus.',3);},
     'hunt-alarm':(event,now)=>{sound('boss');toast('30 SEKUNDER KVAR!',journey.rush.exitReady?'Följ den gröna tryggzonen!':'Jaga sista poängen och hitta en tryggzon!',2);},
-    'hunt-finish':(event,now)=>{cityResult(event);},
+    'hunt-finish':(event,now)=>{if(xmas?.zombieMode)return;cityResult(event);},
     'damage':(event,now)=>{damageFlash=.4;sound('bump');if(fleet.riding)parkRyde('crash');},
     'zap':(event,now)=>{sound('capture');spawnPop(event.x,event.z,event.combo);if(event.combo>1)toast(event.combo+'× SOLSTREAK!','Det där borde räknas som friskvård.',1);},
     'bump':(event,now)=>{if(isPush()){sound('bump'); toast('”JAG STOD FAKTISKT HÄR.”', 'Håll lite avstånd. −15 poäng.');}},

@@ -16,7 +16,10 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
   const pts=el('div','xh-points');const ptsVal=el('b',null,'0'),ptsLabel=el('span',null,'JULPOÄNG'),timeEl=el('em','xh-time','');timeEl.hidden=true;pts.append(ptsLabel,ptsVal);row.append(timeEl);
   const combo=el('div','xh-combo');combo.hidden=true;const comboChain=el('b',null,'KOMBO 2'),comboMult=el('span',null,'×2'),comboBar=el('i','xh-combo-bar'),comboFill=el('u');comboBar.append(comboFill);combo.append(comboChain,comboMult,comboBar);
   const pill=el('div','xh-pill');pill.id='xmasPill';
-  hud.append(row,pts,combo);
+  // Liv och solenergi (bara i Tomtezombies)
+  const vit=el('div','xh-vitals');vit.hidden=true;const hp=el('i','xh-hp'),hpFill=el('u'),sun=el('i','xh-sun'),sunFill=el('u');hp.append(hpFill);sun.append(sunFill);vit.append(el('span',null,'LIV'),hp,el('span',null,'SOL'),sun);
+  let vitHp=-1,vitSun=-1;
+  hud.append(row,pts,combo,vit);
   mount.append(goal,hud,pill);
   let goalUntil=0,pillUntil=0,state={goal:0,total:0,kind:'',phase:''};
 
@@ -53,16 +56,35 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
     if(pill.classList.contains('on')&&now>pillUntil)pill.classList.remove('on');
     setCombo(run);setTime(run);
   }
+  function setMode(m){hud.dataset.mode=m;vit.hidden=m!=='zombies';}
+  function setVitals(h,e){
+    const a=Math.max(0,Math.min(100,Math.round(h??0))),b=Math.max(0,Math.min(100,Math.round(e??0)));
+    if(a!==vitHp){vitHp=a;hpFill.style.width=a+'%';hp.dataset.low=a<=30?'1':'0';}
+    if(b!==vitSun){vitSun=b;sunFill.style.width=b+'%';}
+  }
   function showHud(on){hud.hidden=!on;if(!on){goal.classList.remove('on');pill.classList.remove('on');combo.hidden=true;}}
 
   // ── Resultatkort ───────────────────────────────────────────────────────────────────────────────────────────────
   const result=$('round-xmas-result');
+  let resultMode='ok';
   function showResult(res){
     const stampCv=$('xmasResultStamp');
+    resultMode=res.failed?'fail':'ok';
+    $('xmasResultContinue').firstChild.textContent=res.failed?'FÖRSÖK IGEN ':'FORTSÄTT ';$('xmasResultFree').textContent=res.failed?'JULMENYN':'FRI JULVANDRING';
+    if(res.failed){
+      $('xmasResultKicker').textContent='TOMTEJAKTEN';$('xmasResultTitle').textContent='DU BLEV TAGEN!';
+      $('xmasResultLine').textContent='Tomtezombierna hann ikapp dig. Du hann samla '+res.collected+' av '+res.goal+' paket. Försök igen: skjut dem med SOLSTÖT och ta paketen för att fylla på solenergin.';
+      stampCv.hidden=true;$('xmasResultPoints').textContent=res.points.toLocaleString('sv-SE')+' JULPOÄNG';
+      const grid=$('xmasResultGrid');grid.replaceChildren();
+      for(const [k,v] of [['PAKET',res.collected+'/'+res.goal],['BÄSTA KOMBO',String(res.bestChain)],['TID',mmss(res.seconds)]]){const c=el('div','xr-cell');c.append(el('b',null,v),el('span',null,k));grid.append(c);}
+      $('xmasResultParts').textContent='Ingen stämpel den här gången. Paket du samlat räknas inte förrän du lämnat dem hos tomten.';
+      $('xmasResultStatus').textContent='JULSTÄMPLAR '+save.stampCount()+' / '+save.stampTotal()+' · '+save.title();
+      return;
+    }
     $('xmasResultKicker').textContent=res.stamp?'NY JULSTÄMPEL!':res.late?'KLART · SENT MEN GOTT':'KLART!';
-    $('xmasResultTitle').textContent=res.kind==='intro'?'TOMTEN ÄR RÄDDAD!':res.kind==='delivery'?'FIKAT ÄR LEVERERAT!':'JULRUNDAN ÄR KLAR!';
+    $('xmasResultTitle').textContent=res.kind==='intro'?'TOMTEN ÄR RÄDDAD!':res.kind==='delivery'?'FIKAT ÄR LEVERERAT!':res.kind==='zombies'?'TOMTEJAKTEN KLARAD!':'JULRUNDAN ÄR KLAR!';
     $('xmasResultLine').textContent=res.kind==='intro'
-      ?'Tomten får tillbaka sina paket och skickar dig vidare med en julstämpel.':res.kind==='delivery'?'Tomten fick sin julfika, precis som beställt. Tack för hjälpen!':'Tomtarna tackar för hjälpen och tappar säkert fler paket i morgon.';
+      ?'Tomten får tillbaka sina paket och skickar dig vidare med en julstämpel.':res.kind==='delivery'?'Tomten fick sin julfika, precis som beställt. Tack för hjälpen!':res.kind==='zombies'?'Tomten fick sina paket trots tomtezombierna. Stämpeln är din!':'Tomtarna tackar för hjälpen och tappar säkert fler paket i morgon.';
     const stamp=STAMPS.find(s=>s.id===res.stampId);
     stampCv.hidden=!stamp;
     if(stamp){stampCv.width=stampCv.height=220;drawXmasStamp(stampCv.getContext('2d'),220,{label:stamp.label,sub:stamp.sub});}
@@ -108,7 +130,7 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
   const on=(id,fn)=>{const b=$(id);if(b)b.addEventListener('click',fn);};
   on('xmasCozy',()=>fx.cozy());on('xmasZombies',()=>fx.zombies());on('xmasBack',()=>fx.goBase());
   on('xmasContinueIntro',()=>fx.intro());on('xmasRound',()=>fx.round());on('xmasShops',()=>fx.shops());on('xmasFree',()=>fx.free());on('xmasContinueMenu',()=>fx.openMenu());on('xmasContinueBack',()=>fx.goBase());
-  on('xmasResultContinue',()=>fx.openContinue());on('xmasResultFree',()=>fx.free());
-  return {hud,showGoal,showPill,setProgress,setCombo,tick,showHud,showResult,renderStart,renderContinue,renderWeather,
+  on('xmasResultContinue',()=>resultMode==='fail'?fx.zombies():fx.openContinue());on('xmasResultFree',()=>resultMode==='fail'?fx.openMenu():fx.free());
+  return {hud,showGoal,showPill,setProgress,setCombo,setMode,setVitals,tick,showHud,showResult,renderStart,renderContinue,renderWeather,
     get goalText(){return goal.textContent;},get progressText(){return count.textContent;}};
 }

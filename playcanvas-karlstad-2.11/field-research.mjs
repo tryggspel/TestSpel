@@ -14,7 +14,7 @@ export const RESEARCH_TASKS=Object.freeze([
   {id:'gagata',hud:'GÅGATUTERMOSAR',goal:2,text:'2 TERMOSAR PÅ GÅGATA',match:e=>e.type==='thermos'&&e.gagata},
   {id:'street',hud:'GATUHÄNDELSER',goal:2,text:'KLARA 2 GATUHÄNDELSER',match:e=>e.type==='street-complete'},
   {id:'sun',hud:'SOLBADA 6 S',goal:1,text:'SOLBADA 6 SEKUNDER',match:e=>e.type==='sun-bonus'},
-  {id:'golden',hud:'FÅNGA GULD-GUNNAR',goal:1,text:'FÅNGA GULD-GUNNAR',match:e=>e.type==='golden-caught',hard:true}
+  {id:'golden',hud:'FÅNGA GULD-NISSE',goal:1,text:'FÅNGA GULD-NISSE',match:e=>e.type==='golden-caught',hard:true}
 ]);
 
 export function pickResearch(random){
