@@ -72,7 +72,7 @@ loggar och domäner). Skapa det så här (några minuter):
 
 ## 5. Vad som ändrats i grundspelets filer (för framtida sammanslagningar från `main`)
 
-All julkod ligger under `xmas/` (22 filer) och i `tests/xmas-*.test.mjs` (6 filer). Grundspelets egna filer är rörda så här (utöver cache-nyckeln `?v=` som byts överallt):
+All julkod ligger under `xmas/` (22 filer), `tests/xmas-*.test.mjs` (6 filer) och `tools/xmas-flow/` (2 verifieringsskript). Grundspelets egna filer är rörda så här (utöver cache-nyckeln `?v=` som byts överallt):
 
 | Fil | Ändring |
 |---|---|
