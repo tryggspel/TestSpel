@@ -3,9 +3,9 @@
 // Idéerna är lånade: kombo och beröm från Candy Crush, regnbågstermosen från Mario Karts frågetecken-lådor,
 // dagsmål och streak från Duolingo och Pokémon GO, hett/kallt från geocaching, album från samlarkort.
 // Ren spellogik utan DOM och rendering, så att allt går att testa. Bara 'clean'-läget (City Explore) använder den.
-import {stockholmDay} from './daily-challenge.mjs?v=2.21.1';
-import {ALBUM_AREAS,areaOf} from './explore-places.mjs?v=2.21.1';
-import {PowerState,powerFor,POWERUPS} from './powerups.mjs?v=2.21.1';
+import {stockholmDay} from './daily-challenge.mjs?v=2.21.2';
+import {ALBUM_AREAS,areaOf} from './explore-places.mjs?v=2.21.2';
+import {PowerState,powerFor,POWERUPS} from './powerups.mjs?v=2.21.2';
 
 export const FUN_KEY='karlstad:fun:1';
 export const BASE_POINTS=25;

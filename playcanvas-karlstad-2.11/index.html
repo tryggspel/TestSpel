@@ -30,10 +30,10 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:11px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.21.1">
-<link rel="stylesheet" href="./compact-hud.css?v=2.21.1">
-<link rel="stylesheet" href="./explore-fun.css?v=2.21.1">
-<link rel="stylesheet" href="./places.css?v=2.21.1">
+<link rel="stylesheet" href="./last-round.css?v=2.21.2">
+<link rel="stylesheet" href="./compact-hud.css?v=2.21.2">
+<link rel="stylesheet" href="./explore-fun.css?v=2.21.2">
+<link rel="stylesheet" href="./places.css?v=2.21.2">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
@@ -132,7 +132,7 @@
     <p class="round-lead">Promenera, hitta nya platser och samla termosar.</p>
     <div class="city-rules"><span><b>01 · SAMLA 1000 XP</b>Följ pilarna: cyan = gatuhändelse, lila = termos, guld = Guld-Gunnar. Texten säger var nästa sväng kommer.</span><span><b>02 · TA BUSS 666</b>Ta ratten. Rädda bussen. Upp till 350 XP.</span><span><b>03 · FLY TILL GRÖNT</b>Nå en tryggzon innan tiden tar slut. Livet får inte ta slut!</span></div>
     <p id="cityControlCopy" class="control-hint"></p>
-    <button id="cityClean" class="round-primary">CLEAN CITY EXPLORE →</button><p class="round-fine">Bara Karlstad och termosar. Inga fiender. Frivilliga butiksuppdrag.</p><p id="cityFunStatus" class="round-fine fun-news"></p><p class="round-fine fun-news"><b>NYTT:</b> turbo (T), busslinjer från Torget till Haga, Mariebergsskogen och Tingvalla, kombon, sällsynta termosar och gömda skatter.</p><p class="round-fine fun-news"><b>2.21:</b> Karlstadpasset. Prata med personalen hos Cervera i Mitt i City och vid Pressbyrån på Kungsgatan 14, gör ett uppdrag och få en stämpel.</p><p class="round-fine fun-news"><b>2.15:</b> förmågor i glittrande märken (raket, stjärna, stövlar, sköld, klocka, sockerbomb), blixtutmaningar och TEMPORUSH.</p><button id="cityTempo" class="round-primary tempo-btn">TEMPORUSH · TEMPOT STIGER <span>→</span></button><p id="cityTempoBest" class="round-fine">Samma stad, men farten och poängen ökar för varje 15 sekunder. Missa en termos för länge och du tappar ett liv.</p><button id="cityTrail" class="round-secondary">TERMOSRUNDAN · 3 MINUTER</button>
+    <button id="cityClean" class="round-primary">CLEAN CITY EXPLORE →</button><p class="round-fine">Bara Karlstad och termosar. Inga fiender. Frivilliga butiksuppdrag.</p><p id="cityFunStatus" class="round-fine fun-news"></p><p class="round-fine fun-news"><b>NYTT:</b> turbo (T), busslinjer från Torget till Haga, Mariebergsskogen och Tingvalla, kombon, sällsynta termosar och gömda skatter.</p><p class="round-fine fun-news"><b>2.21:</b> Karlstadpasset. Prata med personalen hos Cervera i Mitt i City och vid Pressbyrån på Kungsgatan 14, gör ett uppdrag och få en stämpel.</p><p class="round-fine fun-news"><b>2.15:</b> förmågor i glittrande märken (raket, stjärna, stövlar, sköld, klocka, sockerbomb), blixtutmaningar och TEMPORUSH.</p><button id="cityTempo" class="round-primary tempo-btn">TEMPORUSH · TEMPOT STIGER <span>→</span></button><p id="cityTempoBest" class="round-fine">Samma stad, men farten och poängen ökar för varje 15 sekunder. Missa en termos för länge och du tappar ett liv.</p><button id="cityXmas" class="round-secondary xmas-btn" type="button" hidden>JULKLAPPSJAKTEN 🎁 <span>→</span></button><p id="cityXmasNote" class="round-fine" hidden>Öppnar julversionen i samma flik. Där finns en knapp tillbaka hit, och dina sparade framsteg här ligger kvar.</p><button id="cityTrail" class="round-secondary">TERMOSRUNDAN · 3 MINUTER</button>
     <button id="dailyOpen" class="daily-tile"><span id="dailyDate"></span><b id="dailyTitle"></b><small id="dailyTeaser"></small><strong>SPELA DAGENS →</strong></button>
     <button id="cityStart" class="round-secondary">ZOMBIEJAKTEN · 3:00 <span>→</span></button>
     <button id="cityFree" class="round-tertiary">Stadsvandring med zombies</button>
@@ -280,6 +280,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.21.1"></script>
+<script type="module" src="./app.js?v=2.21.2"></script>
 </body>
 </html>

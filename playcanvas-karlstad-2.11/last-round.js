@@ -1,43 +1,44 @@
-import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.21.1';
-import {createSouthSigns} from './city-south.js?v=2.21.1';
-import {createOrrholmenSigns} from './orrholmen.js?v=2.21.1';
-import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.21.1';
-import {createZombieAtlases} from './zombie-art.js?v=2.21.1';
-import {FriendlyClerks} from './friendly-clerks.mjs?v=2.21.1';
-import {createFriendlyView} from './friendly-view.js?v=2.21.1';
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.21.1';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.21.1';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.21.1';
-import {CityJourney} from './journey-rules.mjs?v=2.21.1';
-import {createJourneyView} from './journey-view.js?v=2.21.1';
-import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.21.1';
-import {createBoatRide} from './boat-ride.js?v=2.21.1';
-import {createBusRide} from './bus-ride.js?v=2.21.1';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.21.1';
-import {createPostcard} from './challenge-postcard.js?v=2.21.1';
-import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.21.1';
-import {RUSH} from './city-rush.mjs?v=2.21.1';
-import {StampBook} from './city-stamps.mjs?v=2.21.1';
-import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.21.1';
-import {POWERUPS} from './powerups.mjs?v=2.21.1';
-import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.21.1';
-import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.21.1';
-import {fetchLiveBoard} from './bus-quiz.mjs?v=2.21.1';
-import {GhostRun} from './ghost-run.mjs?v=2.21.1';
-import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.21.1';
-import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.21.1';
-import {pedestrianAt} from './pedestrian.mjs?v=2.21.1';
-import {createPedestrianSigns} from './pedestrian-view.js?v=2.21.1';
-import {drawMapLabels} from './city-geography.mjs?v=2.21.1';
-import {createCityIdentity} from './city-identity.js?v=2.21.1';
-import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.21.1';
+import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.21.2';
+import {createSouthSigns} from './city-south.js?v=2.21.2';
+import {createOrrholmenSigns} from './orrholmen.js?v=2.21.2';
+import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.21.2';
+import {createZombieAtlases} from './zombie-art.js?v=2.21.2';
+import {FriendlyClerks} from './friendly-clerks.mjs?v=2.21.2';
+import {createFriendlyView} from './friendly-view.js?v=2.21.2';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.21.2';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.21.2';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.21.2';
+import {CityJourney} from './journey-rules.mjs?v=2.21.2';
+import {createJourneyView} from './journey-view.js?v=2.21.2';
+import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.21.2';
+import {createBoatRide} from './boat-ride.js?v=2.21.2';
+import {createBusRide} from './bus-ride.js?v=2.21.2';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.21.2';
+import {createPostcard} from './challenge-postcard.js?v=2.21.2';
+import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.21.2';
+import {RUSH} from './city-rush.mjs?v=2.21.2';
+import {StampBook} from './city-stamps.mjs?v=2.21.2';
+import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.21.2';
+import {POWERUPS} from './powerups.mjs?v=2.21.2';
+import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.21.2';
+import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.21.2';
+import {fetchLiveBoard} from './bus-quiz.mjs?v=2.21.2';
+import {GhostRun} from './ghost-run.mjs?v=2.21.2';
+import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.21.2';
+import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.21.2';
+import {pedestrianAt} from './pedestrian.mjs?v=2.21.2';
+import {createPedestrianSigns} from './pedestrian-view.js?v=2.21.2';
+import {drawMapLabels} from './city-geography.mjs?v=2.21.2';
+import {createCityIdentity} from './city-identity.js?v=2.21.2';
+import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.21.2';
 
-import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.21.1';
-import {PlaceQuests} from './place-quests.mjs?v=2.21.1';
-import {placeAnchors} from './places-space.mjs?v=2.21.1';
-import {createPlacesView} from './places-view.js?v=2.21.1';
-import {createPlacesUi} from './places-ui.js?v=2.21.1';
-import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.21.1';
+import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.21.2';
+import {PlaceQuests} from './place-quests.mjs?v=2.21.2';
+import {JULKNAPP,julTarget} from './julknapp.mjs?v=2.21.2';
+import {placeAnchors} from './places-space.mjs?v=2.21.2';
+import {createPlacesView} from './places-view.js?v=2.21.2';
+import {createPlacesUi} from './places-ui.js?v=2.21.2';
+import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.21.2';
 
 export function createLastRound(pc, host) {
   // 2.10: elementuppslag cachas, och HUD-text skrivs bara om när värdet faktiskt ändras.
@@ -969,6 +970,8 @@ export function createLastRound(pc, host) {
   $('busChallengeStart').addEventListener('click',()=>startBusChallenge());$('busChallengeBack').addEventListener('click',()=>startCity('free'));
   for(const id of ['cityFree','cityResultFree'])$(id).addEventListener('click',()=>startCity('free'));
   function startTempoRun(){startCity('clean');journey.startTempo();host.music?.tempo?.(1);renderTurbo();toast('TEMPORUSH','Följ pilen till nästa termos. Tryck T för turbo.',2.6);}
+  // 2.21.2: knappen till Julklappsjakten (egen spelversion). Dold tills en verifierad adress är inkopplad i julknapp.mjs.
+  {const jt=julTarget(JULKNAPP,{search:location.search,host:location.hostname}),jb=$('cityXmas'),jn=$('cityXmasNote');if(jb&&jt){jb.hidden=false;if(jn)jn.hidden=false;jb.addEventListener('click',()=>{try{journey.save();}catch{}location.assign(jt.url);});}}
   $('cityTempo').addEventListener('click',startTempoRun);$('tempoRetry').addEventListener('click',startTempoRun);$('tempoExplore').addEventListener('click',()=>startCity('clean'));
   $('trailRetry').addEventListener('click',()=>startCity('trail'));$('trailExplore').addEventListener('click',()=>startCity('clean'));
   $('cityNewRun').addEventListener('click',()=>{if(game.phase==='playing')game.pause();setPanel('city-intro');});
