@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#071015">
-<title>Karlstad City · Dagens utmaning &amp; stadsjakten</title>
-<meta name="description" content="Dagens Karlstad: samma utmaning för alla. Samla 1000 XP, undvik kaffehorden, följ solen och utmana en vän med ditt challenge-vykort.">
+<title>Julklappsjakten – 2.21-XMS · Karlstad</title>
+<meta name="description" content="Julklappsjakten i Karlstad: tomtarna har tappat julklapparna. Samla paket på Stora Torget, hjälp tomten och få julstämplar. Ett fristående julspel.">
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071015;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%}button,[role="button"]{touch-action:manipulation}
 #game{width:100%;height:100%;display:block;touch-action:none}
@@ -34,6 +34,7 @@
 <link rel="stylesheet" href="./compact-hud.css?v=2.21.1-xmas.1">
 <link rel="stylesheet" href="./explore-fun.css?v=2.21.1-xmas.1">
 <link rel="stylesheet" href="./places.css?v=2.21.1-xmas.1">
+<link rel="stylesheet" href="./xmas/xmas.css?v=2.21.1-xmas.1">
 <link rel="preload" href="./audio/karlstad-main.mp3" as="audio" type="audio/mpeg">
 <link rel="preload" href="./audio/karlstad-zombie-transition.mp3" as="audio" type="audio/mpeg">
 </head>
@@ -126,6 +127,42 @@
   <div id="busPaused" hidden><div><h2>HÅLLPLATS: PAUS.</h2><p>Bussen och jaktklockan står stilla.</p><button id="busResume" class="round-primary">FORTSÄTT RESAN →</button></div></div>
 </div>
 <div id="roundPanel" role="dialog" aria-modal="true" aria-label="Karlstad efter stängning">
+  <section id="round-xmas-intro" class="round-card xmas-card" hidden>
+    <div class="episode-label"><span>KARLSTAD / JULEN</span><span class="game-version">2.21.1-xmas.1</span></div>
+    <h1>JULKLAPPS<br><em>JAKTEN.</em></h1>
+    <p class="round-lead">Tomtarna har tappat julklapparna runt om i Karlstad. Hjälp dem hitta paketen!</p>
+    <button id="xmasCozy" class="round-primary xmas-primary" type="button">JULKLAPPSJAKTEN 🎁 <span>→</span></button>
+    <p id="xmasCozyNote" class="round-fine"></p>
+    <button id="xmasZombies" class="round-secondary xmas-zombie" type="button">TOMTEZOMBIES <span>→</span></button>
+    <p class="round-fine">Ett separat julläge med zombier och kuslig julmusik. Julklappsjakten är helt utan zombier.</p>
+    <p id="xmasStatus" class="round-fine fun-news"></p>
+    <button id="xmasBack" class="round-tertiary" type="button">← Tillbaka till Karlstad-spelet</button>
+    <p id="xmasBuild" class="round-fine xmas-build"></p>
+  </section>
+  <section id="round-xmas-continue" class="round-card compact xmas-card" hidden>
+    <div class="episode-label"><span>JULKLAPPSJAKTEN</span><span>FORTSÄTT JULEN</span></div>
+    <h2>VAD<br><em>NU?</em></h2>
+    <p id="xmasContinueStatus" class="round-fine"></p>
+    <button id="xmasRound" class="round-primary xmas-primary" type="button">NY JULRUNDA · 2–3 MIN <span>→</span></button>
+    <button id="xmasShops" class="round-secondary" type="button">BUTIKSUPPDRAG <span>→</span></button>
+    <button id="xmasFree" class="round-secondary" type="button">FRI JULVANDRING <span>→</span></button>
+    <ul id="xmasStampList" class="xmas-stamps"></ul>
+    <button id="xmasContinueIntro" class="round-tertiary" type="button">Spela första uppdraget igen</button>
+    <button id="xmasContinueMenu" class="round-tertiary" type="button">Startmenyn</button>
+    <button id="xmasContinueBack" class="round-tertiary" type="button">← Tillbaka till Karlstad-spelet</button>
+  </section>
+  <section id="round-xmas-result" class="round-card compact xmas-card" hidden>
+    <div class="episode-label"><span id="xmasResultKicker">KLART!</span><span>JULKLAPPSJAKTEN</span></div>
+    <canvas id="xmasResultStamp" class="xmas-stamp" width="220" height="220" role="img" aria-label="Din julstämpel" hidden></canvas>
+    <h2 id="xmasResultTitle">TOMTEN ÄR RÄDDAD!</h2>
+    <p id="xmasResultLine" class="round-lead"></p>
+    <p id="xmasResultPoints" class="xmas-points"></p>
+    <div id="xmasResultGrid" class="xmas-grid"></div>
+    <p id="xmasResultParts" class="round-fine"></p>
+    <p id="xmasResultStatus" class="round-fine"></p>
+    <button id="xmasResultContinue" class="round-primary xmas-primary" type="button">FORTSÄTT <span>→</span></button>
+    <button id="xmasResultFree" class="round-secondary" type="button">FRI JULVANDRING</button>
+  </section>
   <section id="round-city-intro" class="round-card city-card" hidden>
     <div class="episode-label"><span>KARLSTAD / STADSJAKTEN</span><span class="game-version">2.11.22</span></div>
     <h1>KARLSTAD<br><em>ÄR DITT.</em></h1>

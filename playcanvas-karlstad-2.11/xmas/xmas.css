@@ -1,0 +1,85 @@
+/* Julklappsjakten (2.21.1-xmas.1): gränssnittet. Bygger på grundspelets kort och knappar (.round-card, .round-primary …) och ändrar bara det som är jul.
+   Mobilfirst: alla knappar är minst 52 px höga, HUD:en är två rader högst upp till vänster och spelvärlden syns ovanför och mellan dem. */
+:root{--xmas-red:#d9473f;--xmas-red-dark:#8f2621;--xmas-green:#2d8a5f;--xmas-snow:#f6fbff;--xmas-gold:#ffd36b}
+
+/* ── Kort: startvy, fortsättning, resultat ─────────────────────────────────────────────────────────────────────── */
+.xmas-card{border-top-color:var(--xmas-red)}
+.xmas-card::before{content:'';position:absolute;left:-1px;right:-1px;top:-5px;height:5px;background:repeating-linear-gradient(90deg,var(--xmas-red) 0 18px,var(--xmas-gold) 18px 30px,var(--xmas-green) 30px 48px,var(--xmas-gold) 48px 60px)}
+.xmas-card h1{font-size:clamp(38px,12.5vw,66px)}
+.xmas-card h2{font-size:clamp(32px,10vw,46px)}
+.xmas-card h1 em,.xmas-card h2 em{color:var(--xmas-gold)}
+.xmas-card button{min-height:52px}
+.xmas-card .round-tertiary{min-height:44px;padding:10px 14px}
+.xmas-card .xmas-primary{background:var(--xmas-red);color:#fff;box-shadow:0 4px 0 var(--xmas-red-dark)}
+.xmas-card .xmas-primary:hover{background:#e65b52}
+.xmas-card .xmas-primary:active{transform:translateY(2px);box-shadow:0 2px 0 var(--xmas-red-dark)}
+.xmas-card .xmas-zombie{border-color:#b58ad688;color:#e7d6ff;min-height:52px}
+.xmas-card .xmas-zombie[disabled]{opacity:.5}
+.xmas-build{font:600 10px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#7f9a88;letter-spacing:.02em;word-break:break-all}
+#round-xmas-intro{max-height:calc(100dvh - 36px);overflow-y:auto;touch-action:pan-y}
+#round-xmas-result{max-height:calc(100dvh - 36px);overflow-y:auto;touch-action:pan-y;text-align:center}
+#round-xmas-result .episode-label{text-align:left}
+.xmas-stamp{display:block;width:150px;height:150px;margin:14px auto 0;transform:rotate(-5deg);animation:xmasStampIn .55s cubic-bezier(.2,1.5,.4,1) both}
+.xmas-stamp[hidden]{display:none}
+.round-card p.xmas-points{font:1000 28px/1.1 system-ui;color:var(--xmas-gold);letter-spacing:-.02em;margin:6px 0 4px}
+.xmas-card p.round-fine{margin-bottom:12px}
+.xmas-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 4px}
+.xr-cell{padding:9px 6px;border-radius:6px;background:#0c241f;border:1px solid #85aa8544}
+.xr-cell b{display:block;font:1000 24px/1.1 system-ui;color:var(--paper)}
+.xr-cell span{display:block;margin-top:3px;font:800 10px/1.2 system-ui;letter-spacing:.14em;color:#9fc0a8}
+.xmas-stamps{list-style:none;margin:14px 0 6px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.xmas-stamps li{padding:7px 8px;border-radius:4px;border:1px dashed #85aa8566;color:#9fb9a3;font:700 11px/1.25 system-ui,sans-serif;overflow-wrap:break-word}
+.xmas-stamps li.stamped{border:1px solid var(--xmas-gold);background:#ffd36b22;color:#ffe9a8}
+.xmas-pause{display:grid;gap:8px;margin:12px 0 6px}
+.xmas-pause button{min-height:48px;margin-top:0!important}
+@keyframes xmasStampIn{0%{opacity:0;transform:rotate(-5deg) scale(1.9)}100%{opacity:1;transform:rotate(-5deg) scale(1)}}
+
+/* ── HUD under spelets gång ───────────────────────────────────────────────────────────────────────────────────── */
+#xmasHud{position:absolute;z-index:6;top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));width:min(290px,calc(100vw - 132px));display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;padding:7px 10px 8px;border-radius:10px;background:#0f2a24e8;border:1px solid #abc7ad55;border-bottom:3px solid var(--xmas-red);color:var(--paper);pointer-events:none;font-family:system-ui,sans-serif}
+#xmasHud[hidden]{display:none}
+.xh-row{grid-column:1/-1;display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:center}
+.xh-label{font:800 11px/1 system-ui;letter-spacing:.14em;color:#b3c7b7}
+.xh-count{font:1000 24px/1 system-ui;letter-spacing:-.03em;color:var(--xmas-gold)}
+.xh-bar{display:block;height:7px;border-radius:5px;background:#ffffff22;overflow:hidden}
+.xh-bar u{display:block;height:100%;width:0;text-decoration:none;background:linear-gradient(90deg,var(--xmas-red),var(--xmas-gold));transition:width .18s}
+#xmasHud[data-phase="deliver"] .xh-count,#xmasHud[data-phase="done"] .xh-count{color:#9bf0a7}
+#xmasHud[data-phase="deliver"] .xh-bar u,#xmasHud[data-phase="done"] .xh-bar u{background:linear-gradient(90deg,#4cc784,#9bf0a7)}
+.xh-points{display:flex;align-items:baseline;gap:6px}
+.xh-points b{font:900 17px/1 system-ui;color:var(--paper)}
+.xh-points span{font:800 10px/1 system-ui;letter-spacing:.12em;color:#9fc0a8}
+.xh-combo{display:flex;align-items:center;gap:6px;white-space:nowrap;padding:3px 7px;border-radius:12px;background:#4b2b62ee;border:1px solid #d8b3ed;font:900 11px/1 system-ui;letter-spacing:.04em;color:#fff0ce}
+.xh-combo[hidden]{display:none}
+.xh-combo span{color:var(--xmas-gold)}
+.xh-combo-bar{display:block;width:34px;height:4px;border-radius:3px;background:#ffffff2a;overflow:hidden}
+.xh-combo-bar u{display:block;height:100%;width:100%;text-decoration:none;background:linear-gradient(90deg,#ff9bd8,var(--xmas-gold))}
+.xh-combo[data-tier="2"]{border-color:#9ee6ff}.xh-combo[data-tier="3"]{border-color:#9bf0a7}.xh-combo[data-tier="4"]{border-color:var(--xmas-gold);background:#6a2f58ee}
+
+/* Målrad och poängpuffar */
+#xmasGoal{position:absolute;z-index:7;left:50%;top:max(150px,calc(env(safe-area-inset-top) + 144px));transform:translate(-50%,-6px);max-width:min(430px,calc(100vw - 28px));padding:11px 16px;border-radius:12px;background:var(--xmas-snow);color:#17352b;border:3px solid var(--xmas-red);box-shadow:0 5px 0 #0a1f1a88;font:900 17px/1.25 system-ui,sans-serif;letter-spacing:-.01em;text-align:center;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s}
+#xmasGoal.on{opacity:1;transform:translate(-50%,0)}
+#xmasPill{position:absolute;z-index:7;left:50%;bottom:max(34%,calc(env(safe-area-inset-bottom) + 230px));transform:translate(-50%,0);padding:7px 13px;border-radius:999px;background:#112e29f0;border:2px solid var(--xmas-gold);color:var(--paper);font:900 14px/1.1 system-ui,sans-serif;letter-spacing:.03em;white-space:nowrap;opacity:0;pointer-events:none}
+#xmasPill.on{animation:xmasPill 1s ease-out both}
+#xmasPill[data-tone="bonus"]{background:#6a2f58f0;border-color:#ffe08a;color:#fff0ce;font-size:16px}
+#xmasPill[data-tone="lost"]{border-color:#9bb0bc;color:#d6e2ea;background:#25383ff0}
+@keyframes xmasPill{0%{opacity:0;transform:translate(-50%,12px) scale(.85)}14%{opacity:1;transform:translate(-50%,0) scale(1.08)}30%{transform:translate(-50%,0) scale(1)}80%{opacity:1;transform:translate(-50%,-10px)}100%{opacity:0;transform:translate(-50%,-18px)}}
+
+/* ── Julläget döljer grundspelets termosdelar och lägger kompassen under julens HUD ────────────────────────────── */
+body.xmas-cozy #roundHud,body.xmas-cozy #funHud,body.xmas-cozy #cityEventHud,body.xmas-cozy #panicHud,body.xmas-cozy #sunHud,body.xmas-cozy #refillBtn,
+body.xmas-cozy #roundPhase,body.xmas-cozy #roundTactic,body.xmas-cozy #ghostHud,body.xmas-cozy #roundLaunch,body.xmas-cozy #solarWeapon,body.xmas-cozy #flashBar,
+body.xmas-cozy #journeyPickupToast,body.xmas-cozy #tempoArrow,body.xmas-cozy #tempoEdgeL,body.xmas-cozy #tempoEdgeR,body.xmas-cozy #cityJourneyHud{display:none!important}
+body.xmas-cozy.round-playing #roundCompass{top:max(86px,calc(env(safe-area-inset-top) + 80px));left:max(10px,env(safe-area-inset-left));max-width:min(330px,calc(100vw - 132px));background:#0f2a24dd;border:1px solid #abc7ad44}
+body.xmas-cozy.round-playing #roundCompassText{font-weight:900}
+body.xmas-cozy.round-playing #roundCompassArrow{color:var(--xmas-gold)}
+body.xmas-cozy.round-playing #roundToast{bottom:30%}
+body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
+@media(max-height:500px){
+ #xmasHud{width:min(236px,36vw)}
+ #xmasGoal{top:max(16px,env(safe-area-inset-top));left:50%;max-width:40vw;font-size:14px;padding:8px 12px}
+ body.xmas-cozy.round-playing #roundCompass{top:max(80px,calc(env(safe-area-inset-top) + 74px));max-width:36vw}
+ #xmasPill{bottom:24%}
+ .xmas-stamp{width:96px;height:96px}
+}
+@media(pointer:coarse) and (max-width:520px) and (min-height:501px){
+ #xmasGoal{top:max(158px,calc(env(safe-area-inset-top) + 150px));font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){#xmasPill.on{animation:none;opacity:1}.xmas-stamp{animation:none}}

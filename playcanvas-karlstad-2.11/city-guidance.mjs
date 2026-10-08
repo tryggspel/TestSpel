@@ -61,7 +61,7 @@ export function nextTurn(path,player,minAngle=.6){
 // HUD, floor arrows, radar and compass all consume the same walkable route.
 // Explicit via points bridge door/interior segments that sit outside the normal street component.
 // One colour per kind of goal, used by floor arrows, radar line and HUD alike.
-export const ROUTE_COLORS=Object.freeze({default:'#81e9e3',escape:'#96f3b1',gold:'#ffd35c',golden:'#ffd35c',sun:'#ffe27a',coffee:'#c9b3ff'});
+export const ROUTE_COLORS=Object.freeze({default:'#81e9e3',escape:'#96f3b1',gold:'#ffd35c',golden:'#ffd35c',sun:'#ffe27a',coffee:'#c9b3ff',xmas:'#e0453b'}); // xmas: julgrenens pilar, röda mot snön
 export class CityGuidance {
   constructor(nav){this.nav=nav;this.key='';this.path=[];}
   update(p,goal,forward={x:0,z:-1}){

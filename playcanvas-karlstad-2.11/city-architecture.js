@@ -425,11 +425,15 @@ function addAddressPlates(mesh,buildings){
 }
 
 export class ComicMesh {
+  static snow=null; // julgrenen: (färg, normal-y, höjd) → färg, eller null
   constructor(srgb=false){this.srgb=srgb;this.positions=[];this.normals=[];this.colors=[];this.indices=[];}
   tri(a,b,c,colour){
     const k=this.positions.length/3,u=b.map((v,i)=>v-a[i]),v=c.map((n,i)=>n-a[i]);
     const n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],l=Math.hypot(...n)||1;
-    for(const p of [a,b,c]){this.positions.push(...p);this.normals.push(...n.map(x=>x/l));this.colors.push(...rgb(colour).map((v,i)=>this.srgb&&i<3?(v<=.04045?v/12.92:((v+.055)/1.055)**2.4):v));}
+    // Julgrenen: ett färgfilter (xmas/xmas-snow.mjs) kan lägga snö efter hur triangeln vänder. Utan filter är det exakt som förut.
+    let col=rgb(colour);const snow=ComicMesh.snow;if(snow)col=snow(col,n[1]/l,(a[1]+b[1]+c[1])/3);
+    const lin=this.srgb?col.map((v,i)=>i<3?(v<=.04045?v/12.92:((v+.055)/1.055)**2.4):v):col;
+    for(const p of [a,b,c]){this.positions.push(...p);this.normals.push(...n.map(x=>x/l));this.colors.push(...lin);}
     this.indices.push(k,k+1,k+2);
   }
   quad(a,b,c,d,colour){this.tri(a,b,c,colour);this.tri(a,c,d,colour);}

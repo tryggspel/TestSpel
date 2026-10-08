@@ -92,7 +92,7 @@ export class CityJourney extends CityMission {
     this.postcards=POSTCARDS.map(p=>({...p,...nav.point(p)}));this.postcardsFound=new Set();this.routeMode='hunt';
     this.position={...this.layout.spawn};this.heading=0;this.load();
     this.fun=new ExploreFun({storage,items:this.items,treasureIds:[...this.secrets.map(s=>s.id),...this.treasures.map(t=>t.id)],stopIds:this.busNetwork.filter(s=>!s.hub).map(s=>s.id),xp:this.lifetime});
-    this.lastStep=null;this.speed=0;this.foundAt=new Map();this.lastRespawn=0;this.itemById=new Map(this.items.map(t=>[t.id,t]));this.rush=new CityRush(this);
+    this.lastStep=null;this.speed=0;this.foundAt=new Map();this.lastRespawn=0;this.itemById=new Map(this.items.map(t=>[t.id,t]));this.xmas=null;this.rush=new CityRush(this);
     this.flash=new FlashChallenges({seed:1});this.tempo=new TempoRun(storage);
     this.sitesDone=new Set();this.activeSite=null;this.dyn=[];this.dynSerial=0;this.dynRnd=seededRandom(hashSeed('dyn'));this.lastSupply=0;this.lastForward={x:0,z:-1};this.helper={active:false,x:0,z:0,target:null,t:0,cool:0};
   }
@@ -150,7 +150,7 @@ export class CityJourney extends CityMission {
     this.balance=Math.max(0,this.balance-25);this.health=100;this.energy=Math.max(20,this.energy);this.contactCooldown=8;this.actors.forEach(a=>a.active=false);this.pendingAmbush=null;
     this.events.push({type:'recover'});this.dirty=true;
   }
-  objective(player=this.position){if(atKil(player))return {...KIL,id:'return-train',kind:'landmark',label:'RETURTÅG · KARLSTAD C',radius:8,action:'KLIV OMBORD'};if(atMarieberg(player))return {...MARIEBERG,id:'return-boat',kind:'landmark',label:'RETURBÅT · INRE HAMN',radius:7,action:'KLIV OMBORD'};if(this.rush.peaceful&&this.routeMode==='bus'){const bus=this.nearestBus(player);return {...bus,id:'clean-bus-'+bus.id,kind:'landmark',label:'BUSSHÅLLPLATS · '+bus.name.toUpperCase(),radius:6};}if(this.rush.peaceful&&this.routeMode!=='landmark'){const quest=this.places?.objective?.(player)||(this.routeMode==='help'?this.clerks?.objective():null);if(quest)return quest;if(this.rush.mode==='trail'){const item=this.items.filter(t=>!this.found.has(t.id)).sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z))[0];if(item)return {...item,kind:'coffee',label:'NÄSTA TERMOS',radius:1.8};}return {...player,id:'explore',kind:'wait',label:'CITY EXPLORE · VÄLJ PLATS PÅ KARTAN',radius:2};}if(this.routeMode==='help'&&!this.rush?.exitReady){const help=this.clerks?.objective();if(help)return help;}const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;if(this.routeMode==='landmark'&&this.landmarkGoal)return this.landmarkGoal.id==='place-mitticity'?mallGoal(player,this.rush.mode==='trail'||this.secretsFound.has(MALL_CACHE.id)):this.landmarkGoal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
+  objective(player=this.position){if(atKil(player))return {...KIL,id:'return-train',kind:'landmark',label:'RETURTÅG · KARLSTAD C',radius:8,action:'KLIV OMBORD'};if(atMarieberg(player))return {...MARIEBERG,id:'return-boat',kind:'landmark',label:'RETURBÅT · INRE HAMN',radius:7,action:'KLIV OMBORD'};if(this.rush.peaceful&&this.routeMode==='bus'){const bus=this.nearestBus(player);return {...bus,id:'clean-bus-'+bus.id,kind:'landmark',label:'BUSSHÅLLPLATS · '+bus.name.toUpperCase(),radius:6};}if(this.rush.peaceful&&this.routeMode!=='landmark'){const quest=this.places?.objective?.(player)||(this.routeMode==='help'?this.clerks?.objective():null);if(quest)return quest;const xm=this.xmas?.objective(player);if(xm)return xm;if(this.rush.mode==='trail'){const item=this.items.filter(t=>!this.found.has(t.id)).sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z))[0];if(item)return {...item,kind:'coffee',label:'NÄSTA TERMOS',radius:1.8};}return {...player,id:'explore',kind:'wait',label:'CITY EXPLORE · VÄLJ PLATS PÅ KARTAN',radius:2};}if(this.routeMode==='help'&&!this.rush?.exitReady){const help=this.clerks?.objective();if(help)return help;}const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;if(this.routeMode==='landmark'&&this.landmarkGoal)return this.landmarkGoal.id==='place-mitticity'?mallGoal(player,this.rush.mode==='trail'||this.secretsFound.has(MALL_CACHE.id)):this.landmarkGoal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
   // Sträckan sedan förra steget (om spelaren inte teleporterats) och en jämnad fartuppskattning i m/s.
   trackMove(dt,p){
     const from=this.lastStep,d=from?Math.hypot(p.x-from.x,p.z-from.z):0,sweep=from&&d<14?from:null;this.lastStep={x:p.x,z:p.z};
@@ -178,6 +178,12 @@ export class CityJourney extends CityMission {
     const fun=this.rush.mode==='clean'?this.fun:null,py=(p.y??1.68)-1.68;
     // Sträckan sedan förra steget: med turbo och Ryde hinner man 1–3 m per bildruta, och en termos får inte missas mellan två steg.
     const sweep=this.trackMove(dt,p);
+    if(this.xmas){ // julgrenen: paketjakten ersätter termosar, blixtutmaningar och Temporush; butiksuppdragen (personal, platser) går som förut
+      try{if(this.clerks?.explore())this.clerks.step(dt,p);this.places?.step(dt,p);}catch(e){if(!this.placesFault){this.placesFault=true;console.error('[Platsuppdrag] fel i steget',e);}}
+      this.xmas.step(dt,p,sweep,this.speed);
+      if(this.elapsed-this.lastSave>=4){this.lastSave=this.elapsed;this.save();}
+      return;
+    }
     if(fun){
       const t=fun.tick(dt);if(t.lost>=3)this.events.push({type:'combo-lost',chain:t.lost});if(t.saved)this.events.push({type:'shield-save',chain:t.saved});
       this.tickFlash(dt);this.tickTempo(dt,p);this.tickGhost(dt,p,fun);this.tickSites(p);

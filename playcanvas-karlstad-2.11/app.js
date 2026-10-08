@@ -1,8 +1,10 @@
+import './xmas/xmas-storage-install.mjs?v=2.21.1-xmas.1'; // julgrenen: egen sparning, måste utvärderas före alla andra moduler
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
 import {createLastRound} from './last-round.js?v=2.21.1-xmas.1';
 import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.21.1-xmas.1';
 import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.21.1-xmas.1';
-import {createCityArchitecture,createInfill,coreContourBuildings} from './city-architecture.js?v=2.21.1-xmas.1';
+import {createCityArchitecture,createInfill,coreContourBuildings,ComicMesh} from './city-architecture.js?v=2.21.1-xmas.1';
+import {installSnow,SNOW_MATERIALS,WINTER_SKY} from './xmas/xmas-snow.mjs?v=2.21.1-xmas.1';
 import {createCityEnvironment} from './city-environment.mjs?v=2.21.1-xmas.1';
 import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.21.1-xmas.1';
 import {ColliderGrid} from './collider-grid.mjs?v=2.21.1-xmas.1';
@@ -24,6 +26,7 @@ import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.21.1-xmas.1';
 import {createAudioEngine} from './audio-engine.mjs?v=2.21.1-xmas.1';
 import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.21.1-xmas.1';
 
+installSnow(ComicMesh); // julgrenen: snön är ett färgfilter på stadens geometri (ingen extra yta)
 const canvas=document.getElementById('game');
 const loading=document.getElementById('loading');
 const loadText=document.getElementById('loadText');
@@ -300,10 +303,7 @@ function addGraphicsPass12(){
   addPlazaPattern();
   // Route guidance is owned by the active mission; no competing legacy trail.
   // Small rewards make the square worth exploring rather than only crossing.
-  addPickup(-12,-10,'xp',20);
-  addPickup(12,-9,'energy',30);
-  addPickup(-12,11,'xp',20);
-  addPickup(12,10,'energy',30);
+  // julgrenen: torgets gamla XP-kulor är borta, paketen på torget ägs av Julklappsjakten (xmas/)
 }
 function addFacadePass12(b,hero,seed){
   const near=b.dist<CORE_LOCK.detailRadius;
@@ -374,10 +374,9 @@ function addContentGraphicsPass15(){
   // Keep the 1.5 reward breadcrumbs, but the old O'Learys slab is retired.
   // The actual storefront is now owned by Landmark Storefront 1.7.
   const [ox,oz]=localXY(OLEARYS.lon,OLEARYS.lat);
-  addPickup(ox-4.0,oz-4.8,'xp',25);
-  addPickup(ox-4.0,oz+4.8,'energy',35);
+  // julgrenen: inga kulor vid O’Learys eller Mitt i City
   const [mx,mz]=localXY(MALL.lon,MALL.lat);
-  addPickup(mx+7,mz+4,'xp',30);
+
 }
 
 function addLandmarkIdentityPass16(){
@@ -400,9 +399,9 @@ function addStreetProps(){
 }
 
 function initScene(){
-  M.ground=mat(0x779a7e,0,.08);
-  M.grass=mat(0x609b70,0,.05);
-  M.plaza=mat(0xc1ad87,0,.12);
+  M.ground=mat(SNOW_MATERIALS.ground,0,.08);
+  M.grass=mat(SNOW_MATERIALS.grass,0,.05);
+  M.plaza=mat(SNOW_MATERIALS.plaza,0,.12);
   M.building=mat(0xe2a17b,0,.2);
   M.stone=mat(0xcbbd97,0,.18);
   M.plaster=mat(0xf2d6a0,0,.16);
@@ -412,8 +411,8 @@ function initScene(){
   M.hero=mat(0xe6b467,0,.3);
   M.heroDark=mat(0x2d363b,.08,.5);
   M.mittSlate=mat(0x555b66,0,.2);
-  M.road=mat(0x475763,0,.08);
-  M.sidewalk=mat(0xa79b80,0,.1);
+  M.road=mat(SNOW_MATERIALS.road,0,.08);
+  M.sidewalk=mat(SNOW_MATERIALS.sidewalk,0,.1);
   M.marking=mat(0xe8e3d6,0,.18);
   M.tree=mat(0x388466,0,.05);
   M.trunk=mat(0x654a37,0,.08);
@@ -440,7 +439,7 @@ function initScene(){
   app.root.addChild(player);
 
   camera=new pc.Entity('camera');
-  camera.addComponent('camera',{clearColor:new pc.Color(.53,.77,.86),nearClip:.12,farClip:620,fov:74});
+  camera.addComponent('camera',{clearColor:new pc.Color(...WINTER_SKY.clear),nearClip:.12,farClip:620,fov:74});
   player.addChild(camera);
   camera.setLocalPosition(0,0,0);
 
@@ -454,9 +453,9 @@ function initScene(){
   app.scene.ambientLight=new pc.Color(.34,.38,.40);
   if(pc.FOG_LINEAR!==undefined && app.scene.fog){
     app.scene.fog.type=pc.FOG_LINEAR;
-    app.scene.fog.color=new pc.Color(.53,.77,.86);
-    app.scene.fog.start=185;
-    app.scene.fog.end=470;
+    app.scene.fog.color=new pc.Color(...WINTER_SKY.fog);
+    app.scene.fog.start=WINTER_SKY.fogStart;
+    app.scene.fog.end=WINTER_SKY.fogEnd;
   }
 
   addStreetProps();
