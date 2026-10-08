@@ -3,9 +3,9 @@
 // Idéerna är lånade: kombo och beröm från Candy Crush, regnbågstermosen från Mario Karts frågetecken-lådor,
 // dagsmål och streak från Duolingo och Pokémon GO, hett/kallt från geocaching, album från samlarkort.
 // Ren spellogik utan DOM och rendering, så att allt går att testa. Bara 'clean'-läget (City Explore) använder den.
-import {stockholmDay} from './daily-challenge.mjs?v=2.20.0';
-import {ALBUM_AREAS,areaOf} from './explore-places.mjs?v=2.20.0';
-import {PowerState,powerFor,POWERUPS} from './powerups.mjs?v=2.20.0';
+import {stockholmDay} from './daily-challenge.mjs?v=2.21.0';
+import {ALBUM_AREAS,areaOf} from './explore-places.mjs?v=2.21.0';
+import {PowerState,powerFor,POWERUPS} from './powerups.mjs?v=2.21.0';
 
 export const FUN_KEY='karlstad:fun:1';
 export const BASE_POINTS=25;
@@ -116,7 +116,9 @@ export const BADGES=Object.freeze([
   {id:'power-5',name:'Fyndare',desc:'Hitta 5 förmågor (glittrande märken).',test:s=>s.powerups>=5},
   {id:'flash-5',name:'Blixtsnabb',desc:'Klara 5 blixtutmaningar.',test:s=>s.flashDone>=5},
   {id:'tempo-5',name:'Rusningstid',desc:'Nå tempo 5 i Temporush.',test:s=>s.tempoLevel>=5},
-  {id:'tempo-10',name:'Vansinnesfart',desc:'Nå tempo 10 i Temporush.',test:s=>s.tempoLevel>=10}
+  {id:'tempo-10',name:'Vansinnesfart',desc:'Nå tempo 10 i Temporush.',test:s=>s.tempoLevel>=10},
+  {id:'pass-1',name:'Första stämpeln',desc:'Gör ett butiksuppdrag och få en stämpel i Karlstadpasset.',test:s=>s.partnerStamps>=1},
+  {id:'pass-all',name:'Fullt pass',desc:'Samla alla stämplar i Karlstadpasset.',test:s=>s.partnerTotal>0&&s.partnerStamps>=s.partnerTotal}
 ]);
 
 // Hett/kallt för gömda skatter, som geocaching. Avstånd i meter.
@@ -125,7 +127,7 @@ export function heatFor(distance){for(const [d,label,level] of HEAT)if(distance<
 
 const freshState=()=>({version:1,collected:[],treasures:[],stops:[],badges:[],areasDone:[],day:'',dayCount:0,dayDone:false,
   streak:0,lastDone:'',bestStreak:0,bestChain:0,levelSeen:1,
-  checkinDay:'',stats:{thermos:0,silver:0,gold:0,rainbow:0,turboMeters:0,rides:0,treasures:0,quizCorrect:0,quizPerfect:0,checkins:0,powerups:0,flashDone:0,tempoLevel:0}});
+  checkinDay:'',stats:{thermos:0,silver:0,gold:0,rainbow:0,turboMeters:0,rides:0,treasures:0,quizCorrect:0,quizPerfect:0,checkins:0,powerups:0,flashDone:0,tempoLevel:0,partnerStamps:0}});
 const idList=(v,max=2000)=>Array.isArray(v)?[...new Set(v.filter(x=>typeof x==='string'&&x.length>0&&x.length<64))].slice(0,max):[];
 
 export class ExploreFun{
@@ -167,7 +169,7 @@ export class ExploreFun{
   activate(kind){this.boosters[kind]=BOOSTERS[kind].seconds;}
   badgeStats(xp=0){
     const s=this.state;
-    return {...s.stats,bestChain:s.bestChain,treasures:s.treasures.length,treasureTotal:this.treasureTotal,stops:s.stops.length,stopTotal:this.stopIds.size,
+    return {...s.stats,partnerTotal:this.partnerTotal||0,bestChain:s.bestChain,treasures:s.treasures.length,treasureTotal:this.treasureTotal,stops:s.stops.length,stopTotal:this.stopIds.size,
       areasDone:s.areasDone.length,bestStreak:s.bestStreak,level:Math.max(s.levelSeen,levelFor(xp).level)};
   }
   // Nya märken som uppfyllts just nu, som händelser.
@@ -249,6 +251,12 @@ export class ExploreFun{
     return {type:'power',kind,label:def.label,text:def.text,seconds:def.seconds};
   }
   noteFlash(){this.state.stats.flashDone++;this.dirty=true;return this.badgeEvents();}
+  // Karlstadpasset: antal stämplar och hur många som finns. Räknaren sparas (högsta värdet), totalen kommer från spelet.
+  notePartnerStamps(count,total){
+    const n=clampInt(count,999);this.partnerTotal=clampInt(total,999);
+    if(n>this.state.stats.partnerStamps){this.state.stats.partnerStamps=n;this.dirty=true;}
+    return this.badgeEvents();
+  }
   noteTempo(level){if(level>this.state.stats.tempoLevel){this.state.stats.tempoLevel=level;this.dirty=true;}return this.badgeEvents();}
   // Incheckning hos MusicPartner: en gång per dag.
   checkIn(){

@@ -1,4 +1,35 @@
-# Karlstad City — 2.18.1 · BussQuiz, zombiechaufför, levande båtfärd och MusicPartner
+# Karlstad City — 2.21.0 · Butiksuppdrag och Karlstadpasset
+
+> **2.21.0 — Butiksuppdrag, Karlstadpasset och en gemensam modell för partnerplatser**
+> - **Två demonstrationer i Clean City Explore** (frivilliga, startas med kontextknappen): **Cervera · Duka för fikastunden** (Mitt i City, plan 0) och **Pressbyrån · Fika på minuten** (Kungsgatan 14). Båda ger kaffepoäng och en **stämpel i Karlstadpasset**. De är märkta DEMO. Inget samarbete eller avtal är bekräftat.
+> - **Karlstadpasset** ligger i pausmenyn (och öppnas från resultatkortet): besökta platser, klara uppdrag och stämplar. Stämplarna sparas i en egen nyckel (`karlstad:places:1`) och rör inga gamla sparfiler. Två nya märken i Fikaalbumet: *Första stämpeln* och *Fullt pass*.
+> - **Gemensam modell** (`places.mjs`, `place-quests.mjs`): en plats är data (namn, plats, entré, personal, uppdragstyp, föremål, belöning, stämpel, godkänt erbjudande, status). Två uppdragstyper är färdiga (*hämta och lämna*, *beställning i rätt ordning*); Kjell & Company, Åhléns, Duvan, Värmlands Museum och Sandgrund finns som förberedda poster (status `future`) och syns aldrig för spelaren.
+> - **Mätning** (`partner-events.mjs`): ett gemensamt gränssnitt för *digitalt platsbesök, startat, avslutat, avbrutet uppdrag och klick på verksamhetens länk*. Händelserna sparas **bara lokalt på enheten** (för verifiering) och innehåller ingen position eller personuppgift. **Aggregerad produktionsstatistik över alla spelare finns inte och återstår** (kräver en server).
+> - **Personalens hjälpuppdrag fungerar nu i vanliga City Explore** (Coop och Clas Ohlson, utan zombier). Cervera och Pressbyrån har egna, större uppdrag. Zombieläget, Temporush, Termosrundan och delade utmaningar är oförändrade.
+> - 40 nya tester (355 totalt) och ett webbläsarflöde (`tools/places-flow/flow.mjs`, 26 kontroller). Ingen verifiering på fysisk telefon är gjord.
+
+> **Tidigare i 2.18.2–2.20.0**
+>
+> ### 2.20.0 – fångstfält som växer med farten i alla lägen
+> - Samma förlåtande fångst som i Temporush gäller nu i City Explore, Termosrundan och zombiejakten: en termos tas när man passerar inom ett fält som växer med farten, så man slipper vända om.
+> - Fältet är 2,4 m till fots (förut 1,65 m), runt 3,2 m i sprint, 3,8 m i turbo ×2 och upp till 5,8 m i riktigt hög fart (turbo ×3, Ryde). Farten mäts i spelet (m/s) och jämnas ut, så förmågorna raket, stövlar och Ryde räknas automatiskt.
+> - Hela sträckan sedan förra bildrutan räknas (som förut), men nu mot närmaste punkt på sträckan.
+> - Fri sikt krävs: en termos tas inte genom en vägg eller över vatten (tre blockerade punkter i rad stoppar, en stolpe gör det inte). Kaffemagneten (16 m, högst tre per steg) är oförändrad och går fortfarande genom hinder.
+> - Temporush behåller sitt eget, större fält (3,6–6,5 m) och använder det större av de två.
+> - Skatter, hemligheter och busshållplatser har oförändrad radie.
+
+> ### 2.19.1 – Temporush stannar vid kartans kant
+> - Banan följer inte längre en rak linje ut över obyggd mark eller öppet vatten utanför den modellerade staden. En pärla läggs bara där det finns byggnader inom 150 m (`ColliderGrid.covered`).
+
+> ### 2.19.0 – Temporush: mjukare pil, tydligare stråle, förlåtande fångst
+> - Riktning spelar mindre roll: pärlor fångas i ett brett fält (3,6 m på nivå 1, upp till 6,5 m) längs hela rörelsen, så man slipper vända om när man susar förbi i turbo.
+> - Pilen siktar längs banan (en bit bortom nästa pärla, 34–70 m beroende på tempo), mjukas upp och tonas ner när pärlan är nära eller rakt fram. Den snurrar inte längre.
+> - Ljusstrålen är bredare och högre med större ring, och en svag bortre stråle visar banans riktning längre fram.
+
+> ### 2.18.2 – blommor i rabatterna
+> - Blommorna i rabatterna är nu små färgade blomhuvuden (kon) på tunna gröna stjälkar, inte lådor. De ligger bara inne i rabattens riktiga form.
+> - Skrivbordsläsare kan ha gammal cache; ladda om hårt (Ctrl+Shift+R) om gamla klossar syns.
+
 
 > **2.18.1 — Rabatter utan klossar och stabilare Temporush-bana**
 > - **Blomrabatterna** ritades som omslutande rutor med stora kuber och täckte hela gator. De ritas nu inuti rabattens verkliga form (OSM `leisure=garden`) med små, låga blommor på en grön yta, och aldrig på stigarna i Stadsträdgården.
@@ -560,23 +591,3 @@ Current chaos set:
 The new **KARLSTAD PANIK 0–100%** meter rises from time, thermos pickups, shooting and completed events. Thresholds at 25/50/75% warn the player and increase city pressure. At 100%, **KARLSTAD HAR FALLIT** starts a short survival spike with repeated horde pressure. Surviving the spike partially resets panic instead of ending the run.
 
 The director stays inside the existing six-active-enemy budget, reuses the navigation/actor pool, and does not alter the locked walking speed, collision radius, camera feel or render DPR policy.
-
-## 2.18.2 – blommor i rabatterna
-- Blommorna i rabatterna är nu små färgade blomhuvuden (kon) på tunna gröna stjälkar, inte lådor. De ligger bara inne i rabattens riktiga form.
-- Skrivbordsläsare kan ha gammal cache; ladda om hårt (Ctrl+Shift+R) om gamla klossar syns.
-
-## 2.19.0 – Temporush: mjukare pil, tydligare stråle, förlåtande fångst
-- Riktning spelar mindre roll: pärlor fångas i ett brett fält (3,6 m på nivå 1, upp till 6,5 m) längs hela rörelsen, så man slipper vända om när man susar förbi i turbo.
-- Pilen siktar längs banan (en bit bortom nästa pärla, 34–70 m beroende på tempo), mjukas upp och tonas ner när pärlan är nära eller rakt fram. Den snurrar inte längre.
-- Ljusstrålen är bredare och högre med större ring, och en svag bortre stråle visar banans riktning längre fram.
-
-## 2.19.1 – Temporush stannar vid kartans kant
-- Banan följer inte längre en rak linje ut över obyggd mark eller öppet vatten utanför den modellerade staden. En pärla läggs bara där det finns byggnader inom 150 m (`ColliderGrid.covered`).
-
-## 2.20.0 – fångstfält som växer med farten i alla lägen
-- Samma förlåtande fångst som i Temporush gäller nu i City Explore, Termosrundan och zombiejakten: en termos tas när man passerar inom ett fält som växer med farten, så man slipper vända om.
-- Fältet är 2,4 m till fots (förut 1,65 m), runt 3,2 m i sprint, 3,8 m i turbo ×2 och upp till 5,8 m i riktigt hög fart (turbo ×3, Ryde). Farten mäts i spelet (m/s) och jämnas ut, så förmågorna raket, stövlar och Ryde räknas automatiskt.
-- Hela sträckan sedan förra bildrutan räknas (som förut), men nu mot närmaste punkt på sträckan.
-- Fri sikt krävs: en termos tas inte genom en vägg eller över vatten (tre blockerade punkter i rad stoppar, en stolpe gör det inte). Kaffemagneten (16 m, högst tre per steg) är oförändrad och går fortfarande genom hinder.
-- Temporush behåller sitt eget, större fält (3,6–6,5 m) och använder det större av de två.
-- Skatter, hemligheter och busshållplatser har oförändrad radie.

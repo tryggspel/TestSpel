@@ -1,4 +1,4 @@
-import {GAME_VERSION} from './build-info.mjs?v=2.20.0';
+import {GAME_VERSION} from './build-info.mjs?v=2.21.0';
 // Versioned, local challenge rules. Dates always follow Karlstad's calendar.
 // The corrected city geometry changes walkable routes and pickup paths.
 // Keep scores/replays from the previous map out of the new challenge comparison.

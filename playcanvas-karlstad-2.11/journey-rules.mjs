@@ -1,19 +1,19 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.20.0';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.20.0';
-import {CityMission} from './city-missions.mjs?v=2.20.0';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.20.0';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.20.0';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.20.0';
-import {CITY_STREETS} from './city-streets.mjs?v=2.20.0';
-import {pedestrianAt} from './pedestrian.mjs?v=2.20.0';
-import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.20.0';
-import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.20.0';
-import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.20.0';
-import {streetDistance,streetCovered} from './street-index.mjs?v=2.20.0';
-import {SITE_CHALLENGES} from './orrholmen-places.mjs?v=2.20.0';
-import {FlashChallenges} from './challenges.mjs?v=2.20.0';
-import {TempoRun} from './tempo-run.mjs?v=2.20.0';
-import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.20.0';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.21.0';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.21.0';
+import {CityMission} from './city-missions.mjs?v=2.21.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.21.0';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.21.0';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.21.0';
+import {CITY_STREETS} from './city-streets.mjs?v=2.21.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.21.0';
+import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.21.0';
+import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.21.0';
+import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.21.0';
+import {streetDistance,streetCovered} from './street-index.mjs?v=2.21.0';
+import {SITE_CHALLENGES} from './orrholmen-places.mjs?v=2.21.0';
+import {FlashChallenges} from './challenges.mjs?v=2.21.0';
+import {TempoRun} from './tempo-run.mjs?v=2.21.0';
+import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.21.0';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
@@ -150,7 +150,7 @@ export class CityJourney extends CityMission {
     this.balance=Math.max(0,this.balance-25);this.health=100;this.energy=Math.max(20,this.energy);this.contactCooldown=8;this.actors.forEach(a=>a.active=false);this.pendingAmbush=null;
     this.events.push({type:'recover'});this.dirty=true;
   }
-  objective(player=this.position){if(atKil(player))return {...KIL,id:'return-train',kind:'landmark',label:'RETURTÅG · KARLSTAD C',radius:8,action:'KLIV OMBORD'};if(atMarieberg(player))return {...MARIEBERG,id:'return-boat',kind:'landmark',label:'RETURBÅT · INRE HAMN',radius:7,action:'KLIV OMBORD'};if(this.rush.peaceful&&this.routeMode==='bus'){const bus=this.nearestBus(player);return {...bus,id:'clean-bus-'+bus.id,kind:'landmark',label:'BUSSHÅLLPLATS · '+bus.name.toUpperCase(),radius:6};}if(this.rush.peaceful&&this.routeMode!=='landmark'){if(this.rush.mode==='trail'){const item=this.items.filter(t=>!this.found.has(t.id)).sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z))[0];if(item)return {...item,kind:'coffee',label:'NÄSTA TERMOS',radius:1.8};}return {...player,id:'explore',kind:'wait',label:'CITY EXPLORE · VÄLJ PLATS PÅ KARTAN',radius:2};}if(this.routeMode==='help'&&!this.rush?.exitReady){const help=this.clerks?.objective();if(help)return help;}const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;if(this.routeMode==='landmark'&&this.landmarkGoal)return this.landmarkGoal.id==='place-mitticity'?mallGoal(player,this.rush.mode==='trail'||this.secretsFound.has(MALL_CACHE.id)):this.landmarkGoal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
+  objective(player=this.position){if(atKil(player))return {...KIL,id:'return-train',kind:'landmark',label:'RETURTÅG · KARLSTAD C',radius:8,action:'KLIV OMBORD'};if(atMarieberg(player))return {...MARIEBERG,id:'return-boat',kind:'landmark',label:'RETURBÅT · INRE HAMN',radius:7,action:'KLIV OMBORD'};if(this.rush.peaceful&&this.routeMode==='bus'){const bus=this.nearestBus(player);return {...bus,id:'clean-bus-'+bus.id,kind:'landmark',label:'BUSSHÅLLPLATS · '+bus.name.toUpperCase(),radius:6};}if(this.rush.peaceful&&this.routeMode!=='landmark'){const quest=this.places?.objective?.(player)||(this.routeMode==='help'?this.clerks?.objective():null);if(quest)return quest;if(this.rush.mode==='trail'){const item=this.items.filter(t=>!this.found.has(t.id)).sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z))[0];if(item)return {...item,kind:'coffee',label:'NÄSTA TERMOS',radius:1.8};}return {...player,id:'explore',kind:'wait',label:'CITY EXPLORE · VÄLJ PLATS PÅ KARTAN',radius:2};}if(this.routeMode==='help'&&!this.rush?.exitReady){const help=this.clerks?.objective();if(help)return help;}const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;if(this.routeMode==='landmark'&&this.landmarkGoal)return this.landmarkGoal.id==='place-mitticity'?mallGoal(player,this.rush.mode==='trail'||this.secretsFound.has(MALL_CACHE.id)):this.landmarkGoal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
   // Sträckan sedan förra steget (om spelaren inte teleporterats) och en jämnad fartuppskattning i m/s.
   trackMove(dt,p){
     const from=this.lastStep,d=from?Math.hypot(p.x-from.x,p.z-from.z):0,sweep=from&&d<14?from:null;this.lastStep={x:p.x,z:p.z};
@@ -181,7 +181,9 @@ export class CityJourney extends CityMission {
     if(fun){
       const t=fun.tick(dt);if(t.lost>=3)this.events.push({type:'combo-lost',chain:t.lost});if(t.saved)this.events.push({type:'shield-save',chain:t.saved});
       this.tickFlash(dt);this.tickTempo(dt,p);this.tickGhost(dt,p,fun);this.tickSites(p);
+      if(this.clerks?.explore())this.clerks.step(dt,p); // 2.21: personalens hjälpuppdrag (hitta föremålet) fungerar även i City Explore
     }
+    this.places?.step(dt,p); // 2.21: butiksuppdrag och digitala besök; avbryter själv om läget inte tillåter dem
     let reach=catchReach(this.speed);let taken=0;
     if(fun)reach=fun.pickupRadius(reach);
     if(fun&&this.tempo.running)reach=Math.max(reach,tempoReach(this.tempo.level));
@@ -501,7 +503,7 @@ export class CityJourney extends CityMission {
     this.flash.reset();const ev=this.tempo.start();for(const e of ev)this.events.push(e);return ev;
   }
   // Ny City Explore-runda: ingen kedja, inga superkrafter, alla termosar tillbaka.
-  newExploreRun(seed=Math.floor(Math.random()*1e6)){this.lastStep=null;this.lastRespawn=0;this.foundAt.clear();this.fun.newRun();this.flash.seed=seed;this.flash.reset();this.tempo.reset();this.dropPearls?.(true);this.course=null;this.endSite?.();this.sitesDone?.clear();}
+  newExploreRun(seed=Math.floor(Math.random()*1e6)){this.lastStep=null;this.lastRespawn=0;this.foundAt.clear();this.fun.newRun();this.flash.seed=seed;this.flash.reset();this.tempo.reset();this.dropPearls?.(true);this.course=null;this.endSite?.();this.sitesDone?.clear();this.places?.cancel('mode');}
   // Närmaste ofunna skatt på samma våning, för hett/kallt-mätaren.
   nearestHidden(p){
     const py=(p.y??1.68)-1.68;let best=null,bd=Infinity;

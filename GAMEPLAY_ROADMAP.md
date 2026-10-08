@@ -4,6 +4,17 @@
 **Created:** 2026-09-29  
 **Current reference build:** `playcanvas-karlstad-next v2.9.0`
 
+## Implementation checkpoint — 2026-10-08 / City Explore 2.21.0 (partner places)
+
+The sponsor-mechanic idea from the north star now has a first reusable foundation, without ordinary advertising:
+
+- One data model for interactive places (`places.mjs`) and one quest engine (`place-quests.mjs`). Two quest types are implemented (fetch-and-deliver, ordered order-taking on a timer); Kjell & Company, Åhléns, Duvan, Värmlands Museum and Sandgrund exist only as hidden `future` entries.
+- Two working demonstrations in Clean City Explore: Cervera "Duka för fikastunden" (Mitt i City) and Pressbyrån "Fika på minuten" (Kungsgatan 14, freestanding service counter, facade untouched). Voluntary, never active in Temporush, Termosrundan, the zombie modes or shared challenges.
+- Karlstadpasset (stamps need a completed quest; separate save key) and a common event interface for digital visits, started/completed/aborted quests and link clicks. Events are stored locally on the device only. Aggregated production statistics across players do not exist yet and remain to be built (server, privacy text).
+- Staff help quests now also work in plain City Explore (Coop, Clas Ohlson). No partner agreement or offer is claimed anywhere: the demonstrations are marked DEMO and offers are only shown when explicitly approved in the data.
+
+Not verified on a physical phone. See `playcanvas-karlstad-2.11/PARTNERPLATSER.md` for how to add the next partner.
+
 ## Implementation checkpoint — 2026-10-06 / City Explore 2.13.0
 
 City Explore gets a reason to keep playing, without touching the zombie game: a turbo toggle (2× speed on foot and on Ryde), a Candy Crush style combo chain with rising notes and praise, daily-shuffled silver/gold/rainbow thermoses (the rainbow one carries a Mario Kart style power-up), levels, a 13-area collection album, 19 badges, a daily goal with streak, thermos respawn after four minutes, 94 more thermoses and 24 more hidden treasures out to the edges of the map (with hot/cold hints), and an eight-line bus network from Torget to Sandgrund, Sandgrundsudden, Haga, Åttkanten, Inre hamn, Karlstad C, Mariebergsskogen and Domkyrkan. Details in `playcanvas-karlstad-2.11/README.md`.

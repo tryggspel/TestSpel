@@ -11,7 +11,7 @@ test('alla id:n som spelkoden använder finns i index.html',()=>{
   const code=['last-round.js','app.js'].map(f=>fs.readFileSync(new URL('../'+f,import.meta.url),'utf8')).join('\n');
   const used=new Set([...code.matchAll(/\$\('([A-Za-z][\w-]*)'\)/g),...code.matchAll(/getElementById\('([A-Za-z][\w-]*)'\)/g)].map(m=>m[1]));
   // Element som skapas dynamiskt av koden själv.
-  for(const dyn of ['perfProbe'])used.delete(dyn);
+  for(const dyn of ['perfProbe','placePass'])used.delete(dyn); // placePass byggs av places-ui.js
   const missing=[...used].filter(id=>!ids.has(id));
   assert.deepEqual(missing,[]);
 });
