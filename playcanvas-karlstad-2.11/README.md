@@ -1,4 +1,10 @@
-# Karlstad City — 2.21.0 · Butiksuppdrag och Karlstadpasset
+# Karlstad City — 2.21.1 · Butiksuppdrag och Karlstadpasset
+
+> **2.21.1 — finputs i Karlstadpasset**
+> - Passet skriver **"1 digitalt besök"** i singular (förut "1 digitala besök"); fler besök heter fortfarande "digitala besök".
+> - Den lokala mätningstabellen (`?partner`) **rullar i sidled** på smala skärmar i stället för att klippa sista kolumnen.
+> - Personalens replikruta lyfts **över beställningsremsan** på skrivbord i Pressbyrån (sista raden låg bakom remsan). Mobil och liggande telefon är oförändrade.
+> - 2 nya tester (359 totalt) och 2 nya kontroller i webbläsarflödet (30 totalt). Ingen spellogik ändrad.
 
 > **2.21.0 — Butiksuppdrag, Karlstadpasset och en gemensam modell för partnerplatser**
 > - **Två demonstrationer i Clean City Explore** (frivilliga, startas med kontextknappen): **Cervera · Duka för fikastunden** (Mitt i City, plan 0) och **Pressbyrån · Fika på minuten** (Kungsgatan 14). Båda ger kaffepoäng och en **stämpel i Karlstadpasset**. De är märkta DEMO. Inget samarbete eller avtal är bekräftat.

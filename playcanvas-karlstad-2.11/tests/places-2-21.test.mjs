@@ -1,7 +1,7 @@
 // 2.21: datamodell, uppdragsmotor, Karlstadpass och mätning för interaktiva platser (Cervera och Pressbyrån).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {PLACES,STATUS,PLAYABLE,ACTIVITY_TYPES,validatePlace,validateAll,resolvePlaces,playablePlaces,approvedOffer,storefrontSpot,placeById,PASS_TEXT} from '../places.mjs';
+import {PLACES,STATUS,PLAYABLE,ACTIVITY_TYPES,validatePlace,validateAll,resolvePlaces,playablePlaces,approvedOffer,storefrontSpot,placeById,PASS_TEXT,visitsLabel} from '../places.mjs';
 import {PlaceQuests,PLACE_KEY,QUEST} from '../place-quests.mjs';
 import {PartnerEvents,EVENT_TYPES,PARTNER_EVENTS_KEY,beaconSink,cleanMeta,LOCAL_SCOPE_NOTE} from '../partner-events.mjs';
 import {mallWalkable,mallRoom,MALL_ROOMS,MALL_CACHE} from '../mall-space.mjs';
@@ -377,4 +377,11 @@ test('badges: stämplar ger märken i det befintliga märkessystemet',async()=>{
   // gamla sparfiler utan det nya fältet laddas utan problem
   const old=storage();old.setItem('karlstad:fun:1',JSON.stringify({version:1,collected:['a'],stats:{thermos:3}}));
   const h=new ExploreFun({storage:old});assert.equal(h.state.stats.partnerStamps,0);assert.equal(h.state.stats.thermos,3);
+});
+
+test('Karlstadpasset skriver "digitalt besök" i singular och "digitala besök" annars',()=>{
+  assert.equal(visitsLabel(0),'0 digitala besök');
+  assert.equal(visitsLabel(1),'1 digitalt besök');
+  assert.equal(visitsLabel(2),'2 digitala besök');
+  assert.equal(visitsLabel(12),'12 digitala besök');
 });

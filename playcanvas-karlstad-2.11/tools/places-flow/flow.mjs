@@ -58,7 +58,11 @@ check('Cervera: E stänger resultatkortet och startar inget nytt uppdrag direkt'
 const press=await ev(()=>window.KarlstadDebug.places().get('pressbyran').talk);
 await tp(press.x,press.z+1.8,0,-8);await shot('pressbyran-1-serviceyta');s=await S();
 check('Pressbyrån: kontextknappen säger TA EMOT ORDER',s.btn==='TA EMOT ORDER',s.btn);
-await use();s=await S();check('Pressbyrån: beställningen startar med tid',s.run?.phase==='serve'&&s.run.left>30,JSON.stringify(s.run));await shot('pressbyran-2-bestallning');
+await use();s=await S();check('Pressbyrån: beställningen startar med tid',s.run?.phase==='serve'&&s.run.left>30,JSON.stringify(s.run));
+// Replikrutan (personalens första rad) ska ligga helt ovanför beställningsremsan, aldrig bakom den. Mäts före skärmbilden (rutan visas 4,5 s).
+const toastGap=await ev(()=>{const t=document.getElementById('roundToast'),h=document.getElementById('placeHud');if(!t||!h||h.hidden)return null;const a=t.getBoundingClientRect(),b=h.getBoundingClientRect();return {shown:t.classList.contains('visible'),gap:Math.round(b.top-a.bottom)};});
+check('Pressbyrån: replikrutan ligger ovanför beställningsremsan',!!toastGap&&toastGap.shown&&toastGap.gap>=0,JSON.stringify(toastGap));
+await shot('pressbyran-2-bestallning');
 const order=await ev(()=>({o:window.KarlstadDebug.places().run.order.items,m:window.KarlstadDebug.places().run.menu.map(m=>m.id)}));
 const wrong=order.m.findIndex(id=>!order.o.includes(id));await click(`.ph-btn:nth-child(${wrong+1})`);await wait(300);
 s=await S();check('Pressbyrån: fel sak kostar tid men ordern lever',s.run?.step===0&&s.run.left<37,JSON.stringify(s.run));
@@ -84,6 +88,8 @@ const pass1=await ev(()=>window.KarlstadDebug.places().pass().map(r=>[r.id,r.sta
 check('Stämplarna finns kvar efter omladdning',JSON.stringify(pass0)===JSON.stringify(pass1)&&pass1.every(r=>r[1]),JSON.stringify(pass1));
 await click('#roundPause');await wait(800);await ev(()=>document.getElementById('placePass')?.scrollIntoView({block:'center'}));await wait(300);await shot('karlstadpasset');
 check('Karlstadpasset visas i pausmenyn',await ev(()=>!!document.querySelector('#placePass .pass-row.stamped')));
+const passText=await ev(()=>[...document.querySelectorAll('#placePass .pass-status')].map(e=>e.textContent));
+check('Karlstadpasset: "1 digitalt besök" i singular, aldrig "1 digitala"',passText.length===2&&passText.every(t=>/ 1 digitalt besök$/.test(t)),JSON.stringify(passText));
 for(const [row,label,btn] of [[2,'Pressbyrån','TA EMOT ORDER'],[1,'Cervera','HJÄLP RUT']]){
   await click(`#placePass .pass-row:nth-child(${row}) .pass-tp`);await wait(1800);s=await S();
   const open=await ev(()=>document.body.classList.contains('round-panel-open'));

@@ -2,7 +2,7 @@
 // Allt som skiljer en plats från en annan står här som data: namn, plats, entré, personal, uppdragstyp, föremål, belöning, stämpel,
 // godkänt erbjudande och status. Uppdragsmotorn (place-quests.mjs) och vyerna läser bara det här. Nästa plats = ett nytt objekt i PLACES.
 // Ren modul utan DOM och utan PlayCanvas, så att spelet, testerna och verktygen delar samma källa.
-import {MALL_ROOMS} from './mall-space.mjs?v=2.21.0';
+import {MALL_ROOMS} from './mall-space.mjs?v=2.21.1';
 
 export const PLACES_VERSION=1;
 // active  = samarbete bekräftat och godkänt innehåll (inget sådant finns än).
@@ -25,8 +25,11 @@ export const PASS_TEXT=Object.freeze({
   demoTag:'DEMO',
   demoNote:'Demonstration. Inget samarbete eller avtal är bekräftat.',
   offerSlot:'Här visar verksamheten ett eget, godkänt erbjudande eller en länk. Exempelplats, inget verkligt erbjudande.',
-  visitWord:'digitala besök'
+  visitWord:'digitala besök',
+  visitWordOne:'digitalt besök'
 });
+// "0 digitala besök", "1 digitalt besök", "2 digitala besök".
+export const visitsLabel=n=>n+' '+(n===1?PASS_TEXT.visitWordOne:PASS_TEXT.visitWord);
 
 const cervera=MALL_ROOMS.find(r=>r.id==='cervera');
 const counterMid=c=>({x:(c.minx+c.maxx)/2,z:(c.minz+c.maxz)/2});

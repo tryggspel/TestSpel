@@ -70,11 +70,14 @@
 .pass-btns{display:grid;gap:6px}
 .pass-go{min-height:44px;padding:0 12px;border:1px solid #ffe18c88;border-radius:8px;background:#173a31;color:#ffe18c;font:900 11px system-ui;letter-spacing:.05em;cursor:pointer;touch-action:manipulation}
 .pass-local{margin-top:10px;padding-top:8px;border-top:1px solid #85aa8544}.pl-head{display:block;color:#ffe18c;font:900 12px system-ui;letter-spacing:.08em}
-.pl-table{width:100%;border-collapse:collapse;margin:6px 0;font:700 11px/1.3 system-ui;color:#cfe0c8}.pl-table th,.pl-table td{padding:4px 5px;text-align:right;border-bottom:1px solid #85aa8533}.pl-table th:first-child,.pl-table td:first-child{text-align:left}
+.pl-scroll{margin:6px 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pl-table{width:100%;border-collapse:collapse;font:700 11px/1.3 system-ui;color:#cfe0c8}.pl-table th,.pl-table td{padding:4px 5px;text-align:right;border-bottom:1px solid #85aa8533}.pl-table th:first-child,.pl-table td:first-child{text-align:left}
+@media(max-width:430px){.pl-table th,.pl-table td{padding:4px 3px}}
 @media(prefers-reduced-motion:reduce){.ph-chip.next,.place-hud.urgent .ph-time,.place-result.in,.place-hud.shake,.place-hud.pop,.ph-btn.wrong{animation:none}}
 
 /* Dialogtexten (personalens repliker) ligger ovanför remsan, aldrig bakom den. */
 body.place-hud-on.round-playing #roundToast{top:auto;bottom:252px}
+body.place-order-on.round-playing #roundToast{bottom:288px} /* beställningsremsan är ca 200 px hög på skrivbord */
 @media(pointer:coarse){body.place-hud-on.round-playing #roundToast{bottom:max(402px,calc(env(safe-area-inset-bottom) + 392px))}}
 @media(max-height:520px){body.place-hud-on.round-playing #roundToast{bottom:216px}}
 @media(max-width:430px){.ph-btn-name{font-size:10px;letter-spacing:-.02em}.ph-btn{padding-left:0;padding-right:0}}

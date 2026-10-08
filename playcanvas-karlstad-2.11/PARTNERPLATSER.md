@@ -16,6 +16,7 @@ Starta **CLEAN CITY EXPLORE** (inte Temporush, Termosrundan, zombielägena eller
 | **Pressbyrån · Fika på minuten** | Kungsgatan 14. Ny serviceyta (blå disk med randig markis) på trottoaren framför entrén. | Stå vid disken (knappen **TA EMOT ORDER**). Tryck rätt saker i rätt ordning på 40 s (knapparna eller tangent 1–6). Fel sak kostar 4 s. Tiden slut: **IGEN →** eller **LÄMNA**. |
 
 Karlstadpasset öppnas i pausmenyn (Ⅱ) och från resultatkortet. Lokal mätning visas där om du öppnar spelet med `?partner` (eller `?debug`).
+Öppna spelet direkt på `…/playcanvas-karlstad-2.11/?partner`: startsidan (`/`) skickar vidare till spelet och tappar `?partner`.
 
 ## Demo på tre minuter (kundmöte)
 

@@ -1,9 +1,9 @@
 // 2.21: 3D-vyn för interaktiva platser. Återanvänder spelets korthjälpare (card, primitive, material, labelTex, texture).
 // Allt är billigt: en statisk mesh för Pressbyråns serviceyta, ett fåtal kort och ringar, och inget alls ritas för en plats
 // som spelaren inte är i närheten av eller när spelet inte är i City Explore. Inga bildfiler laddas ner.
-import {ComicMesh} from './city-architecture.js?v=2.21.0';
-import {drawItemCard,drawMenuBoard} from './place-art.js?v=2.21.0';
-import {mallRoom} from './mall-space.mjs?v=2.21.0';
+import {ComicMesh} from './city-architecture.js?v=2.21.1';
+import {drawItemCard,drawMenuBoard} from './place-art.js?v=2.21.1';
+import {mallRoom} from './mall-space.mjs?v=2.21.1';
 
 const VIEW_RANGE=95,MARKER_RANGE=62,RING_RANGE=42,FLOOR=5.4;
 export function createPlacesView(pc,host,draw,engine){

@@ -1,9 +1,9 @@
 // 2.21: gränssnitt för uppdrag på interaktiva platser: uppdragsremsa, beställningsknappar, resultatkort och Karlstadpasset.
 // Byggs med vanliga DOM-element (textContent, aldrig HTML-strängar med data) och ligger i #roundOverlay, så allt göms automatiskt
 // när en panel öppnas. Små mål: remsan är en rad, knapparna är minst 52 px och spelvärlden syns ovanför.
-import {drawProp,drawStamp} from './place-art.js?v=2.21.0';
-import {EVENT_TYPES,LOCAL_SCOPE_NOTE} from './partner-events.mjs?v=2.21.0';
-import {PASS_TEXT} from './places.mjs?v=2.21.0';
+import {drawProp,drawStamp} from './place-art.js?v=2.21.1';
+import {EVENT_TYPES,LOCAL_SCOPE_NOTE} from './partner-events.mjs?v=2.21.1';
+import {PASS_TEXT,visitsLabel} from './places.mjs?v=2.21.1';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 const mmss=s=>{const n=Math.max(0,Math.ceil(s));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};
@@ -40,6 +40,7 @@ export function createPlacesUi({engine,mount,pauseAnchor,fx,showLocalReport=fals
   function render(){
     const run=engine.run,place=run?engine.get(run.placeId):null;
     hud.hidden=!run||!place;document.body.classList.toggle('place-hud-on',!hud.hidden);
+    document.body.classList.toggle('place-order-on',!hud.hidden&&run.type==='order'); // beställningsremsan är högre: replikrutan lyfts över den
     hud.dataset.type=run?.type||'';hud.dataset.phase=run?.phase||'';
     shownRev=engine.rev;shownRun=run?run.id:null;lastSecond=-1;
     if(!run||!place){chips.replaceChildren();dock.replaceChildren();chipEls=[];dockEls=[];return;}
@@ -137,7 +138,7 @@ export function createPlacesUi({engine,mount,pauseAnchor,fx,showLocalReport=fals
 
   // ── Varje bildruta: bara textuppdateringar som faktiskt ändrats ─────────────────────────────────────────────────
   function sync(now,visible){
-    if(!visible){if(!hud.hidden){hud.hidden=true;document.body.classList.remove('place-hud-on');}if(!result.hidden&&now>resultUntil)hideResult();return;}
+    if(!visible){if(!hud.hidden){hud.hidden=true;document.body.classList.remove('place-hud-on','place-order-on');}if(!result.hidden&&now>resultUntil)hideResult();return;}
     const run=engine.run;
     // Efter paus göms remsan; då måste den tändas igen även om uppdraget inte ändrats.
     if(engine.rev!==shownRev||(run?run.id:null)!==shownRun||(!!run&&hud.hidden)||(!run&&!hud.hidden))render();
@@ -170,7 +171,7 @@ export function createPlacesUi({engine,mount,pauseAnchor,fx,showLocalReport=fals
       const info=el('div','pass-info'),nm=el('b',null,r.name.toUpperCase());
       if(r.demo)nm.append(el('small','pass-tag',' '+PASS_TEXT.demoTag));
       const sub=el('span','pass-sub',(r.venue?r.venue+' · ':'')+r.title),st=el('span','pass-status',
-        (r.visited?'✓ Besökt':'○ Inte besökt')+' · '+(r.completed?'✓ Uppdrag klart'+(r.completed>1?' ('+r.completed+' gånger)':''):'○ Uppdrag kvar')+' · '+r.visits+' '+PASS_TEXT.visitWord);
+        (r.visited?'✓ Besökt':'○ Inte besökt')+' · '+(r.completed?'✓ Uppdrag klart'+(r.completed>1?' ('+r.completed+' gånger)':''):'○ Uppdrag kvar')+' · '+visitsLabel(r.visits));
       info.append(nm,sub,st);
       if(r.offer){const a=el('a','pass-offer',r.offer.label||'Läs mer');a.href=r.offer.url;a.target='_blank';a.rel='noopener noreferrer';a.addEventListener('click',ev=>{ev.preventDefault();engine.events.record(EVENT_TYPES.link,r.id,{offer:'approved'});openLink(r.offer.url);});info.append(a);}
       else if(r.demo)info.append(el('span','pass-note',r.note));
@@ -193,7 +194,7 @@ export function createPlacesUi({engine,mount,pauseAnchor,fx,showLocalReport=fals
       for(const v of [r.name,c[EVENT_TYPES.visit]||0,c[EVENT_TYPES.start]||0,c[EVENT_TYPES.complete]||0,c[EVENT_TYPES.abort]||0,c[EVENT_TYPES.link]||0])tr.append(el('td',null,String(v)));
       tbl.append(tr);
     }
-    pLocal.append(tbl);
+    const scroll=el('div','pl-scroll');scroll.append(tbl);pLocal.append(scroll); // smal skärm: tabellen rullar i sidled i stället för att klippas
     const reset=el('button','round-secondary','NOLLSTÄLL LOKAL MÄTNING');reset.type='button';reset.addEventListener('click',()=>{engine.events.reset();renderLocal();});pLocal.append(reset);
   }
   return {handle,sync,handleDigit,pick,dismissResult,renderPass,render,hud,result,pass,get resultOpen(){return !result.hidden;},get hudOpen(){return !hud.hidden;}};
