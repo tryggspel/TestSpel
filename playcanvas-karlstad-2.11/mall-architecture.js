@@ -1,6 +1,6 @@
-import {ComicMesh} from './city-architecture.js?v=2.19.1';
-import {addMittICityExterior} from './mitt-i-city-exterior.mjs?v=2.19.1';
-import {MALL_SPACE as S,MALL_CORRIDORS,MALL_ENTRANCES,ESCALATORS,splitMallWall,MALL_ROOMS} from './mall-space.mjs?v=2.19.1';
+import {ComicMesh} from './city-architecture.js?v=2.20.0';
+import {addMittICityExterior} from './mitt-i-city-exterior.mjs?v=2.20.0';
+import {MALL_SPACE as S,MALL_CORRIDORS,MALL_ENTRANCES,ESCALATORS,splitMallWall,MALL_ROOMS} from './mall-space.mjs?v=2.20.0';
 export const MALL_SHOPS=Object.freeze([
   {name:'COOP CITY',floor:0,x:-154.5,z:88,yaw:90,w:8,color:'#498653'},
   {name:'SUSHI YAMA',floor:0,x:-154.5,z:118,yaw:90,w:8,color:'#9a4443'},

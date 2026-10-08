@@ -1,19 +1,19 @@
-import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.19.1';
-import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.19.1';
-import {CityMission} from './city-missions.mjs?v=2.19.1';
-import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.19.1';
-import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.19.1';
-import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.19.1';
-import {CITY_STREETS} from './city-streets.mjs?v=2.19.1';
-import {pedestrianAt} from './pedestrian.mjs?v=2.19.1';
-import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.19.1';
-import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.19.1';
-import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.19.1';
-import {streetDistance,streetCovered} from './street-index.mjs?v=2.19.1';
-import {SITE_CHALLENGES} from './orrholmen-places.mjs?v=2.19.1';
-import {FlashChallenges} from './challenges.mjs?v=2.19.1';
-import {TempoRun} from './tempo-run.mjs?v=2.19.1';
-import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.19.1';
+import {atKil,KIL,KARLSTAD_C} from './scenic-transit.js?v=2.20.0';
+import {SOUTH_PLACES,atMarieberg,MARIEBERG} from './city-south-space.mjs?v=2.20.0';
+import {CityMission} from './city-missions.mjs?v=2.20.0';
+import {CityRush,POSTCARDS} from './city-rush.mjs?v=2.20.0';
+import {MALL_CACHE,mallGoal} from './mall-space.mjs?v=2.20.0';
+import {PARK_ENCOUNTERS} from './park-space.mjs?v=2.20.0';
+import {CITY_STREETS} from './city-streets.mjs?v=2.20.0';
+import {pedestrianAt} from './pedestrian.mjs?v=2.20.0';
+import {ExploreFun,segmentDistance,heatFor,levelFor} from './explore-fun.mjs?v=2.20.0';
+import {POWER,POWER_KINDS,GIFT_KINDS,powerFor} from './powerups.mjs?v=2.20.0';
+import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.20.0';
+import {streetDistance,streetCovered} from './street-index.mjs?v=2.20.0';
+import {SITE_CHALLENGES} from './orrholmen-places.mjs?v=2.20.0';
+import {FlashChallenges} from './challenges.mjs?v=2.20.0';
+import {TempoRun} from './tempo-run.mjs?v=2.20.0';
+import {FX_THERMOS,TREASURES,BUS_NETWORK,BUS_FIRST_RIDE_BONUS,MUSIC_OFFICE} from './explore-places.mjs?v=2.20.0';
 // 2.11: gatufynd — termosar längs alla gator i centrum, så att det alltid finns något inom
 // ett kvarter. Gågator ger fikabonus.
 export const STREET_ITEM_SPACING=30, GAGATA_BONUS=10;
@@ -28,6 +28,14 @@ const GIFTS=GIFT_KINDS;
 // 2.19: fångstradie i Temporush. I turbo hinner man inte sikta, så pärlor tas i ett brett fält längs hela banan (och längs hela steget, se sweep).
 export const TEMPO_CATCH=Object.freeze({base:3.6,perLevel:.35,max:6.5,aim:34,aimPerLevel:3,aimMax:70});
 export const tempoReach=level=>Math.min(TEMPO_CATCH.max,TEMPO_CATCH.base+TEMPO_CATCH.perLevel*(Math.max(1,level)-1));
+// 2.20: fångstfält som växer med farten, i alla lägen. Med turbo hinner man inte sikta, så en termos tas redan när man passerar inom några meter,
+// mätt mot hela sträckan sedan förra steget. Över capAbove (kaffemagneten) räknas inte sikt och högst tre tas per steg.
+export const CATCH=Object.freeze({base:2.4,walk:7.2,gain:.2,max:5.8,near:1.7,lineStep:.5,blockedRun:3,capAbove:8,maxSpeed:60});
+export const catchReach=speed=>Math.min(CATCH.max,CATCH.base+Math.max(0,(Number.isFinite(speed)?speed:0)-CATCH.walk)*CATCH.gain);
+function closestOnSegment(px,pz,ax,az,bx,bz){
+  const dx=bx-ax,dz=bz-az,len2=dx*dx+dz*dz,t=len2>0?Math.max(0,Math.min(1,((px-ax)*dx+(pz-az)*dz)/len2)):0,x=ax+dx*t,z=az+dz*t;
+  return {x,z,d:Math.hypot(x-px,z-pz)};
+}
 export const TEMPO_COURSE=Object.freeze({step:2,maxRay:520,maxTurn:110,turnPenalty:.55,rays:24,minLeg:30,wobble:1,streetNear:24,greenRun:48,maxGap:55,reanchorEvery:2.5,lookBase:150,lookPerLevel:14,lookMax:320,spacingBase:10,spacingPerLevel:1.5,spacingMax:28,behindDrop:12,perTick:14,every:.25,clearance:2});
 export const TEMPO_SUPPLY=Object.freeze({want:8,perTick:3,every:.3,baseRadius:70,perLevel:8,maxRadius:150,minAhead:16,keep:90,powerEvery:6,spread:.85});
 
@@ -84,7 +92,7 @@ export class CityJourney extends CityMission {
     this.postcards=POSTCARDS.map(p=>({...p,...nav.point(p)}));this.postcardsFound=new Set();this.routeMode='hunt';
     this.position={...this.layout.spawn};this.heading=0;this.load();
     this.fun=new ExploreFun({storage,items:this.items,treasureIds:[...this.secrets.map(s=>s.id),...this.treasures.map(t=>t.id)],stopIds:this.busNetwork.filter(s=>!s.hub).map(s=>s.id),xp:this.lifetime});
-    this.lastStep=null;this.foundAt=new Map();this.lastRespawn=0;this.itemById=new Map(this.items.map(t=>[t.id,t]));this.rush=new CityRush(this);
+    this.lastStep=null;this.speed=0;this.foundAt=new Map();this.lastRespawn=0;this.itemById=new Map(this.items.map(t=>[t.id,t]));this.rush=new CityRush(this);
     this.flash=new FlashChallenges({seed:1});this.tempo=new TempoRun(storage);
     this.sitesDone=new Set();this.activeSite=null;this.dyn=[];this.dynSerial=0;this.dynRnd=seededRandom(hashSeed('dyn'));this.lastSupply=0;this.lastForward={x:0,z:-1};this.helper={active:false,x:0,z:0,target:null,t:0,cool:0};
   }
@@ -143,23 +151,43 @@ export class CityJourney extends CityMission {
     this.events.push({type:'recover'});this.dirty=true;
   }
   objective(player=this.position){if(atKil(player))return {...KIL,id:'return-train',kind:'landmark',label:'RETURTÅG · KARLSTAD C',radius:8,action:'KLIV OMBORD'};if(atMarieberg(player))return {...MARIEBERG,id:'return-boat',kind:'landmark',label:'RETURBÅT · INRE HAMN',radius:7,action:'KLIV OMBORD'};if(this.rush.peaceful&&this.routeMode==='bus'){const bus=this.nearestBus(player);return {...bus,id:'clean-bus-'+bus.id,kind:'landmark',label:'BUSSHÅLLPLATS · '+bus.name.toUpperCase(),radius:6};}if(this.rush.peaceful&&this.routeMode!=='landmark'){if(this.rush.mode==='trail'){const item=this.items.filter(t=>!this.found.has(t.id)).sort((a,b)=>Math.hypot(a.x-player.x,a.z-player.z)-Math.hypot(b.x-player.x,b.z-player.z))[0];if(item)return {...item,kind:'coffee',label:'NÄSTA TERMOS',radius:1.8};}return {...player,id:'explore',kind:'wait',label:'CITY EXPLORE · VÄLJ PLATS PÅ KARTAN',radius:2};}if(this.routeMode==='help'&&!this.rush?.exitReady){const help=this.clerks?.objective();if(help)return help;}const goal=this.rush?.state==='playing'?this.rush.objective(player):null;if(goal)return goal;if(this.routeMode==='landmark'&&this.landmarkGoal)return this.landmarkGoal.id==='place-mitticity'?mallGoal(player,this.rush.mode==='trail'||this.secretsFound.has(MALL_CACHE.id)):this.landmarkGoal;const p=this.portals[this.destination];return {...p,id:'mission-'+this.destination,kind:'mission',label:p.name.toUpperCase(),radius:4,action:'TRYCK STARTA UPPDRAG'};}
+  // Sträckan sedan förra steget (om spelaren inte teleporterats) och en jämnad fartuppskattning i m/s.
+  trackMove(dt,p){
+    const from=this.lastStep,d=from?Math.hypot(p.x-from.x,p.z-from.z):0,sweep=from&&d<14?from:null;this.lastStep={x:p.x,z:p.z};
+    const inst=sweep&&dt>0?Math.min(CATCH.maxSpeed,d/dt):0;this.speed+=(inst-this.speed)*Math.min(1,Math.max(0,dt)*8);
+    return sweep;
+  }
+  // Fri sikt mellan två punkter. Några blockerade punkter i rad (vägg, vatten) stoppar; en stolpe eller bänk gör det inte.
+  clearLine(ax,az,bx,bz){
+    const d=Math.hypot(bx-ax,bz-az);if(d<=CATCH.near)return true;
+    const n=Math.ceil(d/CATCH.lineStep);let run=0;
+    for(let i=1;i<n;i++){if(this.nav.blocked(ax+(bx-ax)*i/n,az+(bz-az)*i/n)){if(++run>=CATCH.blockedRun)return false;}else run=0;}
+    return true;
+  }
+  // Ligger termosen inom fångstfältet? Närmaste punkt på sträckan sedan förra steget räknas, och det krävs fri sikt dit (utom för kaffemagneten).
+  inCatch(item,p,reach,sweep){
+    if(Math.abs((p.y??1.68)-1.68-(item.y||0))>=1.5)return false;
+    const q=sweep?closestOnSegment(item.x,item.z,sweep.x,sweep.z,p.x,p.z):{x:p.x,z:p.z,d:Math.hypot(p.x-item.x,p.z-item.z)};
+    if(q.d>=reach)return false;
+    return reach>=CATCH.capAbove||q.d<=CATCH.near||this.clearLine(q.x,q.z,item.x,item.z);
+  }
   stepExplore(dt,p,f){
     this.elapsed+=dt;this.position={x:p.x,z:p.z};this.heading=Math.atan2(-f.x,-f.z)*180/Math.PI;this.lastForward={x:f.x,z:f.z};
     this.actors.forEach(a=>a.active=false);this.pendingAmbush=null;this.rush.clock(dt);
     if(this.rush.state!=='playing')return;
     const fun=this.rush.mode==='clean'?this.fun:null,py=(p.y??1.68)-1.68;
     // Sträckan sedan förra steget: med turbo och Ryde hinner man 1–3 m per bildruta, och en termos får inte missas mellan två steg.
-    const from=this.lastStep,sweep=from&&Math.hypot(p.x-from.x,p.z-from.z)<14?from:null;this.lastStep={x:p.x,z:p.z};
+    const sweep=this.trackMove(dt,p);
     if(fun){
       const t=fun.tick(dt);if(t.lost>=3)this.events.push({type:'combo-lost',chain:t.lost});if(t.saved)this.events.push({type:'shield-save',chain:t.saved});
       this.tickFlash(dt);this.tickTempo(dt,p);this.tickGhost(dt,p,fun);this.tickSites(p);
     }
-    let reach=fun?fun.pickupRadius():1.65;let taken=0;
+    let reach=catchReach(this.speed);let taken=0;
+    if(fun)reach=fun.pickupRadius(reach);
     if(fun&&this.tempo.running)reach=Math.max(reach,tempoReach(this.tempo.level));
     for(const item of this.items){
-      if(this.found.has(item.id)||Math.abs(py-(item.y||0))>=1.5)continue;
-      if((sweep?segmentDistance(item.x,item.z,sweep.x,sweep.z,p.x,p.z):Math.hypot(p.x-item.x,p.z-item.z))>=reach)continue;
-      if(reach>2&&++taken>3)break; // kaffemagneten tar högst tre per steg
+      if(this.found.has(item.id)||!this.inCatch(item,p,reach,sweep))continue;
+      if(reach>=CATCH.capAbove&&++taken>3)break; // kaffemagneten tar högst tre per steg
       if(fun){this.takeItem(item,p,fun);continue;}
       const gagata=pedestrianAt(item);
       this.found.add(item.id);this.energy=Math.min(100,this.energy+15);
@@ -510,7 +538,8 @@ export class CityJourney extends CityMission {
     if(this.phase!=='playing')return;
     this.clerks?.step(Math.min(dt,1),player);
     this.rush.step(Math.min(dt,1),player,forward);if(this.phase!=='playing')return;
-    for(const item of this.items)if(Math.abs((player.y??1.68)-1.68-(item.y||0))<1.5&&!this.found.has(item.id)&&Math.hypot(player.x-item.x,player.z-item.z)<1.65){
+    const sweep=this.trackMove(dt,player),reach=catchReach(this.speed);
+    for(const item of this.items)if(!this.found.has(item.id)&&this.inCatch(item,player,reach,sweep)){
       this.found.add(item.id);this.collectChain=this.elapsed-this.lastCollect<6?this.collectChain+1:1;this.lastCollect=this.elapsed;
       const gagata=pedestrianAt(item),bonus=(this.collectChain%5===0?25:0)+(gagata?GAGATA_BONUS:0);this.reward(25+bonus);this.energy=Math.min(100,this.energy+15);this.rush?.raisePanic(5);this.rush?.ecology.coffee();
       this.events.push({type:'thermos',points:25+bonus,chain:this.collectChain,x:item.x,z:item.z,id:item.id,gagata});

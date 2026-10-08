@@ -58,7 +58,7 @@ test('ambushes wait until out of view, give a warning, emerge, and reward each h
 
 test('pause freezes city collectibles and a defeat preserves discoveries without ending exploration',()=>{
   const g=new CityJourney(nav,mall,portals);g.pause();g.step(1,g.items[0]);assert.equal(g.balance,0);g.resume();g.step(.1,g.items[0]);
-  const found=g.found.size;g.reward(50);const before=g.balance,p={x:25,z:25};g.spawn(g.actors[0],p,'walker');g.health=16;g.contactCooldown=0;g.step(.1,p);
+  const found=g.found.size;g.lastStep=null;g.reward(50);const before=g.balance,p={x:25,z:25};g.spawn(g.actors[0],p,'walker');g.health=16;g.contactCooldown=0;g.step(.1,p);
   assert.equal(g.phase,'playing');assert.equal(g.health,100);assert.equal(g.balance,before-25);assert.equal(g.found.size,found);
   const events=g.drainEvents();assert.ok(events.some(e=>e.type==='recover'));assert.ok(!events.some(e=>e.type==='finish'));
 });

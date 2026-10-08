@@ -1,9 +1,9 @@
 // 2.18: Orrholmen och vattnet, Stadsträdgården, Bryggudden och Karlstad C. Allt här är dekor som ritas i en enda statisk mesh (inga kollisioner):
 // vågor och skum som gör vattnet tydligt, bojar och båtar, bänkar och lyktor, rabatter, träd, paviljong och fontän, kajer och hamnkran,
 // samt perronger, extra spår, tak och ett tåg vid stationen. Byggnader, vatten och vägar kommer från data/osm-outer-orrholmen.json.
-import {ComicMesh} from './city-architecture.js?v=2.19.1';
-import {cityPoint} from './city-geography.mjs?v=2.19.1';
-import {BAY_WEST,BAY_EAST,shoreE,pointIn,TRADGARD,TRADGARD_BEDS,bryggEdges,ORR_SIGNS} from './orrholmen-places.mjs?v=2.19.1';
+import {ComicMesh} from './city-architecture.js?v=2.20.0';
+import {cityPoint} from './city-geography.mjs?v=2.20.0';
+import {BAY_WEST,BAY_EAST,shoreE,pointIn,TRADGARD,TRADGARD_BEDS,bryggEdges,ORR_SIGNS} from './orrholmen-places.mjs?v=2.20.0';
 
 const rngFrom=(seed)=>()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
 

@@ -572,3 +572,11 @@ The director stays inside the existing six-active-enemy budget, reuses the navig
 
 ## 2.19.1 – Temporush stannar vid kartans kant
 - Banan följer inte längre en rak linje ut över obyggd mark eller öppet vatten utanför den modellerade staden. En pärla läggs bara där det finns byggnader inom 150 m (`ColliderGrid.covered`).
+
+## 2.20.0 – fångstfält som växer med farten i alla lägen
+- Samma förlåtande fångst som i Temporush gäller nu i City Explore, Termosrundan och zombiejakten: en termos tas när man passerar inom ett fält som växer med farten, så man slipper vända om.
+- Fältet är 2,4 m till fots (förut 1,65 m), runt 3,2 m i sprint, 3,8 m i turbo ×2 och upp till 5,8 m i riktigt hög fart (turbo ×3, Ryde). Farten mäts i spelet (m/s) och jämnas ut, så förmågorna raket, stövlar och Ryde räknas automatiskt.
+- Hela sträckan sedan förra bildrutan räknas (som förut), men nu mot närmaste punkt på sträckan.
+- Fri sikt krävs: en termos tas inte genom en vägg eller över vatten (tre blockerade punkter i rad stoppar, en stolpe gör det inte). Kaffemagneten (16 m, högst tre per steg) är oförändrad och går fortfarande genom hinder.
+- Temporush behåller sitt eget, större fält (3,6–6,5 m) och använder det större av de två.
+- Skatter, hemligheter och busshållplatser har oförändrad radie.
