@@ -5,6 +5,7 @@ import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=
 import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.21.1-xmas.1';
 import {createCityArchitecture,createInfill,coreContourBuildings,ComicMesh} from './city-architecture.js?v=2.21.1-xmas.1';
 import {installSnow,SNOW_MATERIALS,WINTER_SKY} from './xmas/xmas-snow.mjs?v=2.21.1-xmas.1';
+import {xmasColliders} from './xmas/xmas-decor-data.mjs?v=2.21.1-xmas.1';
 import {createCityEnvironment} from './city-environment.mjs?v=2.21.1-xmas.1';
 import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.21.1-xmas.1';
 import {ColliderGrid} from './collider-grid.mjs?v=2.21.1-xmas.1';
@@ -504,6 +505,8 @@ function addBuildings(osm,environment,outerData={}){
   window.KarlstadOuter=Object.freeze(outer?outer.stats:{skipped:true});
   // 2.21: fristående serviceytor för partnerplatser (Pressbyrån) läggs in före rutnätet byggs, så att de är fasta föremål.
   try{for(const c of partnerColliders(colliders))colliders.push(c);}catch(e){console.error('[Partner places skipped]',e);}
+  // julgrenen: granen och marknadsstånden är fasta föremål (före rutnätet byggs, så att färdväg och fångst ser samma värld)
+  try{for(const c of xmasColliders())colliders.push(c);}catch(e){console.error('[Jul] kollisionsobjekt hoppades över',e);}
   colliderGrid=new ColliderGrid(colliders);southGate=colliders.filter(b=>b.osm===80868525);
   const infillGraphics=createInfill(pc,app,infill,admitted),river=createRiverArchitecture(pc,app);
   const geometry=createCityArchitecture(pc,app,admitted,infill),environmentGraphics=createCityEnvironment(pc,app,environment),south=createSouthCity(pc,app,admitted);

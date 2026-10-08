@@ -12,7 +12,7 @@ export function createSprites(pc,host,{texture,root}){
   const spriteMaterial=(tex,{tiling=[1,1],offset=[0,0],alphaTest=.1,additive=false}={})=>{
     const m=new pc.StandardMaterial();m.useLighting=false;m.diffuse.set(0,0,0);m.emissive.set(1,1,1);m.emissiveMap=tex;m.opacityMap=tex;m.opacityMapChannel='a';
     m.emissiveMapTiling.set(tiling[0],tiling[1]);m.emissiveMapOffset.set(offset[0],offset[1]);m.opacityMapTiling.set(tiling[0],tiling[1]);m.opacityMapOffset.set(offset[0],offset[1]);
-    m.blendType=additive?pc.BLEND_ADDITIVE:pc.BLEND_NORMAL;m.alphaTest=additive?0:alphaTest;m.cull=pc.CULLFACE_NONE;if(additive)m.depthWrite=false;m.update();return m;
+    m.blendType=additive?pc.BLEND_ADDITIVEALPHA:pc.BLEND_NORMAL;m.alphaTest=additive?0:alphaTest;m.cull=pc.CULLFACE_NONE;if(additive)m.depthWrite=false;m.update();return m;
   };
   // ── paket: åtta celler i en bild (4×2)
   const pkgTex=texture((c)=>drawPackageAtlas(c),PACKAGE_CELL*4,PACKAGE_CELL*2);

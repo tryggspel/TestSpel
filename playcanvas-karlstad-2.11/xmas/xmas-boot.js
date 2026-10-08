@@ -8,6 +8,7 @@ import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xm
 import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.1';
 import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.1';
 import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.1';
+import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.1';
 
 // Julbygget har inga termosar, hemligheter eller skatter: paketen ersätter dem. Anropas direkt efter att resan skapats, innan någon vy ritas.
 export function prepareXmasJourney(journey){
@@ -16,7 +17,7 @@ export function prepareXmasJourney(journey){
 }
 
 export function installXmas(ctx){
-  const {pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,isPlaying,placeActive,params,storage}=ctx;
+  const {pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,isPlaying,placeActive,indoors,params,storage}=ctx;
   const save=new XmasSave(storage);
   let fault=false;
   const guard=(fn,fallback)=>{if(fault)return fallback;try{return fn();}catch(e){fault=true;console.error('[Jultillägget stängdes av efter fel]',e);try{hunt.cancel('fel');ui.showHud(false);view.clear();document.body.classList.remove('xmas-cozy');}catch{}return fallback;}};
@@ -24,7 +25,9 @@ export function installXmas(ctx){
   const nav={blocked:(x,z)=>host.blocked(x,z),snap:p=>{try{const q=journey.nav.point(p);return {x:q.x,z:q.z};}catch{return null;}}};
   const hunt=new XmasHunt({save,nav});
   const sprites=createSprites(pc,host,{texture,root});
-  const view=createXmasView(pc,host,{labelTex,root},sprites,hunt);
+  const view=createXmasView(pc,host,{labelTex,root,texture},sprites,hunt);
+  let decor=null; // julmiljön: gran, stånd, ljus, tomtar och snöfall. Fail-soft: går något fel i den fortsätter spelet utan.
+  try{decor=createXmasDecor(pc,host,{root,texture,labelTex,indoors,params:{weather:save.weather}},sprites);}catch(e){console.error('[Julmiljön hoppades över]',e);}
   const baseUrl=baseGameUrl(location.search,location.hostname);
   let stamp=baseStamp,mode='menu'; // menu | cozy | zombies
   let resultTimer=0,resultOpen=false;
@@ -66,7 +69,7 @@ export function installXmas(ctx){
     });
   }
   function openContinue(){guard(()=>{ui.renderContinue();setPanel('xmas-continue');});}
-  function setWeather(level){save.setWeather(level);ctx.env?.setWeather?.(level);}
+  function setWeather(level){save.setWeather(level);try{decor?.setWeather(level);}catch(e){console.error(e);}}
 
   const ui=createXmasUi({save,fx:{
     cozy:()=>{if(save.introDone)openContinue();else startIntro();},
@@ -105,7 +108,7 @@ export function installXmas(ctx){
       handle(now);
       view.update(p,now,dt);
       ui.tick(hunt.run,now);
-      ctx.env?.update?.(p,now,dt);
+      decor?.update(p,now,dt);
     });
   }
   // Grundspelets HUD (var 80:e ms): julens text för mål, poäng och kompass skrivs över efter grundspelets.
@@ -121,12 +124,12 @@ export function installXmas(ctx){
   loadBuildStamp().then(s=>{stamp=s;try{$('xmasBuild').textContent=buildDetail(s);const v=document.querySelectorAll('.game-version');v.forEach(x=>{x.textContent=s.version;});}catch{}});
   ui.renderStart(buildDetail(stamp));
   const api={
-    hunt,save,view,ui,sprites,handlers,
+    hunt,save,view,ui,sprites,handlers,decor,
     get active(){return hunt.active;},get cozy(){return mode==='cozy';},
     update,hudText,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
     step:(dt,p,sweep,speed)=>guard(()=>hunt.step(dt,p,sweep,speed)),
     objective:p=>fault?null:hunt.objective(p),
-    snapshot:()=>({mode,fault,hunt:hunt.snapshot(),view:view.snapshot(),build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone}}),
+    snapshot:()=>({mode,fault,hunt:hunt.snapshot(),view:view.snapshot(),decor:decor?decor.snapshot():null,build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone}}),
     onResultClosed:()=>{resultOpen=false;}
   };
   return api;

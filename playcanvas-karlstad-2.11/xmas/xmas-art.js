@@ -78,7 +78,7 @@ export function drawTomte(c,x0,y0,style,frame=0){
   shape(c,style.trim,()=>c.ellipse(212,86,17,17,0,0,Math.PI*2),6);
   // rekvisita
   if(style.prop==='sack'){shape(c,'#b98d52',()=>{c.moveTo(10,262);c.quadraticCurveTo(0,330,40,336);c.quadraticCurveTo(80,334,70,262);c.quadraticCurveTo(40,236,10,262);c.closePath();},6);shape(c,'#d94a4a',()=>c.roundRect(24,244,30,26,5),4);}
-  if(style.prop==='gift'){shape(c,'#f6cf4f',()=>c.roundRect(214,288,44,38,5),5);shape(c,'#d94a4a',()=>c.rect(231,288,10,38),3);shape(c,'#d94a4a',()=>c.moveTo(236,288)||c.arc(226,284,9,0,7),3);}
+  if(style.prop==='gift'){shape(c,'#f6cf4f',()=>c.roundRect(214,288,44,38,5),5);shape(c,'#d94a4a',()=>c.rect(231,288,10,38),3);shape(c,'#d94a4a',()=>c.ellipse(228,284,10,6,-.5,0,Math.PI*2),3);shape(c,'#d94a4a',()=>c.ellipse(244,284,10,6,.5,0,Math.PI*2),3);}
   if(style.prop==='lantern'){c.strokeStyle=INK;c.lineWidth=5;c.beginPath();c.moveTo(232,276);c.lineTo(250,238);c.stroke();shape(c,'#ffd45a',()=>c.roundRect(238,222,28,34,6),5);sparkle(c,252,239,9,'#fffbe0');}
   if(style.prop==='cup'){shape(c,PAPER,()=>c.roundRect(214,262,34,34,6),5);shape(c,'#7b4a2c',()=>c.rect(218,266,26,8),2);c.strokeStyle=INK;c.lineWidth=4;c.beginPath();c.arc(250,278,9,-1.2,1.2);c.stroke();c.strokeStyle='#ffffff';c.lineWidth=3;c.beginPath();c.moveTo(224,254);c.quadraticCurveTo(218,244,226,236);c.stroke();}
   if(style.prop==='candy'){shape(c,'#ffffff',()=>c.roundRect(222,240,14,64,6),4);c.strokeStyle='#d33a3a';c.lineWidth=7;for(let i=0;i<4;i++){c.beginPath();c.moveTo(222,248+i*14);c.lineTo(236,256+i*14);c.stroke();}shape(c,'#ffffff',()=>c.arc(229,238,11,Math.PI,0),4);}
@@ -108,4 +108,47 @@ export function drawXmasStamp(c,size,{label='',sub='',color='#b8302f'}={}){
   c.fillText(line1,cx,cy+s*.31,s*.7);if(line2)c.fillText(line2,cx,cy+s*.385,s*.7);
   c.font=`800 ${s*.05}px system-ui,sans-serif`;c.fillStyle=color+'cc';c.fillText('JULSTÄMPEL',cx,cy-s*.30,s*.6);
   c.restore();
+}
+
+// ── Tomtefönster ─────────────────────────────────────────────────────────────────────────────────────────────────────
+// Ett upplyst fönster med snö på bänken, gardiner och en tomte som tittar ut. Tre färgvarianter i en bild (3×1 celler à 128×192).
+export const WINDOW_CELL=Object.freeze({w:128,h:192});
+export const WINDOW_STYLES=Object.freeze([
+  {glow0:'#fff0b8',glow1:'#ffc766',curtain:'#c93a3a',hat:'#d33a3a'},
+  {glow0:'#e6f4ff',glow1:'#a9d2f5',curtain:'#3c6fb2',hat:'#3f7a5c'},
+  {glow0:'#ffe3ee',glow1:'#ffb3cd',curtain:'#7b4aa6',hat:'#d33a3a'}
+]);
+export function drawWindow(c,x0,y0,style){
+  c.save();c.translate(x0,y0);c.lineJoin='round';c.lineCap='round';
+  // sken utanför fönstret
+  const g=c.createRadialGradient(64,100,10,64,100,92);g.addColorStop(0,style.glow1+'aa');g.addColorStop(1,style.glow1+'00');c.fillStyle=g;c.fillRect(0,0,128,192);
+  // karm och ruta
+  shape(c,'#5a3b2a',()=>c.roundRect(14,12,100,160,8),5);
+  const gl=c.createLinearGradient(0,22,0,160);gl.addColorStop(0,style.glow0);gl.addColorStop(1,style.glow1);
+  shape(c,gl,()=>c.roundRect(22,20,84,144,4),3);
+  // tomten (hatt, ansikte, skägg) tittar upp över bänken
+  shape(c,'#f1c7a2',()=>c.ellipse(64,112,19,18,0,0,Math.PI*2),4);
+  shape(c,PAPER,()=>{c.moveTo(46,114);c.quadraticCurveTo(46,150,64,154);c.quadraticCurveTo(82,150,82,114);c.quadraticCurveTo(64,132,46,114);c.closePath();},4);
+  shape(c,'#e9806b',()=>c.ellipse(64,118,5,4,0,0,Math.PI*2),2);
+  c.fillStyle=INK;c.beginPath();c.arc(57,108,2.4,0,7);c.arc(71,108,2.4,0,7);c.fill();
+  shape(c,style.hat,()=>{c.moveTo(45,104);c.quadraticCurveTo(50,70,64,56);c.quadraticCurveTo(90,58,92,78);c.quadraticCurveTo(84,92,83,104);c.closePath();},4);
+  shape(c,'#ffffff',()=>c.roundRect(43,98,42,13,6),3);shape(c,'#ffffff',()=>c.ellipse(91,78,8,8,0,0,Math.PI*2),3);
+  // spröjs, gardiner och snö på bänken
+  c.strokeStyle='#5a3b2a';c.lineWidth=4;c.beginPath();c.moveTo(64,20);c.lineTo(64,164);c.moveTo(22,70);c.lineTo(106,70);c.stroke();
+  shape(c,style.curtain,()=>{c.moveTo(22,20);c.lineTo(46,20);c.quadraticCurveTo(30,70,40,120);c.lineTo(22,120);c.closePath();},3);
+  shape(c,style.curtain,()=>{c.moveTo(106,20);c.lineTo(82,20);c.quadraticCurveTo(98,70,88,120);c.lineTo(106,120);c.closePath();},3);
+  shape(c,'#ffffff',()=>{c.moveTo(8,176);c.quadraticCurveTo(24,158,50,168);c.quadraticCurveTo(76,160,100,168);c.quadraticCurveTo(116,160,122,176);c.lineTo(122,182);c.lineTo(8,182);c.closePath();},4);
+  sparkle(c,100,36,7);sparkle(c,30,48,5);
+  c.restore();
+}
+export function drawWindowAtlas(c){WINDOW_STYLES.forEach((s,i)=>drawWindow(c,i*WINDOW_CELL.w,0,s));}
+
+// Ljusstråle (bonuspaket och tomten): lodrät, kraftig vid marken och mjukt utfadad uppåt och åt sidorna. Ritas som ett bildkort som vänder sig mot spelaren.
+export function drawBeam(c,w,h,col='#ffd36b'){
+  c.clearRect(0,0,w,h);
+  const g=c.createLinearGradient(0,h,0,0);g.addColorStop(0,col+'d8');g.addColorStop(.3,col+'88');g.addColorStop(.75,col+'30');g.addColorStop(1,col+'00');
+  c.fillStyle=g;c.fillRect(0,0,w,h);
+  c.globalCompositeOperation='destination-in';
+  const m=c.createLinearGradient(0,0,w,0);m.addColorStop(0,'#ffffff00');m.addColorStop(.3,'#ffffffff');m.addColorStop(.7,'#ffffffff');m.addColorStop(1,'#ffffff00');
+  c.fillStyle=m;c.fillRect(0,0,w,h);c.globalCompositeOperation='source-over';
 }

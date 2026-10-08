@@ -1084,7 +1084,7 @@ export function createLastRound(pc, host) {
     actors: game.actors.map(a => ({id: a.id, x: a.x, z: a.z, active: a.active, hp:a.hp, kind:a.kind})), goal: {...layout.goal}, objective:isPush()?layout.goal:game.objective(host.player.getPosition())})});
   // Julgrenen: Julklappsjakten kopplas in här. Alla hjälpfunktioner som julkoden behöver ges som argument, den rör inga andra moduler.
   xmas=installXmas({pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,params,storage,
-    isPlaying:()=>game.phase==='playing'&&!panel,placeActive:()=>!!journey.places?.run});
+    isPlaying:()=>game.phase==='playing'&&!panel,placeActive:()=>!!journey.places?.run,indoors:p=>mallInside(p)});
   journey.xmas=xmas;
   explore(true);
   if(xmas){xmas.openMenu();}
@@ -1297,7 +1297,7 @@ export function createLastRound(pc, host) {
     uiTime += dt;
     if (uiTime > .08) {
       uiTime = 0;
-      if(game.phase==='playing'&&!panel){const st=stampBook.check(p);if(st){sound('capture');toast('STÄMPEL · '+st.place.label,st.complete?'Alla '+st.total+' platser! Du har sett hela Karlstad.':st.count+' av '+st.total+' platser · se PAUS → STÄMPELKARTA',st.complete?4:2.4);}}
+      if(game.phase==='playing'&&!panel&&!xmas?.active){const st=stampBook.check(p);if(st){sound('capture');toast('STÄMPEL · '+st.place.label,st.complete?'Alla '+st.total+' platser! Du har sett hela Karlstad.':st.count+' av '+st.total+' platser · se PAUS → STÄMPELKARTA',st.complete?4:2.4);}}
       if(host.music?.jukebox?.playing&&Math.hypot(p.x-MUSIC_OFFICE.x,p.z-MUSIC_OFFICE.z)>90)host.music.jukebox.stop();
       guidance=!isPush()?guideFor(p,game.objective(p)):null;
       updateGuide(p); drawRadar(p);renderTurbo();updateFunHud(p);
