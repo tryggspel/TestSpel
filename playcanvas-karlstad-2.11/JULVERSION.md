@@ -12,7 +12,9 @@ Vercel-projekt och få en egen adress. Grundspelet fortsätter på `main` med si
 | `main` när arbetet började | **2.21.1**, commit `fadc36ad65078401e1a751c9236c1577d1bc5de8` (nyare förbättringar bevarade: butiksuppdrag och Karlstadpasset 2.21.0–2.21.1) |
 | Julversionen bygger på | `fadc36ad65078401e1a751c9236c1577d1bc5de8` |
 | Befintligt Vercel-projekt | `karlstad-city-visual-twin` (`prj_VsGY8BEV27Zr0CGIqpBxBWkRpyoY`), team `kmauritz-7561` (`team_R8VGNJRdhhNZtekaQs1aoVVp`), följer `main`; projektets rotkatalog är spelmappen (funktionerna i `api/` ligger där) |
-| Grundspelets produktionsadress | https://karlstad-city-visual-twin.vercel.app/ |
+| Grundspelets produktionsadress | https://karlstad-city-visual-twin.vercel.app/ (produktionsdeployen är `main` @ `fadc36a`, `dpl_FwuTrU4TtDo7Gis1UXzckwUgj4WP`; orörd av jularbetet) |
+| **Julprojektet (Vercel)** | `karlstad-julklappsjakten` (`prj_VN5TE5HguK955hdkuGdIw8FWvzDl`), samma konto som grundspelets projekt, rotkatalog `playcanvas-karlstad-2.11`, kopplat till `tryggspel/TestSpel`. Se avsnitt 4. |
+| **Julversionens stabila adress** | https://karlstad-julklappsjakten.vercel.app/ |
 | Återställningspunkt (gren) | `backup/jul-2026-baseline-2.21.1-fadc36a` = `fadc36ad65078401e1a751c9236c1577d1bc5de8` |
 | Git-tagg | `jul-2026-baseline-2.21.1` finns lokalt men **kunde inte pushas**: fjärren svarar HTTP 403 på alla tagg-pushar från den miljö som byggde julversionen. Skapa den själv: `git tag -a jul-2026-baseline-2.21.1 fadc36a && git push origin jul-2026-baseline-2.21.1` (eller GitHub → Releases → Draft a new release på den commiten). |
 
@@ -23,7 +25,7 @@ GitHub Pages-arbetsflödet `Deploy Karlstad City Mobile` publicerar bara `main`;
 | Gren | Syfte | Vercel |
 |---|---|---|
 | `main` | Grundspelet (2.21.x). Får bara julknappen och navigeringen som behövs. **Ingen julkod slås ihop hit.** | `karlstad-city-visual-twin`, produktion |
-| `release/jul-2026` | Julversionen. Det som ligger här är det som publiceras som julspelet. | Julprojektet, produktionsgren |
+| `release/jul-2026` | Julversionen. Det som ligger här är det som publiceras som julspelet. | Julprojektet `karlstad-julklappsjakten` (stabil adress, se avsnitt 4) |
 | `claude/stoic-tesla-59znyc` | Utvecklingsgren för julversionen. Flyttas fram till `release/jul-2026` när den är verifierad. | Förhandsvisningar |
 | `feature/julknapp-grundspelet` | Grundspelets julknapp (2.21.2), byggd från `main`. Förberedd men avstängd. Se avsnitt 9. | Förhandsvisning av grundspelet |
 | `backup/jul-2026-baseline-2.21.1-fadc36a` | Återställningspunkt = grundspelet före allt jularbete. | – |
@@ -47,29 +49,36 @@ i `?debug` och i `/api/build-info`.
 
 ## 4. Vercel-projektet för julversionen
 
-Projektet kunde **inte skapas av Claude**: Vercel-anslutningen i byggmiljön hade ingen behörighet på teamets scope (HTTP 403 vid `create_project`, `list_deployments`,
-loggar och domäner; `list_teams` gav en tom lista, men en tidigare session kunde lista projekten den 5 oktober). Det går att lösa genom att koppla om Vercel-anslutningen med åtkomst till teamet
-(claude.ai → Customize → Connectors) och starta en ny session. Eller skapa projektet själv så här (några minuter):
+**Status:** projektet är skapat och första deployen är klar. Adressen har kontrollerats mot Vercels API men **inte öppnats i någon webbläsare av den som byggde den** (se avsnitt 8).
 
-1. Vercel → *Add New… → Project* → importera `tryggspel/TestSpel` i teamet `kmauritz-7561`.
-2. Projektnamn `karlstad-julklappsjakten` (adressen blir https://karlstad-julklappsjakten.vercel.app/ om namnet är ledigt).
-3. *Root Directory*: `playcanvas-karlstad-2.11`. *Framework Preset*: Other. Inget build-kommando, ingen output-katalog.
-4. *Settings → Git → Production Branch*: `release/jul-2026`. (Förhandsvisningar för övriga grenar får gärna vara på: de är till för test.)
-5. *Settings → Deployment Protection → Vercel Authentication*: välj samma alternativ som i grundspelets projekt (öppna det projektets inställning och jämför). Målet är att produktionsadressen är öppen för spelare medan förhandsvisningarna kräver inloggning. Kontrollera efteråt genom att öppna produktionsadressen i ett privat fönster utan att vara inloggad på Vercel.
-6. *Settings → Environment Variables → Automatically expose System Environment Variables*: på (standard), så att `/api/build-info` kan visa commit-ID.
-7. Kontrollera att `https://<adressen>/api/build-info` visar `"branch":"release/jul-2026"` och rätt commit, och att startvyn visar samma version och commit.
-8. Valfritt, men rekommenderat: hindra att projekten bygger varandras grenar (båda projekten är kopplade till samma repository, så annars får
-   grundspelets projekt förhandsvisningar av julgrenarna och tvärtom). *Settings → Git → Ignored Build Step* (kommandot avslutas med 0 = hoppa över bygget, 1 = bygg):
-   - Julprojektet: `case "$VERCEL_GIT_COMMIT_REF" in release/jul-2026|claude/*) exit 1;; *) exit 0;; esac`
-   - Grundspelets projekt (`karlstad-city-visual-twin`): `case "$VERCEL_GIT_COMMIT_REF" in release/jul-2026|claude/*|backup/*) exit 0;; *) exit 1;; esac`
+| | |
+|---|---|
+| Projekt | `karlstad-julklappsjakten` (`prj_VN5TE5HguK955hdkuGdIw8FWvzDl`), konto `team_R8VGNJRdhhNZtekaQs1aoVVp` (scope `kmauritz-7561`): samma som grundspelets projekt `karlstad-city-visual-twin` |
+| Stabil adress | https://karlstad-julklappsjakten.vercel.app/ (projektets enda domän, verifierad) |
+| Första deployen | `dpl_msrvXvBQp11YLWdZUNDYJD1Dud7G`, gren `release/jul-2026`, commit `f592db03374ab1432c4e9c827bd74e5bb29f9b2f`, klar (READY) efter ca 8 s. Vercel gör den första deployen i ett nytt projekt till produktion, oavsett gren. |
+| Inställningar | Rotkatalog `playcanvas-karlstad-2.11`, inget ramverk, inget build-kommando, ingen output-katalog (statiska filer + funktionerna i `api/`). Vercel Authentication som i grundspelet (`all_except_custom_domains`: produktionsadressen öppen, förhandsvisningar bakom inloggning). System-miljövariabler exponeras så att `/api/build-info` kan visa commit. *Ignored Build Step* så att bara `release/jul-2026` och `claude/*` byggs: `case "$VERCEL_GIT_COMMIT_REF" in release/jul-2026\|claude/*) exit 1;; *) exit 0;; esac` |
+| Grundspelets projekt | Orört. Produktion är fortfarande `main` @ `fadc36a`. (Det projektet bygger förhandsvisningar av alla grenar som pushas, även julgrenarna, eftersom det är kopplat till samma repository. De är bakom inloggning och påverkar inte grundspelets adress.) |
+
+### Det som återstår för dig (kunde inte göras härifrån)
+
+1. **Sätt Production Branch till `release/jul-2026`**: Vercel → `karlstad-julklappsjakten` → *Settings → Git → Production Branch*. Standardvärdet för ett nytt projekt är repots huvudgren `main`; det gick varken att läsa eller sätta via det API som byggmiljön hade.
+   Tills dess blir nya pushar till `release/jul-2026` förhandsvisningar och den stabila adressen står kvar på den senaste produktionsdeployen (en säker standard: adressen ändras bara när du vill). Ett senare bygge kan också släppas med *Promote to Production* på en förhandsvisning.
+2. **Öppna https://karlstad-julklappsjakten.vercel.app/ på riktiga enheter** och gå igenom kontrollistan i avsnitt 8. Kontrollera även i ett privat fönster (utan Vercel-inloggning) att adressen är öppen, och att `https://karlstad-julklappsjakten.vercel.app/api/build-info` visar `"branch":"release/jul-2026"` och rätt commit.
+3. Valfritt: hindra att grundspelets projekt bygger julgrenarna. I `karlstad-city-visual-twin` → *Settings → Git → Ignored Build Step*: `case "$VERCEL_GIT_COMMIT_REF" in release/jul-2026|claude/*|backup/*) exit 0;; *) exit 1;; esac` (0 = hoppa över bygget, 1 = bygg).
+4. Koppla in julknappen i grundspelet när punkt 2 är klar (avsnitt 9).
 
 ### Kontroll före varje publicering (team, projekt, gren, commit)
 
-1. Rätt team (`kmauritz-7561`) och rätt projekt (`karlstad-julklappsjakten`, **inte** `karlstad-city-visual-twin`).
-2. Rätt gren: produktion bygger bara `release/jul-2026`; förhandsvisningar kommer från övriga grenar.
+1. Rätt konto och projekt: `karlstad-julklappsjakten` (`prj_VN5TE5HguK955hdkuGdIw8FWvzDl`), **inte** `karlstad-city-visual-twin`.
+2. Rätt gren: produktion byggs bara från `release/jul-2026`; förhandsvisningar kommer från `claude/*`.
 3. Rätt commit: `git log -1 release/jul-2026` ska stämma med `/api/build-info` och med raden längst ned i startvyn.
-4. Förhandsvisningen först: öppna den, kör introduktionen, kontrollera att knappen Tillbaka leder till grundspelets adress, och publicera därefter genom att flytta fram `release/jul-2026`.
+4. Förhandsvisningen först: öppna den, kör introduktionen, kontrollera att knappen Tillbaka leder till grundspelets adress, och publicera därefter (Production Branch eller *Promote to Production*).
 5. Grundspelets projekt och adress ska vara oförändrade (öppna https://karlstad-city-visual-twin.vercel.app/ och kontrollera att versionen är den väntade).
+
+### Skapa projektet från grunden (om det tas bort)
+
+Vercel → *Add New… → Project* → importera `tryggspel/TestSpel`; projektnamn `karlstad-julklappsjakten`; *Root Directory* `playcanvas-karlstad-2.11`; *Framework Preset* Other, inget build-kommando eller output-katalog;
+*Production Branch* `release/jul-2026`; *Deployment Protection → Vercel Authentication* som i grundspelets projekt; *Automatically expose System Environment Variables* på; *Ignored Build Step* enligt tabellen ovan.
 
 ## 5. Vad som ändrats i grundspelets filer (för framtida sammanslagningar från `main`)
 
@@ -142,6 +151,7 @@ mobilformat 414×896 med emulerad tryckskärm, liggande telefon 896×414 och skr
 | `tools/xmas-flow/flow.mjs` (mobil 414×896) | startvy och version → introduktionen (mål 20, 30 + 3 paket, paketen syns, målet visas, leverans, resultatkort, stämpel) → sparning i egna nycklar och efter omladdning → tre rundor (Kungsgatan spelad hela vägen) → miljön (8 stånd, granar, ljusslingor, snö utomhus men inte inomhus, ~6 tomtar nära) → Pressbyrån (beställning och leverans) och Cervera → Tomtezombies (4 typer, högst sex aktiva, tagen, försök igen) → inga zombier i Julklappsjakten → väder av/på, mute → tillbaka-knapparna → inga konsolfel | **37/37 OK** (kod som i `b0c81cc`; senare commits ändrar bara dokumentation) |
 | `tools/xmas-flow/flow.mjs` (skrivbord 1000×640) | samma | **37/37 OK** |
 | `tools/xmas-flow/switch.mjs` | grundspelet (med julknappen) → julversionen → tillbaka, i samma flik, grundspelets sparade framsteg kvar | **8/8 OK** |
+| Vercel (via API, `karlstad-julklappsjakten`) | projektet finns i samma konto som grundspelets, endast domänen `karlstad-julklappsjakten.vercel.app`, första deployen klar (READY), gren `release/jul-2026`, commit `f592db0`, alias tilldelade utan fel; grundspelets produktionsdeploy oförändrad (`main` @ `fadc36a`) | **kontrollerat** (men adressen är inte öppnad i någon webbläsare) |
 | engångsskript (ej incheckade) | fritt paketregn (5–6 paket på 43–48 m håll, alla nåbara, inga dubbla poäng, försvinner efter sin tid), liggande telefon, A/B-prestanda, musik renderad och analyserad | körda, se avsnitt 7 |
 
 Verktygen körs mot en lokal server (se rubriken i varje fil). Ett fel som först syntes (Cervera efter Pressbyrån) berodde på att grundspelets resultatkort ligger kvar i 14 s och tar det första knapptrycket vid nästa plats: grundspelets eget beteende, inte ett fel i julkoden.
@@ -151,7 +161,7 @@ Testet trycker nu FORTSÄTT som en spelare gör, och julversionen stänger korte
 - iPhone 11/Safari och MacBook Air 2018: bildfrekvens, känsla, värme, minne, WebKit-specifikt beteende (tyst läge, låsskärm/bakgrund, `100dvh`, pekkänsla).
 - Riktig GPU-prestanda. De mätningar som finns är jämförelser mellan grundspelet och julversionen i samma mjukvaruritade miljö.
 - Hur musiken *låter*. Den är provrenderad och analyserad (ingen klippning, rimlig frekvensbild) men ingen människa har lyssnat.
-- Vercel: projektet, förhandsvisningen, produktionsadressen, `/api/build-info` med riktig commit, Git-taggen och att knappen leder till den riktiga adressen.
+- Vercel: att adressen faktiskt öppnas och startar spelet (byggmiljöns nätverkspolicy blockerar `*.vercel.app`, och Vercels skyddslänk kräver en behörighet som anslutningen saknade), att `/api/build-info` visar rätt commit i en riktig deploy, Git-taggen, Production Branch-inställningen och att knappen leder till den riktiga adressen. Vercels bygglogg kunde inte läsas (samma behörighet); deployen är klar enligt API:t.
 
 ### Kontrollista för riktig enhet (iPhone 11/Safari, MacBook Air 2018)
 
@@ -166,12 +176,12 @@ Testet trycker nu FORTSÄTT som en spelare gör, och julversionen stänger korte
 ## 9. Julknappen i grundspelet
 
 Grenen `feature/julknapp-grundspelet` (från `main`, version 2.21.2) lägger en knapp **JULKLAPPSJAKTEN 🎁** direkt under TempoRush i startmenyn. Den öppnar julversionen i samma flik (ingen iframe).
-Knappen är **förberedd men avstängd** (`enabled:false` i `julknapp.mjs`) och syns inte för spelare. Koppla in den först när julprojektets produktionsadress är verifierad: sätt `url` och `enabled:true`, kör testerna, förhandsvisa, slå ihop med `main`.
+Knappen är **förberedd men avstängd** (`enabled:false` i `julknapp.mjs`) och syns inte för spelare. Julversionens adress (https://karlstad-julklappsjakten.vercel.app/) är redan förifylld; koppla in knappen först när adressen är verifierad på riktiga enheter: sätt `enabled:true`, höj versionen, kör testerna, förhandsvisa, slå ihop med `main`.
 Stäng av den igen genom att sätta `enabled:false`. Se `JULKNAPPEN.md` på den grenen. Julversionens knapp **← Tillbaka till Karlstad-spelet** leder till `BASE_GAME_URL` i `xmas/xmas-config.mjs` (grundspelets adress, i samma flik).
 
 ## 10. Kända begränsningar och nästa steg
 
-- Vercel-projekt, Git-tagg och produktionsadress återstår att skapa (avsnitt 1 och 4). Julknappen kopplas in efter det.
+- Vercel-projektet och den stabila adressen finns (avsnitt 4), men Production Branch ska sättas, adressen ska öppnas och verifieras på riktiga enheter, och Git-taggen ska skapas (avsnitt 1). Julknappen kopplas in efter det.
 - Ingen test på riktig mobil. Kör `?perf` på iPhone 11 och MacBook Air 2018 och jämför med grundspelet innan publicering.
 - Tomtezombies är grundspelets zombieläge med paketmål; vidare balansering (antal zombier, tempo) bör ske efter spelartester.
 - Butiksuppdragens personal är grundspelets figurer (inte tomteklädda).

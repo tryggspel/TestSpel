@@ -1,7 +1,7 @@
 # Karlstad City — 2.21.1 · Butiksuppdrag och Karlstadpasset
 
 > **Julklappsjakten – 2.21-XMS · bygge 2.21.1-xmas.1 (den här grenen, `release/jul-2026`)**
-> - Den här grenen är **julversionen**: ett fristående bygge av samma spel med egen Git-gren, eget Vercel-projekt och egen adress. Grundspelet (`main`, 2.21.x) ligger kvar oförändrat på sin egen adress. **Julkoden slås aldrig ihop med `main`.** Utgångsläge, återställningspunkt, Vercel-steg, verifiering och kända begränsningar står i [`JULVERSION.md`](JULVERSION.md).
+> - Den här grenen är **julversionen**: ett fristående bygge av samma spel med egen Git-gren, eget Vercel-projekt och egen adress. Grundspelet (`main`, 2.21.x) ligger kvar oförändrat på sin egen adress. Julversionens egen adress är https://karlstad-julklappsjakten.vercel.app/ (Vercel-projektet `karlstad-julklappsjakten`). **Julkoden slås aldrig ihop med `main`.** Utgångsläge, återställningspunkt, Vercel-steg, verifiering och kända begränsningar står i [`JULVERSION.md`](JULVERSION.md).
 > - Startvyn har **Julklappsjakten** (mysigt, inga zombier), **Tomtezombies** (eget zombieläge) och **← Tillbaka till Karlstad-spelet**. Julversionen har egen sparning (`karlstad-xmas:*` och prefixet `xmas:`); grundspelets sparfiler rörs inte.
 > - Allt som rör julen ligger i `xmas/` och `tests/xmas-*.test.mjs`. Grundspelets egna filer har bara små krokar (förteckning i `JULVERSION.md`, avsnitt 5), så att förbättringar från `main` går att föra över med en vanlig Git-sammanslagning *till* julgrenen.
 
