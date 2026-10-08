@@ -9,6 +9,7 @@
 export const TREE={x:0,z:0,radius:2.6,collider:1.5,height:15};
 export const INTRO_GOAL=20;
 const SPIRAL=Object.freeze({turns:2.25,r0:27,r1:8.5,bearing0:180});
+const LEAD=3; // meter från spiralens början till startpunkten (på linjen mot granen)
 // Platser i grundspelets torgmiljö som paket inte får ligga i (bänkar, planteringar, lyktor, träd). Se app.js addPlazaPattern/addStreetProps.
 export const TORGET_PROPS=Object.freeze([
   [-18,-18],[18,-18],[-18,17],[18,17],[-25,-20],[25,-20],[-25,20],[25,20],
@@ -37,8 +38,11 @@ export const SHAPES=Object.freeze({
   zig3:[[0,1],[1.8,-1],[3.6,1]]
 });
 // Gruppernas ordning och startavstånd (m från spawn längs spåret). Summan av antalen är 30 vanliga paket.
+// Den första gruppen ligger rakt framför start, på linjen mot granen (båglängden räknas där längs den raka linjen). Spelaren startar vänd mot granen
+// och ser både granen och de första paketen på samma bild; i stående läge på en telefon syns bara ungefär 40° i sidled, så en grupp på spiralens
+// sida (90° från granen) hade hamnat utanför bilden. Övriga grupper följer spiralen.
 const CLUSTERS=Object.freeze([
-  ['line3',7],['pair',29],['arc4',45],['zig3',66],['pair',86],['line3',104],['arc4',124],['zig3',146],['pair',168],['pair',188],['pair',212]
+  ['line3',3],['pair',21],['arc4',43],['zig3',66],['pair',86],['line3',104],['arc4',124],['zig3',146],['pair',168],['pair',188],['pair',212]
 ]);
 // Bonuspaket ligger några meter vid sidan av spåret (valfria avstickare) och är större, guldiga och har en ljusstråle.
 // [båglängd längs spåret, föredragen sida (+1 utåt / −1 inåt)]. Själva platsen väljs så att den ligger 5–11 m från den väg man går
@@ -49,15 +53,19 @@ export const BONUS_DETOUR=Object.freeze({min:5,max:11});
 export function buildIntroLayout(){
   const pkgs=[];let n=0;
   const push=(x,z,kind,cluster)=>pkgs.push({id:kind==='bonus'?'i:b'+(pkgs.filter(p=>p.kind==='bonus').length+1):'i:'+String(++n).padStart(2,'0'),x:+x.toFixed(2),z:+z.toFixed(2),kind,cluster});
+  // Spelaren startar LEAD m utanför spiralens början, på linjen mot granen, och går rakt mot granen genom den första gruppen.
+  const spiral0=atArc(0),dTree=Math.hypot(TREE.x-spiral0.x,TREE.z-spiral0.z)||1,rad0={tx:(TREE.x-spiral0.x)/dTree,tz:(TREE.z-spiral0.z)/dTree};
+  rad0.nx=-rad0.tz;rad0.nz=rad0.tx;
+  const start={x:spiral0.x-rad0.tx*LEAD,z:spiral0.z-rad0.tz*LEAD};
+  const radialAt=s=>({x:start.x+rad0.tx*s,z:start.z+rad0.tz*s,nx:rad0.nx,nz:rad0.nz});
   CLUSTERS.forEach(([shape,s0],ci)=>{
     for(const [ds,lat] of SHAPES[shape]){
-      const a=atArc(s0+ds);let x=a.x+a.nx*lat,z=a.z+a.nz*lat;
+      const a=ci===0?radialAt(s0+ds):atArc(s0+ds);let x=a.x+a.nx*lat,z=a.z+a.nz*lat;
       ({x,z}=clearOfProps(x,z));
       push(x,z,'regular',ci);
     }
   });
   const end=atArc(SPIRAL_LENGTH),tomte={x:+(end.x+end.nx*1.4+end.tx*1.2).toFixed(2),z:+(end.z+end.nz*1.4+end.tz*1.2).toFixed(2),radius:3.4};
-  const start=atArc(0),first=atArc(3);
   // Vägen man går om man tar paketen i ordning (spawn → alla vanliga paket → tomten). Bonuspaketen får inte ligga på den.
   const walked=[{x:start.x,z:start.z},...pkgs.filter(p=>p.kind==='regular'),tomte];
   BONUS.forEach(([s0,side],i)=>{
@@ -69,7 +77,7 @@ export function buildIntroLayout(){
     if(!best){const c=clearOfProps(a.x+a.nx*side*8,a.z+a.nz*side*8);best={x:c.x,z:c.z};}
     push(best.x,best.z,'bonus',100+i);
   });
-  const yaw=(Math.atan2(-(first.x-start.x),-(first.z-start.z))*180/Math.PI+360)%360;
+  const yaw=(Math.atan2(-(rad0.tx),-(rad0.tz))*180/Math.PI+360)%360; // vänd mot granen, med de första paketen rakt framför
   return {spawn:{x:+start.x.toFixed(2),z:+start.z.toFixed(2),yaw:Math.round(yaw)},tree:{...TREE},tomte,packages:pkgs,length:SPIRAL_LENGTH,goal:INTRO_GOAL};
 }
 

@@ -73,11 +73,15 @@ export function createXmasView(pc,host,draw,sprites,hunt){
     // puffar
     for(const b of bursts){
       if(b.life<=0){if(b.ring.enabled){b.ring.enabled=false;b.spark.enabled=false;}continue;}
-      b.life=Math.max(0,b.life-dt);const k=1-b.life/b.max,fade=1-k,size=(b.big?3.4:2.0)*(.4+k*.9);
+      b.life=Math.max(0,b.life-dt);const k=1-b.life/b.max,fade=1-k;
+      // Ett paket tas på 1–2 m håll. Då fyller en 2–4 m stor ljusfläck halva bilden (på en stående telefon syns bara ~38° i sidled), så storleken
+      // begränsas efter avståndet till kameran: nära ger små gnistor, längre bort den fulla puffen.
+      const d=Math.hypot(b.x-p.x,b.y-(p.y??1.7),b.z-p.z),cap=Math.max(.5,d*(b.big?.52:.36));
+      const size=Math.min((b.big?3.4:2.0)*(.4+k*.9),cap);
       b.ring.enabled=b.spark.enabled=true;
       const yaw=sprites.yawToward(b.x,b.z,p);
       b.ring.setPosition(b.x,b.y+k*.8-size/2,b.z);b.ring.setLocalScale(size,size,1);b.ring.setEulerAngles(0,yaw,0);
-      const ss=(b.big?1.8:1.1)*(1-k*.4);b.spark.setPosition(b.x,b.y+.5+k*1.3-ss/2,b.z);b.spark.setLocalScale(ss,ss,1);b.spark.setEulerAngles(0,yaw,k*160);
+      const ss=Math.min((b.big?1.8:1.1)*(1-k*.4),Math.max(.35,cap*.7));b.spark.setPosition(b.x,b.y+.5+k*1.3-ss/2,b.z);b.spark.setLocalScale(ss,ss,1);b.spark.setEulerAngles(0,yaw,k*160);
       if(fade<.08){b.life=0;}
     }
   }

@@ -1086,7 +1086,7 @@ export function createLastRound(pc, host) {
     actors: game.actors.map(a => ({id: a.id, x: a.x, z: a.z, active: a.active, hp:a.hp, kind:a.kind})), goal: {...layout.goal}, objective:isPush()?layout.goal:game.objective(host.player.getPosition())})});
   // Julgrenen: Julklappsjakten kopplas in här. Alla hjälpfunktioner som julkoden behöver ges som argument, den rör inga andra moduler.
   xmas=installXmas({pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,params,storage,
-    isPlaying:()=>game.phase==='playing'&&!panel,placeActive:()=>!!journey.places?.run,indoors:p=>mallInside(p),openPass:()=>openPass()});
+    isPlaying:()=>game.phase==='playing'&&!panel,placeActive:()=>!!journey.places?.run,indoors:p=>mallInside(p),openPass:()=>openPass(),dismissPlaceResult:()=>placesUi.dismissResult()});
   journey.xmas=xmas;
   explore(true);
   if(xmas){xmas.openMenu();}

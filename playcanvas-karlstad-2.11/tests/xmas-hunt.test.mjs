@@ -53,6 +53,15 @@ test('introduktionens utlägg: 25–35 vanliga paket, 2–3 bonuspaket, mål 20 
   for(const b of bon){const nr=Math.min(...reg.map(r=>dist(r,b)));assert.ok(nr>=5&&nr<=14,b.id+' avstickare '+nr.toFixed(1));}
 });
 
+test('start: spelaren är vänd mot granen och de första paketen ligger rakt framför, så att båda syns även på en stående telefon',()=>{
+  // Kamerans synfält är 74° på höjden; i stående läge (414×896) blir det ungefär ±19° i sidled, så allt viktigt måste ligga nära blickriktningen.
+  const bearing=(a,b)=>(Math.atan2(-(b.x-a.x),-(b.z-a.z))*180/Math.PI+360)%360,off=(a,b)=>Math.abs(((a-b+540)%360)-180);
+  assert.ok(off(INTRO.spawn.yaw,bearing(INTRO.spawn,TREE))<=10,'startblicken är '+off(INTRO.spawn.yaw,bearing(INTRO.spawn,TREE)).toFixed(0)+'° från granen');
+  const reg=INTRO.packages.filter(p=>p.kind==='regular');
+  for(const p of reg.slice(0,3))assert.ok(off(INTRO.spawn.yaw,bearing(INTRO.spawn,p))<=15,p.id+' ligger '+off(INTRO.spawn.yaw,bearing(INTRO.spawn,p)).toFixed(0)+'° vid sidan av blicken');
+  assert.ok(dist(INTRO.spawn,reg[0])>=2.8,'första paketet ligger så långt bort att det inte tas direkt vid start');
+});
+
 test('introduktionen tar ungefär 60–90 sekunder för en ny spelare och är snabbare för en van',()=>{
   const tr=trail();let len=0;for(let i=1;i<tr.length;i++)len+=dist(tr[i-1],tr[i]);
   const pickupOverhead=8+6; // läsa målet i början och hinna fram till tomten i slutet (sekunder)

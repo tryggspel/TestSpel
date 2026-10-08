@@ -20,11 +20,11 @@ export function prepareXmasJourney(journey){
 }
 
 export function installXmas(ctx){
-  const {pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,isPlaying,placeActive,indoors,openPass,params,storage}=ctx;
+  const {pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,isPlaying,placeActive,indoors,openPass,dismissPlaceResult,params,storage}=ctx;
   registerXmasProps();
   const save=new XmasSave(storage);
   let fault=false;
-  const guard=(fn,fallback)=>{if(fault)return fallback;try{return fn();}catch(e){fault=true;console.error('[Jultillägget stängdes av efter fel]',e);try{hunt.cancel('fel');ui.showHud(false);view.clear();document.body.classList.remove('xmas-cozy');}catch{}return fallback;}};
+  const guard=(fn,fallback)=>{if(fault)return fallback;try{return fn();}catch(e){fault=true;console.error('[Jultillägget stängdes av efter fel]',e);try{hunt.cancel('fel');ui.showHud(false);view.clear();document.body.classList.remove('xmas-on','xmas-cozy','xmas-zombies');journey.xmas=null;}catch{}return fallback;}}; // grundspelets HUD och regler tar över igen
 
   const nav={blocked:(x,z)=>host.blocked(x,z),snap:p=>{try{const q=journey.nav.point(p);return {x:q.x,z:q.z};}catch{return null;}}};
   // Spelets egen gångbara karta för rundorna (rutter, hinder, fri sikt).
@@ -60,6 +60,7 @@ export function installXmas(ctx){
   }
   // ── Vad som händer när en körning startar ─────────────────────────────────────────────────────────────────────
   function enter(kind,spawn=null){
+    try{dismissPlaceResult?.();}catch{} // grundspelets resultatkort från ett butiksuppdrag ska inte ligga kvar över nästa läge
     const zombies=kind==='zombies';
     mode=zombies?'zombies':'cozy';caughtAt=0;
     document.body.classList.add('xmas-on');document.body.classList.toggle('xmas-cozy',!zombies);document.body.classList.toggle('xmas-zombies',zombies);
@@ -160,7 +161,7 @@ export function installXmas(ctx){
   }
   function openMenu(){
     guard(()=>{
-      hunt.cancel('meny');view.clear();ui.showHud(false);journey.pause?.();mode='menu';caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies');
+      try{dismissPlaceResult?.();}catch{}hunt.cancel('meny');view.clear();ui.showHud(false);journey.pause?.();mode='menu';caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies');
       ui.renderStart(buildDetail(stamp));setPanel('xmas-intro');
     });
   }

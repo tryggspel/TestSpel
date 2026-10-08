@@ -9,7 +9,7 @@
 .xmas-card h2{font-size:clamp(32px,10vw,46px)}
 .xmas-card h1 em,.xmas-card h2 em{color:var(--xmas-gold)}
 .xmas-card button{min-height:52px}
-.xmas-card .round-tertiary{min-height:44px;padding:10px 14px}
+.xmas-card .round-tertiary{min-height:48px;padding:12px 14px}
 .xmas-card .xmas-primary{background:var(--xmas-red);color:#fff;box-shadow:0 4px 0 var(--xmas-red-dark)}
 .xmas-card .xmas-primary:hover{background:#e65b52}
 .xmas-card .xmas-primary:active{transform:translateY(2px);box-shadow:0 2px 0 var(--xmas-red-dark)}
