@@ -1072,7 +1072,7 @@ export function createLastRound(pc, host) {
   });
   window.addEventListener('blur', () => {host.resetInput(); if (game.phase === 'playing') pause();});
   window.addEventListener('pagehide',()=>{if(!isJourney()&&roundInProgress&&!game.practice)journey.energy=game.energy;journey.save();});
-  window.addEventListener('pointerdown',()=>{host.music?.unlock?.();if(isJourney()&&!panel)host.music?.city?.(true);},{once:true});
+  window.addEventListener('pointerdown',()=>{host.music?.unlock?.();if(isJourney()&&(!panel||panel==='xmas-intro'))host.music?.city?.(true);},{once:true}); // julgrenen: musiken börjar redan vid första trycket på startvyn
   document.addEventListener('visibilitychange', () => {if (document.hidden && game.phase === 'playing') pause();});
   $('useBtn').textContent = 'UPPDRAG'; $('jumpBtn').textContent = 'HOPPA';
   window.KarlstadRound = Object.freeze({version: GAME_VERSION, snapshot: () => ({phase: game.phase, mode:scenicRide.active()?'transit':boatRide.active()?'boat':busRide.active()?'bus':isJourney()?'journey':'mission',score: game.score, energy: game.energy,oneHand:!!host.oneHand?.(),bus:busRide.snapshot(),boat:boatRide.snapshot(),transit:scenicRide.snapshot(),rush:journey.rush.snapshot(),xmas:xmas?xmas.snapshot():null,postcard:lastMoment?{...lastMoment}:null,challengeRequest:request,

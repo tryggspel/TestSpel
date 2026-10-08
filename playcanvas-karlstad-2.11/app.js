@@ -25,6 +25,7 @@ import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPass
 import {waterBlocked} from './park-space.mjs?v=2.21.1-xmas.1';
 import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.21.1-xmas.1';
 import {createAudioEngine} from './audio-engine.mjs?v=2.21.1-xmas.1';
+import {createXmasMusic} from './xmas/xmas-music.js?v=2.21.1-xmas.1';
 import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.21.1-xmas.1';
 
 installSnow(ComicMesh); // julgrenen: snön är ett färgfilter på stadens geometri (ingen extra yta)
@@ -81,54 +82,44 @@ let resetTouch=()=>{};
 // 2.10: all musik går genom audio-engine.mjs (GainNode) eftersom iOS ignorerar <audio>.volume.
 const AUDIO=createAudioEngine({storage:(()=>{try{return localStorage;}catch{return null;}})()});
 const MUSIC_STATE={ready:false,unlocked:false,mode:'silent',roundTimer:0,arenaTimer:0};
-function musicInit(){
-  if(MUSIC_STATE.ready)return;
+// julgrenen: julens musik syntetiseras (xmas/xmas-music.js) och grundspelets ljudfiler hämtas först om jukeboxen används.
+const XMUSIC=createXmasMusic({audio:AUDIO});
+let baseTracksReady=false;
+function baseTracks(){
+  if(baseTracksReady)return;baseTracksReady=true;
   AUDIO.track('main','./audio/karlstad-main.mp3',{loop:true});
   AUDIO.track('arena','./audio/karlstad-arena-layer.mp3');
   AUDIO.track('transition','./audio/karlstad-zombie-transition.mp3');
   AUDIO.track('zombie','./audio/karlstad-zombie-main.mp3',{loop:true});
+}
+function musicInit(){
+  if(MUSIC_STATE.ready)return;
   MUSIC_STATE.ready=true;
 }
 function musicUnlock(){musicInit();AUDIO.context();AUDIO.resume();MUSIC_STATE.unlocked=true;}
 function musicCity(withArena=false){
   musicUnlock();clearTimeout(MUSIC_STATE.roundTimer);clearTimeout(MUSIC_STATE.arenaTimer);MUSIC_STATE.mode='city';
-  AUDIO.stop('transition');
-  AUDIO.fade('zombie',0,500,{pauseAfter:true});
-  AUDIO.play('main');AUDIO.fade('main',.23,850);
-  if(withArena){
-    AUDIO.play('arena',{restart:true});AUDIO.fade('arena',.08,550);
-    MUSIC_STATE.arenaTimer=setTimeout(()=>{if(MUSIC_STATE.mode==='city')AUDIO.fade('arena',0,1800,{pauseAfter:true});},9000);
-  }
+  if(JUKE.playing)return;
+  XMUSIC.setPaused(false);XMUSIC.play(MUSIC_STATE.mood==='eerie'&&MUSIC_STATE.keepMood?'eerie':'cozy');
 }
+// julgrenen: stämning (cozy | eerie) väljs av spelläget. keep = stämningen ligger kvar tills nästa läge väljer om.
+function musicMood(m,{keep=true}={}){MUSIC_STATE.mood=m;MUSIC_STATE.keepMood=keep&&m==='eerie';musicUnlock();if(!JUKE.playing)XMUSIC.play(m);}
 function musicRoundStart(){
   musicUnlock();clearTimeout(MUSIC_STATE.roundTimer);clearTimeout(MUSIC_STATE.arenaTimer);MUSIC_STATE.mode='round';
-  AUDIO.fade('arena',0,250,{pauseAfter:true});
-  AUDIO.fade('main',.035,550);
-  AUDIO.fade('transition',.58,10);AUDIO.play('transition',{restart:true});
-  MUSIC_STATE.roundTimer=setTimeout(()=>{
-    if(MUSIC_STATE.mode!=='round')return;
-    AUDIO.play('zombie',{restart:true});AUDIO.fade('zombie',.25,900);AUDIO.fade('main',0,600,{pauseAfter:true});
-  },900);
+  if(!JUKE.playing)XMUSIC.play('eerie');
 }
 function musicRoundEnd(){
-  clearTimeout(MUSIC_STATE.roundTimer);MUSIC_STATE.mode='results';
-  AUDIO.fade('zombie',0,800,{pauseAfter:true});
-  AUDIO.play('main');AUDIO.fade('main',.13,1300);
+  clearTimeout(MUSIC_STATE.roundTimer);MUSIC_STATE.mode='results';MUSIC_STATE.keepMood=false;
+  if(!JUKE.playing)XMUSIC.play('cozy');
 }
-function musicPause(){
-  if(MUSIC_STATE.mode==='round')AUDIO.fade('zombie',.07,320);
-  else if(MUSIC_STATE.mode==='city')AUDIO.fade('main',.08,320);
-}
-function musicResume(){
-  AUDIO.resume();
-  if(MUSIC_STATE.mode==='round')AUDIO.fade('zombie',.25,420);
-  else if(MUSIC_STATE.mode==='city')AUDIO.fade('main',.23,420);
-}
+function musicPause(){XMUSIC.setPaused(true);}
+function musicResume(){AUDIO.resume();XMUSIC.setPaused(false);}
 function musicSetMuted(v){AUDIO.setMuted(v);}
 // 2.14 MusicPartner: en enkel jukebox på spelets egna spår. Musikläget 'jukebox' lämnas orört av paus/återuppta.
 const JUKE={playing:null};
 function jukeboxPlay(id){
   if(!['main','zombie','arena'].includes(id))return false;
+  baseTracks();XMUSIC.stop(.4);
   musicUnlock();clearTimeout(MUSIC_STATE.roundTimer);clearTimeout(MUSIC_STATE.arenaTimer);MUSIC_STATE.mode='jukebox';
   for(const n of ['main','zombie','arena','transition'])if(n!==id)AUDIO.fade(n,0,300,{pauseAfter:true});
   AUDIO.play(id,{restart:true});AUDIO.fade(id,.32,350);JUKE.playing=id;return true;
@@ -137,15 +128,15 @@ function jukeboxStop(){
   if(!JUKE.playing)return;AUDIO.fade(JUKE.playing,0,400,{pauseAfter:true});JUKE.playing=null;musicCity(false);
 }
 // 2.15 Temporush: stadens musik går fortare när tempot stiger (tonhöjden hålls, bara farten ändras).
-function musicTempo(rate){AUDIO.rate('main',rate);}
+function musicTempo(rate){if(baseTracksReady)AUDIO.rate('main',rate);}
 const GAME_MUSIC=Object.freeze({
-  init:musicInit,unlock:musicUnlock,city:musicCity,roundStart:musicRoundStart,roundEnd:musicRoundEnd,
+  init:musicInit,unlock:musicUnlock,city:musicCity,mood:musicMood,roundStart:musicRoundStart,roundEnd:musicRoundEnd,
   pause:musicPause,resume:musicResume,setMuted:musicSetMuted,tempo:musicTempo,
   jukebox:Object.freeze({play:jukeboxPlay,stop:jukeboxStop,get playing(){return JUKE.playing;}}),
   get muted(){return AUDIO.muted;},
   // Spelets korta effektljud (last-round.js) delar samma AudioContext och mute.
   sfx:opts=>AUDIO.blip(opts),
-  snapshot:()=>({ready:MUSIC_STATE.ready,unlocked:MUSIC_STATE.unlocked,mode:MUSIC_STATE.mode,...AUDIO.snapshot()})
+  snapshot:()=>({ready:MUSIC_STATE.ready,unlocked:MUSIC_STATE.unlocked,mode:MUSIC_STATE.mode,xmas:XMUSIC.snapshot(),...AUDIO.snapshot()})
 });
 window.KarlstadMusic=GAME_MUSIC;
 // iOS kan pausa ljudkontexten (samtal, låsskärm). Återuppta vid nästa beröring.

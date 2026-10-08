@@ -92,8 +92,10 @@ export function createAudioEngine({
       o.connect(g);g.connect(sfxBus);o.start(now);o.stop(now+length+.02);
     }catch{}
   }
+  // Julgrenen: syntetiserad musik (xmas/xmas-music.js) kopplas på samma musikbuss som ljudspåren, så att mute och master gäller även den.
+  function bus(kind='music'){context();return kind==='sfx'?sfxBus:musicBus;}
   return Object.freeze({
-    context,resume,track,fade,play,stop,level,setMuted,blip,rate,
+    context,resume,track,fade,play,stop,level,setMuted,blip,rate,bus,
     get muted(){return muted;},
     get routed(){return [...tracks.values()].every(t=>!!t.gain);},
     snapshot:()=>({context:ctx?.state??'none',muted,routed:[...tracks.values()].every(t=>!!t.gain),levels:Object.fromEntries([...tracks].map(([k,t])=>[k,+t.level.toFixed(3)]))})

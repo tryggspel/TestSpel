@@ -53,6 +53,7 @@ export function installXmas(ctx){
       const r=journey.rush;r.nextContract=1e9;r.nextChaos=1e9;r.nextBlackout=1e9;r.ecology.nextSun=1e9;r.nextPatrol=Math.max(r.nextPatrol,9);
     }
     ui.setMode(zombies?'zombies':'cozy');
+    try{if(zombies)host.music?.mood?.('eerie');else host.music?.mood?.('cozy',{keep:false});}catch{}
     const {x,z,yaw}=spawn||(kind==='intro'?INTRO.spawn:kind==='free'?freeSpawn():INTRO.spawn);
     host.teleport(x,z,yaw,-4);journey.position={x,z};journey.lastStep=null;journey.heading=yaw;journey.routeMode='hunt';
     ui.showHud(true);
