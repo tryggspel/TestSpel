@@ -183,7 +183,7 @@ export class CityJourney extends CityMission {
       this.tickFlash(dt);this.tickTempo(dt,p);this.tickGhost(dt,p,fun);this.tickSites(p);
       if(this.clerks?.explore())this.clerks.step(dt,p); // 2.21: personalens hjälpuppdrag (hitta föremålet) fungerar även i City Explore
     }
-    this.places?.step(dt,p); // 2.21: butiksuppdrag och digitala besök; avbryter själv om läget inte tillåter dem
+    try{this.places?.step(dt,p);}catch(e){if(!this.placesFault){this.placesFault=true;console.error('[Platsuppdrag] fel i steget',e);}} // 2.21: butiksuppdrag och digitala besök; avbryter själv om läget inte tillåter dem
     let reach=catchReach(this.speed);let taken=0;
     if(fun)reach=fun.pickupRadius(reach);
     if(fun&&this.tempo.running)reach=Math.max(reach,tempoReach(this.tempo.level));

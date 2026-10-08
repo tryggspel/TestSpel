@@ -80,13 +80,16 @@ export function createLastRound(pc, host) {
   // 2.21: interaktiva platser (Cervera, Pressbyrån). Frivilliga uppdrag i vanliga City Explore; aldrig i Temporush, Termosrundan,
   // zombielägena eller delade utmaningar. Belöningen går via journey.reward, stämplar sparas i Karlstadpasset (egen sparnyckel).
   const placeSite=placeAnchors(host.colliders);
-  journey.places=new PlaceQuests({anchors:placeSite.anchors,faces:placeSite.faces,storage,host:{
-    push:e=>journey.events.push(e),
-    reward:points=>journey.reward(points),
-    onStamp:(count,total)=>{for(const b of journey.fun.notePartnerStamps(count,total))journey.events.push(b);journey.save();},
-    available:()=>journey.rush.mode==='clean'&&journey.rush.state==='playing'&&!journey.tempo.running&&!journey.rush.challenge
-  }});
-  journey.fun.notePartnerStamps(journey.places.stampCount(),journey.places.stampTotal());
+  // Fail-soft som övriga förbättringspass: om något i platskoden skulle kasta på en enhet vi inte testat ska grundspelet leva vidare.
+  try{
+    journey.places=new PlaceQuests({anchors:placeSite.anchors,faces:placeSite.faces,storage,host:{
+      push:e=>journey.events.push(e),
+      reward:points=>journey.reward(points),
+      onStamp:(count,total)=>{for(const b of journey.fun.notePartnerStamps(count,total))journey.events.push(b);journey.save();},
+      available:()=>journey.rush.mode==='clean'&&journey.rush.state==='playing'&&!journey.tempo.running&&!journey.rush.challenge
+    }});
+    journey.fun.notePartnerStamps(journey.places.stampCount(),journey.places.stampTotal());
+  }catch(e){console.error('[Platsuppdrag hoppades över]',e);journey.places=new PlaceQuests({places:[]});}
   let selectedMission = MISSIONS.some(m=>m.id===params.get('challenge')) ? params.get('challenge') : 'sista-rundan';
   let game = rounds['sista-rundan'], layout = olearyLayout;
   const missionInfo = () => MISSIONS.find(m=>m.id===selectedMission);
@@ -294,7 +297,7 @@ export function createLastRound(pc, host) {
   journey.cursedHunt=cursedHunt;
   if(cursedHunt)document.body.classList.add('halloween');
   function renderStamps(){
-    placesUi.renderPass();
+    try{placesUi.renderPass();}catch(e){console.error('[Karlstadpasset kunde inte ritas]',e);}
     const box=$('stampBook');if(!box)return;
     $('stampTitle').textContent='STÄMPELKARTA · '+stampBook.count+' / '+stampBook.total;
     const grid=$('stampGrid');grid.textContent='';
@@ -342,10 +345,16 @@ export function createLastRound(pc, host) {
   createSouthSigns({card,labelTex},host.colliders);
   createOrrholmenSigns({card,labelTex});
   const friendlyView=createFriendlyView({card,fanTex,labelTex},journey.clerks);
-  const placesView=createPlacesView(pc,host,{card,texture,labelTex,primitive,material,root,fanTex},journey.places);
-  const placesUi=createPlacesUi({engine:journey.places,mount:$('roundOverlay'),pauseAnchor:$('openAlbum'),showLocalReport:DEBUG||params.has('partner'),
-    fx:{sound:k=>sound(k),note:(f,t,l,p)=>note(f,t,l,p),setPickup:(text,now,ms,rarity)=>setPickup(text,now,ms,rarity),burst:(x,y,z,k)=>journeyView.burst(x,y,z,k),
-      celebrate:(id,now)=>placesView.celebrate(id,now),flash:()=>{damageFlash=.16;},openPass:()=>openPass(),route:id=>choosePartnerPlace(id),canTeleport:()=>cleanExplore(),teleport:id=>teleportToPartnerPlace(id)}});
+  let placesView,placesUi,placesFault=false;
+  try{placesView=createPlacesView(pc,host,{card,texture,labelTex,primitive,material,root,fanTex},journey.places);}
+  catch(e){console.error('[Platsvyn hoppades över]',e);placesView={update(){},celebrate(){},snapshot:()=>[],drawCalls:()=>0};}
+  try{
+    placesUi=createPlacesUi({engine:journey.places,mount:$('roundOverlay'),pauseAnchor:$('openAlbum'),showLocalReport:DEBUG||params.has('partner'),
+      fx:{sound:k=>sound(k),note:(f,t,l,p)=>note(f,t,l,p),setPickup:(text,now,ms,rarity)=>setPickup(text,now,ms,rarity),burst:(x,y,z,k)=>journeyView.burst(x,y,z,k),
+        celebrate:(id,now)=>placesView.celebrate(id,now),flash:()=>{damageFlash=.16;},openPass:()=>openPass(),route:id=>choosePartnerPlace(id),canTeleport:()=>cleanExplore(),teleport:id=>teleportToPartnerPlace(id)}});
+  }catch(e){console.error('[Platsgränssnittet hoppades över]',e);placesUi={handle:()=>false,sync(){},handleDigit:()=>false,pick:()=>false,dismissResult:()=>false,renderPass(){}};}
+  // Varje bildruta och varje händelse går genom ett skydd: ett fel i platskoden får aldrig stoppa spelloopen.
+  const placesGuard=fn=>{if(placesFault)return;try{return fn();}catch(e){placesFault=true;console.error('[Platsuppdrag stängdes av efter fel]',e);try{journey.places.cancel('fel');}catch{}}};
   const busRide=createBusRide(host,{driverTexture:fanTex('walker','#e79355'),passengerTextures:[fanTex('walker','#e79355'),fanTex('runner','#73b8ad'),fanTex('tank','#a184c1')],
     onTick:dt=>{journey.rush.clock(dt);if(journey.rush.state==='caught')busRide.stop();},
     onArrive:(result,to,from)=>{journey.rush.buses++;recordBusMoment(result,to,from);journey.position={x:to.x,z:to.z};journey.heading=0;journey.reward(result.points);journey.contactCooldown=4;journey.save();host.music?.city?.();toast('”NÄSTA: '+to.name.toUpperCase()+'!”','Bussresan klar! +'+result.points+' XP. Inga återbetalningar.',3);if(busChallenge)openMoment('bus-intro');},
@@ -752,8 +761,7 @@ export function createLastRound(pc, host) {
       if(fleet.canPickUp(here)&&!mallInside(here)&&here.y<3.7){fleet.pickUp(here);return;}
       if(journey.rush.peaceful&&journey.nearOffice(here)){openMusicOffice();return;}
       if(journey.rush.peaceful){const from=journey.nearestBus(here);if(from.distance<6.5){openBusPicker(from);return;}}
-      if(placesUi.dismissResult())return;
-      if(journey.places.interact(here))return;
+      if(placesGuard(()=>placesUi.dismissResult()||journey.places.interact(here)))return;
       if(journey.clerks.interact(here))return;
       if(mallInside(here)){journey.landmarkGoal=landmarkDestination('mitticity',host.colliders);journey.routeMode='landmark';toast('MITT I CITY · TVÅ PLAN','Gå på rulltrappan för att åka med. Fikaförrådet väntar på plan 1.',3);return;}
       if(journey.rush.interact(host.player.getPosition(),host.camera.forward))return;
@@ -896,7 +904,7 @@ export function createLastRound(pc, host) {
       const station=isJourney()?journeyView.nearbyStation(p):null,portal=isJourney()?journey.nearestPortal(p):null,bus=isJourney()?journey.nearestBus(p):null;
       const interactive=isJourney()&&['power','bowling'].includes(journey.rush.contract?.kind)&&Math.hypot(p.x-journey.rush.contract.spot.x,p.z-journey.rush.contract.spot.z)<3.3;
       const office=isJourney()&&journey.rush.peaceful&&journey.nearOffice(p);
-      const placePrompt=isJourney()?journey.places.prompt(p):null;
+      const placePrompt=isJourney()&&!placesFault?placesGuard(()=>journey.places.prompt(p))||null:null;
       const dock=atMarieberg(p)?MARIEBERG:HARBOUR,nearBoat=isJourney()&&Math.hypot(p.x-dock.x,p.z-dock.z)<7;
       const trainStation=atKil(p)?KIL:KARLSTAD_C,nearTrain=isJourney()&&Math.hypot(p.x-trainStation.x,p.z-trainStation.z)<8;
       $('useBtn').dataset.context=String((isJourney()&&(!!fleet.riding||fleet.canPickUp(p)))||office||nearTrain||nearBoat||bus?.distance<6.5||!isJourney()||!!placePrompt||!!journey.clerks.prompt(p)||!!interactive||!journey.rush.peaceful&&(bus?.distance<6.5||!!station||portal?.distance<9));
@@ -1048,7 +1056,7 @@ export function createLastRound(pc, host) {
     if (e.code === 'Escape') {if (!panel) pause(); else if (panel === 'pause' || panel === 'map') resume(); else if (panel === 'bus-pick') {busFrom=null;resume();} else if (panel === 'musicpartner') resume();}
     if (panel) return;
     if (e.code === 'KeyE') use();
-    if (/^Digit[1-6]$/.test(e.code)&&placesUi.handleDigit(Number(e.code.slice(5))))e.preventDefault();
+    if (/^Digit[1-6]$/.test(e.code)&&placesGuard(()=>placesUi.handleDigit(Number(e.code.slice(5)))))e.preventDefault();
     if (e.code === 'KeyM') showMap();
     if (e.code === 'KeyT') toggleTurbo();
     if (e.code === 'KeyH'&&isJourney()){liteUser=!liteUser;toast(liteUser?'MINDRE TEXT PÅ SKÄRMEN':'FULL HUD','H växlar mellan kompakt och full text.',1.4);}
@@ -1085,8 +1093,8 @@ export function createLastRound(pc, host) {
   // okända typer ignoreras som förut. Effekterna är desamma som i 2.9.0.
   const EVENT_HANDLERS={
     // 2.21: platsuppdrag. All logik och text bor i places-ui.js; här kopplas bara händelserna in.
-    'place-start':(e,now)=>placesUi.handle(e,now),'place-item':(e,now)=>placesUi.handle(e,now),'place-order-step':(e,now)=>placesUi.handle(e,now),'place-miss':(e,now)=>placesUi.handle(e,now),
-    'place-fail':(e,now)=>placesUi.handle(e,now),'place-cancel':(e,now)=>placesUi.handle(e,now),'place-complete':(e,now)=>placesUi.handle(e,now),'place-visit':(e,now)=>placesUi.handle(e,now),
+    'place-start':(e,now)=>placesGuard(()=>placesUi.handle(e,now)),'place-item':(e,now)=>placesGuard(()=>placesUi.handle(e,now)),'place-order-step':(e,now)=>placesGuard(()=>placesUi.handle(e,now)),'place-miss':(e,now)=>placesGuard(()=>placesUi.handle(e,now)),
+    'place-fail':(e,now)=>placesGuard(()=>placesUi.handle(e,now)),'place-cancel':(e,now)=>placesGuard(()=>placesUi.handle(e,now)),'place-complete':(e,now)=>placesGuard(()=>placesUi.handle(e,now)),'place-visit':(e,now)=>placesGuard(()=>placesUi.handle(e,now)),
     'trail-finish':(event,now)=>{const newGhost=ghostRun.finish(event.score,event.count);if(newGhost)setTimeout(()=>toast('NYTT SPÖKE SPARAT','Nästa Termosrunda springer din bästa runda bredvid dig.',2.6),400);let best=0;try{best=Math.max(event.score,Number(storage?.getItem('karlstad:trail:best'))||0);storage?.setItem('karlstad:trail:best',String(best));}catch{}$('trailResultScore').textContent=event.score+' POÄNG · '+event.count+' TERMOSAR';$('trailResultBest').textContent='DITT REKORD: '+best+' POÄNG';setPanel('trail-result');},
     'friendly':(event,now)=>{toast(event.name.toUpperCase()+(event.points?' · +'+event.points+' XP · +20 SOL':''),event.text,4.5);},
     'shot':(event,now)=>{sound(event.charged ? 'charge' : 'shot'); $('reticle').classList.toggle('hit', event.hit); if(!event.hit&&game.shots<3)toast('SIKTA PÅ FIGURERNA',isPush()?'Knuffa dem från din sida mot HEMGÅNG.':'Solstötar når 15 meter. SUPER når 18 meter.');},
@@ -1213,8 +1221,7 @@ export function createLastRound(pc, host) {
     if(busRide.active()||boatRide.active()||scenicRide.active())return;
     pumpFanfare(now);
     friendlyView.update(p,now,isJourney(),isJourney()&&journey.rush.peaceful);
-    placesView.update(p,now,isJourney());
-    placesUi.sync(now,isJourney()&&game.phase==='playing'&&!panel);
+    placesGuard(()=>{placesView.update(p,now,isJourney());placesUi.sync(now,isJourney()&&game.phase==='playing'&&!panel);});
     updateTempoArrow(p);
     // Do not remove and re-add live render components on every frame.
     for(const [id,v] of actorViews)if(id.startsWith('city-')===isPush()){v.e.enabled=false;v.shadow.enabled=false;}
