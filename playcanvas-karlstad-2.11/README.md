@@ -2,11 +2,11 @@
 
 > **2.21.0 — Butiksuppdrag, Karlstadpasset och en gemensam modell för partnerplatser**
 > - **Två demonstrationer i Clean City Explore** (frivilliga, startas med kontextknappen): **Cervera · Duka för fikastunden** (Mitt i City, plan 0) och **Pressbyrån · Fika på minuten** (Kungsgatan 14). Båda ger kaffepoäng och en **stämpel i Karlstadpasset**. De är märkta DEMO. Inget samarbete eller avtal är bekräftat.
-> - **Karlstadpasset** ligger i pausmenyn (och öppnas från resultatkortet): besökta platser, klara uppdrag och stämplar. Stämplarna sparas i en egen nyckel (`karlstad:places:1`) och rör inga gamla sparfiler. Två nya märken i Fikaalbumet: *Första stämpeln* och *Fullt pass*.
+> - **Karlstadpasset** ligger i pausmenyn (och öppnas från resultatkortet): besökta platser, klara uppdrag och stämplar, med VISA VÄGEN och GÅ DIT (genväg som kartans teleportknappar). Stämplarna sparas i en egen nyckel (`karlstad:places:1`) och rör inga gamla sparfiler. Två nya märken i Fikaalbumet: *Första stämpeln* och *Fullt pass*.
 > - **Gemensam modell** (`places.mjs`, `place-quests.mjs`): en plats är data (namn, plats, entré, personal, uppdragstyp, föremål, belöning, stämpel, godkänt erbjudande, status). Två uppdragstyper är färdiga (*hämta och lämna*, *beställning i rätt ordning*); Kjell & Company, Åhléns, Duvan, Värmlands Museum och Sandgrund finns som förberedda poster (status `future`) och syns aldrig för spelaren.
 > - **Mätning** (`partner-events.mjs`): ett gemensamt gränssnitt för *digitalt platsbesök, startat, avslutat, avbrutet uppdrag och klick på verksamhetens länk*. Händelserna sparas **bara lokalt på enheten** (för verifiering) och innehåller ingen position eller personuppgift. **Aggregerad produktionsstatistik över alla spelare finns inte och återstår** (kräver en server).
 > - **Personalens hjälpuppdrag fungerar nu i vanliga City Explore** (Coop och Clas Ohlson, utan zombier). Cervera och Pressbyrån har egna, större uppdrag. Zombieläget, Temporush, Termosrundan och delade utmaningar är oförändrade.
-> - 40 nya tester (355 totalt) och ett webbläsarflöde (`tools/places-flow/flow.mjs`, 26 kontroller). Ingen verifiering på fysisk telefon är gjord.
+> - 42 nya tester (357 totalt) och ett webbläsarflöde (`tools/places-flow/flow.mjs`, 28 kontroller). Ingen verifiering på fysisk telefon är gjord.
 
 > **Tidigare i 2.18.2–2.20.0**
 >

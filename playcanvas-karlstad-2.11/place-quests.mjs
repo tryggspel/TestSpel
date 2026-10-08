@@ -163,6 +163,12 @@ export class PlaceQuests{
     for(const it of this.activeItems()){const d=Math.hypot(it.x-p.x,it.z-p.z);if(d<bd){bd=d;best=it;}}
     return best?{x:best.x,z:best.z,y:best.floor*QUEST.floorHeight,id:'place-item-'+r.id+'-'+best.id,kind:'landmark',label:best.name+' · '+best.hint.toUpperCase(),radius:1.2,action:'GÅ NÄRA FÖR ATT PLOCKA UPP'}:null;
   }
+  // Var spelaren hamnar om hen väljer GÅ DIT i Karlstadpasset: 2,4 m framför samtalspunkten, med blicken mot den, så att knappen finns direkt.
+  arrivalFor(id,back=2.4){
+    const pl=this.byId.get(id);if(!pl)return null;
+    const yaw=pl.entrance?.yaw??0,a=yaw*Math.PI/180;
+    return {x:+(pl.talk.x+Math.sin(a)*back).toFixed(2),z:+(pl.talk.z+Math.cos(a)*back).toFixed(2),yaw,floor:pl.talk.floor||0};
+  }
   goalFor(id){
     const pl=this.byId.get(id);if(!pl)return null;
     const t=pl.talk;return {x:t.x,z:t.z,y:(t.floor||0)*QUEST.floorHeight,id:'place-'+pl.id,kind:'landmark',label:pl.name.toUpperCase()+' · '+pl.activity.title,radius:2.2,action:'DU ÄR FRAMME · PRATA MED '+pl.staff.name.toUpperCase()};

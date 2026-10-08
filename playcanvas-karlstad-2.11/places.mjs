@@ -50,9 +50,9 @@ export const PLACES=Object.freeze([
       ready:'Allt är hittat! Kom till disken och lämna porslinet till Rut.',
       deliver:{label:'LÄMNA PÅ DISKEN',radius:3,line:'Perfekt dukat! Rut: ”Kopp i handen, kanna i … vänta, vilken ände?” Fikastunden är räddad.'},
       items:[
-        {id:'kopp',name:'KOPPEN',art:'kopp',x:-141.2,z:126,floor:0,reach:2.1,hint:'Längs högra hyllan, nära dörren',found:'KOPPEN! Den gömde sig bland returerna. Jag sa ju att jag inte vågade fråga.'},
+        {id:'kopp',name:'KOPPEN',art:'kopp',x:-141.2,z:126,floor:0,reach:2.1,hint:'På östra hyllan, nära dörren',found:'KOPPEN! Den gömde sig bland returerna. Jag sa ju att jag inte vågade fråga.'},
         {id:'kanna',name:'KANNAN',art:'kanna',x:-119,z:112,floor:0,reach:2.6,hint:'På cafébordet ute i atriet',found:'KANNAN! Den låtsades vara en vas på cafébordet. Smart. Inte smart nog.'},
-        {id:'fat',name:'FATET',art:'fat',x:-147.6,z:131.4,floor:0,reach:2.1,hint:'Längst in till vänster, vid hyllorna',found:'FATET! Någon hade använt det som frisbee. Det överlevde. Nästan.'}
+        {id:'fat',name:'FATET',art:'fat',x:-147.6,z:131.4,floor:0,reach:2.1,hint:'På västra hyllan, längst in',found:'FATET! Någon hade använt det som frisbee. Det överlevde. Nästan.'}
       ]
     },
     reward:{points:150,repeatPoints:30,repeatCooldown:90,stamp:{id:'cervera',label:'CERVERA · FIKASTUNDEN'}},

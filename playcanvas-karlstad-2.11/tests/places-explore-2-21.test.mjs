@@ -51,6 +51,15 @@ test('Coop i City Explore: personalens hjälpuppdrag fungerar nu även utan zomb
   assert.ok(coop);
 });
 
+test('Clas Ohlson (plan 1) i City Explore: samma hjälpuppdrag, på rätt våning',()=>{
+  const j=world('clean'),clerk=j.clerks.people.find(q=>q.id==='clas'),up=1.68+5.4,here=at(-139,77.2,up);
+  assert.equal(clerk.y,5.4);assert.equal(j.clerks.prompt(here),'HJÄLP');assert.equal(j.clerks.prompt(at(-139,77.2)),null,'inte på plan 0');
+  assert.equal(j.clerks.interact(here),true);assert.equal(clerk.stage,'search');
+  step(j,at(clerk.item.x,clerk.item.z,1.68));assert.equal(clerk.stage,'search','fel våning hittar ingenting');
+  const ev=step(j,at(clerk.item.x,clerk.item.z,up));assert.equal(clerk.stage,'found');assert.ok(ev.some(e=>e.type==='friendly'&&/SKRUVASKEN hittad/.test(e.text)));
+  const bal=j.balance;j.clerks.interact(here);assert.equal(j.balance-bal,80);
+});
+
 test('Temporush, Termosrundan och delade utmaningar: inga platsuppdrag, personalen bara pratar',()=>{
   const cerv=at(-144,129.2),coopSpot=at(-160.5,88);
   // Temporush

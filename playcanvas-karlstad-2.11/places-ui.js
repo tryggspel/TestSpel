@@ -175,7 +175,9 @@ export function createPlacesUi({engine,mount,pauseAnchor,fx,showLocalReport=fals
       if(r.offer){const a=el('a','pass-offer',r.offer.label||'Läs mer');a.href=r.offer.url;a.target='_blank';a.rel='noopener noreferrer';a.addEventListener('click',ev=>{ev.preventDefault();engine.events.record(EVENT_TYPES.link,r.id,{offer:'approved'});openLink(r.offer.url);});info.append(a);}
       else if(r.demo)info.append(el('span','pass-note',r.note));
       const go=el('button','pass-go','VISA VÄGEN');go.type='button';go.setAttribute('aria-label','Visa vägen till '+r.name);go.addEventListener('click',()=>fx.route?.(r.id));
-      li.append(cv,info,go);pList.append(li);
+      const btns=el('div','pass-btns',null);btns.append(go);
+      if(fx.canTeleport?.()){const tp=el('button','pass-go pass-tp','GÅ DIT');tp.type='button';tp.setAttribute('aria-label','Gå direkt till '+r.name);tp.addEventListener('click',()=>fx.teleport?.(r.id));btns.append(tp);}
+      li.append(cv,info,btns);pList.append(li);
     }
     renderLocal();
   }

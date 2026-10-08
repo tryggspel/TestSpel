@@ -345,7 +345,7 @@ export function createLastRound(pc, host) {
   const placesView=createPlacesView(pc,host,{card,texture,labelTex,primitive,material,root,fanTex},journey.places);
   const placesUi=createPlacesUi({engine:journey.places,mount:$('roundOverlay'),pauseAnchor:$('openAlbum'),showLocalReport:DEBUG||params.has('partner'),
     fx:{sound:k=>sound(k),note:(f,t,l,p)=>note(f,t,l,p),setPickup:(text,now,ms,rarity)=>setPickup(text,now,ms,rarity),burst:(x,y,z,k)=>journeyView.burst(x,y,z,k),
-      celebrate:(id,now)=>placesView.celebrate(id,now),flash:()=>{damageFlash=.16;},openPass:()=>openPass(),route:id=>choosePartnerPlace(id)}});
+      celebrate:(id,now)=>placesView.celebrate(id,now),flash:()=>{damageFlash=.16;},openPass:()=>openPass(),route:id=>choosePartnerPlace(id),canTeleport:()=>cleanExplore(),teleport:id=>teleportToPartnerPlace(id)}});
   const busRide=createBusRide(host,{driverTexture:fanTex('walker','#e79355'),passengerTextures:[fanTex('walker','#e79355'),fanTex('runner','#73b8ad'),fanTex('tank','#a184c1')],
     onTick:dt=>{journey.rush.clock(dt);if(journey.rush.state==='caught')busRide.stop();},
     onArrive:(result,to,from)=>{journey.rush.buses++;recordBusMoment(result,to,from);journey.position={x:to.x,z:to.z};journey.heading=0;journey.reward(result.points);journey.contactCooldown=4;journey.save();host.music?.city?.();toast('”NÄSTA: '+to.name.toUpperCase()+'!”','Bussresan klar! +'+result.points+' XP. Inga återbetalningar.',3);if(busChallenge)openMoment('bus-intro');},
@@ -983,6 +983,13 @@ export function createLastRound(pc, host) {
     if(!isJourney()||busRide.active()||boatRide.active()||scenicRide.active())return;
     if(game.phase==='playing')pause();
     queueMicrotask(()=>$('placePass')?.scrollIntoView({block:'start'}));
+  }
+  // GÅ DIT: som kartans genvägar till Mitt i City och Torget. Bara i Clean City Explore, där uppdragen finns.
+  function teleportToPartnerPlace(id){
+    if(!cleanExplore()||journey.rush.exitReady)return false;
+    const a=journey.places.arrivalFor(id),goal=journey.places.goalFor(id);if(!a||!goal)return false;
+    host.teleport(a.x,a.z,a.yaw,-4);journey.position={x:a.x,z:a.z};journey.landmarkGoal={...goal};journey.routeMode='landmark';journey.save();resume();
+    toast('FRAMME · '+journey.places.get(id).name.toUpperCase(),'Tryck på knappen nere till vänster för att prata med personalen.',2.4);return true;
   }
   function choosePartnerPlace(id){
     if(!isJourney()||journey.rush.exitReady)return false;

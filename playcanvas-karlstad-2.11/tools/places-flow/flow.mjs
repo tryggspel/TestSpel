@@ -84,6 +84,12 @@ const pass1=await ev(()=>window.KarlstadDebug.places().pass().map(r=>[r.id,r.sta
 check('Stämplarna finns kvar efter omladdning',JSON.stringify(pass0)===JSON.stringify(pass1)&&pass1.every(r=>r[1]),JSON.stringify(pass1));
 await click('#roundPause');await wait(800);await ev(()=>document.getElementById('placePass')?.scrollIntoView({block:'center'}));await wait(300);await shot('karlstadpasset');
 check('Karlstadpasset visas i pausmenyn',await ev(()=>!!document.querySelector('#placePass .pass-row.stamped')));
+for(const [row,label,btn] of [[2,'Pressbyrån','TA EMOT ORDER'],[1,'Cervera','HJÄLP RUT']]){
+  await click(`#placePass .pass-row:nth-child(${row}) .pass-tp`);await wait(1800);s=await S();
+  const open=await ev(()=>document.body.classList.contains('round-panel-open'));
+  check('Karlstadpasset: GÅ DIT tar spelaren till '+label+' med knappen redo',!open&&s.btn===btn,s.btn);if(row===2)await shot('pass-ga-dit-pressbyran');
+  if(row===2){await click('#roundPause');await wait(900);}
+}
 
 // ── Övriga lägen lämnas ifred ───────────────────────────────────────────────────────────────────────────────────
 for(const [btn,name,expectLegacy] of [['#cityTempo','Temporush',false],['#cityStart','zombiejakten',true]]){

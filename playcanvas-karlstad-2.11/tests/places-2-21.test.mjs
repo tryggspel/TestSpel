@@ -311,6 +311,21 @@ test('digitala besök räknas en gång per session, i butiken och vid serviceyta
   const f=make();f.q.step(1/30,at(cerv.talk.x,cerv.talk.z,1.68+5.4));assert.equal(f.q.events.count(EVENT_TYPES.visit,'cervera'),0);
 });
 
+test('GÅ DIT: ankomstpunkten ligger fri, framför samtalspunkten och ger knappen direkt',()=>{
+  const {q}=make();
+  for(const pl of q.list()){
+    const a=q.arrivalFor(pl.id);assert.ok(a,pl.id);
+    const d=Math.hypot(a.x-pl.talk.x,a.z-pl.talk.z);assert.ok(d>1.5&&d<pl.talk.radius,pl.id+' avstånd '+d);
+    assert.ok(q.prompt(at(a.x,a.z)),pl.id+': knappen finns direkt vid ankomst');
+    // blicken (yaw 0 = norrut, 180 = söderut) pekar mot samtalspunkten
+    const look={x:-Math.sin(a.yaw*Math.PI/180),z:-Math.cos(a.yaw*Math.PI/180)};
+    assert.ok(look.x*(pl.talk.x-a.x)+look.z*(pl.talk.z-a.z)>0,pl.id+': ser mot samtalspunkten');
+  }
+  const cerv=q.arrivalFor('cervera');assert.ok(mallWalkable(cerv.x,cerv.z,false),'Cervera: gångbar ankomst');
+  const press=q.get('pressbyran'),pa=q.arrivalFor('pressbyran');assert.ok(pa.z>press.kiosk.rect.maxz+1,'Pressbyrån: ankomst framför disken');
+  assert.equal(q.arrivalFor('kjell'),null,'framtida platser kan inte väljas');
+});
+
 test('Karlstadpasset visar bara spelbara platser med besök, uppdrag och stämpel, och märker demonstrationer',()=>{
   const {q}=make();
   const rows=q.pass();assert.equal(rows.length,2);

@@ -12,10 +12,19 @@ Starta **CLEAN CITY EXPLORE** (inte Temporush, Termosrundan, zombielägena eller
 
 | Plats | Hitta dit | Uppdrag |
 |---|---|---|
-| **Cervera · Duka för fikastunden** | Mitt i City, plan 0, butiken söder om atriet. En orange UPPDRAG-skylt syns över dörren. Karta (M) → stjärnmärket CERVERA, eller Karlstadpasset → VISA VÄGEN. | Prata med Rut (knappen **HJÄLP RUT**). Hitta koppen (högra hyllan), kannan (cafébordet i atriet) och fatet (längst in till vänster). Lämna på disken (**LÄMNA PÅ DISKEN**). |
+| **Cervera · Duka för fikastunden** | Mitt i City, plan 0, butiken söder om atriet. En orange UPPDRAG-skylt syns över dörren. Karta (M) → stjärnmärket CERVERA, eller Karlstadpasset → VISA VÄGEN (eller GÅ DIT för att hoppa direkt). | Prata med Rut (knappen **HJÄLP RUT**). Hitta koppen (östra hyllan vid dörren), kannan (cafébordet i atriet) och fatet (västra hyllan längst in). Kompassen och pilarna visar vägen. Lämna på disken (**LÄMNA PÅ DISKEN**). |
 | **Pressbyrån · Fika på minuten** | Kungsgatan 14. Ny serviceyta (blå disk med randig markis) på trottoaren framför entrén. | Stå vid disken (knappen **TA EMOT ORDER**). Tryck rätt saker i rätt ordning på 40 s (knapparna eller tangent 1–6). Fel sak kostar 4 s. Tiden slut: **IGEN →** eller **LÄMNA**. |
 
 Karlstadpasset öppnas i pausmenyn (Ⅱ) och från resultatkortet. Lokal mätning visas där om du öppnar spelet med `?partner` (eller `?debug`).
+
+## Demo på tre minuter (kundmöte)
+
+1. Öppna spelet och välj **CLEAN CITY EXPLORE**.
+2. Tryck Ⅱ → **Karlstadpasset** → **GÅ DIT** vid Cervera. Passet visar 0 av 2.
+3. Tryck **HJÄLP RUT**. Hitta koppen, kannan och fatet (rutan nere visar vad som är kvar, pilarna och kompassen visar vägen) och tryck **LÄMNA PÅ DISKEN**. Resultatkortet visar poäng, stämpel och platsen där verksamhetens egna, godkända erbjudande skulle visas.
+4. Tryck Ⅱ → **GÅ DIT** vid Pressbyrån → **TA EMOT ORDER**. Tryck rätt saker i rätt ordning (1–6 eller knapparna). Låt klockan gå ut en gång för att visa **IGEN**.
+5. Visa Karlstadpasset igen: 2 av 2 och märket *Fullt pass* i Fikaalbumet. Öppna spelet med `?partner` för att visa den lokala mätningen (digitala besök, start, klara, avbrutna).
+6. Säg tydligt att det är demonstrationer: inget samarbete är bekräftat och mätningen gäller bara den här enheten.
 
 ## Vad en verksamhet får (för kundmöten)
 
