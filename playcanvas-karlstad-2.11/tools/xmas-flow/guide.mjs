@@ -204,6 +204,7 @@ const rn=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run.rain
 await ev(()=>{window.KarlstadDebug.journey().xmas.hunt.stepRain=()=>{};});                // inga fler tappade paket under kontrollerna (ett nytt kommer annars när man flyttat sig långt)
 await tp(...(await ev(()=>window.__pos())),0,-4,700);                                   // stå still en stund så att vyn hinner skriva om spåren
 const f1=await snap();
+check('F4b0 inga gamla avtryck ligger kvar i meshen: antalet ritade fyrkanter är lika med antalet avtryck i närheten',f1.view.printQuads===f1.view.prints&&f1.view.prints>0,JSON.stringify({quads:f1.view.printQuads,prints:f1.view.prints}));
 check('F4b fri vandring är sök och hitta: spår i snön finns men ingen pil, målstråle, ring eller julband mot paketen, och raden säger HITTA TOMTARNAS SPÅR',!!rn&&rn.n>=6&&!f1.guide.on&&f1.view.goal===false&&f1.view.ribbon===0&&!(await vis('#xmasArrow'))&&f1.guide.mission==='HITTA TOMTARNAS SPÅR'&&f1.hunt.prints>=6,JSON.stringify({on:f1.guide.on,goal:f1.view.goal,ribbon:f1.view.ribbon,m:f1.guide.mission,prints:f1.hunt.prints}));
 // Står man vid ett avtryck ritas spåret i vyn och raden säger FÖLJ SPÅREN; nära paketen LETA RUNT.
 const pr=rn.trail[Math.floor(rn.trail.length/2)],pr2=rn.trail[Math.min(rn.trail.length-1,Math.floor(rn.trail.length/2)+3)];
@@ -235,7 +236,7 @@ await ev(()=>window.KarlstadDebug.use());await wait(900);
 const q=await snap();
 check('F5 under ett butiksuppdrag är pil och uppdragsrad av (grundspelets egen vägledning gäller)',q.guide.on===false&&!(await vis('#xmasArrow'))&&!(await vis('#xmasMission')),JSON.stringify({on:q.guide.on}));
 await ev(()=>window.KarlstadDebug.journey().xmas.openMenu());await wait(600);
-check('F6 i menyn är allt dolt',!(await vis('#xmasArrow'))&&!(await vis('#xmasMission'))&&!(await vis('#xmasEdgeL')));
+check('F6 i menyn är allt dolt (och inga avtryck ligger kvar i meshen)',!(await vis('#xmasArrow'))&&!(await vis('#xmasMission'))&&!(await vis('#xmasEdgeL'))&&(await snap()).view.printQuads===0);
 check('G inga oväntade fel i konsolen',errs.length===0,errs.slice(0,3).join(' | '));
 
 console.log(`\n${VIEW}: ${results.length-failed}/${results.length} OK, ${failed} fel`);

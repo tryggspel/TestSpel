@@ -1,8 +1,8 @@
-import {nearestByRoute} from './city-guidance.mjs?v=2.21.1-xmas.4';
-import {beginStory,storyAction,stepStory,STREET_STORIES} from './street-stories.mjs?v=2.21.1-xmas.4';
-import {seededRandom,saveDailyResult,dailyRecord} from './daily-challenge.mjs?v=2.21.1-xmas.4';
-import {CityEcology} from './city-ecology.mjs?v=2.21.1-xmas.4';
-import {FieldResearch} from './field-research.mjs?v=2.21.1-xmas.4';
+import {nearestByRoute} from './city-guidance.mjs?v=2.21.1-xmas.5';
+import {beginStory,storyAction,stepStory,STREET_STORIES} from './street-stories.mjs?v=2.21.1-xmas.5';
+import {seededRandom,saveDailyResult,dailyRecord} from './daily-challenge.mjs?v=2.21.1-xmas.5';
+import {CityEcology} from './city-ecology.mjs?v=2.21.1-xmas.5';
+import {FieldResearch} from './field-research.mjs?v=2.21.1-xmas.5';
 export const RUSH=Object.freeze({seconds:180,target:1000,maxTime:210,maxEnemies:6});
 // 2.12 Guld-Gunnar: one rare, fleeing zombie per hunt. Catch him for a big reward.
 export const GOLDEN=Object.freeze({earliest:24,spread:26,seconds:18,points:120,time:12});

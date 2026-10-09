@@ -209,10 +209,10 @@ export function drawFootprints(c,w,h){
   };
   for(let i=0;i<2;i++){
     c.save();c.translate(cw*i+cw/2,0);c.scale(i?-1:1,1); // höger fot = vänster fot spegelvänd
-    c.shadowColor='#d6ebffd9';c.shadowBlur=w*.05;c.fillStyle='#5c78a6f2';sole();c.fill();                    // sken och fördjupning
+    c.shadowColor='#e4f1ff';c.shadowBlur=w*.07;c.fillStyle='#46659ef7';sole();c.fill();                    // sken och fördjupning
     c.shadowBlur=0;
     c.save();sole();c.clip();                                                                                 // djupare mitt och mönsterränder, klippta mot sulan
-    c.fillStyle='#3a537ed0';c.beginPath();c.ellipse(.02*cw,.30*h,.2*cw,.16*h,0,0,6.2832);c.fill();c.beginPath();c.ellipse(-.01*cw,.80*h,.14*cw,.09*h,0,0,6.2832);c.fill();
+    c.fillStyle='#2c4a82d8';c.beginPath();c.ellipse(.02*cw,.30*h,.2*cw,.16*h,0,0,6.2832);c.fill();c.beginPath();c.ellipse(-.01*cw,.80*h,.14*cw,.09*h,0,0,6.2832);c.fill();
     c.strokeStyle='#f2f8ff99';c.lineWidth=w*.017;c.lineCap='round';
     for(const y of [.2,.28,.36,.44]){c.beginPath();c.moveTo(-.3*cw,y*h);c.lineTo(.3*cw,y*h-.012*h);c.stroke();}
     for(const y of [.75,.83,.9]){c.beginPath();c.moveTo(-.2*cw,y*h);c.lineTo(.2*cw,y*h);c.stroke();}

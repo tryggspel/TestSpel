@@ -33,8 +33,8 @@ GitHub Pages-arbetsflödet `Deploy Karlstad City Mobile` publicerar bara `main`;
 Julversionens ändringar slås **inte** ihop med `main`. Förbättringar i grundspelet förs över till julgrenen med granskade Git-ändringar
 (`git switch release/jul-2026 && git merge main`, lös konflikter i de få filer som julgrenen rör (avsnitt 5), kör testerna).
 
-Versionsbeteckning: `X.Y.Z-xmas.N`, där `X.Y.Z` är basversionen på `main` och `N` räknar julbyggen (**`2.21.1-xmas.4`**). Det synliga namnet är
-**Julklappsjakten – 2.21-XMS**. `node tools/set-version.mjs 2.21.1-xmas.5` (nästa bygge) sätter en enda cache-nyckel i alla moduler, HTML och CSS
+Versionsbeteckning: `X.Y.Z-xmas.N`, där `X.Y.Z` är basversionen på `main` och `N` räknar julbyggen (**`2.21.1-xmas.5`**). Det synliga namnet är
+**Julklappsjakten – 2.21-XMS**. `node tools/set-version.mjs 2.21.1-xmas.6` (nästa bygge) sätter en enda cache-nyckel i alla moduler, HTML och CSS
 (testet `version.test.mjs` och CI kräver att den är densamma överallt). Samma beteckning visas i startvyn (längst ned), i `window.KarlstadRound.version`,
 i `?debug` och i `/api/build-info`.
 
@@ -44,7 +44,7 @@ i `?debug` och i `/api/build-info`.
 - Alla moduler, HTML och CSS bär samma `?v=`-nyckel, så en ny version kan aldrig blanda gamla och nya filer i webbläsarens cache.
 - Julmusiken syntetiseras i spelet: inga ljudfiler laddas ner (grundspelets mp3 hämtas först om jukeboxen används).
 - Spelmotorn (PlayCanvas 2.22.4) hämtas från jsDelivr med fast version, som i grundspelet.
-- Startvyn visar `Julklappsjakten – 2.21-XMS · bygge 2.21.1-xmas.4 · <miljö> <gren> <commit> · bas 2.21.1 (fadc36a)`. `/api/build-info` (Vercel-funktion)
+- Startvyn visar `Julklappsjakten – 2.21-XMS · bygge 2.21.1-xmas.5 · <miljö> <gren> <commit> · bas 2.21.1 (fadc36a)`. `/api/build-info` (Vercel-funktion)
   ger deployens commit, gren och miljö; lokalt visas "lokalt bygge".
 
 ## 4. Vercel-projektet för julversionen

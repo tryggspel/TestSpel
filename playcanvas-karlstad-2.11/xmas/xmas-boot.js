@@ -1,23 +1,23 @@
 // Julklappsjakten: kopplar ihop motorn, vyn, gränssnittet och grundspelets system. Anropas en gång från last-round.js (bara i julbygget).
 // Allt här är fail-soft: om något i julkoden skulle kasta stängs jultilläggen av och grundspelet lever vidare (som platskoden i 2.21).
-import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.4';
-import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.4';
-import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.4';
-import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.4';
-import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.4';
-import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.4';
-import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.4';
-import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.4';
-import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.4';
-import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.4';
-import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.4';
-import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.4';
-import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.4';
-import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.4';
-import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.4';
-import {nextRound,roundById,buildRound} from './xmas-rounds.mjs?v=2.21.1-xmas.4';
-import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.4';
-import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.4';
+import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.5';
+import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.5';
+import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.5';
+import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.5';
+import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.5';
+import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.5';
+import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.5';
+import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.5';
+import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.5';
+import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.5';
+import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.5';
+import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.5';
+import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.5';
+import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.5';
+import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.5';
+import {nextRound,roundById,buildRound} from './xmas-rounds.mjs?v=2.21.1-xmas.5';
+import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.5';
+import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.5';
 
 // Julbygget har inga termosar, hemligheter eller skatter: paketen ersätter dem. Anropas direkt efter att resan skapats, innan någon vy ritas.
 export function prepareXmasJourney(journey){
@@ -46,7 +46,7 @@ export function installXmas(ctx){
   const julrush=new XmasRush({journey,save}); // JulRushen: TempoRushs bana och klocka (journey.tempo) med julens paket, gåvor och poäng
   const guide=new XmasGuide({nav:journey.nav}); // pilen, kantmarkörerna, stjärnspåret och uppdragsraden i paketjakten (inte i JulRushen, som har grundspelets pil)
   let guideShown=false,missionAt=0;
-  const rushArrow=document.getElementById('tempoArrow');let rushArrowAt=0,rushArrowTop=-1;
+  const rushArrow=document.getElementById('tempoArrow');let rushGoal=null,rushArrowAt=0,rushArrowTop=-1; // rushGoal (målrutan) skapas av gränssnittet längre ned och slås upp första gången den behövs
   const sprites=createSprites(pc,host,{texture,root});
   const view=createXmasView(pc,host,{labelTex,root,texture},sprites,hunt,julrush);
   let decor=null; // julmiljön: gran, stånd, ljus, tomtar och snöfall. Fail-soft: går något fel i den fortsätter spelet utan.
@@ -356,8 +356,12 @@ export function installXmas(ctx){
     guard(()=>{
       // JulRushens pil (grundspelets #tempoArrow) ligger strax under HUD:ens underkant, som växer när fler gåvor är på; läses högst fyra gånger i sekunden.
       if(rushArrow){
-        if(mode==='rush'){if(now-rushArrowAt>250){rushArrowAt=now;const b=Math.round(ui.hud.getBoundingClientRect().bottom)+8;if(b!==rushArrowTop&&b>20){rushArrowTop=b;rushArrow.style.top=b+'px';}}}
-        else if(rushArrowTop!==-1){rushArrowTop=-1;rushArrow.style.top='';}
+        if(mode==='rush'){
+          if(now-rushArrowAt>250){
+            rushArrowAt=now;rushGoal=rushGoal||document.getElementById('xmasGoal');const b=Math.round(ui.hud.getBoundingClientRect().bottom)+8;
+            if(b!==rushArrowTop&&b>20){rushArrowTop=b;rushArrow.style.top=b+'px';if(rushGoal)rushGoal.style.top=(b+(rushArrow.offsetHeight||44)+8)+'px';} // målrutan ligger under pilen
+          }
+        }else if(rushArrowTop!==-1){rushArrowTop=-1;rushArrow.style.top='';if(rushGoal)rushGoal.style.top='';}
       }
       // Blickriktningen: det första tappade paketet i fri julvandring läggs framför spelaren så att spåret syns direkt.
       {const f=host.camera.forward,h=hunt.facing||(hunt.facing={x:0,z:0});h.x=f.x;h.z=f.z;}

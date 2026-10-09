@@ -18,7 +18,7 @@ function toPath(pt,path){
   return best;
 }
 
-test('spåret: ett avtryck var 1,2 m längs vägen, från 14 m in till 3,4 m före slutet, vänster och höger fot om vartannat',()=>{
+test('spåret: ett avtryck var 1,35 m längs vägen, från 14 m in till 3,4 m före slutet, vänster och höger fot om vartannat',()=>{
   const pr=trailPrints(bend);
   assert.ok(pr.length>=50&&pr.length<=TRAILS.maxPrints,'antal: '+pr.length);
   assert.ok(dist(pr[0],{x:0,z:-TRAILS.lead})<1.2,'börjar '+TRAILS.lead+' m in på vägen: '+JSON.stringify(pr[0]));

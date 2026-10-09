@@ -2,13 +2,13 @@
 // ComicMesh) och slås ihop till få ritanrop: granen, stånden, små granar och presenter i en mesh, ljusen i tre (som blinkar var för sig),
 // stjärnan i en. Tomtar, tomtefönster och snöfall är bildkort och en enda dynamisk mesh. Inga ljuskällor, ingen fysik och inga nya ytor
 // som kan flimra; snön på marken och taken är ett färgfilter (xmas-snow.mjs) som redan är aktivt när stadens byggnader skapas.
-import {ComicMesh} from '../city-architecture.js?v=2.21.1-xmas.4';
-import {TREE} from './xmas-layout.mjs?v=2.21.1-xmas.4';
-import {STALLS,STALL,FIRS,TOMTE_SPOTS,ARCH,facadeSpots,stringBulbs,FACADE} from './xmas-decor-data.mjs?v=2.21.1-xmas.4';
-import {WEATHER} from './xmas-config.mjs?v=2.21.1-xmas.4';
-import {createSnowfall} from './xmas-snowfall.js?v=2.21.1-xmas.4';
-import {drawWindowAtlas,WINDOW_CELL,WINDOW_STYLES} from './xmas-art.js?v=2.21.1-xmas.4';
-import {hash32} from './xmas-sprites.js?v=2.21.1-xmas.4';
+import {ComicMesh} from '../city-architecture.js?v=2.21.1-xmas.5';
+import {TREE} from './xmas-layout.mjs?v=2.21.1-xmas.5';
+import {STALLS,STALL,FIRS,TOMTE_SPOTS,ARCH,facadeSpots,stringBulbs,FACADE} from './xmas-decor-data.mjs?v=2.21.1-xmas.5';
+import {WEATHER} from './xmas-config.mjs?v=2.21.1-xmas.5';
+import {createSnowfall} from './xmas-snowfall.js?v=2.21.1-xmas.5';
+import {drawWindowAtlas,WINDOW_CELL,WINDOW_STYLES} from './xmas-art.js?v=2.21.1-xmas.5';
+import {hash32} from './xmas-sprites.js?v=2.21.1-xmas.5';
 
 const TAU=Math.PI*2;
 const BULB_COLORS=Object.freeze({A:['#ff4d4d','#ff8fb1','#ff7a3d'],B:['#fff2a8','#ffe27a','#ffd1a0'],C:['#7dffb0','#7fd2ff','#b9a8ff']});

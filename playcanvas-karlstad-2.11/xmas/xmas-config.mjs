@@ -43,7 +43,7 @@ export const FREE_RAIN=Object.freeze({first:5,every:Object.freeze([22,38]),minDi
 // stopShort: spåren slutar så här långt före paketen (ett par sista spår går runt på platsen), maxPrints: tak per spår, showRadius: spår längre bort än så ritas inte,
 // hw/hl: avtryckets halva bredd och längd i vyn (större än en riktig stövel så att de syns på en telefon), idleAssist: efter så här många sekunder utan fynd pekar en liten pil mot närmaste spår,
 // assistClear: är man närmare än så ett spårs början behövs ingen hjälp, nearDrop: närmare än så från platsen säger uppdragsraden att man ska leta runt.
-export const TRAILS=Object.freeze({lead:14,step:1.2,side:.26,wobble:.35,wobbleLen:9,stopShort:3.4,maxPrints:90,showRadius:46,hw:.3,hl:.42,idleAssist:40,assistClear:9,nearDrop:14});
+export const TRAILS=Object.freeze({lead:14,step:1.35,side:.28,wobble:.35,wobbleLen:9,stopShort:3.4,maxPrints:90,showRadius:46,hw:.38,hl:.55,idleAssist:40,assistClear:9,nearDrop:14});
 
 export const WEATHER=Object.freeze({full:Object.freeze({label:'FULLT',flakes:100,decor:1}),light:Object.freeze({label:'LÄTT',flakes:50,decor:.5}),off:Object.freeze({label:'AV',flakes:0,decor:0})});
 export const WEATHER_ORDER=Object.freeze(['full','light','off']);

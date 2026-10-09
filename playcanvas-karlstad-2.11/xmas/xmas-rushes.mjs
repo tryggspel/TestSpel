@@ -5,7 +5,7 @@
 // Målet är antingen ett antal paket eller en poängsumma (varannan rush av varje sort). Stjärnor = hjärtan som är kvar när målet nås (1–3). En rush låses upp när den förra är klarad.
 // "NÄSTA RUSH" tar med sig hjärtana: ett hjärta fylls på bara om man klarade rushen utan att tappa något. Efter Rush 12 fortsätter det som ÖVERTID (Rush 13, 14 …): samma tempo
 // som Rush 12 men allt trängre klocka och längre mål, så långt man orkar. Rush 13 och uppåt har inga fasta namn eller stjärnor på rutorna: bara hur långt man kommit räknas.
-import {TEMPO,tempoSpeed,tempoPoints} from '../tempo-run.mjs?v=2.21.1-xmas.4';
+import {TEMPO,tempoSpeed,tempoPoints} from '../tempo-run.mjs?v=2.21.1-xmas.5';
 
 export const RUSH_COUNT=12;                             // de namngivna rusherna
 export const RUSH_MAX=99;                               // högsta rush som räknas (Rush 13 och uppåt är ÖVERTID)

@@ -6,11 +6,11 @@
 // som rullas ut på marken längs gångvägen dit. Bandet ligger fast i världen: man går fram över det och nya bitar rullas ut längst bort.
 // Fri julvandring (sök och hitta) har ingen pil, stråle eller ring mot paketen: tomtarnas spår i snön, fotavtryck som ritas i en enda mesh, leder till de tappade paketen, och paketen syns först på nära håll.
 // Ingen fysik, inga ljus: allt är platta bildkort och genomskinliga cylindrar.
-import {drawBeam,drawRibbon,drawGiftIcons,drawGhostHelper,drawFootprints,GIFT_ICON_COLS,GIFT_ICON_ROWS,GIFT_ICON_CELL} from './xmas-art.js?v=2.21.1-xmas.4';
-import {GIFT_KINDS,GIFTS} from './xmas-rush.mjs?v=2.21.1-xmas.4';
-import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.4';
-import {TRAILS,FREE_RAIN} from './xmas-config.mjs?v=2.21.1-xmas.4';
-import {printCorners} from './xmas-tracks.mjs?v=2.21.1-xmas.4';
+import {drawBeam,drawRibbon,drawGiftIcons,drawGhostHelper,drawFootprints,GIFT_ICON_COLS,GIFT_ICON_ROWS,GIFT_ICON_CELL} from './xmas-art.js?v=2.21.1-xmas.5';
+import {GIFT_KINDS,GIFTS} from './xmas-rush.mjs?v=2.21.1-xmas.5';
+import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.5';
+import {TRAILS,FREE_RAIN} from './xmas-config.mjs?v=2.21.1-xmas.5';
+import {printCorners} from './xmas-tracks.mjs?v=2.21.1-xmas.5';
 export function createXmasView(pc,host,draw,sprites,hunt,rush=null){
   const {labelTex,texture}=draw,root=draw.root;
   const POOL=26,SHOW=54,SHOW_RUSH=96,BEAMS=4,BADGES=6,BURSTS=6,RIBBON=GUIDE.ribbon.max,RIBBON_PHASES=4;
@@ -54,7 +54,7 @@ export function createXmasView(pc,host,draw,sprites,hunt,rush=null){
   const prEnt=new pc.Entity('Spår i snön');prEnt.addComponent('render',{meshInstances:[prMi]});prEnt.enabled=false;root.addChild(prEnt);
   let printsOn=0,printsShown=0,printsAt=-1e9,printsX=1e9,printsZ=1e9,printsKey=-1;
   function updatePrints(p,now,run,on){
-    if(!on){if(prEnt.enabled){prEnt.enabled=false;printsOn=0;printsShown=0;printsKey=-1;}return;}
+    if(!on){if(prEnt.enabled||printsShown){prEnt.enabled=false;printsOn=0;printsShown=0;printsKey=-1;prPos.fill(0);}return;} // allt nollas: gamla avtryck får aldrig ligga kvar i meshen när spåren byts
     let key=0;for(const x of run.rains)key=key*31+x.serial*2+(x.left>0?1:0); // vilka högar som finns och har paket kvar (ett tal, ingen ny sträng varje bildruta)
     if(key===printsKey&&Math.abs(p.x-printsX)+Math.abs(p.z-printsZ)<1.5&&now-printsAt<1500)return;
     printsKey=key;printsAt=now;printsX=p.x;printsZ=p.z;
@@ -228,6 +228,6 @@ export function createXmasView(pc,host,draw,sprites,hunt,rush=null){
     if(d>lim){x=128+dx/d*lim;y=128+dy/d*lim;}
     c.beginPath();c.arc(x,y,d>lim?6:8,0,6.283);c.fillStyle='#4cc784cc';c.fill();c.strokeStyle='#ffffff';c.lineWidth=3;c.stroke();
   }
-  function clear(){prEnt.enabled=false;printsOn=0;printsShown=0;printsKey=-1;for(const s of pool){s.e.enabled=false;s.id='';}for(const e of ribbon)e.enabled=false;ribbonOn=0;for(const b of badges)b.e.enabled=false;badgesOn=0;ghost.enabled=false;for(const b of beams)b.enabled=false;goal.beam.enabled=goal.ring.enabled=false;goalOn=false;tomte.e.enabled=tomte.bubble.enabled=tomte.ring.enabled=false;for(const b of bursts){b.life=0;b.ring.enabled=b.spark.enabled=false;}shown=0;beamsOn=0;}
-  return {update,burst,clear,radar,setGuide:g=>{guide=g||null;},setLite:v=>{lite=!!v;},get lite(){return lite;},tomteEntity:tomte.e,snapshot:()=>({shown,beams:beamsOn,goal:goalOn,ribbon:ribbonOn,prints:printsOn,badges:badgesOn,ghost:ghost.enabled,tomte:tomte.e.enabled,bubble:tomte.mood,ring:tomte.ring.enabled,pool:POOL,bursts:bursts.filter(b=>b.life>0).length}),drawCalls:()=>shown+beamsOn+ribbonOn+(printsOn>0?1:0)+badgesOn+(ghost.enabled?1:0)+(goalOn?2:0)+(tomte.e.enabled?2:0)+(tomte.ring.enabled?1:0)+bursts.filter(b=>b.life>0).length*2};
+  function clear(){prEnt.enabled=false;printsOn=0;printsShown=0;printsKey=-1;prPos.fill(0);for(const s of pool){s.e.enabled=false;s.id='';}for(const e of ribbon)e.enabled=false;ribbonOn=0;for(const b of badges)b.e.enabled=false;badgesOn=0;ghost.enabled=false;for(const b of beams)b.enabled=false;goal.beam.enabled=goal.ring.enabled=false;goalOn=false;tomte.e.enabled=tomte.bubble.enabled=tomte.ring.enabled=false;for(const b of bursts){b.life=0;b.ring.enabled=b.spark.enabled=false;}shown=0;beamsOn=0;}
+  return {update,burst,clear,radar,setGuide:g=>{guide=g||null;},setLite:v=>{lite=!!v;},get lite(){return lite;},tomteEntity:tomte.e,snapshot:()=>({shown,beams:beamsOn,goal:goalOn,ribbon:ribbonOn,prints:printsOn,printQuads:(()=>{let c=0;for(let i=0;i<PRINTS;i++){const o=i*12;if(prPos[o]!==0||prPos[o+2]!==0||prPos[o+3]!==0)c++;}return c;})(),badges:badgesOn,ghost:ghost.enabled,tomte:tomte.e.enabled,bubble:tomte.mood,ring:tomte.ring.enabled,pool:POOL,bursts:bursts.filter(b=>b.life>0).length}),drawCalls:()=>shown+beamsOn+ribbonOn+(printsOn>0?1:0)+badgesOn+(ghost.enabled?1:0)+(goalOn?2:0)+(tomte.e.enabled?2:0)+(tomte.ring.enabled?1:0)+bursts.filter(b=>b.life>0).length*2};
 }
