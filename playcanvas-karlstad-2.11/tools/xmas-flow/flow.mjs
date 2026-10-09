@@ -237,6 +237,25 @@ check('F9 i startvyn står nästa nivå på Tomtezombies-knappen och raden under
 await shot('24-zombies-startvy');
 await click('xmasZombies');await wait(2800);
 check('F10 knappen startar nästa nivå (nivå 2) och inte om nivå 1',await ev(()=>window.KarlstadDebug.journey().xmas.zombieLevel?.n===2));
+// Nivå 2, 3 och 4 klaras i tur och ordning på julrundornas banor (Torget, Kungsgatan, Drottninggatan); NÄSTA NIVÅ på kortet startar nästa.
+const lvl=[];
+for(const [n,layout,goal] of [[2,'round-torget',22],[3,'round-kungsgatan',24],[4,'round-drottninggatan',26]]){
+  const st=await ev(()=>{const x=window.KarlstadDebug.journey().xmas,r=x.hunt.run;return {lv:x.zombieLevel?.n,layout:x.zombieLevel?.layout,goal:r.goal,mode:x.snapshot().mode};});
+  await collectGoal();
+  const t=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.tomte);await calm();await tp(t.x,t.z,0,-4,2800);
+  const card=await ev(()=>({shown:!document.getElementById('round-xmas-result').hidden,title:document.getElementById('xmasResultTitle').textContent,b1:document.getElementById('xmasResultContinue').textContent.trim(),
+    cleared:window.KarlstadDebug.journey().xmas.save.state.zombies.cleared}));
+  lvl.push({n,ok:st.lv===n&&st.layout===layout&&st.goal===goal&&st.mode==='zombies'&&card.shown&&new RegExp('NIVÅ '+n+' KLARAD').test(card.title)&&new RegExp('^NÄSTA NIVÅ · '+(n+1)).test(card.b1)&&card.cleared===n,st,card});
+  if(n===3)await shot('25-zombies-kungsgatan-klar');
+  await click('xmasResultContinue');await wait(3000);
+}
+check('F11 nivå 2, 3 och 4 går att klara i tur och ordning (Torget 22, Kungsgatan 24, Drottninggatan 26 paket) och sparas',lvl.every(l=>l.ok),lvl.map(l=>l.n+':'+(l.ok?'ok':JSON.stringify({st:l.st,card:l.card}))).join(' | '));
+const z5=await ev(()=>{
+  const j=window.KarlstadDebug.journey(),x=j.xmas,p=window.__pos(),a=j.actors.find(q=>!q.active);j.spawn(a,{x:p[0]+6,z:p[1]-6},'walker');
+  return {lv:x.zombieLevel?.n,layout:x.zombieLevel?.layout,goal:x.hunt.run.goal,speed:+a.speed.toFixed(3),label:document.querySelector('.xh-points span').textContent,every:x.zombieLevel?.patrolEvery};
+});
+check('F12 nivå 5 börjar om på Torget med 28 paket, zombierna är ×1,2 snabbare och patrullerna kommer med högst 8 s mellanrum',z5.lv===5&&z5.layout==='round-torget'&&z5.goal===28&&Math.abs(z5.speed-1.65*1.2)<.01&&z5.label==='NIVÅ 5 · JULPOÄNG'&&z5.every===8,JSON.stringify(z5));
+await shot('26-zombies-nivå-5');
 await ev(()=>window.KarlstadDebug.journey().xmas.openMenu());await wait(600);
 
 // ── G: Julklappsjakten har inga zombier ──────────────────────────────────────────────────────────────────────────
