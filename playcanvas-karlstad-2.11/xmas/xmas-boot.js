@@ -203,6 +203,9 @@ export function installXmas(ctx){
   }});
 
   // ── Händelser från motorn → ljud, effekter och gränssnitt ──────────────────────────────────────────────────────
+  // Varje gåva har sitt eget lilla ljud: släden stiger snabbt, magneten sveper nedåt, spöket klingar, bomben mullrar, regnet porlar.
+  const GIFT_JINGLE={default:[[659.25],[880],[1174.66]],sleigh:[[392,'sawtooth'],[523.25,'sawtooth'],[659.25,'sawtooth'],[880,'sawtooth']],magnet:[[880,'sine'],[740,'sine'],[622,'sine'],[523.25,'sine'],[440,'sine']],
+    ghost:[[1046.5],[987.77],[880],[783.99],[659.25]],bomb:[[110,'sawtooth'],[82.4,'sawtooth'],[164.8,'square']],rain:[[1318.5],[1174.66],[1046.5],[987.77],[880],[783.99]]};
   const chainFreq=chain=>[523.25,587.33,659.25,698.46,783.99,880,987.77,1046.5][Math.min(7,Math.max(0,chain-1))]||1046.5;
   const handlers={
     'xmas-start':(e,now)=>{ui.setProgress(hunt.run);},
@@ -225,11 +228,12 @@ export function installXmas(ctx){
       if(e.gold){[659.25,880,1174.66,1568].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.22,.08),i*70));view.burst(e.x,e.z,{big:true});}
       else{note(chainFreq(e.chain),'triangle',.16,.075);setTimeout(()=>note(chainFreq(e.chain)*1.5,'sine',.2,.04),55);view.burst(e.x,e.z);}
       // Allt i en enda puff (i det här tempot hinner en separat kombotavla inte läsas): poäng, flyt och kombo eller kombonivåns beröm.
-      ui.showPill('+'+e.points+(e.flow?' · FLYT':'')+(e.praise?' · '+e.praise:e.chain>=2?' · KOMBO '+e.chain:''),e.gold||e.praise?1500:900,now,e.gold||e.praise?'bonus':'');
+      const who=e.by==='ghost'?'SPÖKET · ':e.by==='magnet'?'MAGNET · ':e.side&&!e.rain?'SIDOPAKET · ':'';
+      ui.showPill(who+'+'+e.points+(e.flow?' · FLYT':'')+(e.praise?' · '+e.praise:e.chain>=2?' · KOMBO '+e.chain:''),e.gold||e.praise?1500:900,now,e.gold||e.praise?'bonus':'');
     },
     'rush-gift':(e,now)=>{
-      sound('win');[659.25,880,1174.66].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.2,.07),i*70));
-      fanfare(e.label+(e.kind==='sparkler'?' · '+e.count+' PAKET':'')+'!',e.text+(e.seconds?' '+e.seconds+' sekunder.':''),2.2,'energy');
+      sound(e.kind==='bomb'?'boss':'win');(GIFT_JINGLE[e.kind]||GIFT_JINGLE.default).forEach(([f,type],i)=>setTimeout(()=>note(f,type||'triangle',.2,.07),i*(e.kind==='sleigh'?45:e.kind==='ghost'?85:65)));
+      fanfare(e.label+(e.count>0?' · '+e.count+' PAKET':'')+'!',e.text+(e.seconds?' '+e.seconds+' sekunder.':''),2.2,'energy');
     },
     'rush-level':(e,now)=>{
       sound('boss');host.music?.tempo?.(1+.03*(e.level-1));

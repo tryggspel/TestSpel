@@ -92,6 +92,71 @@ export const TOMTE_ATLAS={w:TOMTE_CELL.w*6,h:TOMTE_CELL.h*2,cols:6,rows:2};
 // ── Små ikoner och effekter ────────────────────────────────────────────────────────────────────────────────────────
 export function drawStar(c,w,h){c.clearRect(0,0,w,h);const g=c.createRadialGradient(w/2,h/2,2,w/2,h/2,w/2);g.addColorStop(0,'#fff6b8ff');g.addColorStop(.4,'#ffe27a99');g.addColorStop(1,'#ffe27a00');c.fillStyle=g;c.fillRect(0,0,w,h);
   c.fillStyle='#ffd845';c.strokeStyle=INK;c.lineWidth=w*.03;c.lineJoin='round';c.beginPath();for(let i=0;i<10;i++){const r=i%2?w*.14:w*.34,a=-Math.PI/2+i*Math.PI/5;c.lineTo(w/2+Math.cos(a)*r,h/2+Math.sin(a)*r);}c.closePath();c.fill();c.stroke();}
+// ── Julgåvornas brickor (JulRushen) ─────────────────────────────────────────────────────────────────────────────────────────────────────
+// En bricka per gåva (rund, i gåvans färg, med en enkel symbol) som svävar ovanför guldpaketet, så att man ser vad man är på väg att få och kan välja avstickare.
+// Bilden är 4×3 celler à 128 px i samma ordning som GIFT_KINDS: renssläde, magnet, spöke, stjärna, klocka, paus, guldklapp, bloss, sköld, bomb, regn.
+export const GIFT_ICON_COLS=4,GIFT_ICON_ROWS=3,GIFT_ICON_CELL=128;
+export function drawGiftIcons(c,kinds,colors){
+  const star=(cx,cy,r0,r1,fill)=>{c.beginPath();for(let i=0;i<10;i++){const r=i%2?r1:r0,a=-Math.PI/2+i*Math.PI/5;c.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);}c.closePath();c.fillStyle=fill;c.fill();c.stroke();};
+  const ink=(w=5)=>{c.strokeStyle=INK;c.lineWidth=w;c.lineJoin='round';c.lineCap='round';};
+  kinds.forEach((kind,i)=>{
+    c.save();c.translate((i%GIFT_ICON_COLS)*GIFT_ICON_CELL,Math.floor(i/GIFT_ICON_COLS)*GIFT_ICON_CELL);ink();
+    // rund bricka med ljus överkant
+    const g=c.createLinearGradient(0,8,0,120);g.addColorStop(0,'#ffffff');g.addColorStop(.18,colors[i]);g.addColorStop(1,colors[i]);
+    c.beginPath();c.arc(64,64,56,0,7);c.fillStyle=g;c.fill();ink(7);c.stroke();ink();
+    if(kind==='sleigh'){ // släde med fartstreck
+      c.fillStyle='#fff1ce';c.beginPath();c.roundRect(44,52,50,26,7);c.fill();c.stroke();c.fillStyle='#d94a4a';c.fillRect(52,60,34,6);
+      c.beginPath();c.moveTo(34,90);c.quadraticCurveTo(68,104,102,86);c.quadraticCurveTo(112,80,106,72);c.stroke();ink(6);c.beginPath();c.moveTo(34,90);c.quadraticCurveTo(68,104,102,86);c.stroke();ink();
+      c.strokeStyle='#ffffff';c.lineWidth=5;for(const y of [50,62,74]){c.beginPath();c.moveTo(14,y);c.lineTo(30,y);c.stroke();}
+    }else if(kind==='magnet'){ // hästsko med röda spetsar
+      c.lineCap='butt';c.strokeStyle=INK;c.lineWidth=24;c.beginPath();c.arc(64,62,24,Math.PI,0);c.lineTo(88,90);c.moveTo(40,62);c.lineTo(40,90);c.stroke();
+      c.strokeStyle='#ffffff';c.lineWidth=16;c.beginPath();c.arc(64,62,24,Math.PI,0);c.lineTo(88,78);c.moveTo(40,62);c.lineTo(40,78);c.stroke();
+      c.strokeStyle='#e8433b';c.beginPath();c.moveTo(88,78);c.lineTo(88,90);c.moveTo(40,78);c.lineTo(40,90);c.stroke();
+    }else if(kind==='ghost'){ // spöke med tomteluva
+      c.fillStyle='#ffffff';c.beginPath();c.moveTo(36,96);c.lineTo(36,64);c.arc(64,62,28,Math.PI,0);c.lineTo(92,96);c.lineTo(84,88);c.lineTo(76,96);c.lineTo(64,88);c.lineTo(52,96);c.lineTo(44,88);c.closePath();c.fill();c.stroke();
+      c.fillStyle=INK;c.beginPath();c.ellipse(54,66,4,6,0,0,7);c.ellipse(74,66,4,6,0,0,7);c.fill();c.beginPath();c.ellipse(64,80,5,4,0,0,7);c.fill();
+      c.fillStyle='#d33a3a';c.beginPath();c.moveTo(38,48);c.lineTo(62,18);c.lineTo(90,46);c.closePath();c.fill();c.stroke();
+      c.fillStyle='#ffffff';c.beginPath();c.roundRect(36,44,56,10,5);c.fill();c.stroke();c.beginPath();c.arc(62,18,6,0,7);c.fill();c.stroke();
+    }else if(kind==='star'){
+      star(64,66,36,15,'#fff3a0');c.fillStyle='#ffffffc0';c.beginPath();c.ellipse(55,52,5,3,-.6,0,7);c.fill();
+    }else if(kind==='clock'){ // väckarklocka med klockor
+      c.fillStyle='#ffd0ee';for(const x of [40,88]){c.beginPath();c.arc(x,34,10,0,7);c.fill();c.stroke();}
+      c.fillStyle='#ffffff';c.beginPath();c.arc(64,68,30,0,7);c.fill();c.stroke();
+      c.beginPath();c.moveTo(64,68);c.lineTo(64,48);c.moveTo(64,68);c.lineTo(80,76);c.stroke();ink(7);c.beginPath();c.moveTo(64,68);c.lineTo(64,48);c.stroke();ink();
+    }else if(kind==='pause'){
+      c.fillStyle='#ffffff';for(const x of [40,70]){c.beginPath();c.roundRect(x,36,18,56,6);c.fill();c.stroke();}
+    }else if(kind==='golden'){ // ×3
+      c.font='900 58px system-ui,sans-serif';c.textAlign='center';c.textBaseline='middle';ink(10);c.strokeText('×3',64,68);c.fillStyle='#fff3a6';c.fillText('×3',64,68);
+    }else if(kind==='sparkler'){ // tomtebloss: pinne och gnistor
+      ink(9);c.beginPath();c.moveTo(34,98);c.lineTo(72,58);c.stroke();c.strokeStyle='#7b4a2c';c.lineWidth=5;c.beginPath();c.moveTo(34,98);c.lineTo(72,58);c.stroke();
+      ink(4);c.strokeStyle='#ffffff';c.lineWidth=5;for(let k=0;k<8;k++){const a=k*Math.PI/4;c.beginPath();c.moveTo(80+Math.cos(a)*7,50+Math.sin(a)*7);c.lineTo(80+Math.cos(a)*(k%2?17:24),50+Math.sin(a)*(k%2?17:24));c.stroke();}
+      c.fillStyle='#fff3a6';c.beginPath();c.arc(80,50,7,0,7);c.fill();
+    }else if(kind==='shield'){ // pepparkaksskölden
+      c.fillStyle='#e8b977';c.beginPath();c.moveTo(64,24);c.lineTo(96,36);c.lineTo(94,70);c.quadraticCurveTo(90,94,64,104);c.quadraticCurveTo(38,94,34,70);c.lineTo(32,36);c.closePath();c.fill();c.stroke();
+      c.fillStyle='#ffffff';c.beginPath();c.moveTo(64,86);c.bezierCurveTo(40,68,48,48,64,60);c.bezierCurveTo(80,48,88,68,64,86);c.fill();ink(3);c.stroke();
+    }else if(kind==='bomb'){
+      c.fillStyle='#4a3366';c.beginPath();c.arc(60,74,26,0,7);c.fill();ink(5);c.stroke();c.strokeStyle='#ffffff90';c.lineWidth=5;c.beginPath();c.arc(60,74,17,Math.PI*1.05,Math.PI*1.45);c.stroke();
+      ink(6);c.beginPath();c.moveTo(74,52);c.quadraticCurveTo(86,42,92,32);c.stroke();c.strokeStyle='#b98a5e';c.lineWidth=3;c.beginPath();c.moveTo(74,52);c.quadraticCurveTo(86,42,92,32);c.stroke();
+      ink(3);star(94,30,10,4.5,'#ffd23f');
+    }else if(kind==='rain'){ // paket som faller
+      const box=(x,y,r,col)=>{c.save();c.translate(x,y);c.rotate(r);c.fillStyle=col;c.beginPath();c.roundRect(-13,-13,26,26,4);c.fill();ink(4);c.stroke();c.fillStyle='#fff1ce';c.fillRect(-3,-13,6,26);c.fillRect(-13,-3,26,6);c.restore();};
+      c.strokeStyle='#ffffffb0';c.lineWidth=4;for(const [x,y0] of [[42,22],[68,34],[88,26]]){c.beginPath();c.moveTo(x,y0);c.lineTo(x,y0+10);c.stroke();}
+      ink(4);box(42,48,-.2,'#d94a4a');box(70,62,.25,'#3f9462');box(54,88,-.1,'#ffcf3f');
+    }
+    c.restore();
+  });
+}
+// Tomtespöket (JulRushens hjälpare): ett vitt spöke med tomteluva som svävar fram till paketen.
+export function drawGhostHelper(c,w,h){
+  c.clearRect(0,0,w,h);c.save();c.scale(w/160,h/200);c.lineJoin='round';c.lineCap='round';
+  const g=c.createRadialGradient(80,110,10,80,110,80);g.addColorStop(0,'#e6e0ffaa');g.addColorStop(1,'#e6e0ff00');c.fillStyle=g;c.fillRect(0,0,160,200);
+  shape(c,'#ffffff',()=>{c.moveTo(34,176);c.lineTo(32,100);c.arc(80,98,48,Math.PI,0);c.lineTo(126,176);c.lineTo(112,160);c.lineTo(98,178);c.lineTo(80,160);c.lineTo(62,178);c.lineTo(48,160);c.closePath();},6);
+  c.fillStyle=INK;c.beginPath();c.ellipse(64,104,6,10,0,0,7);c.ellipse(96,104,6,10,0,0,7);c.fill();c.beginPath();c.ellipse(80,130,9,7,0,0,7);c.fill();
+  c.fillStyle='#f6a6b8aa';c.beginPath();c.ellipse(50,122,8,5,0,0,7);c.ellipse(110,122,8,5,0,0,7);c.fill();
+  shape(c,'#d33a3a',()=>{c.moveTo(36,74);c.quadraticCurveTo(48,28,86,14);c.quadraticCurveTo(128,26,126,72);c.closePath();},6);
+  shape(c,'#ffffff',()=>c.roundRect(30,64,100,22,10),5);shape(c,'#ffffff',()=>c.arc(88,14,11,0,7),5);
+  c.restore();
+}
 // Julbandet på marken: ett rött band med gyllene kanter och ljusa pilar som pekar framåt (uppåt i bilden). Två pilar per tavla; bilden går att rulla runt (REPEAT)
 // så att pilarna kan flytta sig mot målet. Rött syns bäst mot snö, och de gyllene kanterna håller bandet synligt även på mörk asfalt.
 export function drawRibbon(c,w,h){

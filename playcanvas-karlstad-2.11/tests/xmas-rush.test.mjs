@@ -7,7 +7,7 @@ import {CityNavigation} from '../city-missions.mjs';
 import {CityJourney,TEMPO_COURSE,tempoReach,catchReach} from '../journey-rules.mjs';
 import {TEMPO,tempoSpeed,tempoPoints} from '../tempo-run.mjs';
 import {powerFor,POWER} from '../powerups.mjs';
-import {XmasRush,GIFTS,GIFT_KINDS,giftFor,RUSH,RUSH_NAMES,rushName} from '../xmas/xmas-rush.mjs';
+import {XmasRush,GIFTS,GIFT_KINDS,giftFor,bearsGift,RUSH,RUSH_NAMES,rushName} from '../xmas/xmas-rush.mjs';
 import {XmasSave,sanitizeSave} from '../xmas/xmas-save.mjs';
 import {COMBO,PACKAGE_POINTS,STAMPS} from '../xmas/xmas-config.mjs';
 
@@ -38,8 +38,9 @@ function until(c,cond,max=120,move='target'){for(let i=0;i<max*60&&!cond();i++){
 // Starta och låt första steget lägga ut banan.
 function started(opts){const c=mk(opts);c.rush.start();frame(c,.1);return c;}
 
-test('julgåvor: sju sorter med namn, förklaring och färg, stabil fördelning och skölden är sällsyntast',()=>{
-  assert.equal(GIFT_KINDS.length,7);
+test('julgåvor: elva sorter med namn, förklaring och färg, stabil fördelning och skölden är sällsyntast',()=>{
+  assert.equal(GIFT_KINDS.length,11);
+  for(const k of ['sleigh','magnet','ghost','star','clock','pause','golden','sparkler','shield','bomb','rain'])assert.ok(GIFT_KINDS.includes(k),k);
   for(const k of GIFT_KINDS){const d=GIFTS[k];assert.ok(d.label&&d.text&&d.color&&d.short,k+' saknar text');assert.ok(Number.isFinite(d.seconds)&&d.seconds>=0);}
   const count=Object.fromEntries(GIFT_KINDS.map(k=>[k,0])),n=32000;
   for(let i=0;i<n;i++){const k=giftFor('tp:'+i);assert.ok(GIFTS[k]);count[k]++;assert.equal(giftFor('tp:'+i),k,'samma id ger samma gåva');}
@@ -188,7 +189,7 @@ test('fångstfältet är TempoRushs: nivåns räckvidd, och inget paket tas geno
   w.pos={x:-13.6,z:35};frame(w,.05);w.pos={x:-13.7,z:35};frame(w,.05);assert.equal(w.g.found.has(near.id),true,'på andra sidan väggen tas det');
 });
 
-test('guldpaket bär julgåvor: var femte till sjätte paket, och gåvan kommer när paketet tas',()=>{
+test('guldpaket bär julgåvor: ungefär vart tredje till fjärde paket, och gåvan kommer när paketet tas',()=>{
   const c=started();
   until(c,()=>c.events.some(e=>e.type==='rush-gift'),90);
   const gift=ofType(c,'rush-gift')[0];assert.ok(gift,'en gåva delades ut');assert.ok(GIFT_KINDS.includes(gift.kind));assert.equal(gift.label,GIFTS[gift.kind].label);
@@ -197,10 +198,10 @@ test('guldpaket bär julgåvor: var femte till sjätte paket, och gåvan kommer 
   // Andelen guldpaket i banan: minst var sjätte (som grundspelets förmågebärare) men inte allt.
   const d=started();let gold2=0,all=0;for(let i=0;i<30*60&&d.rush.state==='running';i++){frame(d,1/60,'target');}
   for(const e of d.events.filter(x=>x.type==='rush-pick')){all++;if(e.gold)gold2++;}
-  assert.ok(all>=20);assert.ok(gold2/all>=1/7&&gold2/all<=.45,'guldandel '+gold2+'/'+all);
-  // Guldpaketets id bär en förmåga i grundspelets mening.
-  const some=c.rush.list.filter(k=>k.kind==='bonus');for(const k of some)assert.ok(powerFor(k.id,c.g.fun.day),k.id);
-  for(const k of c.rush.list.filter(k=>k.kind==='regular'))assert.ok(!powerFor(k.id,c.g.fun.day));
+  assert.ok(all>=20);assert.ok(gold2/all>=1/5&&gold2/all<=.45,'guldandel '+gold2+'/'+all);
+  // Guldpaketets id bär en förmåga i grundspelets mening (eller är en av julens extra bärare); vanliga paket bär ingen.
+  const some=c.rush.list.filter(k=>k.kind==='bonus');for(const k of some)assert.ok(bearsGift(k.id,c.g.fun.day),k.id);
+  for(const k of c.rush.list.filter(k=>k.kind==='regular'))assert.ok(!bearsGift(k.id,c.g.fun.day));
 });
 
 test('gåva: renssläden fördubblar farten via grundspelets raketförmåga och tar slut efter sju sekunder',()=>{
@@ -374,4 +375,166 @@ test('krokarna i grundspelets filer finns kvar (en sammanslagning från main få
   assert.ok(!/rush-(start|pick|gift|level|miss|over)/.test(read('last-round.js')),'last-round.js känner inte till JulRushens händelser');
   // Kungsgatan 14, 16 och 18: fasadmodulerna är orörda av JulRushen (inga imports av julkod).
   for(const f of ['kungsgatan-reference.mjs','photo-reference-pass3.mjs','residenset-facade.mjs','opera-facade.mjs','innerstad-reference.mjs'])assert.ok(!/xmas|JulRush/i.test(read(f).replace(/\?v=[^'"\s)]+/g,'')),f+' är orörd');
+});
+
+// ── Fler gåvor och sidopaket (magnet, tomtespöke, kryddbomb, paketregn) ────────────────────────────────────────────────────────────
+let plainN=0;
+// Lägger ett eget, vanligt paket (utan gåva) på banan, på ett ställe man kan stå och se: samma slags post som banans egna pärlor.
+function plain(c,x,z,{course=900}={}){
+  let id;do{id='tp:prov'+(++plainN);}while(bearsGift(id,c.g.fun.day));
+  const it={id,x,z,dyn:true,course:course+plainN,hx:0,hz:-1};
+  c.g.course.pearls.push(it);c.g.items.push(it);c.g.itemById.set(id,it);c.rush.sync();
+  return c.rush.pk.get(id);
+}
+const sleepFreeze=c=>{c.rush.timers.pause=9999;}; // klockan står still så att inget liv tappas medan provet står och väntar
+
+test('alla elva gåvor går att dela ut: var och en ger sin händelse, och de som varar syns som brickor',()=>{
+  const c=started();sleepFreeze(c);c.events.length=0;
+  for(const k of GIFT_KINDS)c.rush.grant(k,c.pos);
+  c.events.push(...c.rush.drain());
+  assert.deepEqual(ofType(c,'rush-gift').map(e=>e.kind),GIFT_KINDS,'en händelse per gåva, i ordning');
+  for(const e of ofType(c,'rush-gift'))assert.equal(e.label,GIFTS[e.kind].label);
+  const chips=c.rush.powers().map(p=>p.kind);
+  for(const k of ['sleigh','magnet','ghost','star','pause','golden','shield'])assert.ok(chips.includes(k),'bricka för '+k);
+  assert.ok(c.rush.powers().every(p=>p.label),'varje bricka har en text');
+  assert.equal(c.rush.snapshot().magnet,true);assert.equal(c.rush.snapshot().ghost,true);
+  assert.equal(GIFTS.magnet.seconds,10);assert.equal(GIFTS.ghost.seconds,9);
+});
+
+test('sidopaket: var fjärde pärla får ett sidopaket med gåva på en fri plats 6–10,5 m från banan, högst fem åt gången, och inget rör klockan eller målet',()=>{
+  const c=started(),seen=new Map();let maxAlive=0;
+  for(let i=0;i<50*60&&c.rush.state==='running';i++){
+    frame(c,1/60,'target');
+    for(const k of c.rush.side)if(!seen.has(k.id))seen.set(k.id,{...k});
+    maxAlive=Math.max(maxAlive,c.rush.side.filter(k=>!k.rain).length);
+  }
+  assert.ok(seen.size>=4,'sidopaket syntes under en halv minut: '+seen.size);assert.ok(maxAlive<=RUSH.sideMax,'högst '+RUSH.sideMax+' åt gången: '+maxAlive);
+  for(const k of seen.values()){
+    assert.equal(k.kind,'bonus');assert.ok(GIFT_KINDS.includes(k.gift),'har en gåva: '+k.gift);assert.ok(k.side&&!k.rain);assert.match(k.id,/^sd:tp:/);
+    assert.ok(c.g.freeSpot(k.x,k.z),'fri plats '+k.id);assert.equal(c.g.itemById.has(k.id),false,'sidopaket är inga pärlor i journey');
+    assert.equal(k.gift,giftFor('sd|'+k.id.slice(3)),'samma id ger samma gåva');
+  }
+  assert.equal(new Set([...seen.keys()]).size,seen.size,'unika id');
+  // Avståndet till pärlan de hör till (id:t bär pärlans id) är en avstickare på 6–10,5 m. Pärlan finns kanske inte kvar, så vi mäter den första bilden där båda syntes.
+  const c2=started();let measured=0;
+  for(let i=0;i<50*60&&c2.rush.state==='running'&&measured<3;i++){
+    frame(c2,1/60,'target');
+    for(const k of c2.rush.side){if(k.rain)continue;const src=c2.g.course?.pearls.find(x=>'sd:'+x.id===k.id);if(src){const d=Math.hypot(k.x-src.x,k.z-src.z);assert.ok(d>=5.9&&d<=10.6,'avstickare '+d.toFixed(1)+' m');measured++;}}
+  }
+  assert.ok(measured>=1,'minst ett sidopaket mättes mot sin pärla');
+});
+
+test('sidopaket: att ta ett ger poäng, kedja och gåva men räknas inte mot målet och rör inte klockan eller nästa mål',()=>{
+  const c=started();sleepFreeze(c);
+  until(c,()=>c.rush.side.some(k=>!k.rain),60);
+  const sp=c.rush.side.find(k=>!k.rain);assert.ok(sp,'ett sidopaket lades ut');
+  const t=c.g.tempo,tgt=t.target.id,left=t.left,deadline=t.deadline,picked=t.picked,score=t.score,chain=c.rush.chain,gifts=c.rush.gifts;c.events.length=0;
+  const e=c.rush.take(sp,c.pos);
+  assert.ok(e&&e.side===true&&e.gold===true&&e.kind==='bonus');
+  assert.equal(e.points,Math.round(PACKAGE_POINTS.bonus*tempoPoints(t.level)),'guldpaketets poäng × nivåfaktorn, utan flytbonus');
+  assert.equal(t.score,score+e.points);assert.equal(t.picked,picked,'räknas inte som ett plockat paket');
+  assert.equal(t.target.id,tgt,'nästa mål är detsamma');assert.equal(t.left,left);assert.equal(t.deadline,deadline,'klockan är orörd');
+  assert.equal(c.rush.chain,chain+1);assert.equal(c.rush.gifts,gifts+1);assert.equal(c.rush.sideTaken,1);
+  assert.equal(c.rush.take(sp,c.pos),null,'inte två gånger');assert.ok(!c.rush.side.includes(sp)||sp.collected);
+  frame(c,.02);assert.ok(!c.rush.side.some(k=>k.id===sp.id),'ett taget sidopaket försvinner');
+  // Och på riktigt: gå dit (en avstickare) och ta det.
+  const d=started();sleepFreeze(d);until(d,()=>d.rush.side.some(k=>!k.rain),60);
+  const s2=d.rush.side.find(k=>!k.rain);const picked2=d.g.tempo.picked;
+  until(d,()=>s2.collected,30,{x:s2.x,z:s2.z});assert.equal(s2.collected,true,'gick att nå');
+  assert.ok(d.events.some(x=>x.type==='rush-pick'&&x.id===s2.id&&x.side),'händelse');assert.ok(d.g.tempo.picked-picked2<=2,'bara banans paket på vägen räknas');
+});
+
+test('sidopaket: gamla försvinner efter 40 s och allt städas bort med körningen',()=>{
+  const c=started();sleepFreeze(c);until(c,()=>c.rush.side.some(k=>!k.rain),60);
+  const sp=c.rush.side.find(k=>!k.rain);play(c,RUSH.sideLife+1,null);
+  assert.ok(!c.rush.side.some(k=>k.id===sp.id),'borta efter '+RUSH.sideLife+' s');
+  const d=started();sleepFreeze(d);until(d,()=>d.rush.side.length>0,60);d.rush.grant('rain',d.pos);assert.ok(d.rush.side.length>0);
+  d.rush.quit();assert.equal(d.rush.side.length,0);assert.equal(d.rush.pulled.length,0);assert.equal(d.rush.spirit.active,false);assert.equal(d.rush.sideSeen.size,0);
+});
+
+test('gåva: julmagneten drar in paket inom 13 m med fri sikt och tar dem efter en kvarts sekund, men inte genom en vägg eller längre bort',()=>{
+  const c=started();sleepFreeze(c);
+  const a=plain(c,c.pos.x+9,c.pos.z),b=plain(c,c.pos.x-8,c.pos.z+3),far=plain(c,c.pos.x+19,c.pos.z+2);
+  for(const k of [a,b,far])assert.ok(c.g.freeSpot(k.x,k.z),'fri plats '+k.id);
+  assert.ok(Math.hypot(a.x-c.pos.x,a.z-c.pos.z)<RUSH.magnetReach&&Math.hypot(far.x-c.pos.x,far.z-c.pos.z)>RUSH.magnetReach);
+  frame(c,.02);assert.equal(a.collected,false,'utan magnet tas inget på 9 m');
+  c.rush.grant('magnet',c.pos);c.events.length=0;
+  frame(c,.02);assert.ok(a.pull>0&&b.pull>0,'båda dras');assert.equal(far.pull,0,'det tredje ligger för långt bort');
+  frame(c,.1);const k=a.pull;assert.ok(k>.3&&k<1&&a.vx<a.x&&a.vx>c.pos.x,'på väg mot spelaren: '+a.vx.toFixed(1)+' mellan '+c.pos.x.toFixed(1)+' och '+a.x.toFixed(1));
+  play(c,.4,null);
+  assert.ok(a.collected&&b.collected,'framme och tagna');assert.equal(far.collected,false);
+  const picks=ofType(c,'rush-pick').filter(e=>e.by==='magnet'),ids=picks.map(e=>e.id);assert.ok(ids.includes(a.id)&&ids.includes(b.id)&&!ids.includes(far.id),'magneten tog de två provpaketen (och eventuella banpaket inom fältet): '+ids.join(','));
+  // magneten tar slut efter tio sekunder och sedan dras inget mer
+  play(c,10.2,null);assert.equal(c.rush.timers.magnet,0);const far2=plain(c,c.pos.x+6,c.pos.z);frame(c,.05);assert.equal(far2.pull,0,'ingen dragning efter att magneten tagit slut');
+  // Vägg mellan spelaren och paketet: inom fältet men utan fri sikt.
+  const w=mk({wall:(x,z)=>x>-18.2&&x<-16.4&&z>29&&z<41});w.rush.start();w.pos={x:-19,z:35};frame(w,.1);sleepFreeze(w);
+  const behind=plain(w,-13.6,35);assert.ok(Math.hypot(behind.x+19,behind.z-35)<RUSH.magnetReach);
+  w.rush.grant('magnet',w.pos);play(w,1,null);assert.equal(behind.pull,0,'väggen stoppar magneten');assert.equal(behind.collected,false);
+});
+
+test('gåva: tomtespöket plockar ett paket var 0,8:e sekund inom 46 m i nio sekunder, och sedan slutar det',()=>{
+  const c=started();sleepFreeze(c);
+  const ks=[];for(let i=0;i<14;i++)ks.push(plain(c,c.pos.x-20+(i%7)*7,c.pos.z+4+Math.floor(i/7)*5));
+  assert.ok(ks.every(k=>Math.hypot(k.x-c.pos.x,k.z-c.pos.z)<RUSH.ghostRange),'alla inom 46 m');
+  c.rush.grant('ghost',c.pos);assert.equal(c.rush.spirit.active,true);c.events.length=0;
+  const times=[];for(let i=0;i<Math.round(9*60);i++){frame(c,1/60,null);for(const e of c.events.splice(0))if(e.type==='rush-pick'&&e.by==='ghost')times.push(+(c.rush.time).toFixed(2));}
+  assert.ok(times.length>=8&&times.length<=12,'spöket tog '+times.length+' paket på nio sekunder');
+  for(let i=1;i<times.length;i++)assert.ok(times[i]-times[i-1]>=RUSH.ghostEvery-.1&&times[i]-times[i-1]<=RUSH.ghostEvery+.2,'jämn takt: '+(times[i]-times[i-1]).toFixed(2));
+  assert.ok(ks.filter(k=>k.collected).length===times.length||ks.filter(k=>k.collected).length>=times.length-3,'paketen som spöket tog är taget');
+  play(c,1.5,null);assert.equal(c.rush.spirit.active,false,'spöket är borta när tiden gått ut');
+  const n=ofType(c,'rush-pick').filter(e=>e.by==='ghost').length;play(c,2,null);assert.equal(ofType(c,'rush-pick').filter(e=>e.by==='ghost').length,n,'inga fler');
+  // Bara inom 46 m: ett paket långt bort lämnas ifred.
+  const d=started();sleepFreeze(d);const far=plain(d,d.pos.x+RUSH.ghostRange+14,d.pos.z);
+  for(const k of d.rush.list)if(k!==far)k.collected=true; // allt annat är redan taget
+  d.rush.grant('ghost',d.pos);play(d,4,null);assert.equal(far.collected,false,'för långt bort');
+});
+
+test('gåva: kryddbomben tar alla paket inom 24 m (högst 14), närmast först, och paketen i bomben utlöser ingen ny bomb, bloss eller regn',()=>{
+  const c=started();sleepFreeze(c);
+  for(const k of c.rush.list)k.collected=true;c.rush.list.length=0; // en ren yta
+  const inside=[];for(let i=0;i<18;i++)inside.push(plain(c,c.pos.x-12+i*1.4,c.pos.z+((i%2)?3:-3)));
+  const out=plain(c,c.pos.x+RUSH.bombRadius+6,c.pos.z);
+  for(const k of inside)assert.ok(Math.hypot(k.x-c.pos.x,k.z-c.pos.z)<=RUSH.bombRadius);
+  // tre av paketen bär gåvor som annars skulle fortsätta kedjan
+  inside[0].gift='bomb';inside[0].kind='bonus';inside[1].gift='rain';inside[1].kind='bonus';inside[2].gift='sparkler';inside[2].kind='bonus';
+  c.events.length=0;const n=c.rush.grant('bomb',c.pos);c.events.push(...c.rush.drain());
+  assert.equal(n,RUSH.bombMax,'högst '+RUSH.bombMax);
+  const picks=ofType(c,'rush-pick');assert.equal(picks.length,RUSH.bombMax);assert.ok(picks.every(e=>e.blast&&e.by==='bomb'));
+  assert.equal(out.collected,false,'utanför 24 m');
+  const gifts=ofType(c,'rush-gift').map(e=>e.kind);assert.ok(gifts.filter(k=>k==='bomb').length===1,'bara den första bomben (själva gåvan)');
+  assert.equal(c.rush.side.filter(k=>k.rain).length,0,'regnet i bomben utlöstes inte');
+  assert.ok(ofType(c,'rush-gift').filter(e=>e.kind!=='bomb').every(e=>e.count===0),'bloss och regn i bomben gör inget');
+  assert.equal(c.g.tempo.picked,RUSH.bombMax,'bombens paket räknas mot målet som vanligt');
+});
+
+test('gåva: paketregnet lägger åtta extra paket på fria platser runt spelaren, de ger poäng utan att räknas mot målet, och de försvinner efter tolv sekunder',()=>{
+  const c=started();sleepFreeze(c);
+  const n=c.rush.grant('rain',c.pos);assert.ok(n>=5&&n<=RUSH.rainCount,'regnet: '+n);
+  const rain=c.rush.side.filter(k=>k.rain);assert.equal(rain.length,n);
+  for(const k of rain){
+    const d=Math.hypot(k.x-c.pos.x,k.z-c.pos.z);assert.ok(d>=RUSH.rainMin*.49&&d<=RUSH.rainMax+.1,'avstånd '+d.toFixed(1));
+    assert.ok(c.g.freeSpot(k.x,k.z));assert.equal(k.kind,'regular');assert.equal(k.gift,null);assert.match(k.id,/^rn:/);
+  }
+  assert.equal(new Set(rain.map(k=>k.id)).size,n);
+  // Ger poäng som vanliga paket (kombo och nivåfaktor) men inte mot målet.
+  const t=c.g.tempo,picked=t.picked,score=t.score,left=t.left;c.events.length=0;
+  const e=c.rush.take(rain[0],c.pos);assert.equal(e.rain,true);assert.equal(e.side,true);
+  assert.equal(e.points,Math.round(PACKAGE_POINTS.regular*comboMultFor(e.chain)*tempoPoints(t.level)),'10 poäng × kedja × nivåfaktor');assert.equal(t.picked,picked);assert.equal(t.left,left);
+  // Magnet + regn: allt dras in.
+  c.rush.grant('magnet',c.pos);play(c,1.2,null);assert.ok(rain.filter(k=>k.collected).length>=Math.min(n,4),'magneten drar in regnet');
+  // Resten försvinner efter tolv sekunder.
+  const left2=c.rush.side.filter(k=>k.rain&&!k.collected).length;play(c,RUSH.rainLife+.5,null);assert.equal(c.rush.side.filter(k=>k.rain).length,0,'borta efter tolv sekunder (var '+left2+')');
+  // Regnpaket nämns inte som sidopaket i vyn: de är vanliga paket.
+  assert.equal(c.rush.snapshot().rain,0);
+});
+const comboMultFor=chain=>COMBO.tiers.reduce((m,t)=>chain>=t.chain?t.mult:m,1);
+
+test('gåvor och sidopaket i vyn: nearby och giftPackages tar med dem, och de dras visuellt mot spelaren medan magneten drar',()=>{
+  const c=started();sleepFreeze(c);until(c,()=>c.rush.side.some(k=>!k.rain),60);
+  const sp=c.rush.side.find(k=>!k.rain),out=[];
+  assert.ok(c.rush.nearby(c.pos,400,60,out).some(k=>k.id===sp.id),'sidopaketet finns bland de närliggande');
+  assert.ok(c.rush.giftPackages(c.pos,400,40,[]).some(k=>k.id===sp.id),'och bland guldpaketen (ljusstråle)');
+  assert.ok(c.rush.nearby(c.pos,400,60,out).every(k=>Number.isFinite(k.vx)&&Number.isFinite(k.vz)),'varje paket har en ritposition');
+  const near=plain(c,c.pos.x+7,c.pos.z);c.rush.grant('magnet',c.pos);frame(c,.02);frame(c,.1);
+  assert.ok(near.vx<near.x,'ritpositionen glider mot spelaren medan paketet dras in');assert.equal(near.x,c.pos.x+7,'den riktiga platsen ändras inte');
 });

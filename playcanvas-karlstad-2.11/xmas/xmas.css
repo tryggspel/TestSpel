@@ -74,7 +74,7 @@
 .xh-powers{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px}
 .xh-powers[hidden]{display:none}
 .xh-chip{padding:2px 8px;border-radius:10px;background:var(--xmas-gold);color:#3b2a00;font:900 11px/1.35 system-ui;letter-spacing:.05em;white-space:nowrap}
-.xh-chip[data-kind="sleigh"]{background:#ff8a6b;color:#3a0f05}.xh-chip[data-kind="pause"]{background:#9ad8ff;color:#06314a}.xh-chip[data-kind="shield"]{background:#7be495;color:#06301a}.xh-chip[data-kind="golden"]{background:#fff3a6}
+.xh-chip[data-kind="magnet"]{background:#7fcbff;color:#06314a}.xh-chip[data-kind="ghost"]{background:#e6e0ff;color:#2b2060}.xh-chip[data-kind="sleigh"]{background:#ff8a6b;color:#3a0f05}.xh-chip[data-kind="pause"]{background:#9ad8ff;color:#06314a}.xh-chip[data-kind="shield"]{background:#7be495;color:#06301a}.xh-chip[data-kind="golden"]{background:#fff3a6}
 .xh-combo[data-tier="2"]{border-color:#9ee6ff}.xh-combo[data-tier="3"]{border-color:#9bf0a7}.xh-combo[data-tier="4"]{border-color:var(--xmas-gold);background:#6a2f58ee}
 
 /* Grundspelets spelval och samlingar som inte hör till julen göms i pausmenyn och på kartan */
