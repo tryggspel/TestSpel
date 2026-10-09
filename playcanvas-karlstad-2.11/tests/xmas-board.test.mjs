@@ -96,3 +96,21 @@ test('sparningen: namn och vänner sparas, rensas vid läsning och går att ta b
   // profilen som delas innehåller bara det man själv valt: namn, poäng, stjärnor (inga personuppgifter, ingen tid utöver tidsstämpeln)
   a.recordRush(1,{points:640,seconds:40,packages:13,hearts:3,cleared:true});const p=a.profile(1700000000000);assert.deepEqual(Object.keys(p).sort(),['at','bests','cleared','name','stars','total']);
 });
+
+test('LÄNGST: topplistan ordnas på hur långt man kommit i Julrushen (även över Rush 12), först på rush och sedan på summan, och länken och delningstexten bär det',()=>{
+  const me=cleanProfile(prof('Jag',{1:600,2:800},{cleared:14})),friends=[prof('Anna',{1:700,2:900,3:900},{cleared:12}),prof('Bo',{1:500},{cleared:16}),prof('Cia',{1:300},{cleared:14}),prof('Dan',{},{cleared:0})].map(cleanProfile);
+  assert.equal(me.cleared,14,'profilen bär hur långt man kommit (upp till Rush 99)');assert.equal(cleanProfile(prof('X',{1:5},{cleared:500})).cleared,99,'högst Rush 99');
+  const far=leaderboard({me,friends,n:-1});
+  assert.deepEqual(far.map(r=>[r.rank,r.name,r.points]),[[1,'Bo',16],[2,'Jag',14],[3,'Cia',14],[4,'Anna',12]],'lika långt: den med störst summa först; Dan har inte klarat något och är inte med');
+  assert.equal(far[1].you,true);assert.equal(far[0].cleared,16);
+  assert.deepEqual(leaderboard({me:cleanProfile(prof('Ensam',{1:5})),friends:[],n:-1}).map(r=>r.points),[1]);
+  // länken bär hur långt man kommit, också över tolv
+  const t=encodeChallenge({name:'Åsa',focus:0,cleared:15,stars:30,bests:{1:500,12:9000},at:1700000000000}),d=decodeChallenge(t);
+  assert.equal(d.profile.cleared,15);assert.equal(d.profile.bests[12],9000);assert.equal(d.focus,0);
+  const old=decodeChallenge(encodeChallenge({name:'Åsa',focus:5,cleared:5,stars:11,bests:{1:640,5:2200},at:1700000000000}));assert.equal(old.profile.cleared,5);assert.equal(old.toBeat,2200,'länkar av det gamla slaget fungerar');
+  // delningstexten
+  assert.match(shareText({reach:14,url:'https://x.se/'}),/Rush 14.*Kommer du längre\? https:\/\/x\.se\/$/);
+  assert.match(shareText({reach:12}),/Rush 12/);assert.doesNotMatch(shareText({reach:5}),/Rush 5/,'under tolv nämns inte sträckan');assert.match(shareText({reach:5}),/Hur långt kommer du/);
+  assert.match(shareText({rush:{n:3,name:'GLÖGGFART'},points:1200,reach:14}),/1.200 poäng i Rush 3 \(GLÖGGFART\)/,'en rush med poäng går före sträckan');
+  assert.ok(!/[<>]/.test(shareText({name:'<b>',reach:20})));
+});

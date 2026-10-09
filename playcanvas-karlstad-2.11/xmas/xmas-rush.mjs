@@ -11,23 +11,27 @@
 // bär en gåva, och vid sidan av banan ligger valfria sidopaket (alltid med gåva) som kräver en avstickare: de räknas inte mot målet och kostar ingen tid om man hoppar över dem.
 // Ingenting här ändrar grundspelets regler: allt sker via journey-objektets egna funktioner, och den här klassen skriver aldrig i journey.events,
 // så grundspelets tempo-hanterare (som talar om termosar) körs aldrig i julbygget.
-import {TEMPO,tempoPoints} from '../tempo-run.mjs?v=2.21.1-xmas.3';
-import {catchReach,tempoReach,TEMPO_COURSE} from '../journey-rules.mjs?v=2.21.1-xmas.3';
-import {POWER,powerFor} from '../powerups.mjs?v=2.21.1-xmas.3';
-import {PACKAGE_POINTS,COMBO,comboMult} from './xmas-config.mjs?v=2.21.1-xmas.3';
-import {RUSH_COUNT,goalProgress,starsFor,seriesHearts} from './xmas-rushes.mjs?v=2.21.1-xmas.3';
+import {TEMPO,tempoPoints,tempoSpeed} from '../tempo-run.mjs?v=2.21.1-xmas.4';
+import {catchReach,tempoReach,TEMPO_COURSE} from '../journey-rules.mjs?v=2.21.1-xmas.4';
+import {POWER,powerFor} from '../powerups.mjs?v=2.21.1-xmas.4';
+import {PACKAGE_POINTS,COMBO,comboMult} from './xmas-config.mjs?v=2.21.1-xmas.4';
+import {RUSH_COUNT,RUSH_MAX,PRESSURE,clockFor,goalProgress,starsFor,seriesHearts} from './xmas-rushes.mjs?v=2.21.1-xmas.4';
 
 export const RUSH=Object.freeze({
   id:'julrush',
   stampLevel:5,        // julstämpeln delas ut första gången man når tempo 5
   starReach:2,         // JULSTJÄRNAN: fångstfältet växer så här många meter
   starMult:2,goldenMult:3,
-  clockSeconds:8,      // JULKLOCKAN
-  shieldSeconds:5,     // PEPPARKAKSSKÖLDEN: så här lång extra tid när den räddar ett liv
+  marathonRate:1.25,   // Maraton: tempot stiger var 12:e sekund (15 / 1,25) i stället för var 15:e, och fortsätter efter tempo 12 med en trängre klocka
+  clockSeconds:5,      // JULKLOCKAN
+  shieldSeconds:3,     // PEPPARKAKSSKÖLDEN: så här lång extra tid när den räddar ett liv
   shieldMax:2,
   urgent:.3,           // klockan är "brådskande" när mindre än så här av tiden är kvar
   minPicksToSave:1,    // en körning utan ett enda paket sparas inte
   titleShare:.1,       // mot titlarna (NYFIKEN … ÖVERTOMTE) räknas en tiondel av poängen: tempofaktorerna gör en rush ungefär tio gånger större än en jakt
+  speedCap:4,                                           // allt som ökar farten (renssläde, glögg, raket, medvind, skridskor) multiplicerat får aldrig bli mer än så här många gånger
+  boost:Object.freeze({glogg:1.5,kaka:3,wind:1.3,skates:1.25}), // fartgåvornas faktorer (renslädens ×2 är grundspelets raketförmåga)
+  windReach:2,skatesWindow:1.5,                         // MEDVIND: fångstfältet växer så här många meter. SKRIDSKOR: kedjans fönster blir så här många sekunder längre
   extraBearer:.1,      // utöver grundspelets förmågebärare (var sjätte pärla och 5,6 % av resten) bär var tionde vanlig pärla också en gåva
   sideEvery:4,sideMax:5,sideOffsets:Object.freeze([7.5,6,9,10.5]),sideLife:40, // sidopaket: var fjärde pärla får ett sidopaket 6–10,5 m åt sidan, högst fem åt gången, borta efter 40 s
   magnetReach:13,pullSeconds:.28,                       // JULMAGNETEN: paket inom 13 m med fri sikt dras in till spelaren på en kvarts sekund
@@ -52,11 +56,16 @@ export const GIFTS=Object.freeze({
   sparkler:Object.freeze({label:'TOMTEBLOSS',text:'Tar alla paket i en rak linje framför dig.',seconds:0,color:'#ff9f5a',short:'BLOSS'}),
   shield:Object.freeze({label:'PEPPARKAKSSKÖLD',text:'Räddar ett liv nästa gång klockan går ut.',seconds:0,color:'#7be495',short:'SKÖLD'}),
   bomb:Object.freeze({label:'KRYDDBOMBEN',text:'Tar alla paket inom '+RUSH.bombRadius+' meter.',seconds:0,color:'#c28bff',short:'BOMB'}),
-  rain:Object.freeze({label:'PAKETREGNET',text:RUSH.rainCount+' extra paket regnar ner runt dig. Plocka!',seconds:0,color:'#d1a373',short:'REGN'})
+  rain:Object.freeze({label:'PAKETREGNET',text:RUSH.rainCount+' extra paket regnar ner runt dig. Plocka!',seconds:0,color:'#d1a373',short:'REGN'}),
+  // Fler fartgåvor: fyra sista är olika sätt att springa fortare (glögg, raket, medvind, skridskor) och de kombineras med renssläden, dock aldrig över RUSH.speedCap tillsammans
+  glogg:Object.freeze({label:'TURBOGLÖGG',text:'Varm glögg: farten ökar med hälften.',seconds:14,color:'#e0763a',short:'GLÖGG'}),
+  kaka:Object.freeze({label:'PEPPARKAKSRAKETEN',text:'Raketfart! Tre gånger så fort en kort stund.',seconds:3.5,color:'#ff5a7a',short:'RAKET'}),
+  wind:Object.freeze({label:'MEDVIND',text:'Medvind: snabbare, och paketen tas från längre håll.',seconds:20,color:'#7fe0d2',short:'VIND'}),
+  skates:Object.freeze({label:'SKRIDSKOR',text:'Hala skridskor: snabbare, och kedjan håller längre.',seconds:25,color:'#b9dcff',short:'SKRIDSKOR'})
 });
 export const GIFT_KINDS=Object.freeze(Object.keys(GIFTS));
-// Hur ofta varje gåva delas ut (summan är 24). Skölden är sällsynt: den är den enda som räddar ett liv.
-const GIFT_WEIGHT=Object.freeze({sleigh:3,magnet:3,ghost:2,star:2,clock:3,pause:2,golden:2,sparkler:2,shield:1,bomb:2,rain:2});
+// Hur ofta varje gåva delas ut (summan är 33). Skölden är sällsynt: den är den enda som räddar ett liv.
+const GIFT_WEIGHT=Object.freeze({sleigh:3,magnet:3,ghost:2,star:2,clock:3,pause:2,golden:2,sparkler:2,shield:1,bomb:2,rain:2,glogg:3,kaka:2,wind:2,skates:2});
 const GIFT_BAG=Object.freeze(GIFT_KINDS.flatMap(k=>Array(GIFT_WEIGHT[k]).fill(k)));
 
 const hash32=s=>{let h=2166136261>>>0;const t=String(s);for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;};
@@ -72,8 +81,8 @@ export class XmasRush{
     this.pk=new Map();this.list=[];this.reset();
   }
   reset(){
-    this.def=null;this.startHearts=TEMPO.lives;this.streak=0;
-    this.timers={star:0,pause:0,golden:0,magnet:0,ghost:0};this.shield=0;this.pendingClock=0;
+    this.def=null;this.startHearts=TEMPO.lives;this.streak=0;this.extra=0;this.graced=false;
+    this.timers={star:0,pause:0,golden:0,magnet:0,ghost:0,glogg:0,kaka:0,wind:0,skates:0};this.shield=0;this.pendingClock=0;
     this.chain=0;this.bestChain=0;this.lastPickAt=-1e9;this.time=0;this.golds=0;this.gifts=0;this.result=null;
     this.pk.clear();this.list.length=0;
     this.side=[];this.sideSeen=new Set();this.sideSerial=0;this.sideTaken=0;this.pulled=[];
@@ -102,6 +111,7 @@ export class XmasRush{
     const t=j.tempo,def=this.def;
     if(def){t.level=def.tempo;t.levelClock=0;} // en rush har sitt eget tempo från första sekunden och behåller det
     t.lives=this.startHearts;
+    this.installClock();
     this.state='running';
     this.emit({type:'rush-start',level:t.level,lives:t.lives,name:def?def.name:rushName(1),n:def?.n||0,goal:def?{...def.goal}:null,streak:this.streak});
   }
@@ -114,6 +124,35 @@ export class XmasRush{
     this.pk.clear();this.list.length=0;this.side.length=0;this.sideSeen.clear();this.pulled.length=0;this.spirit.active=false;this.spirit.target=null;
     try{j.fun?.power?.reset?.();}catch{}
     if(j.tempo.state==='running')j.tempo.reset(); // gav man upp mitt i en körning: stäng av farten
+    this.removeClock();
+  }
+  // ── Klockan till nästa paket ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  // Grundspelets tempo sätter en generös tid när ett mål väljs (deadlineFor). I JulRushen ersätts den av en trängre tid som beror på rushens nummer (se PRESSURE i xmas-rushes.mjs).
+  // Det sker på journey-objektets egen tempoinstans, så grundspelets TempoRun-klass rörs inte; removeClock tar bort den igen när körningen är slut.
+  installClock(){
+    const t=this.j.tempo,proto=Object.getPrototypeOf(t);
+    t.setTarget=(item,distance)=>{proto.setTarget.call(t,item,distance);this.retime(distance);};
+    // Fartgåvorna går genom grundspelets egen fartfaktor (last-round.js turboFactor och spelarens rörelse läser power.speedMul()), på instansen, så att grundspelets klass inte rörs.
+    const pw=this.j.fun?.power;
+    if(pw&&!this.baseSpeedMul){const base=pw.speedMul.bind(pw);this.baseSpeedMul=base;pw.speedMul=()=>Math.min(RUSH.speedCap,base()*this.boostMul());}
+  }
+  removeClock(){
+    delete this.j.tempo.setTarget;
+    const pw=this.j.fun?.power;if(pw&&this.baseSpeedMul){delete pw.speedMul;this.baseSpeedMul=null;}
+  }
+  // Den starkaste av de aktiva fartgåvorna (glögg ×1,5, pepparkaksraket ×3, medvind ×1,3, skridskor ×1,25). Renslädens ×2 kommer från grundspelet och multipliceras på.
+  boostMul(){
+    let m=1;for(const k of Object.keys(RUSH.boost))if(this.timers[k]>0)m=Math.max(m,RUSH.boost[k]);
+    return m;
+  }
+  chainWindow(){return COMBO.window+(this.timers.skates>0?RUSH.skatesWindow:0);}
+  // Trycket: rushens nummer, eller i Maraton tempot (och därefter ett steg per tempohöjning som inte längre går att göra).
+  pressure(){return this.def?this.def.pressure:this.j.tempo.level+this.extra;}
+  retime(distance){
+    const t=this.j.tempo;if(!t.target||!this.running&&this.state!=='starting')return;
+    const level=t.level,reach=Math.max(tempoReach(level),catchReach(TEMPO.baseSpeed*tempoSpeed(level)*PRESSURE.turbo));
+    const sec=clockFor(distance,{level,pressure:this.pressure(),reach,first:!this.graced});
+    this.graced=true;t.deadline=t.left=sec;
   }
   // Avbryter (pausmenyn → julmenyn). En körning med minst ett paket sparas som en förlust; en utan paket sparas inte.
   quit(){
@@ -123,13 +162,13 @@ export class XmasRush{
     return this.finish(over,{quit:true});
   }
   finish(over,{quit=false,win=false}={}){
-    const t=this.j.tempo,picked=t.picked,level=t.level,score=t.score,seconds=Math.round(t.elapsed),hearts=Math.max(0,t.lives),def=this.def;
+    const t=this.j.tempo,picked=t.picked,level=t.level+(this.def?0:this.extra),score=t.score,seconds=Math.round(t.elapsed),hearts=Math.max(0,t.lives),def=this.def;
     this.state='over';
     const save=picked>=RUSH.minPicksToSave?this.save:null;
     let record=false,stamp=false,stampId=RUSH.id,rush=null;
     if(def){
       // En av tolv rusher: bara klarade rusher sparas (bästa poäng och stjärnor) och låser upp nästa. Streak = rusher klarade i rad (en serie).
-      const prevBest=this.save?.state?.rush?.best?.[def.n],streak=win?this.streak+1:0,prog=win&&save?save.recordRush(def.n,{points:score,seconds,packages:picked,hearts,cleared:true}):null;
+      const prevBest=this.save?.state?.rush?.best?.[def.n],reachBefore=this.save?.state?.rush?.cleared||0,streak=win?this.streak+1:0,prog=win&&save?save.recordRush(def.n,{points:score,seconds,packages:picked,hearts,cleared:true}):null;
       record=!!prog?.record;
       if(win&&save){
         if(def.n>=RUSH.stampLevel&&save.stamp(RUSH.id)){stamp=true;stampId=RUSH.id;}
@@ -137,7 +176,7 @@ export class XmasRush{
         save.noteStreak(streak);
       }
       rush={n:def.n,name:def.name,tempo:def.tempo,goal:{...def.goal},cleared:!!win,stars:win?starsFor(hearts):0,hearts,streak,first:!!prog?.first,unlockedNext:!!prog?.unlocked,
-        next:win&&def.n<RUSH_COUNT?def.n+1:0,nextHearts:win?seriesHearts(hearts):0,done:win&&def.n===RUSH_COUNT,bestBefore:prevBest?{...prevBest}:null};
+        next:win&&def.n<RUSH_MAX?def.n+1:0,nextHearts:win?seriesHearts(hearts,this.startHearts):0,startHearts:this.startHearts,flawless:!!win&&hearts>=this.startHearts,done:win&&def.n===RUSH_COUNT,overtime:!!def.overtime,newReach:!!win&&def.n>reachBefore,bestBefore:prevBest?{...prevBest}:null};
     }else{
       record=save?save.record(RUSH.id,{points:score,seconds,packages:picked,bonus:this.golds,level}):false;
       stamp=save&&level>=RUSH.stampLevel?save.stamp(RUSH.id):false;
@@ -169,7 +208,7 @@ export class XmasRush{
     this.tickMagnet(dt,p);this.tickSpirit(dt,p);
     this.catchAll(p,sweep,speed);this.tickSide(p);
     if(this.state==='running'&&t.needTarget)this.aim(p);
-    if(this.chain>0&&this.time-this.lastPickAt>COMBO.window){const lost=this.chain;this.chain=0;if(lost>=3)this.emit({type:'rush-chain-lost',chain:lost});}
+    if(this.chain>0&&this.time-this.lastPickAt>this.chainWindow()){const lost=this.chain;this.chain=0;if(lost>=3)this.emit({type:'rush-chain-lost',chain:lost});}
   }
   // Välj nästa mål och lägg på den extra tid som en JULKLOCKA gav innan målet fanns.
   aim(p){
@@ -188,10 +227,16 @@ export class XmasRush{
       this.emit({type:'rush-shield',shield:this.shield,seconds:RUSH.shieldSeconds});
     }
     if(this.def)t.levelClock=0; // fast tempo: inga nivåhöjningar mitt i en rush
+    else t.levelClock+=dt*(RUSH.marathonRate-1); // Maraton: tempot stiger snabbare än i grundspelet
     for(const e of t.tick(dt,{freeze:frozen})){
       if(e.type==='tempo-level')this.emit({type:'rush-level',level:e.level,name:rushName(e.level),speed:e.speed,mult:e.mult});
       else if(e.type==='tempo-miss'){this.chain=0;this.emit({type:'rush-miss',lives:e.lives});}
       else if(e.type==='tempo-over')this.finish(e);
+    }
+    // Maraton efter tempo 12: grundspelet höjer inte tempot mer, men klockan fortsätter bli trängre, ett steg per tempohöjning
+    if(!this.def&&this.state==='running'&&t.level>=TEMPO.levels){
+      const extra=Math.max(0,Math.floor(t.levelClock/TEMPO.levelSeconds));
+      if(extra>this.extra){this.extra=extra;this.emit({type:'rush-level',level:TEMPO.levels+extra,name:rushName(TEMPO.levels),speed:tempoSpeed(TEMPO.levels),mult:tempoPoints(TEMPO.levels),extra:true});}
     }
   }
 
@@ -219,7 +264,7 @@ export class XmasRush{
   // ── Fångst: samma fält och sikt som TempoRush (tempoReach, catchReach, fri sikt) ────────────────────────────────────────────────────
   catchAll(p,sweep,speed){
     const j=this.j,t=j.tempo;
-    let reach=Math.max(catchReach(speed),tempoReach(t.level));if(this.timers.star>0)reach+=RUSH.starReach;
+    let reach=Math.max(catchReach(speed),tempoReach(t.level));if(this.timers.star>0)reach+=RUSH.starReach;if(this.timers.wind>0)reach+=RUSH.windReach;
     let taken=0;
     for(const pk of this.list){
       if(j.found.has(pk.id)||pk.pull>0||!j.inCatch(pk.pearl,p,reach,sweep))continue;
@@ -238,7 +283,7 @@ export class XmasRush{
     if(!pk.side){j.found.add(pk.id);j.foundAt?.set(pk.id,j.elapsed);}
     pk.collected=true;pk.pull=0;
     const gold=pk.kind==='bonus';
-    this.chain=this.time-this.lastPickAt<=COMBO.window?this.chain+1:1;this.lastPickAt=this.time;this.bestChain=Math.max(this.bestChain,this.chain);
+    this.chain=this.time-this.lastPickAt<=this.chainWindow()?this.chain+1:1;this.lastPickAt=this.time;this.bestChain=Math.max(this.bestChain,this.chain);
     const cm=comboMult(this.chain),pm=(this.timers.star>0?RUSH.starMult:1)*(this.timers.golden>0?RUSH.goldenMult:1);
     const base=(gold?PACKAGE_POINTS.bonus:PACKAGE_POINTS.regular*cm)*pm;
     const before=t.score;let pick;
@@ -265,6 +310,7 @@ export class XmasRush{
     const def=GIFTS[kind];if(!def)return 0;
     const j=this.j,t=j.tempo;let count=0;this.gifts++;
     if(kind==='sleigh')j.fun.power.grant('rocket'); // farten dubblas genom grundspelets egen raketförmåga (last-round.js turboFactor läser den)
+    else if(kind==='glogg'||kind==='kaka'||kind==='wind'||kind==='skates')this.timers[kind]=Math.max(this.timers[kind],def.seconds);
     else if(kind==='star')this.timers.star=def.seconds;
     else if(kind==='pause')this.timers.pause=def.seconds;
     else if(kind==='golden')this.timers.golden=def.seconds;
@@ -358,11 +404,11 @@ export class XmasRush{
       }
     }
     for(let i=pulled.length-1;i>=0;i--){
-      const pk=pulled[i];
+      const pk=pulled[i];if(!pk)continue; // listan töms när det sista paketet vinner rushen (cleanup) mitt i varvet
       if(pk.collected||(!pk.side&&j.found.has(pk.id))){pulled.splice(i,1);continue;}
       pk.pull+=dt/RUSH.pullSeconds;const k=Math.min(1,pk.pull),e=k*k*(3-2*k);
       pk.vx=pk.x+(p.x-pk.x)*e;pk.vz=pk.z+(p.z-pk.z)*e;
-      if(k>=1){pulled.splice(i,1);this.take(pk,p,{by:'magnet'});}
+      if(k>=1){pulled.splice(i,1);this.take(pk,p,{by:'magnet'});if(this.state!=='running')break;}
     }
   }
   // Tomtespöket: svävar fram till närmaste paket (inom ghostRange från spelaren, helst framför) och tar det åt spelaren, ett paket var ghostEvery:e sekund.
@@ -414,19 +460,19 @@ export class XmasRush{
     return t.distance>16?{x:t.x,z:t.z,id:t.id,kind:'xmas',label:t.label,radius:1.6}:{x:p.x,z:p.z,id:'xmas-near',kind:'wait',label:t.label,radius:2};
   }
   // Kedjan i samma form som en vanlig körning, så att julens HUD kan visa den utan särfall.
-  comboView(){return {chain:this.chain,phase:this.running?'collect':'done',t:this.time,lastPickAt:this.lastPickAt,windowSec:COMBO.window};}
+  comboView(){return {chain:this.chain,phase:this.running?'collect':'done',t:this.time,lastPickAt:this.lastPickAt,windowSec:this.chainWindow()};}
   powers(out=[]){
     out.length=0;
     const rocket=this.j.fun?.power?.timers?.rocket||0;if(rocket>0)out.push({kind:'sleigh',label:GIFTS.sleigh.short,left:rocket,seconds:GIFTS.sleigh.seconds});
-    for(const k of ['magnet','ghost','star','pause','golden'])if(this.timers[k]>0)out.push({kind:k,label:GIFTS[k].short,left:this.timers[k],seconds:GIFTS[k].seconds});
+    for(const k of ['glogg','kaka','wind','skates','magnet','ghost','star','pause','golden'])if(this.timers[k]>0)out.push({kind:k,label:GIFTS[k].short,left:this.timers[k],seconds:GIFTS[k].seconds});
     if(this.shield>0)out.push({kind:'shield',label:GIFTS.shield.short+(this.shield>1?' ×'+this.shield:''),left:0,seconds:0});
     return out;
   }
   snapshot(){
     const t=this.j.tempo,def=this.def;
-    return {state:this.state,running:this.running,level:t.level,name:def?def.name:rushName(t.level),n:def?.n||0,goal:def?goalProgress(def,{picked:t.picked,score:t.score}):null,streak:this.streak,lives:t.lives,maxLives:TEMPO.lives,score:t.score,picked:t.picked,gold:this.golds,gifts:this.gifts,
+    return {state:this.state,running:this.running,level:t.level+(def?0:this.extra),name:def?def.name:rushName(t.level),n:def?.n||0,goal:def?goalProgress(def,{picked:t.picked,score:t.score}):null,streak:this.streak,lives:t.lives,maxLives:TEMPO.lives,score:t.score,picked:t.picked,gold:this.golds,gifts:this.gifts,
       chain:this.chain,bestChain:this.bestChain,ratio:t.target&&t.deadline>0?clamp01(t.left/t.deadline):1,left:Math.max(0,t.left),hasTarget:!!t.target,urgent:!!t.target&&t.deadline>0&&t.left/t.deadline<RUSH.urgent,
-      levelLeft:Math.max(0,TEMPO.levelSeconds-t.levelClock),speed:t.speedMul(),mult:t.pointMul(),shield:this.shield,seconds:t.elapsed,packages:this.list.length,
+      levelLeft:Math.max(0,TEMPO.levelSeconds-(t.levelClock-(t.level>=TEMPO.levels?this.extra*TEMPO.levelSeconds:0)))/(def?1:RUSH.marathonRate),speed:t.speedMul(),mult:t.pointMul(),shield:this.shield,seconds:t.elapsed,packages:this.list.length,
       side:this.side.reduce((n,k)=>n+(k.rain?0:1),0),rain:this.side.reduce((n,k)=>n+(k.rain?1:0),0),sideTaken:this.sideTaken,magnet:this.timers.magnet>0,ghost:this.spirit.active,result:this.result};
   }
 }

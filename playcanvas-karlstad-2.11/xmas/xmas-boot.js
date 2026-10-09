@@ -1,22 +1,22 @@
 // Julklappsjakten: kopplar ihop motorn, vyn, gränssnittet och grundspelets system. Anropas en gång från last-round.js (bara i julbygget).
 // Allt här är fail-soft: om något i julkoden skulle kasta stängs jultilläggen av och grundspelet lever vidare (som platskoden i 2.21).
-import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.3';
-import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.3';
-import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.3';
-import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.3';
-import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.3';
-import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.3';
-import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.3';
-import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.3';
-import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.3';
-import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.3';
-import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.3';
-import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.3';
-import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.3';
-import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.3';
-import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.3';
-import {nextRound,roundById,buildRound} from './xmas-rounds.mjs?v=2.21.1-xmas.3';
-import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.3';
+import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.4';
+import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.4';
+import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.4';
+import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.4';
+import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.4';
+import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.4';
+import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.4';
+import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.4';
+import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.4';
+import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.4';
+import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.4';
+import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.4';
+import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.4';
+import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.4';
+import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.4';
+import {nextRound,roundById,buildRound} from './xmas-rounds.mjs?v=2.21.1-xmas.4';
+import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.4';
 
 // Julbygget har inga termosar, hemligheter eller skatter: paketen ersätter dem. Anropas direkt efter att resan skapats, innan någon vy ritas.
 export function prepareXmasJourney(journey){
@@ -44,6 +44,7 @@ export function installXmas(ctx){
   try{decor=createXmasDecor(pc,host,{root,texture,labelTex,indoors,params:{weather:save.weather}},sprites);}catch(e){console.error('[Julmiljön hoppades över]',e);}
   const baseUrl=baseGameUrl(location.search,location.hostname);
   let stamp=baseStamp,mode='menu'; // menu | cozy | zombies | rush
+  let turboBefore=null; // spelarens eget turbo-val före rushen (rushen slår på turbon); det återställs när man lämnar rushen
   let caughtAt=0;
   // Automatisk lättnad vid segt spel: mäter riktiga bildrutetider (inte spelets klippta dt) och minskar julens effekter ett steg i taget.
   // Av i automatiska tester (navigator.webdriver) och med ?nogov; ?gov tvingar på den. Sparas inte: nästa start prövar full kvalitet igen.
@@ -78,7 +79,7 @@ export function installXmas(ctx){
   function enter(kind,spawn=null){
     try{dismissPlaceResult?.();}catch{} // grundspelets resultatkort från ett butiksuppdrag ska inte ligga kvar över nästa läge
     const zombies=kind==='zombies',rushing=kind==='rush';
-    leaveRush();
+    leaveRush();if(!rushing)restoreTurbo();
     mode=zombies?'zombies':rushing?'rush':'cozy';caughtAt=0;
     document.body.classList.add('xmas-on');document.body.classList.toggle('xmas-cozy',!zombies);document.body.classList.toggle('xmas-zombies',zombies);document.body.classList.toggle('xmas-rush',rushing);
     startCity(zombies?'free':'clean');
@@ -94,6 +95,8 @@ export function installXmas(ctx){
   const freeSpawn=()=>{const p=host.player.getPosition();return {x:p.x,z:p.z,yaw:journey.heading||0};};
   // JulRushen: städa bort paketbandet, farten och tempot så att inget ligger kvar i nästa läge (grundspelets termosband och tempo är annars delade med journey).
   function leaveRush(){try{julrush.cleanup();julrush.drain();julrush.state='idle';}catch(e){console.error(e);}}
+  // Turbon som rushen slog på går tillbaka till det spelaren själv hade valt (när man lämnar rushen, inte mellan två rusher i rad).
+  function restoreTurbo(){if(turboBefore==null)return;const was=turboBefore;turboBefore=null;try{ctx.setTurbo?.(was);}catch{}}
   // JulRushen börjar på Stora Torget, vänd åt det håll där banan får den längsta, fria gatusträckan (grundspelets planHeading prövar tre riktningar: de täcker hela varvet).
   function rushSpawn(){
     const s=INTRO.spawn;let best=null;
@@ -109,14 +112,15 @@ export function installXmas(ctx){
       ui.setProgress(hunt.run);view.clear();
     });
   }
-  // n = 0: Maraton (tempot stiger var 15:e sekund). n = 1–12: en rush med fast tempo och ett mål. series: hjärtan och rusher i rad när man går vidare från en klarad rush.
+  // n = 0: Maraton (tempot stiger var 12:e sekund, och klockan blir trängre). n = 1–99: en rush med fast tempo och ett mål (13 och uppåt är ÖVERTID). series: hjärtan och rusher i rad när man går vidare från en klarad rush.
   function startRush(n=0,series=null){
     guard(()=>{
       const def=n?rushDef(n):null;
       if(n&&(!def||!isUnlocked(save.rush,n))){openRush();return;}
       hunt.cancel('rush');enter('rush',rushSpawn());julrush.start({def,hearts:series?.hearts||3,streak:series?.streak||0});
-      try{host.music?.tempo?.(def?1+.03*(def.tempo-1):1);}catch{}
-      toast(def?'RUSH '+def.n+' · '+def.name:'JULRUSHEN · MARATON',def?goalText(def)+'. Följ pilen och den gröna strålen. Tryck T för turbo.':'Följ pilen och den gröna strålen till nästa paket. Tempot stiger var 15:e sekund. Tryck T för turbo.',3.6);
+      try{const was=ctx.setTurbo?.(true);if(turboBefore==null&&typeof was==='boolean')turboBefore=was;}catch{} // klockan är räknad på turbons fart: den slås på av sig själv (man kan stänga av den, men då hinner man inte långt)
+      try{host.music?.tempo?.(def?Math.min(1.35,1+.03*(def.tempo-1)):1);}catch{}
+      toast(def?'RUSH '+def.n+' · '+def.name:'JULRUSHEN · MARATON',def?goalText(def)+'. Följ pilen och den gröna strålen. Turbon är på.':'Följ pilen och den gröna strålen till nästa paket. Tempot stiger var 12:e sekund och klockan blir trängre. Turbon är på.',3.6);
       ui.showGoal(def?goalText(def)+'!':'Följ pilen: hinn fram före klockan!',5500);
       ui.setRush(julrush.snapshot(),julrush.powers([]),performance.now());view.clear();
     });
@@ -217,7 +221,7 @@ export function installXmas(ctx){
     guard(()=>{
       try{dismissPlaceResult?.();}catch{}clearTimeout(resultTimer);
       if(julrush.active){julrush.quit();} // att ge upp i pausmenyn sparar körningen som en förlust (om den hade några paket)
-      leaveRush();try{host.music?.tempo?.(1);}catch{}
+      leaveRush();restoreTurbo();try{host.music?.tempo?.(1);}catch{}
       hunt.cancel('meny');view.clear();ui.showHud(false);guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;journey.pause?.();mode='menu';caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush');
       if(incoming){ui.renderChallenge(incoming);setPanel('xmas-challenge');return;}
       ui.renderStart(buildDetail(stamp));setPanel('xmas-intro');
@@ -237,7 +241,8 @@ export function installXmas(ctx){
   // ── Händelser från motorn → ljud, effekter och gränssnitt ──────────────────────────────────────────────────────
   // Varje gåva har sitt eget lilla ljud: släden stiger snabbt, magneten sveper nedåt, spöket klingar, bomben mullrar, regnet porlar.
   const GIFT_JINGLE={default:[[659.25],[880],[1174.66]],sleigh:[[392,'sawtooth'],[523.25,'sawtooth'],[659.25,'sawtooth'],[880,'sawtooth']],magnet:[[880,'sine'],[740,'sine'],[622,'sine'],[523.25,'sine'],[440,'sine']],
-    ghost:[[1046.5],[987.77],[880],[783.99],[659.25]],bomb:[[110,'sawtooth'],[82.4,'sawtooth'],[164.8,'square']],rain:[[1318.5],[1174.66],[1046.5],[987.77],[880],[783.99]]};
+    ghost:[[1046.5],[987.77],[880],[783.99],[659.25]],bomb:[[110,'sawtooth'],[82.4,'sawtooth'],[164.8,'square']],rain:[[1318.5],[1174.66],[1046.5],[987.77],[880],[783.99]],
+    glogg:[[392],[493.88],[587.33],[739.99]],kaka:[[330,'sawtooth'],[440,'sawtooth'],[587.33,'sawtooth'],[783.99,'sawtooth'],[1046.5,'sawtooth']],wind:[[600,'sine'],[800,'sine'],[1000,'sine'],[1200,'sine']],skates:[[1568],[1760],[2093]]};
   const chainFreq=chain=>[523.25,587.33,659.25,698.46,783.99,880,987.77,1046.5][Math.min(7,Math.max(0,chain-1))]||1046.5;
   const handlers={
     'xmas-start':(e,now)=>{ui.setProgress(hunt.run);},
@@ -264,14 +269,15 @@ export function installXmas(ctx){
       ui.showPill(who+'+'+e.points+(e.flow?' · FLYT':'')+(e.praise?' · '+e.praise:e.chain>=2?' · KOMBO '+e.chain:''),e.gold||e.praise?1500:900,now,e.gold||e.praise?'bonus':'');
     },
     'rush-gift':(e,now)=>{
-      sound(e.kind==='bomb'?'boss':'win');(GIFT_JINGLE[e.kind]||GIFT_JINGLE.default).forEach(([f,type],i)=>setTimeout(()=>note(f,type||'triangle',.2,.07),i*(e.kind==='sleigh'?45:e.kind==='ghost'?85:65)));
-      fanfare(e.label+(e.count>0?' · '+e.count+' PAKET':'')+'!',e.text+(e.seconds?' '+e.seconds+' sekunder.':''),2.2,'energy');
+      sound(e.kind==='bomb'?'boss':'win');(GIFT_JINGLE[e.kind]||GIFT_JINGLE.default).forEach(([f,type],i)=>setTimeout(()=>note(f,type||'triangle',.2,.07),i*(e.kind==='sleigh'?45:e.kind==='kaka'?35:e.kind==='ghost'?85:65)));
+      fanfare(e.label+(e.count>0?' · '+e.count+' PAKET':'')+'!',e.text+(e.seconds?' '+String(e.seconds).replace('.',',')+' sekunder.':''),2.2,'energy');
     },
     'rush-level':(e,now)=>{
-      sound('boss');host.music?.tempo?.(1+.03*(e.level-1));
-      fanfare('TEMPO '+e.level+' · '+e.name,'Fart ×'+e.speed.toFixed(2).replace('.',',')+' · poäng ×'+e.mult.toFixed(1).replace('.',','),2.2,'chain');
+      sound('boss');host.music?.tempo?.(Math.min(1.35,1+.03*(e.level-1)));
+      fanfare('TEMPO '+e.level+' · '+(e.extra?'ÖVERTID':e.name),e.extra?'Samma fart, men klockan blir trängre.':'Fart ×'+e.speed.toFixed(2).replace('.',',')+' · poäng ×'+e.mult.toFixed(1).replace('.',','),2.2,'chain');
     },
-    'rush-miss':(e,now)=>{sound('bump');ui.showPill(e.lives>0?'FÖR SENT! '+e.lives+' LIV KVAR':'INGA LIV KVAR',1800,now,'lost');ui.hitHearts();},
+    // Klockan är räknad på turbon: har spelaren stängt av den (en knapptryckning räcker) får hen veta varför det går så fort.
+    'rush-miss':(e,now)=>{sound('bump');let noTurbo=false;try{noTurbo=ctx.setTurbo?.()===false;}catch{}ui.showPill((e.lives>0?'FÖR SENT! '+e.lives+' LIV KVAR':'INGA LIV KVAR')+(noTurbo&&e.lives>0?' · SLÅ PÅ TURBON':''),1800,now,'lost');ui.hitHearts();},
     'rush-shield':(e,now)=>{sound('capture');ui.showPill('PEPPARKAKSSKÖLDEN RÄDDADE ETT LIV · +'+e.seconds+' S',2400,now,'bonus');},
     'rush-chain-lost':(e,now)=>{ui.showPill('KEDJAN BRÖTS · '+e.chain+' I RAD',1200,now,'lost');},
     'rush-over':(e,now)=>{

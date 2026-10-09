@@ -1,7 +1,7 @@
 // Julklappsjakten: Tomtezombies. Samma tecknade zombier som i grundspelet (zombie-art.js) med tomteluva, namnskylt och en egen sak i handen,
 // bakade till samma sorts bildruta (4 poser i en bild) så att zombielägets pooler, rörelser och gränser fungerar oförändrade.
 // Varianterna följer grundspelets fyra zombietyper: walker = Paket-Pelle, runner = Stress-Nisse, tank = Gröt-Gunnar, golden = Guld-Nisse.
-import {drawZombiePose} from '../zombie-art.js?v=2.21.1-xmas.3';
+import {drawZombiePose} from '../zombie-art.js?v=2.21.1-xmas.4';
 
 export const TOMTEZOMBIE_NAMES=Object.freeze({walker:'Paket-Pelle',runner:'Stress-Nisse',tank:'Gröt-Gunnar',golden:'Guld-Nisse'});
 export const TOMTEZOMBIE_NOTES=Object.freeze({walker:'Vanlig tomtezombie som bär ett paket',runner:'Snabb och stressad',tank:'Tung, långsam och seg',golden:'Sällsynt: fånga för bonus'});

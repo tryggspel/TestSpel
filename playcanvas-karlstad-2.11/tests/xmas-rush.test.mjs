@@ -10,7 +10,7 @@ import {powerFor,POWER} from '../powerups.mjs';
 import {XmasRush,GIFTS,GIFT_KINDS,giftFor,bearsGift,RUSH,RUSH_NAMES,rushName} from '../xmas/xmas-rush.mjs';
 import {XmasSave,sanitizeSave} from '../xmas/xmas-save.mjs';
 import {COMBO,PACKAGE_POINTS,STAMPS} from '../xmas/xmas-config.mjs';
-import {RUSHES,RUSH_COUNT,goalProgress} from '../xmas/xmas-rushes.mjs';
+import {RUSHES,RUSH_COUNT,RUSH_MAX,PRESSURE,clockFor,rushDef,goalProgress} from '../xmas/xmas-rushes.mjs';
 
 const nav=new CityNavigation(),mall={x:-135,z:98};
 const portals={'sista-rundan':{x:46,z:37,name:'O’Learys'},fikapanik:{x:8,z:6,name:'Fikapanik'},'radda-fikat':{x:-135,z:55,name:'Rädda fikat'},sandgrund:{x:-12,z:-370,name:'Sandgrund'}};
@@ -25,13 +25,15 @@ function mk({wall=null,at=START}={}){
   g.xmas={step:(dt,p,sweep,speed)=>rush.step(dt,p,sweep,speed),objective:p=>rush.objective(p)};
   return {g,rush,save,pos:{...at},fwd:{x:0,z:-1},events:[],base:[]};
 }
-// Ett steg. move: null = stå still, 'target' = gå mot målet, {x,z} = gå mot en punkt. Farten är gångfarten gånger tempot och eventuell släde.
+// Ett steg. move: null = stå still, 'target' = gå mot målet, {x,z} = gå mot en punkt. Farten är gångfarten gånger turbon (×2: rushen slår på den, och klockan är räknad på den), tempot och eventuella fartgåvor.
+// calm(c) stänger av klockan (glöggpaus utan slut) för test som står stilla en längre stund: annars tar hjärtana slut och körningen med dem.
 function frame(c,dt=1/60,move=null){
   const {g}=c;const dest=move==='target'?g.tempo.target:move&&typeof move==='object'?move:null;
-  if(dest){const dx=dest.x-c.pos.x,dz=dest.z-c.pos.z,d=Math.hypot(dx,dz);if(d>1e-6){const v=7.2*g.tempo.speedMul()*g.fun.power.speedMul(),s=Math.min(d,v*dt);c.pos={x:c.pos.x+dx/d*s,z:c.pos.z+dz/d*s};c.fwd={x:dx/d,z:dz/d};}}
+  if(dest){const dx=dest.x-c.pos.x,dz=dest.z-c.pos.z,d=Math.hypot(dx,dz);if(d>1e-6){const v=7.2*(c.turbo??2)*g.tempo.speedMul()*g.fun.power.speedMul(),s=Math.min(d,v*dt);c.pos={x:c.pos.x+dx/d*s,z:c.pos.z+dz/d*s};c.fwd={x:dx/d,z:dz/d};}}
   g.step(dt,{x:c.pos.x,z:c.pos.z,y:1.68},c.fwd);
   const ev=c.rush.drain();c.events.push(...ev);c.base.push(...g.drainEvents());return ev;
 }
+const calm=c=>{c.rush.timers.pause=1e6;return c;};
 function play(c,seconds,move='target',dt=1/60){const n=Math.round(seconds/dt);for(let i=0;i<n&&c.rush.state!=='over';i++)frame(c,dt,move);return c.events;}
 const ofType=(c,type)=>c.events.filter(e=>e.type===type);
 // Spela tills ett villkor är uppfyllt (eller tiden tar slut).
@@ -39,13 +41,13 @@ function until(c,cond,max=120,move='target'){for(let i=0;i<max*60&&!cond();i++){
 // Starta och låt första steget lägga ut banan.
 function started(opts){const c=mk(opts);c.rush.start();frame(c,.1);return c;}
 
-test('julgåvor: elva sorter med namn, förklaring och färg, stabil fördelning och skölden är sällsyntast',()=>{
-  assert.equal(GIFT_KINDS.length,11);
-  for(const k of ['sleigh','magnet','ghost','star','clock','pause','golden','sparkler','shield','bomb','rain'])assert.ok(GIFT_KINDS.includes(k),k);
+test('julgåvor: femton sorter med namn, förklaring och färg, stabil fördelning och skölden är sällsyntast',()=>{
+  assert.equal(GIFT_KINDS.length,15);
+  for(const k of ['sleigh','magnet','ghost','star','clock','pause','golden','sparkler','shield','bomb','rain','glogg','kaka','wind','skates'])assert.ok(GIFT_KINDS.includes(k),k);
   for(const k of GIFT_KINDS){const d=GIFTS[k];assert.ok(d.label&&d.text&&d.color&&d.short,k+' saknar text');assert.ok(Number.isFinite(d.seconds)&&d.seconds>=0);}
   const count=Object.fromEntries(GIFT_KINDS.map(k=>[k,0])),n=32000;
   for(let i=0;i<n;i++){const k=giftFor('tp:'+i);assert.ok(GIFTS[k]);count[k]++;assert.equal(giftFor('tp:'+i),k,'samma id ger samma gåva');}
-  for(const k of GIFT_KINDS)assert.ok(count[k]>n*.03,k+' förekommer: '+count[k]);
+  for(const k of GIFT_KINDS)assert.ok(count[k]>n*.025,k+' förekommer: '+count[k]);
   const rarest=GIFT_KINDS.reduce((a,b)=>count[a]<count[b]?a:b);assert.equal(rarest,'shield','skölden (som räddar ett liv) är sällsyntast');
   assert.ok(count.sleigh>count.shield*2);
 });
@@ -66,7 +68,7 @@ test('start: körningen börjar i första steget, med tempo 1, tre liv och ett p
   assert.ok(pk.every(k=>k.id.startsWith('tp:')&&c.g.itemById.has(k.id)),'samma pärlor som TempoRush lägger ut');
   for(let i=1;i<pk.length;i++){const d=Math.hypot(pk[i].x-pk[i-1].x,pk[i].z-pk[i-1].z);assert.ok(d>6&&d<40,'avstånd '+d.toFixed(1));}
   assert.ok(c.g.tempo.target,'ett mål finns direkt');assert.equal(c.g.tempo.target.id,c.g.course.pearls[0].id);
-  assert.ok(c.g.tempo.deadline>=9&&c.g.tempo.deadline<=16,'första klockan är generös: '+c.g.tempo.deadline.toFixed(1)+' s');
+  assert.ok(c.g.tempo.deadline>=4&&c.g.tempo.deadline<=10,'första klockan har extra tid att se sig om på: '+c.g.tempo.deadline.toFixed(1)+' s');
   const t=c.rush.target(c.pos);assert.equal(t.id,c.g.tempo.target.id);assert.match(t.label,/PAKET/);
 });
 
@@ -100,8 +102,8 @@ test('kedja: fyra paket i rad ger ×2 och kombobonus, och kedjan bryts när fön
   assert.equal(p4.praise,tier.praise);assert.equal(p4.tierBonus,tier.bonus);assert.equal(p4.mult,2);
   assert.ok(p4.points>=PACKAGE_POINTS.regular*2+tier.bonus,'fjärde paketet: '+p4.points);
   assert.equal(c.rush.bestChain,4);
-  // Stå still längre än fönstret: kedjan bryts (och det meddelas för kedjor ≥ 3).
-  for(let i=0;i<Math.ceil((COMBO.window+.5)*60);i++)frame(c,1/60);
+  // Stå still längre än fönstret: kedjan bryts (och det meddelas för kedjor ≥ 3). Klockan hålls i schack, annars tar den ett liv först och bryter kedjan på det sättet.
+  calm(c);for(let i=0;i<Math.ceil((COMBO.window+.5)*60);i++)frame(c,1/60);
   assert.equal(c.rush.chain,0);assert.ok(ofType(c,'rush-chain-lost').some(e=>e.chain===4));
 });
 
@@ -223,7 +225,7 @@ test('gåva: julstjärnan ger dubbla poäng och större fångstfält i nio sekun
   assert.equal(plain.pm,1);assert.ok(star.points>plain.points&&golden.points>star.points);
   // Tiderna.
   assert.equal(GIFTS.star.seconds,9);assert.equal(GIFTS.golden.seconds,20);
-  play(b,9.2,null);assert.equal(b.rush.timers.star,0);play(s,19.5,null);assert.ok(s.rush.timers.golden>0||s.rush.state==='over');
+  calm(b);calm(s);play(b,9.2,null);assert.equal(b.rush.timers.star,0);play(s,19.5,null);assert.ok(s.rush.timers.golden>0||s.rush.state==='over');
   // Magneten: ett paket strax utanför det vanliga fältet tas.
   const m=started(),n=m.rush.list[0],reach=Math.max(catchReach(0),tempoReach(1)),sx=-n.pearl.hz,sz=n.pearl.hx;
   m.rush.grant('star',m.pos);m.pos={x:n.x+sx*(reach+RUSH.starReach-.5),z:n.z+sz*(reach+RUSH.starReach-.5)};frame(m,.05);assert.equal(m.g.found.has(n.id),true,'magneten når längre');
@@ -235,7 +237,7 @@ test('gåva: glöggpausen fryser klockan till nästa paket men inte nivåerna',(
   play(c,5,null);assert.ok(c.g.tempo.left<left,'när pausen är slut går klockan igen');
 });
 
-test('gåva: julklockan lägger åtta sekunder på klockan, även om den kommer mellan två mål',()=>{
+test('gåva: julklockan lägger fem sekunder på klockan, även om den kommer mellan två mål',()=>{
   const c=started(),t=c.g.tempo,left=t.left,dl=t.deadline;
   c.rush.grant('clock',c.pos);assert.equal(t.left,left+RUSH.clockSeconds);assert.equal(t.deadline,dl+RUSH.clockSeconds);
   // Ingen aktuell tid att lägga på: tiden sparas till nästa mål.
@@ -275,7 +277,7 @@ test('banan: pärlor man sprungit förbi försvinner, banan följer med långt b
   play(c,25);assert.equal(c.g.tempo.lives,3);
   assert.ok(c.rush.list.every(k=>c.g.itemById.has(k.id)),'bara levande pärlor visas');
   // Hamnar spelaren långt från banan (till exempel efter en bussresa) börjar banan om vid spelaren.
-  const far={x:c.pos.x+420,z:c.pos.z+80};c.pos=far;
+  const far={x:c.pos.x+420,z:c.pos.z+80};c.pos=far;calm(c);
   for(let i=0;i<14*4;i++)frame(c,.25,null);
   const t=c.g.tempo.target;assert.ok(t,'nytt mål');assert.ok(Math.hypot(t.x-far.x,t.z-far.z)<TEMPO_COURSE.maxGap+1,'målet ligger nära: '+Math.round(Math.hypot(t.x-far.x,t.z-far.z)));
   assert.ok(!c.g.itemById.has(first),'gamla banan är borta');
@@ -326,7 +328,8 @@ test('sparning: nivån följer med rekordet, gamla sparfiler utan nivå läses s
   assert.equal(b.record('julrush',{points:1200,seconds:80,packages:50,bonus:9,level:7}),true);assert.equal(b.state.records.julrush.level,7);
   assert.equal(b.record('julrush',{points:100,seconds:20,packages:5,bonus:0,level:2}),false);assert.equal(b.state.records.julrush.points,1200,'sämre körning ändrar inte rekordet');
   const old=sanitizeSave({v:1,records:{intro:{points:500,seconds:60,packages:20,bonus:1}}});assert.equal(old.records.intro.level,0);
-  const bad=sanitizeSave({v:1,records:{julrush:{points:5,seconds:1,packages:1,bonus:1,level:99}}});assert.equal(bad.records.julrush.level,12);
+  const bad=sanitizeSave({v:1,records:{julrush:{points:5,seconds:1,packages:1,bonus:1,level:150}}});assert.equal(bad.records.julrush.level,99,'Maraton räknar vidare efter tempo 12, men inte över 99');
+  const fine=sanitizeSave({v:1,records:{julrush:{points:5,seconds:1,packages:1,bonus:1,level:27}}});assert.equal(fine.records.julrush.level,27);
   const neg=sanitizeSave({v:1,records:{julrush:{points:5,seconds:1,packages:1,bonus:1,level:-3}}});assert.equal(neg.records.julrush.level,0);
   assert.equal(a.stamp('julrush'),true);assert.equal(a.stamp('julrush'),false);assert.equal(a.stampTotal(),STAMPS.length);
 });
@@ -380,6 +383,9 @@ test('krokarna i grundspelets filer finns kvar (en sammanslagning från main få
   for(const id of ['xmas-rush','xmas-board','xmas-challenge']){assert.ok(lr.includes("'"+id+"'"),id+' finns i setPanel-listan');assert.ok(html.includes('id="round-'+id+'"'),'round-'+id+' finns i index.html');}
   for(const id of ['xmasRushGrid','xmasRushPlay','xmasRushMarathon','xmasBoardList','xmasBoardName','xmasBoardLink','xmasBoardShare','xmasBoardCopy','xmasChallengeGo','xmasChallengeSave','xmasChallengeSkip','xmasResultShare'])assert.ok(html.includes('id="'+id+'"'),id+' finns i index.html');
   assert.ok(/objective:p=>.*quiet:true/.test(read('xmas/xmas-boot.js')),'xmas-boot.js markerar julens mål som quiet');
+  // Turbon: rushen slår på den (klockan är räknad på den) via en krok i last-round.js som inte visar något meddelande och som ger tillbaka det tidigare valet, och spelarens eget val återställs när man lämnar rushen
+  assert.match(lr,/setTurbo:on=>\{const was=turbo;if\(typeof on==='boolean'&&on!==turbo\)\{turbo=on;renderTurbo\(\);\}return was;\}/,'last-round.js har kroken setTurbo');
+  const boot=read('xmas/xmas-boot.js');assert.match(boot,/ctx\.setTurbo\?\.\(true\)/);assert.match(boot,/function restoreTurbo\(\)/);assert.ok((boot.match(/restoreTurbo\(\)/g)||[]).length>=3,'återställs när man lämnar rushen');assert.match(boot,/ctx\.setTurbo\?\.\(\)===false/,'ett missat paket säger att turbon är av');assert.match(boot,/SLÅ PÅ TURBON/);
   // Kungsgatan 14, 16 och 18: fasadmodulerna är orörda av JulRushen (inga imports av julkod).
   for(const f of ['kungsgatan-reference.mjs','photo-reference-pass3.mjs','residenset-facade.mjs','opera-facade.mjs','innerstad-reference.mjs'])assert.ok(!/xmas|JulRush/i.test(read(f).replace(/\?v=[^'"\s)]+/g,'')),f+' är orörd');
 });
@@ -395,14 +401,14 @@ function plain(c,x,z,{course=900}={}){
 }
 const sleepFreeze=c=>{c.rush.timers.pause=9999;}; // klockan står still så att inget liv tappas medan provet står och väntar
 
-test('alla elva gåvor går att dela ut: var och en ger sin händelse, och de som varar syns som brickor',()=>{
+test('alla femton gåvor går att dela ut: var och en ger sin händelse, och de som varar syns som brickor',()=>{
   const c=started();sleepFreeze(c);c.events.length=0;
   for(const k of GIFT_KINDS)c.rush.grant(k,c.pos);
   c.events.push(...c.rush.drain());
   assert.deepEqual(ofType(c,'rush-gift').map(e=>e.kind),GIFT_KINDS,'en händelse per gåva, i ordning');
   for(const e of ofType(c,'rush-gift'))assert.equal(e.label,GIFTS[e.kind].label);
   const chips=c.rush.powers().map(p=>p.kind);
-  for(const k of ['sleigh','magnet','ghost','star','pause','golden','shield'])assert.ok(chips.includes(k),'bricka för '+k);
+  for(const k of ['sleigh','magnet','ghost','star','pause','golden','shield','glogg','kaka','wind','skates'])assert.ok(chips.includes(k),'bricka för '+k);
   assert.ok(c.rush.powers().every(p=>p.label),'varje bricka har en text');
   assert.equal(c.rush.snapshot().magnet,true);assert.equal(c.rush.snapshot().ghost,true);
   assert.equal(GIFTS.magnet.seconds,10);assert.equal(GIFTS.ghost.seconds,9);
@@ -415,6 +421,7 @@ test('sidopaket: var fjärde pärla får ett sidopaket med gåva på en fri plat
     for(const k of c.rush.side)if(!seen.has(k.id))seen.set(k.id,{...k});
     maxAlive=Math.max(maxAlive,c.rush.side.filter(k=>!k.rain).length);
   }
+  for(const [id,k] of [...seen])if(k.rain)seen.delete(id); // paketregnets paket är inga sidopaket
   assert.ok(seen.size>=4,'sidopaket syntes under en halv minut: '+seen.size);assert.ok(maxAlive<=RUSH.sideMax,'högst '+RUSH.sideMax+' åt gången: '+maxAlive);
   for(const k of seen.values()){
     assert.equal(k.kind,'bonus');assert.ok(GIFT_KINDS.includes(k.gift),'har en gåva: '+k.gift);assert.ok(k.side&&!k.rain);assert.match(k.id,/^sd:tp:/);
@@ -564,7 +571,7 @@ test('en rush har sitt tempo från första sekunden och behåller det, med hjär
   const m=started();play(m,TEMPO.levelSeconds+1);assert.equal(ofType(m,'rush-level').length,1);assert.equal(m.rush.snapshot().n,0);assert.equal(m.rush.snapshot().goal,null);
 });
 
-test('rush 1 (hämta 13 paket): målet nås, tre stjärnor utan tappade hjärtan, sparas och låser upp nästa rush',()=>{
+test('rush 1 (hämta 25 paket): målet nås, tre stjärnor utan tappade hjärtan, sparas och låser upp nästa rush',()=>{
   const def=RUSHES[0],c=rushed(def);
   until(c,()=>c.rush.state==='over',150);
   assert.equal(c.rush.state,'over');const over=ofType(c,'rush-over');assert.equal(over.length,1,'ett slut');
@@ -632,7 +639,7 @@ test('rush 5 ger julstämpeln och rush 12 en egen: Tomtegalet',()=>{
   const a=win(4);assert.equal(a.r.stamp,false);assert.equal(a.c.save.hasStamp('julrush'),false,'inte före rush 5');
   const b=win(5);assert.equal(b.r.stamp,true);assert.equal(b.r.stampId,'julrush');assert.equal(b.c.save.hasStamp('julrush'),true);assert.equal(b.c.save.hasStamp('julrush-12'),false);
   const z=win(12);assert.equal(z.r.stamp,true);assert.equal(z.r.stampId,'julrush-12');assert.equal(z.c.save.hasStamp('julrush'),true,'rush 12 ger också rush 5-stämpeln första gången');assert.equal(z.c.save.hasStamp('julrush-12'),true);
-  assert.equal(z.r.rush.done,true);assert.equal(z.r.rush.next,0);assert.ok(STAMPS.some(s=>s.id==='julrush-12'&&s.label==='TOMTEGALET'));
+  assert.equal(z.r.rush.done,true);assert.equal(z.r.rush.next,13,'efter Rush 12 fortsätter det med övertid');assert.equal(z.r.rush.overtime,false);assert.ok(STAMPS.some(s=>s.id==='julrush-12'&&s.label==='TOMTEGALET'));
   // Samma stämpel delas inte ut två gånger.
   const again=win(5);assert.equal(again.r.stamp,true,'ny spelare, ny sparfil');assert.equal(again.c.save.stampCount(),1);
 });
@@ -640,15 +647,144 @@ test('rush 5 ger julstämpeln och rush 12 en egen: Tomtegalet',()=>{
 test('sparningen av nivåerna: gamla filer saknar dem, orimliga värden begränsas och en klarad rush aldrig är låst',()=>{
   const old=sanitizeSave({v:1,records:{}});assert.deepEqual(old.rush,{cleared:0,stars:{},best:{},bestStreak:0});assert.equal(old.name,'');assert.deepEqual(old.friends,[]);
   const bad=sanitizeSave({v:1,rush:{cleared:99,stars:{1:7,2:-3,3:2,99:3},best:{1:{points:1e12,seconds:-1,packages:5,hearts:9},4:{points:0},5:{points:700,seconds:40,packages:12,hearts:2}},bestStreak:500}});
-  assert.equal(bad.rush.cleared,12);assert.deepEqual(bad.rush.stars,{1:3,3:2});assert.equal(bad.rush.best[1].points,9999999);assert.equal(bad.rush.best[1].hearts,3);assert.equal(bad.rush.best[4],undefined);assert.deepEqual(bad.rush.best[5],{points:700,seconds:40,packages:12,hearts:2});assert.equal(bad.rush.bestStreak,99);
+  assert.equal(bad.rush.cleared,99,'Rush 13 och uppåt är övertid: högsta rush är 99');assert.deepEqual(bad.rush.stars,{1:3,3:2,99:3});assert.equal(bad.rush.best[1].points,9999999);assert.equal(bad.rush.best[1].hearts,3);assert.equal(bad.rush.best[4],undefined);assert.deepEqual(bad.rush.best[5],{points:700,seconds:40,packages:12,hearts:2});assert.equal(bad.rush.bestStreak,99);
   const low=sanitizeSave({v:1,rush:{cleared:0,best:{6:{points:100,seconds:10,packages:5,hearts:1}}}});assert.equal(low.rush.cleared,6,'har man ett resultat i rush 6 är rush 6 klarad');
   const m=new Map(),store={getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,String(v))};
   const a=new XmasSave(store);assert.deepEqual(a.recordRush(1,{points:500,hearts:2,cleared:false}),{record:false,first:false,unlocked:false},'bara klarade rusher sparas');
   assert.deepEqual(a.recordRush(1,{points:500,seconds:40,packages:13,hearts:2,cleared:true}),{record:false,first:true,unlocked:true});
   assert.deepEqual(a.recordRush(1,{points:700,seconds:35,packages:13,hearts:3,cleared:true}),{record:true,first:false,unlocked:false});
-  assert.equal(a.recordRush(0,{points:5,cleared:true}).first,false);assert.equal(a.recordRush(13,{points:5,cleared:true}).first,false);
+  assert.equal(a.recordRush(0,{points:5,cleared:true}).first,false);assert.equal(a.recordRush(100,{points:5,cleared:true}).first,false);
   const b=new XmasSave(store);assert.equal(b.rush.cleared,1);assert.equal(b.rush.stars[1],3);assert.equal(b.rush.best[1].points,700);
   assert.deepEqual(b.profile(5),{name:'',cleared:1,stars:3,bests:{1:700},total:700,at:5});
   assert.equal(b.noteStreak(2),true);assert.equal(b.noteStreak(1),false);assert.equal(new XmasSave(store).rush.bestStreak,2);
-  assert.equal(RUSH_COUNT,12);assert.ok(goalProgress(RUSHES[0],{picked:13}).done);
+  assert.equal(RUSH_COUNT,12);assert.ok(goalProgress(RUSHES[0],{picked:RUSHES[0].goal.target}).done);
+});
+
+test('övertid i sparningen: Rush 13 och uppåt sparas och låser upp nästa, och hur långt man kommit följer med',()=>{
+  const m=new Map(),store={getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,String(v))};
+  const a=new XmasSave(store);for(let n=1;n<=12;n++)a.recordRush(n,{points:100*n,seconds:30,packages:25,hearts:3,cleared:true});
+  assert.equal(a.rush.cleared,12);
+  assert.deepEqual(a.recordRush(13,{points:2000,seconds:50,packages:52,hearts:2,cleared:true}),{record:false,first:true,unlocked:true},'Rush 13 är den första övertidsrushen och låser upp Rush 14');
+  assert.equal(a.rush.cleared,13);assert.equal(a.rush.stars[13],2);assert.equal(a.rush.best[13].points,2000);
+  const b=new XmasSave(store);assert.equal(b.rush.cleared,13,'sparas');assert.equal(b.profile().cleared,13);
+  assert.equal(a.recordRush(99,{points:9,seconds:1,packages:1,hearts:1,cleared:true}).unlocked,false,'efter Rush 99 finns ingen mer');
+});
+
+// ── 2.21.1-xmas.4: fler fartgåvor, trängre klocka, Maraton efter tempo 12 och övertid efter Rush 12 ─────────────────────────────────────────────────────
+const takeOne=c=>{const k=c.rush.list.find(x=>x.kind==='regular'&&!c.g.found.has(x.id));c.pos={x:k.x,z:k.z};return frame(c,.05);};
+
+test('fartgåvor: glögg ×1,5, pepparkaksraket ×3, medvind ×1,3 och skridskor ×1,25 går genom grundspelets fartfaktor, den starkaste gäller, renssläden multipliceras på och taket är ×4',()=>{
+  const mul=k=>{const d=started();sleepFreeze(d);d.rush.grant(k,d.pos);return d.g.fun.power.speedMul();};
+  assert.equal(started().g.fun.power.speedMul(),1);
+  assert.equal(mul('glogg'),RUSH.boost.glogg);assert.equal(mul('kaka'),RUSH.boost.kaka);assert.equal(mul('wind'),RUSH.boost.wind);assert.equal(mul('skates'),RUSH.boost.skates);
+  assert.deepEqual([RUSH.boost.glogg,RUSH.boost.kaka,RUSH.boost.wind,RUSH.boost.skates],[1.5,3,1.3,1.25]);assert.equal(mul('sleigh'),2,'renssläden är oförändrad');
+  assert.equal(mul('magnet'),1,'gåvor som inte är fartgåvor ändrar inte farten');
+  const d=started();sleepFreeze(d);for(const k of ['glogg','wind','skates'])d.rush.grant(k,d.pos);
+  assert.equal(d.g.fun.power.speedMul(),1.5,'glögg + medvind + skridskor: bara den starkaste gäller');
+  d.rush.grant('sleigh',d.pos);assert.equal(d.g.fun.power.speedMul(),3,'glögg ×1,5 × renssläde ×2');
+  d.rush.grant('kaka',d.pos);assert.equal(d.g.fun.power.speedMul(),RUSH.speedCap,'raket ×3 × släde ×2 = 6, men taket är ×4');assert.equal(RUSH.speedCap,4);
+  // Spelarens egen fart följer med (farten per bildruta är gångfarten × turbon × tempot × fartgåvorna).
+  const e=started();sleepFreeze(e);const x0=e.pos.x,z0=e.pos.z;frame(e,1/60,{x:x0+100,z:z0});const plainStep=Math.hypot(e.pos.x-x0,e.pos.z-z0);
+  const f=started();sleepFreeze(f);f.rush.grant('glogg',f.pos);frame(f,1/60,{x:f.pos.x+100,z:f.pos.z});assert.ok(Math.abs(Math.hypot(f.pos.x-START.x,f.pos.z-START.z)/plainStep-1.5)<.01,'glögg: en och en halv gånger så långt per bildruta');
+  // Brickorna visar dem, och de tar slut efter sin tid. Raketen är kortast.
+  const g=started();sleepFreeze(g);for(const k of ['glogg','kaka','wind','skates'])g.rush.grant(k,g.pos);
+  const chips=()=>g.rush.powers().filter(p=>p.kind!=='pause'); // (provets egen paus håller klockan still)
+  assert.deepEqual(chips().map(p=>p.kind),['glogg','kaka','wind','skates']);assert.ok(chips().every(p=>p.label&&p.seconds===GIFTS[p.kind].seconds));
+  assert.deepEqual(['glogg','kaka','wind','skates'].map(k=>GIFTS[k].seconds),[14,3.5,20,25]);
+  play(g,GIFTS.kaka.seconds+.2,null);assert.equal(g.rush.timers.kaka,0);assert.equal(g.g.fun.power.speedMul(),RUSH.boost.glogg,'raketen är slut, glöggen är kvar');
+  play(g,GIFTS.glogg.seconds,null);assert.equal(g.rush.timers.glogg,0);assert.equal(g.g.fun.power.speedMul(),RUSH.boost.wind,'glöggen är slut, medvinden är kvar');
+  play(g,GIFTS.skates.seconds,null);assert.equal(chips().length,0);assert.equal(g.g.fun.power.speedMul(),1);
+  // En ny glögg förlänger (kortas aldrig).
+  const h=started();sleepFreeze(h);h.rush.grant('glogg',h.pos);play(h,5,null);const left=h.rush.timers.glogg;h.rush.grant('glogg',h.pos);assert.ok(h.rush.timers.glogg>left+4.9&&h.rush.timers.glogg<=GIFTS.glogg.seconds);
+  // Allt städas bort med körningen: grundspelets fartfaktor och klocka är tillbaka som de var.
+  const q=started();q.rush.grant('kaka',q.pos);assert.ok(Object.hasOwn(q.g.fun.power,'speedMul')&&Object.hasOwn(q.g.tempo,'setTarget'));
+  q.rush.quit();assert.equal(Object.hasOwn(q.g.fun.power,'speedMul'),false);assert.equal(Object.hasOwn(q.g.tempo,'setTarget'),false);assert.equal(q.g.fun.power.speedMul(),1,'ingen fart kvar efter körningen');
+  q.rush.start();frame(q,.1);assert.equal(q.g.fun.power.speedMul(),1,'och en ny körning börjar utan fartgåvor');assert.equal(q.rush.timers.kaka,0);
+});
+
+test('fartgåvor: medvind ger två meter större fångstfält, och skridskor gör kedjans fönster en och en halv sekund längre',()=>{
+  const reach=Math.max(catchReach(0),tempoReach(1));
+  const trial=wind=>{const m=started();sleepFreeze(m);const k=plain(m,m.pos.x+reach+RUSH.windReach-.5,m.pos.z);assert.ok(m.g.freeSpot(k.x,k.z));if(wind)m.rush.grant('wind',m.pos);frame(m,.05);return k.collected;}; // spelaren står still: ingen sträcka som kan passera paketet
+  assert.equal(RUSH.windReach,2);assert.equal(trial(true),true,'med medvind tas paketet strax utanför det vanliga fältet');assert.equal(trial(false),false,'utan medvind tas det inte');
+  const a=started(),b=started();sleepFreeze(a);sleepFreeze(b);b.rush.grant('skates',b.pos);
+  assert.equal(a.rush.comboView().windowSec,COMBO.window);assert.equal(b.rush.comboView().windowSec,COMBO.window+RUSH.skatesWindow);assert.equal(RUSH.skatesWindow,1.5);
+  const gap=COMBO.window+RUSH.skatesWindow/2;
+  for(const c of [a,b]){takeOne(c);assert.equal(c.rush.chain,1);play(c,gap,null);takeOne(c);}
+  assert.equal(a.rush.chain,1,'utan skridskor hade kedjan hunnit brytas');assert.equal(b.rush.chain,2,'med skridskor håller kedjan');
+});
+
+test('klockan: rushens nummer styr tiden till nästa paket (trängre för varje rush), första paketet får extra tid, och grundspelets klocka är tillbaka efter körningen',()=>{
+  const reachFor=lv=>Math.max(tempoReach(lv),catchReach(TEMPO.baseSpeed*tempoSpeed(lv)*PRESSURE.turbo));
+  const deadline=(n,d=30)=>{const def=rushDef(n),c=rushed(def),k=c.rush.list.find(x=>x.id!==c.g.tempo.target?.id);c.g.tempo.setTarget(k,d);return {c,sec:c.g.tempo.deadline,left:c.g.tempo.left,def};};
+  const secs=[1,3,6,9,12,13,16,24,40].map(n=>{const r=deadline(n);assert.ok(Math.abs(r.sec-clockFor(30,{level:r.def.tempo,pressure:n,reach:reachFor(r.def.tempo)}))<1e-9,'rush '+n+' följer formeln');assert.equal(r.left,r.sec);return r.sec;});
+  for(let i=1;i<secs.length;i++)assert.ok(secs[i]<secs[i-1],'klockan blir trängre: '+secs.map(x=>x.toFixed(2)).join(' > '));
+  assert.ok(secs[0]>3&&secs[4]<2.2,'30 m: Rush 1 ger mer än tre sekunder, Rush 12 knappt två: '+secs[0].toFixed(2)+' / '+secs[4].toFixed(2));
+  // Det första målet har extra tid att se sig om på (en gång), nästa mål har det inte.
+  const f=rushed(rushDef(8)),first=f.g.tempo.deadline;f.g.tempo.setTarget(f.rush.list[3],30);
+  assert.ok(first>PRESSURE.grace+PRESSURE.min,'första klockan: '+first.toFixed(2)+' s');assert.ok(Math.abs((f.g.tempo.deadline+PRESSURE.grace)-clockFor(30,{level:8,pressure:8,reach:reachFor(8),first:true}))<1e-9);
+  // Klockan sitter på journeys egen tempoinstans och är borta efter körningen: grundspelets generösa klocka gäller igen.
+  const c=rushed(rushDef(12));assert.equal(Object.hasOwn(c.g.tempo,'setTarget'),true);const trim=secs[4];
+  c.rush.quit();assert.equal(Object.hasOwn(c.g.tempo,'setTarget'),false);c.g.tempo.setTarget(c.rush.list[0]||{id:'x',x:0,z:0},30);
+  assert.ok(c.g.tempo.deadline>trim+3,'grundspelets klocka är mer generös: '+c.g.tempo.deadline.toFixed(2)+' mot '+trim.toFixed(2));
+  // Nivåerna och klockan går vidare efter en teleport: tempot ändras inte av att klockan byts.
+  assert.equal(Object.getPrototypeOf(c.g.tempo).setTarget.length,2);
+});
+
+test('Maraton: tempot stiger var 12:e sekund, fortsätter efter tempo 12 med en allt trängre klocka (övertid) och resultatet räknar med stegen',()=>{
+  const c=started();calm(c);const step=TEMPO.levelSeconds/RUSH.marathonRate;
+  assert.equal(RUSH.marathonRate,1.25);assert.equal(step,12);
+  assert.equal(c.rush.pressure(),1);play(c,step*3+.5,null);
+  assert.deepEqual(ofType(c,'rush-level').map(e=>e.level),[2,3,4],'tempohöjning var 12:e sekund');assert.equal(c.g.tempo.level,4);assert.equal(c.rush.pressure(),4);
+  const s=c.rush.snapshot();assert.ok(s.levelLeft>0&&s.levelLeft<=step,'tid till nästa tempo (verklig tid): '+s.levelLeft.toFixed(2));
+  play(c,step*8-.5,null);assert.equal(c.g.tempo.level,12);assert.equal(c.rush.extra,0);assert.equal(c.rush.snapshot().level,12);
+  const before=ofType(c,'rush-level').length;
+  play(c,step*3+.5,null);
+  const extra=ofType(c,'rush-level').slice(before);assert.deepEqual(extra.map(e=>[e.level,!!e.extra]),[[13,true],[14,true],[15,true]],'övertid i Maraton: ett steg var 12:e sekund');
+  assert.equal(c.g.tempo.level,12,'grundspelets tempo går inte över 12');assert.equal(c.g.tempo.speedMul(),tempoSpeed(12));assert.equal(c.rush.snapshot().level,15);assert.equal(c.rush.pressure(),15);
+  const sn=c.rush.snapshot();assert.ok(sn.levelLeft>0&&sn.levelLeft<=step,'räknaren börjar om för varje steg: '+sn.levelLeft.toFixed(2));
+  assert.ok(extra.every(e=>e.name==='TOMTEGALET'&&e.speed===tempoSpeed(12)&&e.mult===tempoPoints(12)));
+  // Klockan är trängre än i Rush 12 för samma sträcka.
+  const lv=12,reach=Math.max(tempoReach(lv),catchReach(TEMPO.baseSpeed*tempoSpeed(lv)*PRESSURE.turbo));
+  c.g.tempo.setTarget(c.rush.list[2],30);assert.ok(Math.abs(c.g.tempo.deadline-clockFor(30,{level:12,pressure:15,reach}))<1e-9);assert.ok(c.g.tempo.deadline<clockFor(30,{level:12,pressure:12,reach}));
+  const r=c.rush.quit();assert.equal(r.level,15,'resultatet räknar med övertidsstegen');assert.equal(r.name,'TOMTEGALET');assert.equal(r.rush,null,'Maraton är ingen rush');
+});
+
+test('hjärtan i en serie: ett hjärta fylls på bara efter en rush utan förlust, annars tar man med sig det man hade kvar (minst ett)',()=>{
+  const win=(start,lose)=>{const c=rushed(RUSHES[0],{hearts:start});sleepFreeze(c);c.g.tempo.lives=start-lose;c.g.tempo.picked=RUSHES[0].goal.target-1;takeOne(c);return ofType(c,'rush-over')[0].result.rush;};
+  const out=(a,b)=>{const r=win(a,b);return [r.startHearts,r.hearts,r.nextHearts,r.flawless,r.stars];};
+  assert.deepEqual(out(3,0),[3,3,3,true,3],'full pott: inget att fylla på');
+  assert.deepEqual(out(3,1),[3,2,2,false,2],'tappade ett hjärta: det kommer inte tillbaka');
+  assert.deepEqual(out(3,2),[3,1,1,false,1]);
+  assert.deepEqual(out(2,0),[2,2,3,true,2],'började med två och tappade inget: ett hjärta fylls på');
+  assert.deepEqual(out(1,0),[1,1,2,true,1]);
+  assert.deepEqual(out(2,1),[2,1,1,false,1],'tappade ett av två: ett kvar, ingen påfyllning');
+});
+
+test('övertid: Rush 13 och uppåt spelas med tempo 12 och en allt trängre klocka, resultatet bär ÖVERTID och hur långt man kommit, och nästa låses upp',()=>{
+  const def=rushDef(13),c=rushed(def);sleepFreeze(c);
+  assert.equal(c.g.tempo.level,12);assert.equal(c.g.tempo.speedMul(),tempoSpeed(12));assert.equal(c.rush.pressure(),13);assert.equal(c.rush.snapshot().n,13);assert.equal(c.rush.snapshot().name,'ÖVERTID 1');
+  const st=ofType(c,'rush-start')[0];assert.deepEqual([st.n,st.name,st.level],[13,'ÖVERTID 1',12]);
+  for(let n=1;n<=12;n++)c.save.recordRush(n,{points:1000*n,seconds:40,packages:25,hearts:3,cleared:true});
+  assert.equal(def.goal.kind,'packages');c.g.tempo.picked=def.goal.target-1;takeOne(c);
+  let r=ofType(c,'rush-over')[0].result;assert.equal(r.rush.cleared,true);assert.deepEqual([r.rush.n,r.rush.name,r.rush.overtime,r.rush.newReach,r.rush.next,r.rush.done],[13,'ÖVERTID 1',true,true,14,false]);assert.equal(r.level,12);
+  assert.equal(c.save.state.rush.cleared,13);assert.equal(c.save.state.rush.stars[13],3);
+  // Samma rush igen: ingen ny längsta sträcka. Rush 14 (poäng) går att spela direkt och ger Rush 15.
+  c.rush.start({def,hearts:3,streak:1});frame(c,.1);sleepFreeze(c);c.g.tempo.picked=def.goal.target-1;takeOne(c);
+  r=ofType(c,'rush-over')[1].result;assert.equal(r.rush.newReach,false);assert.equal(r.rush.streak,2);
+  const d14=rushDef(14);assert.equal(d14.goal.kind,'points');c.rush.start({def:d14,hearts:3,streak:2});frame(c,.1);sleepFreeze(c);c.g.tempo.score=d14.goal.target-1;takeOne(c);
+  r=ofType(c,'rush-over')[2].result;assert.deepEqual([r.rush.n,r.rush.cleared,r.rush.newReach,r.rush.next],[14,true,true,15]);assert.equal(c.save.state.rush.cleared,14);assert.equal(c.save.state.rush.bestStreak,3);
+  // Det går att förlora i övertid, och då sparas inget nytt.
+  const e=rushed(rushDef(20));for(let i=0;i<3;i++){const k=e.rush.list.find(x=>!e.g.found.has(x.id));e.pos={x:k.x,z:k.z};frame(e,.3);}
+  play(e,60,null);const lost=ofType(e,'rush-over')[0].result.rush;assert.deepEqual([lost.cleared,lost.next,lost.newReach,lost.stars],[false,0,false,0]);assert.equal(e.save.state.rush.cleared,0,'inget sparat');
+  // Sista rushen: Rush 99 har inget efter sig.
+  const z=rushed(rushDef(RUSH_MAX));sleepFreeze(z);const zd=rushDef(RUSH_MAX);z.g.tempo.picked=zd.goal.target-1;z.g.tempo.score=zd.goal.target-1;takeOne(z);const zr=ofType(z,'rush-over')[0]?.result.rush;
+  if(zr)assert.equal(zr.next,0,'efter Rush 99 finns ingen mer');
+});
+
+test('julmagneten: att det sista paketet vinner rushen medan fler paket dras in kraschar inte och ger en vunnen rush',()=>{
+  const def=RUSHES[0],c=rushed(def);sleepFreeze(c);
+  const near=[plain(c,c.pos.x+9,c.pos.z),plain(c,c.pos.x-8,c.pos.z+3),plain(c,c.pos.x+3,c.pos.z+10)];
+  c.g.tempo.picked=def.goal.target-1;c.rush.grant('magnet',c.pos);
+  assert.doesNotThrow(()=>play(c,1,null));
+  assert.equal(c.rush.state,'over');const r=ofType(c,'rush-over')[0].result;assert.equal(r.rush.cleared,true,'rushen vanns');assert.ok(near.some(k=>k.collected),'minst ett paket drogs in');assert.equal(c.rush.pulled.length,0);
 });

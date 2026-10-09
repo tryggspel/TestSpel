@@ -1,12 +1,12 @@
 // Julklappsjakten: gränssnittet. Startvyn, fortsättningsmenyn och resultatkortet är vanliga paneler i index.html; HUD:en och pausmenyns
 // tillägg byggs här med textContent (aldrig HTML-strängar med data). Små mål: knappar är minst 52 px höga och spelvärlden syns ovanför.
 // JulRushen använder samma HUD: tempo och klockan i raden överst (stapeln är tiden till nästa paket), liv som hjärtan, poäng, kombo och gåvorna som små brickor.
-import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.3';
-import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.3';
-import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.3';
-import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.3';
-import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT} from './xmas-rushes.mjs?v=2.21.1-xmas.3';
-import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.3';
+import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.4';
+import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.4';
+import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.4';
+import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.4';
+import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.4';
+import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.4';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 export const mmss=s=>{const n=Math.max(0,Math.round(s));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};
@@ -109,13 +109,13 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
     const sh=$('xmasResultShare');sh.hidden=!(k&&k.cleared);
     $('xmasResultContinue').firstChild.textContent=k?(k.cleared?(k.next?'NÄSTA RUSH · '+k.next+' ':'TILL JULRUSHEN '):'FÖRSÖK IGEN '):'EN RUSH TILL ';
     $('xmasResultFree').textContent=k?'RUSHMENYN':'JULMENYN';
-    $('xmasResultKicker').textContent=res.record?'NYTT REKORD!':res.stamp?'NY JULSTÄMPEL!':k?(k.cleared?'RUSH KLAR!':res.quit?'AVBRUTET':'SLUT PÅ HJÄRTAN'):res.quit?'AVBRUTET':'SLUT PÅ LIV';
+    $('xmasResultKicker').textContent=res.record?'NYTT REKORD!':res.stamp?'NY JULSTÄMPEL!':k?(k.cleared?(k.newReach&&k.n>RUSH_COUNT?'LÄNGRE ÄN NÅGONSIN!':k.overtime?'ÖVERTID KLAR!':'RUSH KLAR!'):res.quit?'AVBRUTET':'SLUT PÅ HJÄRTAN'):res.quit?'AVBRUTET':'SLUT PÅ LIV';
     $('xmasResultTitle').textContent=k?(k.cleared?(k.done?'TOMTEGALET KLARAT!':'RUSH '+k.n+' KLAR!'):'RUSH '+k.n+' · '+k.name):'JULRUSHEN ÄR SLUT!';
     if(k){
       const g=k.goal,vs=res.versus?res.versus.text+'. ':'';
       const did=g.kind==='packages'?'Du hämtade '+res.collected+' paket (målet var '+g.target+')':'Du nådde '+res.points.toLocaleString('sv-SE')+' poäng (målet var '+g.target.toLocaleString('sv-SE')+')';
       $('xmasResultLine').textContent=k.cleared
-        ?vs+did+' och hade '+k.hearts+(k.hearts===1?' hjärta':' hjärtan')+' kvar.'+(k.unlockedNext?' Rush '+k.next+' är upplåst.':'')
+        ?vs+did+' och hade '+k.hearts+(k.hearts===1?' hjärta':' hjärtan')+' kvar.'+(k.done?' Alla tolv rusher är klarade: nu börjar övertiden, med samma fart men allt trängre klocka.':k.unlockedNext?' Rush '+k.next+' är upplåst.':'')+(k.newReach&&k.n>RUSH_COUNT?' Du har aldrig kommit så långt som Rush '+k.n+'.':'')
         :vs+'Du hann '+(g.kind==='packages'?res.collected+' av '+g.target+' paket':res.points.toLocaleString('sv-SE')+' av '+g.target.toLocaleString('sv-SE')+' poäng')+' i Rush '+k.n+' ('+k.name+').'+(res.collected?'':' Följ pilen och den gröna strålen till nästa paket.');
     }else{
       $('xmasResultLine').textContent='Du kom till tempo '+res.level+' ('+res.name+') och plockade '+res.collected+' paket'+(res.gold?', varav '+res.gold+' guldpaket':'')+'.'+(res.record?' Det är ditt bästa hittills!':res.collected?'':' Nästa gång: följ pilen och den gröna strålen.');
@@ -127,7 +127,7 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
     const cells=k?[['STJÄRNOR',starText(k.stars)],['PAKET',String(res.collected)],['BÄSTA KOMBO',String(res.bestChain)],['TID',mmss(res.seconds)]]:[['PAKET',String(res.collected)],['TEMPO',String(res.level)],['BÄSTA KOMBO',String(res.bestChain)],['TID',mmss(res.seconds)]];
     for(const [kk,v] of cells){const c=el('div','xr-cell');c.append(el('b',null,v),el('span',null,kk));grid.append(c);}
     $('xmasResultParts').textContent=k
-      ?'GÅVOR '+res.gifts+(res.sideTaken?' · SIDOPAKET '+res.sideTaken:'')+(k.bestBefore&&k.cleared?' · TIDIGARE REKORD '+k.bestBefore.points.toLocaleString('sv-SE')+' P':'')+(k.streak>1?' · SERIE: '+k.streak+' RUSHER I RAD':'')+(k.cleared&&k.next?' · NÄSTA RUSH MED '+k.nextHearts+' '+(k.nextHearts===1?'HJÄRTA':'HJÄRTAN'):'')
+      ?'GÅVOR '+res.gifts+(res.sideTaken?' · SIDOPAKET '+res.sideTaken:'')+(k.bestBefore&&k.cleared?' · TIDIGARE REKORD '+k.bestBefore.points.toLocaleString('sv-SE')+' P':'')+(k.streak>1?' · SERIE: '+k.streak+' RUSHER I RAD':'')+(k.cleared&&k.next?' · NÄSTA RUSH MED '+k.nextHearts+' '+(k.nextHearts===1?'HJÄRTA':'HJÄRTAN')+(k.flawless&&k.nextHearts>k.hearts?' (ETT NYTT: INGET HJÄRTA TAPPAT)':k.nextHearts<3?' (HJÄRTAN FYLLS BARA PÅ OM DU KLARAR EN RUSH UTAN ATT TAPPA ETT)':''):'')
       :'GÅVOR '+res.gifts+(best?' · REKORD '+best.points.toLocaleString('sv-SE')+' P · TEMPO '+(best.level||'–'):'')+(res.stamp?'':res.level<RUSH.stampLevel?' · Julstämpeln delas ut vid tempo '+RUSH.stampLevel+'.':'');
     $('xmasResultStatus').textContent='JULSTÄMPLAR '+save.stampCount()+' / '+save.stampTotal()+' · '+save.title()+(k?' · RUSHSTJÄRNOR '+totalStars(save.rush)+' / '+RUSH_COUNT*3:'');
   }
@@ -173,8 +173,9 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
     rushNote($('xmasRushStartNote'));
   }
   function rushNote(node){
-    if(!node)return;const R=save.rush,next=nextRush(R),done=R.cleared>=RUSH_COUNT,def=rushDef(next);
-    node.textContent=!R.cleared?'Tolv rusher med stigande tempo, mål, hjärtan och stjärnor. Börja med Rush 1.':done?'Alla tolv rusher klarade: '+totalStars(R)+' av '+RUSH_COUNT*3+' stjärnor. Spela om dem för fler stjärnor och högre poäng.'
+    if(!node)return;const R=save.rush,next=nextRush(R),def=rushDef(next);
+    node.textContent=!R.cleared?'Tolv rusher med stigande tempo, mål, hjärtan och stjärnor. Börja med Rush 1.'
+      :R.cleared>=RUSH_COUNT?'Du har klarat Rush '+R.cleared+(R.cleared>RUSH_COUNT?' i övertiden':'')+' ('+totalStars(R)+' av '+RUSH_COUNT*3+' stjärnor). Nästa: Rush '+next+' · '+def.name+'. Hur långt kommer du?'
       :'Du har klarat '+R.cleared+' av '+RUSH_COUNT+' rusher. Nästa: Rush '+next+' · '+def.name+' ('+goalText(def).toLowerCase()+').';
   }
   function renderContinue(){
@@ -191,7 +192,7 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
   function renderRush(pick=0){
     const R=save.rush,next=nextRush(R);
     selected=pick&&isUnlocked(R,pick)?pick:next; // utan val: nästa rush att spela
-    $('xmasRushStars').textContent='★ '+totalStars(R)+' / '+RUSH_COUNT*3;
+    $('xmasRushStars').textContent='★ '+totalStars(R)+' / '+RUSH_COUNT*3+(R.cleared>RUSH_COUNT?' · RUSH '+R.cleared:'');
     const grid=$('xmasRushGrid');grid.replaceChildren();
     for(const d of RUSHES){
       const open=isUnlocked(R,d.n),stars=R.stars[d.n]||0,b=el('button','xr-tile');
@@ -200,13 +201,21 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
       b.append(el('b',null,String(d.n)),el('span',null,open?d.name:'LÅST'),el('i',null,open?starText(stars):'– – –'));
       b.addEventListener('click',()=>renderRush(d.n));grid.append(b);
     }
+    // Övertid: efter Rush 12 går det vidare (Rush 13, 14 …) så långt man orkar. En ruta som alltid pekar på nästa övertidsrush.
+    {
+      const otOpen=R.cleared>=RUSH_COUNT,otN=Math.min(RUSH_MAX,Math.max(RUSH_COUNT+1,next)),b=el('button','xr-tile xr-ot');
+      b.type='button';b.dataset.n=String(otN);b.dataset.state=!otOpen?'locked':R.cleared>RUSH_COUNT?'done':'open';b.disabled=!otOpen;b.setAttribute('aria-pressed',selected>RUSH_COUNT?'true':'false');
+      b.setAttribute('aria-label',otOpen?'Övertid: Rush '+otN+(R.cleared>RUSH_COUNT?', längst klarat Rush '+R.cleared:''):'Övertid, låst tills Rush 12 är klarad');
+      b.append(el('b',null,otOpen?String(otN):'13+'),el('span',null,'ÖVERTID'),el('i',null,otOpen?(R.cleared>RUSH_COUNT?'✓ '+R.cleared:'NY'):'– – –'));
+      b.addEventListener('click',()=>renderRush(otN));grid.append(b);
+    }
     const d=rushDef(selected),best=R.best[selected];
     $('xmasRushInfoTitle').textContent='RUSH '+d.n+' · '+d.name;
     $('xmasRushInfoGoal').textContent=goalText(d)+' · FART ×'+d.speed.toFixed(2).replace('.',',')+' · POÄNG ×'+d.mult.toFixed(1).replace('.',',');
     $('xmasRushInfoBest').textContent=(best?'REKORD '+best.points.toLocaleString('sv-SE')+' P · '+starText(R.stars[selected]||0):d.blurb)+(R.bestStreak>1?' · LÄNGSTA SERIE '+R.bestStreak:'');
     $('xmasRushPlay').firstChild.textContent='SPELA RUSH '+selected+' ';
     const rec=save.state.records[RUSH.id];
-    $('xmasRushMarathonNote').textContent='Maraton: tempot stiger var 15:e sekund tills du är ute (som TempoRush).'+(rec?' Rekord '+rec.points.toLocaleString('sv-SE')+' poäng · tempo '+(rec.level||'–')+'.':'');
+    $('xmasRushMarathonNote').textContent='Maraton: tempot stiger var 12:e sekund och klockan blir trängre, även efter tempo 12. Tre hjärtan hela vägen.'+(rec?' Rekord '+rec.points.toLocaleString('sv-SE')+' poäng · tempo '+(rec.level||'–')+'.':'');
   }
   const selectedRush=()=>selected;
 
@@ -215,27 +224,28 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
   const boardSelect=$('xmasBoardRush');
   if(boardSelect&&!boardSelect.options.length){
     boardSelect.append(new Option('TOTALT (SUMMAN AV ALLA RUSHER)','0'));
+    boardSelect.append(new Option('LÄNGST I JULRUSHEN','reach'));
     for(const d of RUSHES)boardSelect.append(new Option('RUSH '+d.n+' · '+d.name,String(d.n)));
   }
   function boardStatus(t){const n=$('xmasBoardStatus');if(n)n.textContent=t||'';}
   // Länken beror på namnet i fältet (utan att skriva tillbaka det medan man skriver) och på dina bästa resultat.
   function refreshLink(){
-    const name=cleanName($('xmasBoardName').value),p=save.profile(),focus=boardN&&p.bests[boardN]?boardN:0;
+    const name=cleanName($('xmasBoardName').value),p=save.profile(),focus=boardN>0&&p.bests[boardN]?boardN:0;
     const token=name?encodeChallenge({name,focus,cleared:p.cleared,stars:p.stars,bests:p.bests}):null;
     link=token?challengeUrl(shareBase(),token):'';
     $('xmasBoardLink').value=link;
     const d=focus?rushDef(focus):null;
     $('xmasBoardShareText').textContent=!name?'Skriv ditt namn så att vännen ser vem som utmanar.':d?'Du utmanar med dina '+p.bests[focus].toLocaleString('sv-SE')+' poäng i Rush '+d.n+' ('+d.name+'). Vännen får också din profil i sin topplista.'
-      :'Du skickar din profil: din bästa poäng i varje rush'+(p.cleared?'.':'. Klara en rush först om du vill utmana i den.');
+      :'Du skickar din profil: din bästa poäng i varje rush'+(p.cleared>RUSH_COUNT?' och att du klarat Rush '+p.cleared+'.':p.cleared?'.':'. Klara en rush först om du vill utmana i den.');
     for(const id of ['xmasBoardShare','xmasBoardCopy'])$(id).disabled=!link;
   }
   function renderBoard(n=0,{focusName=false}={}){
-    boardN=Math.max(0,Math.min(RUSH_COUNT,Math.floor(Number(n))||0));boardSelect.value=String(boardN);
+    boardN=n==='reach'||n===-1||Number(n)>RUSH_COUNT?-1:Math.max(0,Math.floor(Number(n))||0);boardSelect.value=boardN<0?'reach':String(boardN);
     const me=save.profile();me.name=me.name||'DU';
     const rows=leaderboard({me,friends:save.friends,n:boardN}),ol=$('xmasBoardList');ol.replaceChildren();
-    if(!rows.length){const li=el('li','empty',boardN?'Ingen har klarat Rush '+boardN+' än. Klara den, eller bjud in en vän!':'Inga resultat än. Klara en rush och bjud in en vän!');ol.append(li);}
+    if(!rows.length){const li=el('li','empty',boardN>0?'Ingen har klarat Rush '+boardN+' än. Klara den, eller bjud in en vän!':'Inga resultat än. Klara en rush och bjud in en vän!');ol.append(li);}
     for(const r of rows.slice(0,20)){
-      const li=el('li',r.you?'you':'');li.append(el('span','rk',String(r.rank)),el('span','nm',r.you?(save.name?save.name+' (DU)':'DU'):r.name),el('span','pt',r.points.toLocaleString('sv-SE')),el('span','st','★'+r.stars));ol.append(li);
+      const li=el('li',r.you?'you':'');li.append(el('span','rk',String(r.rank)),el('span','nm',r.you?(save.name?save.name+' (DU)':'DU'):r.name),el('span','pt',boardN<0?'RUSH '+r.points:r.points.toLocaleString('sv-SE')),el('span','st','★'+r.stars));ol.append(li);
     }
     $('xmasBoardNote').textContent='Listan visar dig och vännerna som skickat dig en utmaning ('+save.friends.length+' '+(save.friends.length===1?'vän':'vänner')+'). En gemensam lista för alla spelare finns inte än.';
     const inp=$('xmasBoardName');if(document.activeElement!==inp)inp.value=save.name;
@@ -249,7 +259,7 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
   };
   async function shareLink(){
     if(!link)return;
-    const d=boardN?rushDef(boardN):null,text=shareText({rush:d,points:d?save.rush.best[boardN]?.points:0});
+    const d=boardN>0?rushDef(boardN):null,text=shareText({rush:d,points:d?save.rush.best[boardN]?.points:0,reach:save.rush.cleared});
     if(navigator.share){try{await navigator.share({title:'Julklappsjakten',text,url:link});boardStatus('Skickat!');return;}catch(e){if(e&&e.name==='AbortError')return;}}
     boardStatus((await copyLink())?'Länken är kopierad. Klistra in den i ett meddelande till din vän.':'Markera länken ovan och kopiera den för hand.');
   }
@@ -260,7 +270,7 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
     $('xmasChallengeTitle').textContent=d?NAME+' UTMANAR DIG!':NAME+' VILL VARA DIN VÄN';
     $('xmasChallengeLine').textContent=d?'Slå '+ch.toBeat.toLocaleString('sv-SE')+' poäng i Rush '+d.n+' · '+d.name+' ('+goalText(d).toLowerCase()+').':p.name+' har skickat sin profil. Spara den så syns '+p.name+' i din topplista.';
     const grid=$('xmasChallengeStats');grid.replaceChildren();
-    for(const [k,v] of [['KLARAT',p.cleared+' / '+RUSH_COUNT],['STJÄRNOR','★ '+p.stars],['SUMMA',p.total.toLocaleString('sv-SE')]]){const c=el('div','xr-cell');c.append(el('b',null,v),el('span',null,k));grid.append(c);}
+    for(const [k,v] of [[p.cleared>RUSH_COUNT?'LÄNGST':'KLARAT',p.cleared>RUSH_COUNT?'RUSH '+p.cleared:p.cleared+' / '+RUSH_COUNT],['STJÄRNOR','★ '+p.stars],['SUMMA',p.total.toLocaleString('sv-SE')]]){const c=el('div','xr-cell');c.append(el('b',null,v),el('span',null,k));grid.append(c);}
     const R=save.rush,reachable=d?isUnlocked(R,d.n):true;
     $('xmasChallengeNote').textContent=d&&!reachable?'Du har inte kommit till Rush '+d.n+' än. Klara Rush '+nextRush(R)+' först: utmaningen ligger kvar tills du är där.':'';
     $('xmasChallengeGo').firstChild.textContent=d?(reachable?'TA UTMANINGEN ':'SPELA RUSH '+nextRush(R)+' '):'SPARA VÄNNEN ';

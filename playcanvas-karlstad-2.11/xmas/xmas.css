@@ -116,7 +116,7 @@
 .xh-powers{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px}
 .xh-powers[hidden]{display:none}
 .xh-chip{padding:2px 8px;border-radius:10px;background:var(--xmas-gold);color:#3b2a00;font:900 11px/1.35 system-ui;letter-spacing:.05em;white-space:nowrap}
-.xh-chip[data-kind="magnet"]{background:#7fcbff;color:#06314a}.xh-chip[data-kind="ghost"]{background:#e6e0ff;color:#2b2060}.xh-chip[data-kind="sleigh"]{background:#ff8a6b;color:#3a0f05}.xh-chip[data-kind="pause"]{background:#9ad8ff;color:#06314a}.xh-chip[data-kind="shield"]{background:#7be495;color:#06301a}.xh-chip[data-kind="golden"]{background:#fff3a6}
+.xh-chip[data-kind="magnet"]{background:#7fcbff;color:#06314a}.xh-chip[data-kind="ghost"]{background:#e6e0ff;color:#2b2060}.xh-chip[data-kind="sleigh"]{background:#ff8a6b;color:#3a0f05}.xh-chip[data-kind="pause"]{background:#9ad8ff;color:#06314a}.xh-chip[data-kind="shield"]{background:#7be495;color:#06301a}.xh-chip[data-kind="golden"]{background:#fff3a6}.xh-chip[data-kind="glogg"]{background:#ffb27a;color:#4a1a05}.xh-chip[data-kind="kaka"]{background:#ff8fa3;color:#4a0a1a}.xh-chip[data-kind="wind"]{background:#a6f0e6;color:#06342e}.xh-chip[data-kind="skates"]{background:#cfe6ff;color:#0b2a4a}
 .xh-combo[data-tier="2"]{border-color:#9ee6ff}.xh-combo[data-tier="3"]{border-color:#9bf0a7}.xh-combo[data-tier="4"]{border-color:var(--xmas-gold);background:#6a2f58ee}
 
 /* Grundspelets spelval och samlingar som inte hör till julen göms i pausmenyn och på kartan */
@@ -226,3 +226,8 @@ body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
  #xmasGoal{top:max(158px,calc(env(safe-area-inset-top) + 150px));font-size:16px}
 }
 @media(prefers-reduced-motion:reduce){#xmasPill.on{animation:none;opacity:1}.xmas-stamp{animation:none}.xh-hearts.hit,#xmasHud.urgent{animation:none}}
+
+/* Övertid: en bred ruta efter de tolv, som alltid pekar på nästa rush att spela */
+.xr-tile.xr-ot{grid-column:1/-1;grid-template-columns:auto auto auto;justify-content:center;align-items:center;gap:6px 12px;border-color:#ff9f5a88}
+.xr-tile.xr-ot span{display:block;font-size:11px;letter-spacing:.12em;color:#ffd7b0}
+.xr-tile.xr-ot[data-state="locked"]{border-color:#85aa8566}

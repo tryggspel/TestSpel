@@ -1,7 +1,7 @@
 // Julgrenen: vilket bygge körs? Versionen står i koden (build-info.mjs). Commit-ID:t kommer från den deployade miljön
 // (api/build-info.mjs, Vercels systemvariabler) så att det alltid hör ihop med filerna i samma deployment.
 // Lokalt och på sidor utan funktionen visas bara versionen, och det sägs rakt ut.
-import {GAME_VERSION,GAME_TITLE,GAME_FLAVOR,GAME_BASE} from '../build-info.mjs?v=2.21.1-xmas.3';
+import {GAME_VERSION,GAME_TITLE,GAME_FLAVOR,GAME_BASE} from '../build-info.mjs?v=2.21.1-xmas.4';
 
 export const shortCommit=c=>typeof c==='string'&&/^[0-9a-f]{7,40}$/i.test(c)?c.slice(0,7).toLowerCase():null;
 export const baseStamp=Object.freeze({version:GAME_VERSION,title:GAME_TITLE,flavor:GAME_FLAVOR,base:GAME_BASE.version,baseCommit:shortCommit(GAME_BASE.commit),commit:null,short:null,branch:null,environment:null,source:'lokalt'});

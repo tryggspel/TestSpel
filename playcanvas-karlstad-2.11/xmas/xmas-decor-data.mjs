@@ -3,7 +3,7 @@
 //
 // Stånden och granarna står på en ring runt granen utanför introduktionens spiral (spiralen börjar på 27 m och går inåt), så ingenting
 // hindrar den som följer paketen. Stånden är fasta föremål (kollisionsrutor som läggs in före rutnätet byggs), granarna är bara utsmyckning.
-import {TREE,INTRO,TORGET_PROPS,distanceToPath} from './xmas-layout.mjs?v=2.21.1-xmas.3';
+import {TREE,INTRO,TORGET_PROPS,distanceToPath} from './xmas-layout.mjs?v=2.21.1-xmas.4';
 
 export const RING={r:33.5,bearings:Object.freeze([20,65,110,155,205,250,295,340])};
 export const STALL=Object.freeze({w:3.2,d:1.9,h:2.55});

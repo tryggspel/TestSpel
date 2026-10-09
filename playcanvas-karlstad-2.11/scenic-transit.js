@@ -1,4 +1,4 @@
-import {QuizSession} from './bus-quiz.mjs?v=2.21.1-xmas.3';
+import {QuizSession} from './bus-quiz.mjs?v=2.21.1-xmas.4';
 export const KARLSTAD_C={x:-220,z:279,name:'Karlstad C'};
 // OSM way 100310623, projected with the same Karlstad origin as the city.
 export const KIL={x:-10583.24,z:-13678.36,name:'Kil station'};

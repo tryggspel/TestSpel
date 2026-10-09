@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Verifiering i riktig webbläsare av JulRushen i läget MARATON (Julklappsjaktens version av TempoRush: tempot stiger var 15:e sekund): knappen i startvyn och rushmenyn,
+// Verifiering i riktig webbläsare av JulRushen i läget MARATON (Julklappsjaktens version av TempoRush: tempot stiger var 12:e sekund och klockan blir trängre; turbon slås på av sig själv): knappen i startvyn och rushmenyn,
 // start, pil och stråle, paket, tempo, liv, gåvor, resultatkort, rekord och julstämpel, att ge upp, och att övriga lägen (Julklappsjakten) är opåverkade efteråt.
 // De tolv rusherna, topplistan och utmaningarna provas i levels.mjs.
 // Startar det riktiga spelet i headless Chromium, låter en liten bot följa spelets egna mål bildruta för bildruta (i speltid, inte i klocktid),
@@ -29,7 +29,7 @@ await page.route(/cdn\.jsdelivr\.net\/npm\/playcanvas/,r=>r.fulfill({contentType
 // app.js får fyra hjälpfunktioner för testet (teleportera, position, blockerad ruta, appen). Ingen fil på disk ändras.
 await page.route(/\/app\.js/,r=>{
   if(!r.request().url().includes('localhost:'+PORT))return r.continue();
-  const s=fs.readFileSync(path.join(root,'app.js'),'utf8').replace("app.on('update',update);","window.__app=app;window.__blocked=blocked;window.__tp=(x,z,h,t)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=h;pitch=t;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);};window.__pos=()=>{const p=player.getPosition();return [p.x,p.z]};app.on('update',update);");
+  const s=fs.readFileSync(path.join(root,'app.js'),'utf8').replace("app.on('update',update);","window.__app=app;window.__blocked=blocked;window.__tp=(x,z,h,t)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=h;pitch=t;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);};window.__pos=()=>{const p=player.getPosition();return [p.x,p.z]};window.__turbo=()=>lastRound?.turboScale?.()||1;app.on('update',update);");
   r.fulfill({contentType:'text/javascript',body:s});
 });
 const results=[];let failed=0;
@@ -47,7 +47,7 @@ const click=id=>ev(i=>document.getElementById(i)?.click(),id);
 await page.goto(`http://localhost:${PORT}/?debug`);await ready();await helpers();
 
 
-// En bot som följer spelets egna mål: varje bildruta flyttas spelaren sträckan 7,2 m/s × tempots fart × gåvornas fart × skicklighet, mätt i SPELTID
+// En bot som följer spelets egna mål: varje bildruta flyttas spelaren sträckan 7,2 m/s × spelets egen fartfaktor (turbon, tempots fart och gåvornas fart: KarlstadRound.turboScale) × skicklighet, mätt i SPELTID
 // (journey.elapsed), så att den går lika långt per speltidssekund oavsett hur trög mjukvarurenderingen är. skill 0 = står still.
 await ev(()=>{
   window.__skill=1;
@@ -60,7 +60,7 @@ await ev(()=>{
       if(t.running&&tg){
         const el=j.elapsed;
         if(last!==null&&el>last){
-          const [x,z]=window.__pos(),dx=tg.x-x,dz=tg.z-z,d=Math.hypot(dx,dz),v=7.2*t.speedMul()*j.fun.power.speedMul()*window.__skill,s=Math.min(d,v*(el-last));
+          const [x,z]=window.__pos(),dx=tg.x-x,dz=tg.z-z,d=Math.hypot(dx,dz),v=7.2*window.__turbo()*window.__skill,s=Math.min(d,v*(el-last));
           if(s>0&&d>.01)window.__tp(x+dx/d*s,z+dz/d*s,Math.atan2(-dx,-dz)*180/Math.PI,-4);
         }
         last=el;
@@ -86,8 +86,8 @@ await shot('r00-start');
 
 // ── R1: start ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 await click('xmasRushStart');await wait(500);
-const menu0=await ev(()=>({panel:!document.getElementById('round-xmas-rush').hidden,tiles:document.querySelectorAll('#xmasRushGrid .xr-tile').length,play:document.getElementById('xmasRushPlay').textContent.trim(),marathon:document.getElementById('xmasRushMarathon').getBoundingClientRect().height}));
-check('R0b JULRUSHEN öppnar rushmenyn med tolv rutor, en spelaknapp och MARATON (minst 48 px hög)',menu0.panel&&menu0.tiles===12&&/SPELA RUSH 1/.test(menu0.play)&&menu0.marathon>=48,JSON.stringify(menu0));
+const menu0=await ev(()=>({panel:!document.getElementById('round-xmas-rush').hidden,tiles:document.querySelectorAll('#xmasRushGrid .xr-tile:not(.xr-ot)').length,ot:document.querySelectorAll('#xmasRushGrid .xr-tile.xr-ot').length,play:document.getElementById('xmasRushPlay').textContent.trim(),marathon:document.getElementById('xmasRushMarathon').getBoundingClientRect().height}));
+check('R0b JULRUSHEN öppnar rushmenyn med tolv rutor, en bred ÖVERTID-ruta, en spelaknapp och MARATON (minst 48 px hög)',menu0.panel&&menu0.tiles===12&&menu0.ot===1&&/SPELA RUSH 1/.test(menu0.play)&&menu0.marathon>=48,JSON.stringify(menu0));
 await shot('r00b-rushmeny');
 await click('xmasRushMarathon');await wait(3200);
 const r1=await ev(()=>{const x=window.KarlstadDebug.journey().xmas,j=window.KarlstadDebug.journey();return {mode:x.snapshot().mode,rush:x.julrush.snapshot(),cls:['xmas-rush','xmas-cozy','xmas-on'].map(c=>document.body.classList.contains(c)),music:window.KarlstadMusic.snapshot().xmas,peaceful:j.rush.peaceful,view:x.view.snapshot(),zombies:j.actors.filter(a=>a.active).length,tempo:j.tempo.running};});
@@ -103,6 +103,8 @@ check('R1f grundspelets termos-HUD är dold (funHud) och grundspelets termoskort
 const rb=await ev(()=>{const root=window.__app.root;let pips=0;root.find(e=>/^mission-arrow-/.test(e.name)&&e.enabled).forEach(()=>pips++);const flag=root.findByName('Ditt valda mål');return {pips,flag:!!flag&&flag.enabled};});
 check('R1h grundspelets små pilar på marken och flaggan "DITT MÅL" ritas inte i JulRushen (pilen och strålen visar vägen)',rb.pips===0&&!rb.flag,JSON.stringify(rb));
 check('R1i julbandet rullas ut på marken mot första paketet (minst en bit) i JulRushen',await ev(()=>window.KarlstadDebug.journey().xmas.view.snapshot().ribbon>=1),JSON.stringify(await ev(()=>window.KarlstadDebug.journey().xmas.view.snapshot())));
+const tb=await ev(()=>({on:window.KarlstadRound.snapshot().turbo.on,factor:window.__turbo(),btn:document.getElementById('turboBtn').textContent,pressed:document.getElementById('turboBtn').getAttribute('aria-pressed')}));
+check('R1j turbon slås på av sig själv när rushen börjar (klockan är räknad på den): knappen visar TURBO ×2 · PÅ',tb.on===true&&Math.abs(tb.factor-2)<.01&&/TURBO ×2 · PÅ/.test(tb.btn)&&tb.pressed==='true',JSON.stringify(tb));
 await shot('r01-start');
 // Kostnaden för att planera banan: startvalet (tre riktningar) och varje bandläggning (supplyTempo, kör fyra gånger i sekunden) mäts i klocktid.
 const plan=await ev(()=>{const j=window.KarlstadDebug.journey(),t=performance.now();for(const h of [0,2.09,4.19])j.planHeading(-3,30,h);const ms=performance.now()-t;
@@ -148,7 +150,8 @@ check('R2g banan växer inte okontrollerat (högst 100 pärlor i journey) och gr
 await ev(()=>{window.__skill=0;});await wait(300);
 const stats0=await rushSnap();
 // Brådskande klocka: mindre än 30 % kvar gör HUD:en och pilen röda.
-await ev(()=>{const t=window.KarlstadDebug.journey().tempo;t.left=t.deadline*.22;});await wait(500);
+// Klockan är trång (några sekunder per paket): en stillastående bot skulle annars tappa ett hjärta av sig själv medan provet väntar. Klockan sätts därför om till en lång tid först.
+await ev(()=>{const t=window.KarlstadDebug.journey().tempo;t.deadline=12;t.left=2.6;});await wait(400);
 const urgent=await ev(()=>({hud:document.getElementById('xmasHud').classList.contains('urgent'),arrow:document.getElementById('tempoArrow').classList.contains('urgent')}));
 check('R3a när under 30 % av tiden återstår blir HUD:en och pilen brådskande (röda)',urgent.hud&&urgent.arrow,JSON.stringify(urgent));
 await shot('r03b-bradskande');
@@ -182,6 +185,13 @@ await click('xmasResultContinue');await wait(3000);
 const r4=await ev(()=>({panel:document.getElementById('round-xmas-result').hidden,s:window.KarlstadDebug.journey().xmas.julrush.snapshot(),hearts:document.querySelector('.xh-hearts').textContent,mode:window.KarlstadDebug.journey().xmas.snapshot().mode,dyn:window.KarlstadDebug.journey().items.filter(t=>t.dyn).length}));
 check('R4 EN RUSH TILL börjar om från noll: tempo 1, tre liv, noll poäng, nytt paketband',r4.panel&&r4.mode==='rush'&&r4.s.state==='running'&&r4.s.level===1&&r4.s.lives===3&&r4.s.score===0&&r4.s.picked===0&&r4.hearts==='♥♥♥'&&r4.dyn>=8&&r4.dyn<=40,JSON.stringify({s:r4.s.state,lvl:r4.s.level,lives:r4.s.lives,score:r4.s.score,dyn:r4.dyn}));
 
+// R4b: stänger man av turbon (klockan är räknad på den) och missar en klocka, säger meddelandet varför
+await ev(()=>{window.__skill=0;window.KarlstadDebug.turbo(false);const t=window.KarlstadDebug.journey().tempo;t.deadline=12;t.left=.02;});await wait(450);
+const nt=await ev(()=>({pill:document.getElementById('xmasPill').textContent,on:window.KarlstadRound.snapshot().turbo.on}));
+check('R4b stänger man av turbon och missar en klocka säger meddelandet "SLÅ PÅ TURBON"',nt.on===false&&/FÖR SENT! \d LIV KVAR · SLÅ PÅ TURBON/.test(nt.pill),JSON.stringify(nt));
+await shot('r04b-turbo-av');
+await ev(()=>{window.KarlstadDebug.turbo(true);window.__skill=1;});
+
 // ── R5: pausmenyn fryser klockan, och att ge upp sparar körningen ───────────────────────────────────────────────────────────────────
 await ev(()=>{window.__skill=1;});await wait(7000);
 await click('roundPause');await wait(700);
@@ -192,8 +202,8 @@ check('R5 pausmenyn fryser klockan och tempot (ingenting tickar medan menyn är 
 await shot('r05-paus');
 const before=await ev(()=>({picked:window.KarlstadDebug.journey().tempo.picked,runs:window.KarlstadDebug.journey().xmas.save.state.totals.runs}));
 await click('xmasMenuBtn');await wait(900);
-const q=await ev(()=>{const j=window.KarlstadDebug.journey(),x=j.xmas;return {intro:!document.getElementById('round-xmas-intro').hidden,state:x.julrush.state,tempo:j.tempo.running,dyn:j.items.filter(t=>t.dyn).length,cls:['xmas-rush','xmas-cozy','xmas-zombies'].map(c=>document.body.classList.contains(c)),runs:x.save.state.totals.runs,mode:x.snapshot().mode,rate:window.KarlstadMusic.snapshot().xmas.rate,resultHidden:document.getElementById('round-xmas-result').hidden,note:document.getElementById('xmasRushStartNote').textContent};});
-check('R5b att ge upp via JULMENY går till startvyn, städar banan och farten, och sparar körningen som en förlust',q.intro&&q.state==='idle'&&!q.tempo&&q.dyn===0&&q.cls.every(c=>!c)&&q.mode==='menu'&&q.rate===1&&q.resultHidden&&(before.picked===0||q.runs===before.runs+1),JSON.stringify({before,q:{state:q.state,dyn:q.dyn,cls:q.cls,runs:q.runs,mode:q.mode}}));
+const q=await ev(()=>{const j=window.KarlstadDebug.journey(),x=j.xmas;return {turbo:window.KarlstadRound.snapshot().turbo.on,intro:!document.getElementById('round-xmas-intro').hidden,state:x.julrush.state,tempo:j.tempo.running,dyn:j.items.filter(t=>t.dyn).length,cls:['xmas-rush','xmas-cozy','xmas-zombies'].map(c=>document.body.classList.contains(c)),runs:x.save.state.totals.runs,mode:x.snapshot().mode,rate:window.KarlstadMusic.snapshot().xmas.rate,resultHidden:document.getElementById('round-xmas-result').hidden,note:document.getElementById('xmasRushStartNote').textContent};});
+check('R5b att ge upp via JULMENY går till startvyn, städar banan och farten, återställer spelarens eget turbo-val (av) och sparar körningen som en förlust',q.intro&&q.turbo===false&&q.state==='idle'&&!q.tempo&&q.dyn===0&&q.cls.every(c=>!c)&&q.mode==='menu'&&q.rate===1&&q.resultHidden&&(before.picked===0||q.runs===before.runs+1),JSON.stringify({before,q:{state:q.state,dyn:q.dyn,cls:q.cls,runs:q.runs,mode:q.mode}}));
 await click('xmasRushStart');await wait(500);
 const mnote=await ev(()=>document.getElementById('xmasRushMarathonNote').textContent);
 check('R5c rushmenyn visar rekordet från Maraton',/Rekord [\d\s\u00a0]+ poäng · tempo \d+/.test(mnote),mnote);
@@ -215,8 +225,8 @@ await shot('r07-stampel');
 await click('xmasResultFree');await wait(700);
 check('R7 JULMENYN på slutkortet leder till startvyn',await ev(()=>!document.getElementById('round-xmas-intro').hidden&&document.getElementById('round-xmas-result').hidden));
 await click('xmasCozy');await wait(2800);
-const c7=await ev(()=>{const j=window.KarlstadDebug.journey(),x=j.xmas;return {mode:x.snapshot().mode,hunt:x.hunt.snapshot(),rushMode:x.rushMode,arrow:getComputedStyle(document.getElementById('tempoArrow')).display,goal:x.view.snapshot().goal,cls:document.body.classList.contains('xmas-rush'),dyn:j.items.filter(t=>t.dyn).length,tempo:j.tempo.running,music:window.KarlstadMusic.snapshot().xmas,hearts:document.querySelector('.xh-hearts').hidden,label:document.querySelector('.xh-label').textContent,zombies:j.actors.filter(a=>a.active).length};});
-check('R7b Julklappsjakten startar som förut efter en rush: mål 20, inga rushdelar, ingen pil, inget tempo, lugn musik i normal fart',c7.mode==='cozy'&&c7.hunt.goal===20&&!c7.rushMode&&c7.arrow==='none'&&!c7.cls&&c7.dyn===0&&!c7.tempo&&c7.music.mode==='cozy'&&c7.music.rate===1&&c7.hearts&&c7.label==='PAKET'&&c7.zombies===0,JSON.stringify(c7));
+const c7=await ev(()=>{const j=window.KarlstadDebug.journey(),x=j.xmas;return {turbo:window.KarlstadRound.snapshot().turbo.on,mode:x.snapshot().mode,hunt:x.hunt.snapshot(),rushMode:x.rushMode,arrow:getComputedStyle(document.getElementById('tempoArrow')).display,goal:x.view.snapshot().goal,cls:document.body.classList.contains('xmas-rush'),dyn:j.items.filter(t=>t.dyn).length,tempo:j.tempo.running,music:window.KarlstadMusic.snapshot().xmas,hearts:document.querySelector('.xh-hearts').hidden,label:document.querySelector('.xh-label').textContent,zombies:j.actors.filter(a=>a.active).length};});
+check('R7b Julklappsjakten startar som förut efter en rush: mål 20, inga rushdelar, ingen pil, inget tempo, turbon av som förut, lugn musik i normal fart',c7.turbo===false&&c7.mode==='cozy'&&c7.hunt.goal===20&&!c7.rushMode&&c7.arrow==='none'&&!c7.cls&&c7.dyn===0&&!c7.tempo&&c7.music.mode==='cozy'&&c7.music.rate===1&&c7.hearts&&c7.label==='PAKET'&&c7.zombies===0,JSON.stringify(c7));
 await shot('r08-jakten-efter');
 
 // ── R8: fortsättningsmenyn och en tredje start ──────────────────────────────────────────────────────────────────────────────────────
@@ -238,6 +248,8 @@ check('R9b flera gåvor syns samtidigt som brickor (sköld, stjärna, paus, guld
 await shot('r11-gavor');
 
 // ── R10: en lång körning på stadens riktiga gator, till tempo 12 (bara med LONG=1; tar flera minuter) ───────────────────────────────────
+// Klockan är trång (se PRESSURE i xmas-rushes.mjs) och den mjukvarurenderade webbläsaren ger få, långa bildrutor som äter av den, så boten får 30 % mer än full turbo (skill 1,3).
+// Det som provas är att banan, klockan och minnet håller i Maraton upp till och förbi tempo 12, inte hur svårt det är (det mäts med tools/xmas-flow/difficulty.mjs).
 // Boten följer målet utan att missa något. Det som kontrolleras är banan under lång tid: ligger paketen på gångbar mark, tar banan slut och måste börja om
 // (anchorCourse), håller sig minnet och planeringen billiga, och går tempot hela vägen upp till 12 utan att något liv går åt.
 if(process.env.LONG){
@@ -247,7 +259,7 @@ if(process.env.LONG){
     const j=window.KarlstadDebug.journey();window.__anch=0;window.__sup=[];
     const a=j.anchorCourse.bind(j);j.anchorCourse=p=>{window.__anch++;return a(p);};
     const s=j.supplyTempo.bind(j);j.supplyTempo=(dt,p)=>{const t=performance.now();s(dt,p);window.__sup.push(performance.now()-t);};
-    window.__skill=1;
+    window.__skill=1.3;
   });
   const bad=new Set(),seen=new Set();let last=null;const t1=Date.now(),limit=Number(process.env.LONG_SECONDS||1500)*1000;
   while(Date.now()-t1<limit){
@@ -255,7 +267,7 @@ if(process.env.LONG){
     const pk=await ev(()=>window.KarlstadDebug.journey().xmas.julrush.list.map(k=>[k.id,k.x,k.z]));
     for(const [id,x,z] of pk)if(!seen.has(id)){seen.add(id);if(await ev(([x,z])=>window.__blocked(x,z),[x,z]))bad.add(id);}
     last=await rushSnap();
-    if(last.state==='over'||(last.level>=12&&last.seconds>=200))break;
+    if(last.state==='over'||(last.level>=12&&last.seconds>=150))break;
   }
   const mem1=await ev(()=>performance.memory?.usedJSHeapSize||0);
   const sup=await ev(()=>{const a=[...window.__sup].sort((x,y)=>x-y);return {n:a.length,max:a.at(-1),p95:a[Math.floor(a.length*.95)],mean:a.reduce((x,y)=>x+y,0)/a.length,anch:window.__anch};});

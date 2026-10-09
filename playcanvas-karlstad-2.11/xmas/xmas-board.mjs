@@ -7,7 +7,7 @@
 //
 // Länkens innehåll är text som går att skriva för hand, så den kontrolleras noga när den läses: format, längd, tal inom gränser, kontrollsumma. Ett trasigt eller manipulerat
 // värde ger null (aldrig ett fel) och allt som visas skrivs med textContent.
-import {RUSH_COUNT} from './xmas-rushes.mjs?v=2.21.1-xmas.3';
+import {RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.4';
 
 export const NAME_MAX=12,FRIENDS_MAX=30,MAX_POINTS=9999999;
 const TOKEN_RE=/^[A-Za-z0-9_-]{16,420}$/;
@@ -32,7 +32,7 @@ export function cleanProfile(raw){
   const bests={};let total=0,stars=0,cleared=0;
   for(let n=1;n<=RUSH_COUNT;n++){const v=num(raw.bests?.[n]??raw.bests?.[String(n)],MAX_POINTS);if(v>0){bests[n]=v;total+=v;cleared=Math.max(cleared,n);}}
   stars=num(raw.stars,RUSH_COUNT*3);
-  return {id:nameId(name),name,cleared:Math.max(cleared,num(raw.cleared,RUSH_COUNT)),stars,bests,total,at:num(raw.at,4102444800000)};
+  return {id:nameId(name),name,cleared:Math.max(cleared,num(raw.cleared,RUSH_MAX)),stars,bests,total,at:num(raw.at,4102444800000)};
 }
 export function cleanFriends(list){
   const out=[],seen=new Set();
@@ -79,21 +79,23 @@ export function tokenFromSearch(search){
   try{const t=new URLSearchParams(search).get('utmaning');return t&&TOKEN_RE.test(t)?t:null;}catch{return null;}
 }
 const sv=v=>Math.round(v).toLocaleString('sv-SE');
-export function shareText({name,rush,points,url}={}){
-  return (rush&&points?'Jag fick '+sv(points)+' poäng i Rush '+rush.n+' ('+rush.name+') i Julklappsjakten. Slå mig!':'Kolla in min julrush i Julklappsjakten. Hur långt kommer du?')+(url?' '+url:'');
+export function shareText({name,rush,points,reach,url}={}){
+  return (rush&&points?'Jag fick '+sv(points)+' poäng i Rush '+rush.n+' ('+rush.name+') i Julklappsjakten. Slå mig!':reach>=RUSH_COUNT?'Jag har klarat Rush '+reach+' i Julrushen i Julklappsjakten. Kommer du längre?':'Kolla in min julrush i Julklappsjakten. Hur långt kommer du?')+(url?' '+url:'');
 }
 
 // ── Topplistan ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-// Rader för en rush (n) eller totalt (n=0). me: din egen profil. Sorterat på poäng (totalt: summan av bästa poäng per rush, sedan stjärnor). Bara de som klarat rushen finns med.
+// Rader för en rush (n), totalt (n=0) eller hur långt man kommit (n=-1: högsta klarade rush, och det kan vara över tolv). me: din egen profil. Sorterat på poäng (totalt: summan av bästa poäng per rush,
+// sedan stjärnor; längst: högsta rush, sedan summan). Bara de som klarat rushen (eller kommit så långt) finns med.
 export function leaderboard({me,friends=[],n=0}={}){
   const rows=[];
   const add=(p,you)=>{
     if(!p)return;
-    const points=n?p.bests?.[n]||0:p.total??Object.values(p.bests||{}).reduce((s,v)=>s+v,0);
-    if(points>0)rows.push({id:you?'du':p.id,name:p.name||'DU',you,points,stars:p.stars||0,cleared:p.cleared||0});
+    const total=p.total??Object.values(p.bests||{}).reduce((s,v)=>s+v,0);
+    const points=n<0?p.cleared||0:n?p.bests?.[n]||0:total;
+    if(points>0)rows.push({id:you?'du':p.id,name:p.name||'DU',you,points,stars:p.stars||0,cleared:p.cleared||0,total});
   };
   add(me,true);for(const f of cleanFriends(friends))add(f,false);
-  rows.sort((a,b)=>b.points-a.points||b.stars-a.stars||(a.you?-1:b.you?1:0));
+  rows.sort((a,b)=>b.points-a.points||(n<0?b.total-a.total:0)||b.stars-a.stars||(a.you?-1:b.you?1:0));
   rows.forEach((r,i)=>{r.rank=i+1;});
   return rows;
 }

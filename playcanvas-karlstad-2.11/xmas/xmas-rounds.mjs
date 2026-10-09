@@ -4,9 +4,9 @@
 //
 // Samma regler som introduktionen: paketen ligger på gångbar mark inom ett par meter från rutten, grupperna 11–15 m isär (en insamling var
 // 2–4 sekund på normal gångfart), allt som krävs för målet går att nå, och bonuspaketen är valfria avstickare 4–9 m från rutten.
-import {SHAPES,TORGET_PROPS,distanceToPath,TREE,INTRO} from './xmas-layout.mjs?v=2.21.1-xmas.3';
-import {STALLS,ARCH} from './xmas-decor-data.mjs?v=2.21.1-xmas.3';
-import {seededRandom} from './xmas-hunt.mjs?v=2.21.1-xmas.3';
+import {SHAPES,TORGET_PROPS,distanceToPath,TREE,INTRO} from './xmas-layout.mjs?v=2.21.1-xmas.4';
+import {STALLS,ARCH} from './xmas-decor-data.mjs?v=2.21.1-xmas.4';
+import {seededRandom} from './xmas-hunt.mjs?v=2.21.1-xmas.4';
 
 const hashStr=s=>{let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;};
 // Platser i staden (meter öster/söder om Stora Torget). Stannar på gångbar mark genom att nav.point flyttar dem till närmaste gångbara punkt.

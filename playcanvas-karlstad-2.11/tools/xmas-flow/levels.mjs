@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Verifiering i riktig webbläsare av JulRushens tolv nivåer, de nya gåvorna, topplistan och utmaningarna:
+// Verifiering i riktig webbläsare av JulRushens tolv nivåer, övertiden efter Rush 12 (ÖVERTID, Rush 13 och uppåt), de nya gåvorna (fyra fartgåvor), topplistan (med LÄNGST) och utmaningarna:
 //  - rushmenyn (tolv rutor, låsta och öppna), start av Rush 1, HUD med mål, en bot som klarar rushen, slutkort med stjärnor, sparning och upplåsning av nästa
 //  - NÄSTA RUSH (hjärtan följer med, tempot är högre), att förlora (ingen upplåsning), magnet, tomtespöke, kryddbomb, paketregn och sidopaket i riktig 3D
 //  - topplistan med namn, utmaningslänken (avkodas här i Node), en andra spelare som öppnar länken i en ny webbläsarkontext, utmaningen och jämförelsen efter rushen,
@@ -37,7 +37,7 @@ async function openGame(query=''){
   await page.route(/cdn\.jsdelivr\.net\/npm\/playcanvas/,r=>r.fulfill({contentType:'text/javascript',body:pcSource}));
   await page.route(/\/app\.js/,r=>{
     if(!r.request().url().includes('localhost:'+PORT))return r.continue();
-    const s=fs.readFileSync(path.join(root,'app.js'),'utf8').replace("app.on('update',update);","window.__app=app;window.__blocked=blocked;window.__tp=(x,z,h,t)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=h;pitch=t;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);};window.__pos=()=>{const p=player.getPosition();return [p.x,p.z]};app.on('update',update);");
+    const s=fs.readFileSync(path.join(root,'app.js'),'utf8').replace("app.on('update',update);","window.__app=app;window.__blocked=blocked;window.__tp=(x,z,h,t)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=h;pitch=t;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);};window.__pos=()=>{const p=player.getPosition();return [p.x,p.z]};window.__turbo=()=>lastRound?.turboScale?.()||1;app.on('update',update);");
     r.fulfill({contentType:'text/javascript',body:s});
   });
   G.page=page;G.ctx=ctx;
@@ -50,7 +50,7 @@ async function injectBot(){
   await ev(()=>{
     window.__skill=1;window.__botOn=false;
     window.__botStart=()=>{if(window.__botOn)return;window.__botOn=true;let last=null;const f=()=>{if(!window.__botOn)return;const j=window.KarlstadDebug.journey(),t=j.tempo,tg=t.target;
-      if(t.running&&tg){const el=j.elapsed;if(last!==null&&el>last){const [x,z]=window.__pos(),dx=tg.x-x,dz=tg.z-z,d=Math.hypot(dx,dz),v=7.2*t.speedMul()*j.fun.power.speedMul()*window.__skill,s=Math.min(d,v*(el-last));if(s>0&&d>.01)window.__tp(x+dx/d*s,z+dz/d*s,Math.atan2(-dx,-dz)*180/Math.PI,-4);}last=el;}else last=null;requestAnimationFrame(f);};requestAnimationFrame(f);};
+      if(t.running&&tg){const el=j.elapsed;if(last!==null&&el>last){const [x,z]=window.__pos(),dx=tg.x-x,dz=tg.z-z,d=Math.hypot(dx,dz),v=7.2*window.__turbo()*window.__skill,s=Math.min(d,v*(el-last));if(s>0&&d>.01)window.__tp(x+dx/d*s,z+dz/d*s,Math.atan2(-dx,-dz)*180/Math.PI,-4);}last=el;}else last=null;requestAnimationFrame(f);};requestAnimationFrame(f);};
     window.__botStop=()=>{window.__botOn=false;};
   });
 }
@@ -85,17 +85,18 @@ await openGame();
 
 // ── L0: rushmenyn ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 await click('xmasRushStart');await wait(500);
-const m0=await ev(()=>({panel:!document.getElementById('round-xmas-rush').hidden,tiles:[...document.querySelectorAll('#xmasRushGrid .xr-tile')].map(t=>[t.dataset.n,t.dataset.state,t.disabled,Math.round(t.getBoundingClientRect().height)]),
+const m0=await ev(()=>({panel:!document.getElementById('round-xmas-rush').hidden,tiles:[...document.querySelectorAll('#xmasRushGrid .xr-tile:not(.xr-ot)')].map(t=>[t.dataset.n,t.dataset.state,t.disabled,Math.round(t.getBoundingClientRect().height)]),ot:[...document.querySelectorAll('#xmasRushGrid .xr-tile.xr-ot')].map(t=>({n:t.dataset.n,state:t.dataset.state,disabled:t.disabled,h:Math.round(t.getBoundingClientRect().height),w:Math.round(t.getBoundingClientRect().width),text:t.textContent.trim()})),grid:Math.round(document.getElementById('xmasRushGrid').getBoundingClientRect().width),
   play:document.getElementById('xmasRushPlay').textContent.trim(),title:document.getElementById('xmasRushInfoTitle').textContent,goal:document.getElementById('xmasRushInfoGoal').textContent,stars:document.getElementById('xmasRushStars').textContent}));
 check('L0 rushmenyn: tolv rutor, bara Rush 1 öppen (de andra låsta och inte tryckbara), alla minst 48 px höga',m0.panel&&m0.tiles.length===12&&m0.tiles[0][1]==='open'&&!m0.tiles[0][2]&&m0.tiles.slice(1).every(t=>t[1]==='locked'&&t[2])&&m0.tiles.every(t=>t[3]>=48),JSON.stringify(m0.tiles.map(t=>t.slice(0,3).join(':'))));
-check('L0b rutan visar "RUSH 1 · JULMYS", målet och spelaknappen "SPELA RUSH 1"',m0.title==='RUSH 1 · JULMYS'&&/^HÄMTA 13 PAKET · FART ×1,00 · POÄNG ×1,0$/.test(m0.goal)&&/^SPELA RUSH 1/.test(m0.play)&&m0.stars==='★ 0 / 36',JSON.stringify({t:m0.title,g:m0.goal,p:m0.play,s:m0.stars}));
+check('L0a efter de tolv rutorna kommer en bred ÖVERTID-ruta (Rush 13 och uppåt) som är låst tills alla tolv är klarade, minst 48 px hög',m0.ot.length===1&&m0.ot[0].n==='13'&&m0.ot[0].state==='locked'&&m0.ot[0].disabled&&m0.ot[0].h>=48&&m0.ot[0].w>m0.grid*.8&&/ÖVERTID/.test(m0.ot[0].text),JSON.stringify(m0.ot));
+check('L0b rutan visar "RUSH 1 · JULMYS", målet och spelaknappen "SPELA RUSH 1"',m0.title==='RUSH 1 · JULMYS'&&new RegExp('^HÄMTA '+rushes.RUSHES[0].goal.target+' PAKET · FART ×1,00 · POÄNG ×1,0$').test(m0.goal)&&/^SPELA RUSH 1/.test(m0.play)&&m0.stars==='★ 0 / 36',JSON.stringify({t:m0.title,g:m0.goal,p:m0.play,s:m0.stars}));
 await shot('l00-rushmeny');
 
 // ── L1: start av Rush 1 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
 await click('xmasRushPlay');await wait(3300);
 const s1=await rush(),h1=await hud();
-check('L1 Rush 1 startar: läge rush, tempo 1, tre hjärtan och målet 13 paket',s1.state==='running'&&s1.n===1&&s1.level===1&&s1.lives===3&&s1.goal&&s1.goal.kind==='packages'&&s1.goal.target===13&&s1.goal.value===0,JSON.stringify({n:s1.n,lvl:s1.level,lives:s1.lives,goal:s1.goal}));
-check('L1b HUD:en visar RUSH 1, namnet JULMYS, tre hjärtan och målraden "HÄMTA PAKET 0/13"',h1.label==='RUSH'&&h1.count==='1'&&h1.name==='JULMYS'&&h1.hearts==='♥♥♥'&&!h1.goalHidden&&h1.goalLabel==='HÄMTA PAKET'&&h1.goalCount==='0/13',JSON.stringify(h1));
+check('L1 Rush 1 startar: läge rush, tempo 1, tre hjärtan, målet '+rushes.RUSHES[0].goal.target+' paket och turbon på av sig själv',s1.state==='running'&&s1.n===1&&s1.level===1&&s1.lives===3&&s1.goal&&s1.goal.kind==='packages'&&s1.goal.target===rushes.RUSHES[0].goal.target&&s1.goal.value===0&&(await ev(()=>window.KarlstadRound.snapshot().turbo.on)),JSON.stringify({n:s1.n,lvl:s1.level,lives:s1.lives,goal:s1.goal}));
+check('L1b HUD:en visar RUSH 1, namnet JULMYS, tre hjärtan och målraden "HÄMTA PAKET 0/25"',h1.label==='RUSH'&&h1.count==='1'&&h1.name==='JULMYS'&&h1.hearts==='♥♥♥'&&!h1.goalHidden&&h1.goalLabel==='HÄMTA PAKET'&&h1.goalCount==='0/'+rushes.RUSHES[0].goal.target,JSON.stringify(h1));
 check('L1c HUD:ns texter klipps inte: prickarna i HÄMTA PAKET syns',(await clipped('#xmasHud *')).length===0&&/HÄMTA/.test(await text('.xh-goal span')),JSON.stringify(await clipped('#xmasHud *')));
 await shot('l01-rush1');
 
@@ -120,7 +121,7 @@ void mid;void sawGoalMid;
 // ── L3: NÄSTA RUSH: tempo 2, målet är poäng, hjärtana följer med ───────────────────────────────────────────────────────────────────────
 await click('xmasResultContinue');await wait(3300);
 const s3=await rush(),h3=await hud();
-check('L3 NÄSTA RUSH startar Rush 2: tempo 2, tre hjärtan, målet 600 poäng och HUD "NÅ POÄNGEN"',s3.n===2&&s3.level===2&&s3.lives===3&&s3.goal.kind==='points'&&s3.goal.target===rushes.RUSHES[1].goal.target&&h3.label==='RUSH'&&h3.count==='2'&&h3.name==='PEPPARKAKA'&&h3.goalLabel==='NÅ POÄNGEN',JSON.stringify({n:s3.n,lvl:s3.level,goal:s3.goal,h:h3}));
+check('L3 NÄSTA RUSH startar Rush 2: tempo 2, tre hjärtan, poängmålet och HUD "NÅ POÄNGEN"',s3.n===2&&s3.level===2&&s3.lives===3&&s3.goal.kind==='points'&&s3.goal.target===rushes.RUSHES[1].goal.target&&h3.label==='RUSH'&&h3.count==='2'&&h3.name==='PEPPARKAKA'&&h3.goalLabel==='NÅ POÄNGEN',JSON.stringify({n:s3.n,lvl:s3.level,goal:s3.goal,h:h3}));
 check('L3b tempot är fast: farten är den för tempo 2 och ingen tempohöjning sker under rushen',await ev(()=>{const t=window.KarlstadDebug.journey().tempo;return t.level===2&&t.levelClock<.5;}));
 check('L3c HUD:ns målrad klipps inte: ringen på Å och prickarna på Ä i NÅ POÄNGEN syns',(await clipped('#xmasHud *')).length===0&&/NÅ POÄNGEN/.test(await text('.xh-goal span')),JSON.stringify(await clipped('#xmasHud *')));
 await ev(()=>{window.__skill=1;window.__botStart();});
@@ -144,7 +145,7 @@ check('L4b att välja Rush 1 visar rekordet och spelaknappen "SPELA RUSH 1", och
 
 // ── L5: att förlora ger inga stjärnor och ingen upplåsning ──────────────────────────────────────────────────────────────────────────────
 await ev(()=>document.querySelector('#xmasRushGrid .xr-tile[data-n="3"]').click());await wait(150);await click('xmasRushPlay');await wait(3000);
-await ev(()=>{window.__botStop();});
+await ev(()=>{window.__botStop();const t=window.KarlstadDebug.journey().tempo;t.deadline=12;t.left=12;}); // en lång klocka så att inget hjärta går åt av sig självt innan missarna tvingas fram
 const hearts=[];
 for(let i=0;i<3;i++){await ev(()=>{window.KarlstadDebug.journey().tempo.left=.02;});await wait(i?900:700);hearts.push((await hud()).hearts);}
 await wait(1900);
@@ -163,6 +164,48 @@ check('L6 Rush 12 startar på tempo 12: fart ×1,88, poängmål '+rushes.RUSHES[
 await shot('l06-rush12');
 await ev(()=>{window.__skill=0;});
 
+// ── L6b: ÖVERTID: när alla tolv rusher är klarade fortsätter det med Rush 13, 14 … ────────────────────────────────────────────────────────────
+await ev(()=>window.KarlstadDebug.journey().xmas.openMenu());await wait(600);
+// som en spelare som klarat Rush 1–12 på riktigt: båda rushstämplarna är delade
+await ev(()=>{const x=window.KarlstadDebug.journey().xmas;x.save.state.rush.cleared=12;x.save.stamp('julrush');x.save.stamp('julrush-12');x.save.save();});
+await click('xmasRushStart');await wait(500);
+const ot=await ev(()=>{const t=document.querySelector('#xmasRushGrid .xr-tile.xr-ot');return {n:t.dataset.n,state:t.dataset.state,disabled:t.disabled,text:t.textContent.trim().replace(/\s+/g,' '),title:document.getElementById('xmasRushInfoTitle').textContent,goal:document.getElementById('xmasRushInfoGoal').textContent,play:document.getElementById('xmasRushPlay').textContent.trim(),pressed:t.getAttribute('aria-pressed'),h:Math.round(t.getBoundingClientRect().height)};});
+check('L6b när alla tolv är klarade öppnas ÖVERTID-rutan: Rush 13 är vald (rubriken ÖVERTID 1), spelaknappen säger SPELA RUSH 13 och rutan är minst 48 px hög',ot.state==='open'&&!ot.disabled&&ot.n==='13'&&ot.title==='RUSH 13 · ÖVERTID 1'&&/^SPELA RUSH 13/.test(ot.play)&&ot.pressed==='true'&&/ÖVERTID/.test(ot.text)&&ot.h>=48&&new RegExp('^HÄMTA '+rushes.rushDef(13).goal.target+' PAKET · FART ×1,88').test(ot.goal),JSON.stringify(ot));
+check('L6b2 rushmenyns texter klipps inte (ÖVERTID i rutan, Å och Ä i rubriker)',(await clipped('#xmasRushGrid .xr-tile span, #xmasRushGrid .xr-tile b, #xmasRushInfoTitle, #xmasRushPlay')).length===0,JSON.stringify(await clipped('#xmasRushGrid .xr-tile span, #xmasRushGrid .xr-tile b, #xmasRushInfoTitle, #xmasRushPlay')));
+await shot('l06b-overtid-meny');
+await click('xmasRushPlay');await wait(3300);
+const o1=await rush(),oh=await hud(),oc=await ev(()=>{const j=window.KarlstadDebug.journey();return {level:j.tempo.level,speed:j.tempo.speedMul(),deadline:j.tempo.deadline,turbo:window.KarlstadRound.snapshot().turbo.on};});
+const d13=rushes.rushDef(13);
+check('L6c Rush 13 (ÖVERTID 1) startar med samma fart som Rush 12 (tempo 12), målet '+d13.goal.target+' paket och HUD "RUSH 13 · ÖVERTID 1"',o1.n===13&&o1.level===12&&o1.goal.target===d13.goal.target&&oc.level===12&&Math.abs(oc.speed-1.88)<.01&&oc.turbo&&oh.label==='RUSH'&&oh.count==='13'&&oh.name==='ÖVERTID 1'&&oh.goalCount==='0/'+d13.goal.target,JSON.stringify({n:o1.n,lvl:o1.level,goal:o1.goal.target,h:oh}));
+check('L6c2 HUD:ns texter klipps inte i övertiden',(await clipped('#xmasHud *')).length===0,JSON.stringify(await clipped('#xmasHud *')));
+await shot('l06c-overtid-start');
+// Boten spelar rusherna med högsta möjliga fart. I den mjukvarurenderade webbläsaren är bildrutorna få och långa och varje bildruta äter av den trånga klockan, så boten får 30 % mer än full turbo:
+// det som provas är att banan, klockan och målet fungerar i övertiden, inte hur svårt det är (det mäts med tools/xmas-flow/difficulty.mjs).
+await ev(()=>{window.__skill=1.3;window.__botStart();});
+await until(()=>window.KarlstadDebug.journey().xmas.julrush.snapshot().picked>=12,200);
+const o2=await rush();
+check('L6d boten plockar minst 12 paket i övertiden utan att tappa ett hjärta ('+o2.picked+' paket, '+o2.lives+' hjärtan)',o2.picked>=12&&o2.lives===3,JSON.stringify({picked:o2.picked,lives:o2.lives,score:o2.score,state:o2.state}));
+// resten av målet hoppas över för att spara tid: räknaren sätts nära målet och boten tar de sista paketen
+await ev(()=>{const t=window.KarlstadDebug.journey().tempo;t.picked=Math.max(t.picked,window.KarlstadDebug.journey().xmas.julrush.def.goal.target-2);});
+await until(()=>window.KarlstadDebug.journey().xmas.julrush.snapshot().state==='over',120);await wait(1800);
+const oc2=await ev(()=>({title:document.getElementById('xmasResultTitle').textContent,kicker:document.getElementById('xmasResultKicker').textContent,line:document.getElementById('xmasResultLine').textContent,b1:document.getElementById('xmasResultContinue').textContent.trim(),share:!document.getElementById('xmasResultShare').hidden,
+  cleared:window.KarlstadDebug.journey().xmas.save.state.rush.cleared,parts:document.getElementById('xmasResultParts').textContent,res:window.KarlstadDebug.journey().xmas.julrush.result.rush}));
+check('L6e Rush 13 klaras: RUSH 13 KLAR!, "LÄNGRE ÄN NÅGONSIN!", "Du har aldrig kommit så långt som Rush 13" och knappen NÄSTA RUSH · 14',oc2.title==='RUSH 13 KLAR!'&&oc2.kicker==='LÄNGRE ÄN NÅGONSIN!'&&/aldrig kommit så långt som Rush 13/.test(oc2.line)&&/^NÄSTA RUSH · 14/.test(oc2.b1)&&oc2.share&&oc2.cleared===13&&oc2.res.overtime&&oc2.res.newReach&&oc2.res.next===14,JSON.stringify({title:oc2.title,kicker:oc2.kicker,line:oc2.line,b1:oc2.b1,cleared:oc2.cleared}));
+check('L6f resultatkortet förklarar hjärtareglen (hjärtan fylls bara på om du klarar en rush utan att tappa ett) och texterna klipps inte',(/NÄSTA RUSH MED \d HJÄRT/.test(oc2.parts))&&(await clipped('#round-xmas-result *')).length===0,JSON.stringify({parts:oc2.parts,clip:await clipped('#round-xmas-result *')}));
+await shot('l06e-overtid-klar');
+// LÄNGST: topplistan kan sorteras på hur långt man kommit, och UTMANA EN VÄN efter en övertidsrush öppnar den
+await click('xmasResultShare');await wait(500);
+const lb=await ev(()=>({sel:document.getElementById('xmasBoardRush').value,rows:[...document.querySelectorAll('#xmasBoardList li')].map(l=>l.textContent),opts:[...document.getElementById('xmasBoardRush').options].map(o=>o.value),txt:document.getElementById('xmasBoardShareText').textContent}));
+check('L6g UTMANA EN VÄN efter Rush 13 öppnar topplistan LÄNGST I JULRUSHEN med "RUSH 13" och väljaren har TOTALT, LÄNGST och tolv rusher (14 val)',lb.sel==='reach'&&lb.rows.length===1&&/RUSH 13/.test(lb.rows[0])&&lb.opts.length===14&&lb.opts[1]==='reach'&&/Skriv ditt namn/.test(lb.txt),JSON.stringify(lb));
+await shot('l06g-langst');
+await click('xmasBoardBack');await wait(400);
+await click('xmasResultFree');await wait(500);
+const ot2=await ev(()=>{const t=document.querySelector('#xmasRushGrid .xr-tile.xr-ot');return {n:t.dataset.n,state:t.dataset.state,text:t.textContent.trim().replace(/\s+/g,' '),head:document.getElementById('xmasRushStars').textContent,play:document.getElementById('xmasRushPlay').textContent.trim()};});
+check('L6h efter Rush 13 pekar ÖVERTID-rutan på Rush 14 och visar hur långt du kommit (✓ 13), och rubriken visar RUSH 13',ot2.n==='14'&&ot2.state==='done'&&/✓ 13/.test(ot2.text)&&/RUSH 13$/.test(ot2.head)&&/^SPELA RUSH 14/.test(ot2.play),JSON.stringify(ot2));
+await shot('l06h-overtid-meny-efter');
+// tillbaka till Rush 12-läget för gåvorna nedan
+await ev(()=>{const x=window.KarlstadDebug.journey().xmas;x.startRush(12);x.julrush.timers.pause=9999;window.__skill=0;});await wait(2600); // klockan fryst direkt: inget hjärta går åt medan provet står och tittar
+
 // ── L7: gåvorna i 3D: magnet, tomtespöke, kryddbomb och paketregn, och sidopaket ─────────────────────────────────────────────────────────────
 await ev(()=>{const x=window.KarlstadDebug.journey().xmas,r=x.julrush,j=window.KarlstadDebug.journey();r.timers.pause=9999;const p=window.__pos(),f=j.lastForward||{x:0,z:-1};
   // ett guldpaket med gåva en bit framför spelaren, så att brickan och spöket alltid har något att visa
@@ -178,6 +221,13 @@ await shot('l07b-regn');
 await ev(()=>{const r=window.KarlstadDebug.journey().xmas.julrush,p=window.__pos();r.grant('bomb',{x:p[0],z:p[1],y:1.68});});await wait(700);
 const bomb=await ev(()=>({rs:window.KarlstadDebug.journey().xmas.julrush.snapshot(),rain:window.KarlstadDebug.journey().xmas.julrush.side.filter(k=>k.rain&&!k.collected).length}));
 check('L7c kryddbomben tar paketen runt spelaren: regnpaketen är borta och poängen har stigit',bomb.rain===0&&bomb.rs.score>0,JSON.stringify({rain:bomb.rain,score:bomb.rs.score}));
+// De fyra fartgåvorna (glögg, pepparkaksraket, medvind, skridskor): brickor, fart (den starkaste gäller, raketen ×3) och effekt
+await ev(()=>{const r=window.KarlstadDebug.journey().xmas.julrush,p=window.__pos();for(const k of ['glogg','kaka','wind','skates'])r.grant(k,{x:p[0],z:p[1],y:1.68});});await wait(700);
+const fg=await ev(()=>({chips:[...document.querySelectorAll('.xh-chip')].map(c=>c.textContent),mul:window.KarlstadDebug.journey().fun.power.speedMul(),scale:window.__turbo(),rocket:document.body.classList.contains('rocket-on'),turbo:document.body.classList.contains('turbo-on'),
+  fit:[...document.querySelectorAll('.xh-chip')].every(c=>{const r=c.getBoundingClientRect();return r.left>=0&&r.right<=window.innerWidth;}),chipClip:null}));
+check('L7e de fyra nya fartgåvorna syns som brickor (GLÖGG, RAKET, VIND, SKRIDSKOR), den starkaste gäller (raketen: farten ×3, med turbon ×'+(2*3*1.88).toFixed(1)+') och alla brickor ryms på skärmen',['GLÖGG','RAKET','VIND','SKRIDSKOR'].every(t=>fg.chips.some(c=>c.startsWith(t)))&&fg.mul===3&&Math.abs(fg.scale-2*3*1.88)<.05&&fg.rocket&&fg.turbo&&fg.fit,JSON.stringify(fg));
+check('L7e2 brickornas texter klipps inte',(await clipped('.xh-chip')).length===0,JSON.stringify(await clipped('.xh-chip')));
+await shot('l07e-fartgavor');
 await ev(()=>{window.__skill=0;});
 // sidopaket: botten springer en stund på en lugn nivå (Rush 12 har glest, så starta Rush 1) och sidopaket ska dyka upp med gåva
 await ev(()=>window.KarlstadDebug.journey().xmas.openMenu());await wait(600);
@@ -194,7 +244,7 @@ await ev(()=>document.querySelector('#xmasRushGrid .xr-tile[data-n="2"]').click(
 await click('xmasRushBoard');await wait(500);
 const b0=await ev(()=>({panel:!document.getElementById('round-xmas-board').hidden,sel:document.getElementById('xmasBoardRush').value,rows:[...document.querySelectorAll('#xmasBoardList li')].map(l=>l.textContent),name:document.getElementById('xmasBoardName').value,link:document.getElementById('xmasBoardLink').value,
   share:document.getElementById('xmasBoardShare').disabled,txt:document.getElementById('xmasBoardShareText').textContent,note:document.getElementById('xmasBoardNote').textContent,opts:document.getElementById('xmasBoardRush').options.length}));
-check('L8 topplistan öppnas för vald rush: listan innehåller dig, väljaren har 13 val, utan namn går det inte att skicka och texten ber om ett namn',b0.panel&&b0.sel==='2'&&b0.opts===13&&b0.rows.length===1&&/^1DU\d/.test(b0.rows[0])&&b0.share===true&&b0.link===''&&/Skriv ditt namn/.test(b0.txt),JSON.stringify({sel:b0.sel,rows:b0.rows,share:b0.share,txt:b0.txt}));
+check('L8 topplistan öppnas för vald rush: listan innehåller dig, väljaren har 14 val (TOTALT, LÄNGST och tolv rusher), utan namn går det inte att skicka och texten ber om ett namn',b0.panel&&b0.sel==='2'&&b0.opts===14&&b0.rows.length===1&&/^1DU\d/.test(b0.rows[0])&&b0.share===true&&b0.link===''&&/Skriv ditt namn/.test(b0.txt),JSON.stringify({sel:b0.sel,rows:b0.rows,share:b0.share,txt:b0.txt}));
 await ev(()=>{const i=document.getElementById('xmasBoardName');i.focus();});
 await G.page.keyboard.type('Åsa Lisa Bo');await wait(300);
 const b1=await ev(()=>({link:document.getElementById('xmasBoardLink').value,share:document.getElementById('xmasBoardShare').disabled,copy:document.getElementById('xmasBoardCopy').disabled,txt:document.getElementById('xmasBoardShareText').textContent,name:document.getElementById('xmasBoardName').value}));
@@ -210,6 +260,12 @@ check('L8d namnet sparas och finns kvar efter omladdning av vyn',await ev(()=>wi
 await ev(()=>{const s=document.getElementById('xmasBoardRush');s.value='0';s.dispatchEvent(new Event('change'));});await wait(250);
 const tot=await ev(()=>[...document.querySelectorAll('#xmasBoardList li')].map(l=>l.textContent));
 check('L8e TOTALT visar summan av dina bästa poäng',tot.length===1&&tot[0].includes(mine.total.toLocaleString('sv-SE')),tot.join('|'));
+// LÄNGST via väljaren: listan visar hur långt man kommit (Rush 13 efter övertiden ovan)
+await ev(()=>{const s=document.getElementById('xmasBoardRush');s.value='reach';s.dispatchEvent(new Event('change'));});await wait(250);
+const farRows=await ev(()=>({sel:document.getElementById('xmasBoardRush').value,rows:[...document.querySelectorAll('#xmasBoardList li')].map(l=>l.textContent)}));
+check('L8g väljaren LÄNGST I JULRUSHEN visar hur långt du kommit: "RUSH 13"',farRows.sel==='reach'&&farRows.rows.length===1&&/^1Åsa Lisa Bo \(DU\)RUSH 13★\d+$/.test(farRows.rows[0]),JSON.stringify(farRows));
+await shot('l08g-langst-vaeljare');
+await ev(()=>{const s=document.getElementById('xmasBoardRush');s.value='0';s.dispatchEvent(new Event('change'));});await wait(200);
 check('L8f namnen i topplistan klipps inte (ett namn som börjar på Å visar sin ring)',(await clipped('#xmasBoardList .nm')).length===0&&/^Å/.test(await text('#xmasBoardList .nm')),JSON.stringify({c:await clipped('#xmasBoardList .nm'),t:await text('#xmasBoardList .nm')}));
 const sharedToken=tok;
 await ev(()=>window.KarlstadDebug.journey().xmas.openMenu());await wait(400);

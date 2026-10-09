@@ -1,46 +1,46 @@
-import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.21.1-xmas.3';
-import {createSouthSigns} from './city-south.js?v=2.21.1-xmas.3';
-import {createOrrholmenSigns} from './orrholmen.js?v=2.21.1-xmas.3';
-import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.21.1-xmas.3';
-import {createZombieAtlases} from './zombie-art.js?v=2.21.1-xmas.3';
-import {createXmasZombieAtlases} from './xmas/xmas-zombie-art.js?v=2.21.1-xmas.3'; // julgrenen: tomtezombier ersätter grundspelets zombiebilder
-import {FriendlyClerks} from './friendly-clerks.mjs?v=2.21.1-xmas.3';
-import {createFriendlyView} from './friendly-view.js?v=2.21.1-xmas.3';
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.21.1-xmas.3';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.21.1-xmas.3';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.21.1-xmas.3';
-import {CityJourney} from './journey-rules.mjs?v=2.21.1-xmas.3';
-import {createJourneyView} from './journey-view.js?v=2.21.1-xmas.3';
-import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.21.1-xmas.3';
-import {createBoatRide} from './boat-ride.js?v=2.21.1-xmas.3';
-import {createBusRide} from './bus-ride.js?v=2.21.1-xmas.3';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.21.1-xmas.3';
-import {createPostcard} from './challenge-postcard.js?v=2.21.1-xmas.3';
-import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.21.1-xmas.3';
-import {RUSH} from './city-rush.mjs?v=2.21.1-xmas.3';
-import {StampBook} from './city-stamps.mjs?v=2.21.1-xmas.3';
-import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.21.1-xmas.3';
-import {POWERUPS} from './powerups.mjs?v=2.21.1-xmas.3';
-import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.21.1-xmas.3';
-import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.21.1-xmas.3';
-import {fetchLiveBoard} from './bus-quiz.mjs?v=2.21.1-xmas.3';
-import {GhostRun} from './ghost-run.mjs?v=2.21.1-xmas.3';
-import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.21.1-xmas.3';
-import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.21.1-xmas.3';
-import {pedestrianAt} from './pedestrian.mjs?v=2.21.1-xmas.3';
-import {createPedestrianSigns} from './pedestrian-view.js?v=2.21.1-xmas.3';
-import {drawMapLabels} from './city-geography.mjs?v=2.21.1-xmas.3';
-import {createCityIdentity} from './city-identity.js?v=2.21.1-xmas.3';
-import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.21.1-xmas.3';
+import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.21.1-xmas.4';
+import {createSouthSigns} from './city-south.js?v=2.21.1-xmas.4';
+import {createOrrholmenSigns} from './orrholmen.js?v=2.21.1-xmas.4';
+import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.21.1-xmas.4';
+import {createZombieAtlases} from './zombie-art.js?v=2.21.1-xmas.4';
+import {createXmasZombieAtlases} from './xmas/xmas-zombie-art.js?v=2.21.1-xmas.4'; // julgrenen: tomtezombier ersätter grundspelets zombiebilder
+import {FriendlyClerks} from './friendly-clerks.mjs?v=2.21.1-xmas.4';
+import {createFriendlyView} from './friendly-view.js?v=2.21.1-xmas.4';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.21.1-xmas.4';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.21.1-xmas.4';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.21.1-xmas.4';
+import {CityJourney} from './journey-rules.mjs?v=2.21.1-xmas.4';
+import {createJourneyView} from './journey-view.js?v=2.21.1-xmas.4';
+import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.21.1-xmas.4';
+import {createBoatRide} from './boat-ride.js?v=2.21.1-xmas.4';
+import {createBusRide} from './bus-ride.js?v=2.21.1-xmas.4';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.21.1-xmas.4';
+import {createPostcard} from './challenge-postcard.js?v=2.21.1-xmas.4';
+import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.21.1-xmas.4';
+import {RUSH} from './city-rush.mjs?v=2.21.1-xmas.4';
+import {StampBook} from './city-stamps.mjs?v=2.21.1-xmas.4';
+import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.21.1-xmas.4';
+import {POWERUPS} from './powerups.mjs?v=2.21.1-xmas.4';
+import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.21.1-xmas.4';
+import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.21.1-xmas.4';
+import {fetchLiveBoard} from './bus-quiz.mjs?v=2.21.1-xmas.4';
+import {GhostRun} from './ghost-run.mjs?v=2.21.1-xmas.4';
+import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.21.1-xmas.4';
+import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.21.1-xmas.4';
+import {pedestrianAt} from './pedestrian.mjs?v=2.21.1-xmas.4';
+import {createPedestrianSigns} from './pedestrian-view.js?v=2.21.1-xmas.4';
+import {drawMapLabels} from './city-geography.mjs?v=2.21.1-xmas.4';
+import {createCityIdentity} from './city-identity.js?v=2.21.1-xmas.4';
+import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.21.1-xmas.4';
 
-import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.21.1-xmas.3';
-import {PlaceQuests} from './place-quests.mjs?v=2.21.1-xmas.3';
-import {placeAnchors} from './places-space.mjs?v=2.21.1-xmas.3';
-import {createPlacesView} from './places-view.js?v=2.21.1-xmas.3';
-import {createPlacesUi} from './places-ui.js?v=2.21.1-xmas.3';
-import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.21.1-xmas.3';
-import {installXmas,prepareXmasJourney} from './xmas/xmas-boot.js?v=2.21.1-xmas.3'; // julgrenen: Julklappsjakten (allt jul bor under xmas/)
-import {XMAS_PLACES} from './xmas/xmas-places.mjs?v=2.21.1-xmas.3';
+import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.21.1-xmas.4';
+import {PlaceQuests} from './place-quests.mjs?v=2.21.1-xmas.4';
+import {placeAnchors} from './places-space.mjs?v=2.21.1-xmas.4';
+import {createPlacesView} from './places-view.js?v=2.21.1-xmas.4';
+import {createPlacesUi} from './places-ui.js?v=2.21.1-xmas.4';
+import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.21.1-xmas.4';
+import {installXmas,prepareXmasJourney} from './xmas/xmas-boot.js?v=2.21.1-xmas.4'; // julgrenen: Julklappsjakten (allt jul bor under xmas/)
+import {XMAS_PLACES} from './xmas/xmas-places.mjs?v=2.21.1-xmas.4';
 
 export function createLastRound(pc, host) {
   // 2.10: elementuppslag cachas, och HUD-text skrivs bara om när värdet faktiskt ändras.
@@ -1086,7 +1086,7 @@ export function createLastRound(pc, host) {
     actors: game.actors.map(a => ({id: a.id, x: a.x, z: a.z, active: a.active, hp:a.hp, kind:a.kind})), goal: {...layout.goal}, objective:isPush()?layout.goal:game.objective(host.player.getPosition())})});
   // Julgrenen: Julklappsjakten kopplas in här. Alla hjälpfunktioner som julkoden behöver ges som argument, den rör inga andra moduler.
   xmas=installXmas({pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,params,storage,
-    isPlaying:()=>game.phase==='playing'&&!panel,placeActive:()=>!!journey.places?.run,indoors:p=>mallInside(p),openPass:()=>openPass(),dismissPlaceResult:()=>placesUi.dismissResult()});
+    isPlaying:()=>game.phase==='playing'&&!panel,placeActive:()=>!!journey.places?.run,indoors:p=>mallInside(p),openPass:()=>openPass(),dismissPlaceResult:()=>placesUi.dismissResult(),setTurbo:on=>{const was=turbo;if(typeof on==='boolean'&&on!==turbo){turbo=on;renderTurbo();}return was;}});
   journey.xmas=xmas;
   explore(true);
   if(xmas){xmas.openMenu();}

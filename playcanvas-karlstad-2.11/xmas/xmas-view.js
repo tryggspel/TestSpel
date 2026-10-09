@@ -5,9 +5,9 @@
 // Vägledningen (xmas-guide.mjs) ritas här: en grön stråle och en ring vid pilens mål (nästa paket, eller tomten efter målet) och ett rött julband med pilar
 // som rullas ut på marken längs gångvägen dit. Bandet ligger fast i världen: man går fram över det och nya bitar rullas ut längst bort.
 // Ingen fysik, inga ljus: allt är platta bildkort och genomskinliga cylindrar.
-import {drawBeam,drawRibbon,drawGiftIcons,drawGhostHelper,GIFT_ICON_COLS,GIFT_ICON_ROWS,GIFT_ICON_CELL} from './xmas-art.js?v=2.21.1-xmas.3';
-import {GIFT_KINDS,GIFTS} from './xmas-rush.mjs?v=2.21.1-xmas.3';
-import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.3';
+import {drawBeam,drawRibbon,drawGiftIcons,drawGhostHelper,GIFT_ICON_COLS,GIFT_ICON_ROWS,GIFT_ICON_CELL} from './xmas-art.js?v=2.21.1-xmas.4';
+import {GIFT_KINDS,GIFTS} from './xmas-rush.mjs?v=2.21.1-xmas.4';
+import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.4';
 export function createXmasView(pc,host,draw,sprites,hunt,rush=null){
   const {labelTex,texture}=draw,root=draw.root;
   const POOL=26,SHOW=54,SHOW_RUSH=96,BEAMS=4,BADGES=6,BURSTS=6,RIBBON=GUIDE.ribbon.max,RIBBON_PHASES=4;

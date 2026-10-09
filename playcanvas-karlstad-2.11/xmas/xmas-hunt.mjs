@@ -6,10 +6,10 @@
 //  - Fångstfältet är detsamma som i 2.20.0 (växer med farten) och kräver fri sikt: inget paket tas genom en vägg.
 //  - Introduktionen har ingen tidsgräns. Rundor har en mjuk tid: den ger bara tidsbonus, man kan alltid lämna in.
 //  - Fri julvandring delar ut nya paketregn med jämna mellanrum; varje regn har egna ID och en tydlig varning, och försvinner efter en stund.
-import {CATCH,catchReach} from '../journey-rules.mjs?v=2.21.1-xmas.3';
-import {PACKAGE_POINTS,COMBO,comboMult,DELIVERY,timeBonus,FREE_RAIN,STAMPS} from './xmas-config.mjs?v=2.21.1-xmas.3';
-import {INTRO,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.3';
-import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.3';
+import {CATCH,catchReach} from '../journey-rules.mjs?v=2.21.1-xmas.4';
+import {PACKAGE_POINTS,COMBO,comboMult,DELIVERY,timeBonus,FREE_RAIN,STAMPS} from './xmas-config.mjs?v=2.21.1-xmas.4';
+import {INTRO,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.4';
+import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.4';
 
 function closestOnSegment(px,pz,ax,az,bx,bz){
   const dx=bx-ax,dz=bz-az,len2=dx*dx+dz*dz,t=len2>0?Math.max(0,Math.min(1,((px-ax)*dx+(pz-az)*dz)/len2)):0,x=ax+dx*t,z=az+dz*t;

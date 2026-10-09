@@ -7,11 +7,11 @@
 //  • En stämpel i Karlstadpasset kräver ett genomfört uppdrag och ges bara första gången.
 //  • Upprepade uppdrag är roliga men ger bara en liten, tidsbegränsad belöning. Permanent samling (stämplar, besök) och
 //    rundans poäng (kaffepoäng) hålls isär: stämplar sparas här, poängen går via host.reward.
-import {PLACES,PLAYABLE,ACTIVITY_TYPES,resolvePlaces,approvedOffer,PASS_TEXT} from './places.mjs?v=2.21.1-xmas.3';
-import {PartnerEvents,EVENT_TYPES} from './partner-events.mjs?v=2.21.1-xmas.3';
-import {mallRoom} from './mall-space.mjs?v=2.21.1-xmas.3';
-import {segmentDistance} from './explore-fun.mjs?v=2.21.1-xmas.3';
-import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.21.1-xmas.3';
+import {PLACES,PLAYABLE,ACTIVITY_TYPES,resolvePlaces,approvedOffer,PASS_TEXT} from './places.mjs?v=2.21.1-xmas.4';
+import {PartnerEvents,EVENT_TYPES} from './partner-events.mjs?v=2.21.1-xmas.4';
+import {mallRoom} from './mall-space.mjs?v=2.21.1-xmas.4';
+import {segmentDistance} from './explore-fun.mjs?v=2.21.1-xmas.4';
+import {seededRandom,hashSeed} from './daily-challenge.mjs?v=2.21.1-xmas.4';
 
 export const PLACE_KEY='karlstad:places:1';
 export const QUEST=Object.freeze({

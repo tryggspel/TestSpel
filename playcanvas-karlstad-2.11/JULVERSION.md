@@ -33,8 +33,8 @@ GitHub Pages-arbetsflödet `Deploy Karlstad City Mobile` publicerar bara `main`;
 Julversionens ändringar slås **inte** ihop med `main`. Förbättringar i grundspelet förs över till julgrenen med granskade Git-ändringar
 (`git switch release/jul-2026 && git merge main`, lös konflikter i de få filer som julgrenen rör (avsnitt 5), kör testerna).
 
-Versionsbeteckning: `X.Y.Z-xmas.N`, där `X.Y.Z` är basversionen på `main` och `N` räknar julbyggen (**`2.21.1-xmas.3`**). Det synliga namnet är
-**Julklappsjakten – 2.21-XMS**. `node tools/set-version.mjs 2.21.1-xmas.4` (nästa bygge) sätter en enda cache-nyckel i alla moduler, HTML och CSS
+Versionsbeteckning: `X.Y.Z-xmas.N`, där `X.Y.Z` är basversionen på `main` och `N` räknar julbyggen (**`2.21.1-xmas.4`**). Det synliga namnet är
+**Julklappsjakten – 2.21-XMS**. `node tools/set-version.mjs 2.21.1-xmas.5` (nästa bygge) sätter en enda cache-nyckel i alla moduler, HTML och CSS
 (testet `version.test.mjs` och CI kräver att den är densamma överallt). Samma beteckning visas i startvyn (längst ned), i `window.KarlstadRound.version`,
 i `?debug` och i `/api/build-info`.
 
@@ -44,7 +44,7 @@ i `?debug` och i `/api/build-info`.
 - Alla moduler, HTML och CSS bär samma `?v=`-nyckel, så en ny version kan aldrig blanda gamla och nya filer i webbläsarens cache.
 - Julmusiken syntetiseras i spelet: inga ljudfiler laddas ner (grundspelets mp3 hämtas först om jukeboxen används).
 - Spelmotorn (PlayCanvas 2.22.4) hämtas från jsDelivr med fast version, som i grundspelet.
-- Startvyn visar `Julklappsjakten – 2.21-XMS · bygge 2.21.1-xmas.3 · <miljö> <gren> <commit> · bas 2.21.1 (fadc36a)`. `/api/build-info` (Vercel-funktion)
+- Startvyn visar `Julklappsjakten – 2.21-XMS · bygge 2.21.1-xmas.4 · <miljö> <gren> <commit> · bas 2.21.1 (fadc36a)`. `/api/build-info` (Vercel-funktion)
   ger deployens commit, gren och miljö; lokalt visas "lokalt bygge".
 
 ## 4. Vercel-projektet för julversionen
@@ -82,12 +82,12 @@ Vercel → *Add New… → Project* → importera `tryggspel/TestSpel`; projektn
 
 ## 5. Vad som ändrats i grundspelets filer (för framtida sammanslagningar från `main`)
 
-All julkod ligger under `xmas/` (27 filer), `tests/xmas-*.test.mjs` (10 filer) och `tools/xmas-flow/` (5 verifieringsskript). Grundspelets egna filer är rörda så här (utöver cache-nyckeln `?v=` som byts överallt):
+All julkod ligger under `xmas/` (27 filer), `tests/xmas-*.test.mjs` (11 filer) och `tools/xmas-flow/` (6 skript: fem webbläsarkontroller och svårighetsprovet `difficulty.mjs`). Grundspelets egna filer är rörda så här (utöver cache-nyckeln `?v=` som byts överallt):
 
 | Fil | Ändring |
 |---|---|
 | `app.js` | Snöfilter (`ComicMesh.snow`), vinterfärger för mark, vägar och himmel, inga XP-kulor på torget, julens kollisionsrutor, ingen snö inomhus, julmusiken (grundspelets mp3 hämtas lazy); JulRushen: `musicTempo` styr även julmusikens tempo och stämningen `rush` ligger kvar (tre rader) |
-| `last-round.js` | Importerar och startar `installXmas`, tömmer termosar, hindrar Halloween-jakt, panellistan (nu även `xmas-rush`, `xmas-board`, `xmas-challenge`), HUD-hook, radar-hook, tomtezombie-bilder, butiksuppdrag med julens platser. Vägledningen: en villkorsrad i `updateRoute` (`!destination.quiet`) och en egenskap `quiet` på tempomålet i JulRushen, så att grundspelets små pilar på marken och flaggan "DITT MÅL" inte ritas för julens mål |
+| `last-round.js` | Importerar och startar `installXmas`, tömmer termosar, hindrar Halloween-jakt, panellistan (nu även `xmas-rush`, `xmas-board`, `xmas-challenge`), HUD-hook, radar-hook, tomtezombie-bilder, butiksuppdrag med julens platser. Vägledningen: en villkorsrad i `updateRoute` (`!destination.quiet`) och en egenskap `quiet` på tempomålet i JulRushen, så att grundspelets små pilar på marken och flaggan "DITT MÅL" inte ritas för julens mål. 2.21.1-xmas.4: kroken `setTurbo(on)` i listan som `installXmas` får (slår på eller av turbon utan meddelande och ger tillbaka det tidigare valet; JulRushen slår på turbon när en rush börjar eftersom klockan är räknad på den, och återställer spelarens eget val när man lämnar rushen) |
 | `journey-rules.mjs` | `objective()`-hook, `stepExplore()` och zombie-`step()` anropar paketjakten, `finish()` ger Tomtezombies eget slut |
 | `index.html` | Titel, tre julpaneler, länk till `xmas/xmas.css`, pausmenyns rubrik, ingen preload av mp3; JulRushen: två knappar `JULRUSHEN` med förklaring (startvyn och fortsättningsmenyn), rushmenyn, topplistan, utmaningskortet och knappen UTMANA EN VÄN på slutkortet |
 | `journey-view.js` | JulRushen: tre villkor (`journey.xmas?.rushMode`) som döljer grundspelets termoskort, cyanfyr och radarprickar medan JulRushen går (den ritar sina egna paket i `xmas/xmas-view.js`) |
@@ -117,7 +117,7 @@ Grundspelets sparfiler på den egna adressen rörs aldrig (andra adress = annan 
 | Butiksuppdrag | Cervera: Tomtarnas fikabord (kopp, kanna, fat). Pressbyrån: Tomtarnas fikaorder (kaffe, lussebulle, pepparkaka …) och leverans till tomten utanför. Förberett (osynligt): Kjell & Company, Åhléns, Duvan, Värmlands Museum, Sandgrund. Inga erbjudanden eller samarbeten påstås. |
 | Fri julvandring | Tomtarna tappar ett nytt paketregn med jämna mellanrum (egna paket-ID, tydlig varning, försvinner efter 4 minuter). |
 | Tomtezombies | Grundspelets zombieregler (AI, rörelse, pooler, högst sex aktiva, patruller, ambushar, Guld-Nisse) med julens bilder. Paket är mål och ammunition. Eget slutkort. |
-| JulRushen | TempoRush i julens värld: **tolv rusher** med fast, stigande tempo, mål, hjärtan, stjärnor och upplåsning, **Maraton** (tempot stiger var 15:e sekund), elva julgåvor, sidopaket, topplista och utmaningar. Se 6.1 och 6.3. |
+| JulRushen | TempoRush i julens värld: **tolv rusher** med fast, stigande tempo, en allt trängre klocka, mål, hjärtan, stjärnor och upplåsning, **ÖVERTID** (Rush 13, 14 … så långt man orkar), **Maraton** (tempot stiger var 12:e sekund), femton julgåvor varav fem ökar farten, sidopaket, topplista (även LÄNGST) och utmaningar. Se 6.1 och 6.3. |
 
 Kombo, poäng och belöningar: 10 poäng per paket, ×2/×3/×4 vid 4/8/12 i rad (engångsbonus 20/40/60), bonuspaket 50, leverans 100 + tidsbonus upp till 100.
 Fångstfältet är detsamma som för termosar i 2.20.0 (växer med farten, ingen insamling genom väggar). Gångfarten är 7,2 m/s (grundspelet).
@@ -130,63 +130,91 @@ Det som är jul är paketen, gåvorna, poängen, namnen, musiken och gränssnitt
 
 | Läge | Så fungerar det |
 |---|---|
-| Tolv rusher | Varje rush har ett **fast tempo från första sekunden** (rush *n* = TempoRuns tempo *n*: fart ×1,00 → ×1,88, poäng ×1,0 → ×4,3, tätare klockor, glesare paket, större fångstfält) och ändras inte under rushen. Tempot stiger alltså **från rush till rush**. Varje rush har ett mål och tre hjärtan: udda rusher har ett paketmål (13–18 paket), jämna rusher ett poängmål (lika mycket spel som en paketrush, räknat med kedja ×2 och flytbonus). När målet nås är rushen klarad: **stjärnor = hjärtan som är kvar** (1–3), bästa poäng och stjärnor sparas och nästa rush låses upp. Tappar man alla hjärtan slutar rushen utan stjärnor och utan upplåsning. |
-| Serie | NÄSTA RUSH på slutkortet startar nästa rush direkt och tar med hjärtana (plus ett nytt, högst tre). Rusher klarade i rad räknas som en serie (längsta serien sparas). Eftersom tempot stiger för varje rush och hjärtana följer med blir det svårt att klara många rusher i rad. En rush som startas från rushmenyn börjar alltid med tre hjärtan. |
-| Maraton | Det ursprungliga JulRushen-läget: tempot stiger var 15:e sekund (tempo 1–12) tills man är ute. Rekord (poäng, tempo, paket) och julstämpeln JULRUSHEN vid tempo 5 som förut. |
+| Tolv rusher | Varje rush har ett **fast tempo från första sekunden** (rush *n* = TempoRuns tempo *n*: fart ×1,00 → ×1,88, poäng ×1,0 → ×4,3, glesare paket, större fångstfält) och ändras inte under rushen. Tempot stiger alltså **från rush till rush**, och det gör också **klockan till nästa paket**, som blir trängre för varje rush (se Klockan nedan). Varje rush har ett mål och tre hjärtan: udda rusher har ett paketmål (25 paket i Rush 1, 50 i Rush 11), jämna rusher ett poängmål (2 000 poäng i Rush 2, 14 000 i Rush 12; räknat så att det kräver lika mycket spel som en paketrush). När målet nås är rushen klarad: **stjärnor = hjärtan som är kvar** (1–3), bästa poäng och stjärnor sparas och nästa rush låses upp. Tappar man alla hjärtan slutar rushen utan stjärnor och utan upplåsning. Turbon slås på av sig själv när en rush börjar (klockan är räknad på den). |
+| Serie | NÄSTA RUSH på slutkortet startar nästa rush direkt och tar med hjärtana. **Ett hjärta fylls på bara om man klarade rushen utan att tappa något** (aldrig över tre); har man tappat ett hjärta tar man med sig det man har kvar, aldrig färre än ett. Slutkortet säger vad som gäller. Rusher klarade i rad räknas som en serie (längsta serien sparas). En rush som startas från rushmenyn börjar alltid med tre hjärtan. |
+| ÖVERTID | När alla tolv är klarade fortsätter det med **Rush 13, 14, 15 …** (ÖVERTID 1, 2, 3 …): **samma fart och poäng som Rush 12** men en klocka som blir trängre för varje rush och ett mål som växer (56 paket i Rush 13, 16 350 poäng i Rush 14, 64 paket i Rush 15 …, till högst 120 paket och 33 850 poäng vid Rush 29–30). Det går att fortsätta så långt man orkar, högst Rush 99. Hur långt man kommit sparas (`rush.cleared`) och visas i rushmenyn (en bred ruta ÖVERTID under de tolv), på slutkortet ("LÄNGRE ÄN NÅGONSIN!") och i topplistan (LÄNGST I JULRUSHEN). Rush 13 och uppåt har inga stjärnor på rutorna: bara hur långt man kommit räknas, och bästa poäng sparas per rush som förut. |
+| Maraton | Det ursprungliga JulRushen-läget: tempot stiger **var 12:e sekund** (tempo 1–12) tills man är ute. Efter tempo 12 stiger farten inte mer, men klockan fortsätter bli trängre ett steg var 12:e sekund (ÖVERTID också här); tempot i resultatet och i rekordet räknar med stegen ("tempo 15"). Rekord (poäng, tempo, paket) och julstämpeln JULRUSHEN vid tempo 5 som förut. |
 
-De tolv rusherna (fart ×/poäng × är tempots; målen är samma varje gång):
+De tolv rusherna (fart ×/poäng × är tempots; klockan är k × minsta tid + marginal, se Klockan; målen är samma varje gång):
 
-| Rush | Namn | Tempo (fart / poäng) | Mål |
+| Rush | Namn | Tempo (fart / poäng) | Mål | Klockan (k / marginal) |
+|---|---|---|---|---|
+| 1 | JULMYS | ×1,00 / ×1,0 | hämta 25 paket | ×2,90 / 1,20 s |
+| 2 | PEPPARKAKA | ×1,08 / ×1,3 | nå 2 000 poäng | ×2,41 / 0,91 s |
+| 3 | GLÖGGFART | ×1,16 / ×1,6 | hämta 30 paket | ×2,04 / 0,70 s |
+| 4 | SNÖYRA | ×1,24 / ×1,9 | nå 3 600 poäng | ×1,77 / 0,55 s |
+| 5 | SLÄDFART | ×1,32 / ×2,2 | hämta 35 paket | ×1,57 / 0,43 s |
+| 6 | ISRASERI | ×1,40 / ×2,5 | nå 5 600 poäng | ×1,42 / 0,34 s |
+| 7 | RENRACE | ×1,48 / ×2,8 | hämta 40 paket | ×1,31 / 0,28 s |
+| 8 | NORDPOLEN | ×1,56 / ×3,1 | nå 8 000 poäng | ×1,23 / 0,23 s |
+| 9 | JULSTRESS | ×1,64 / ×3,4 | hämta 45 paket | ×1,17 / 0,20 s |
+| 10 | SNÖSTORM | ×1,72 / ×3,7 | nå 10 850 poäng | ×1,13 / 0,17 s |
+| 11 | PAKETVIRVEL | ×1,80 / ×4,0 | hämta 50 paket | ×1,09 / 0,15 s |
+| 12 | TOMTEGALET | ×1,88 / ×4,3 | nå 14 000 poäng | ×1,07 / 0,14 s |
+| 13+ | ÖVERTID 1, 2 … | ×1,88 / ×4,3 | 56 paket, 16 350 poäng, 64 paket … | ×1,05 → ×1,00 / 0,13 → 0,10 s |
+
+**Svårighet: vad som är mätt och vad som inte är det.** Önskemålet var att det inte ska vara lätt att ta sig vidare, och att inte alla ska klara alla tolv rusher på första försöket. Klockan var för snäll: den räknade på 85 % av gångfarten plus en stor marginal, och turbon (×2) kom ovanpå, så en perfekt spelare behövde ungefär en sekund per paket men fick 6–16 sekunder. Mätt med samma svårighetsprov på koden för 2.21.1-xmas.3 klarade de simulerade typerna C (nybörjare), A (vanlig) och G (duktig) alla tolv rusher på första försöket i varje försök (8 försök per typ), utan att tappa ett enda hjärta. Klockan, målen och hjärtareglerna är därför ändrade (se Klockan och Serie) och provade med `node tools/xmas-flow/difficulty.mjs`: ett Node-program som spelar den **riktiga motorn** (`XmasRush` ovanpå grundspelets `CityJourney`: samma bana, klocka, fångstfält och gåvor, utan webbläsare) med fem **modellerade** spelartyper. Typerna är en fart (andel av högsta fart med turbo, lägre i högt tempo), en svängfart, en tvekan när nästa paket ligger åt sidan och lite brus:
+
+| Typ | Fart (tempo 1 → 12) | Sväng | Tvekan |
 |---|---|---|---|
-| 1 | JULMYS | ×1,00 / ×1,0 | hämta 13 paket |
-| 2 | PEPPARKAKA | ×1,08 / ×1,3 | nå 600 poäng |
-| 3 | GLÖGGFART | ×1,16 / ×1,6 | hämta 14 paket |
-| 4 | SNÖYRA | ×1,24 / ×1,9 | nå 1 100 poäng |
-| 5 | SLÄDFART | ×1,32 / ×2,2 | hämta 15 paket |
-| 6 | ISRASERI | ×1,40 / ×2,5 | nå 1 700 poäng |
-| 7 | RENRACE | ×1,48 / ×2,8 | hämta 16 paket |
-| 8 | NORDPOLEN | ×1,56 / ×3,1 | nå 2 350 poäng |
-| 9 | JULSTRESS | ×1,64 / ×3,4 | hämta 17 paket |
-| 10 | SNÖSTORM | ×1,72 / ×3,7 | nå 3 100 poäng |
-| 11 | PAKETVIRVEL | ×1,80 / ×4,0 | hämta 18 paket |
-| 12 | TOMTEGALET | ×1,88 / ×4,3 | nå 3 900 poäng |
+| P perfekt | 100 % → 100 % | 720°/s | 0 |
+| E mycket duktig | 98 % → 88 % | 420°/s | 0,10 s |
+| G duktig | 92 % → 72 % | 290°/s | 0,22 s |
+| A vanlig | 85 % → 55 % | 200°/s | 0,38 s |
+| C nybörjare | 72 % → 40 % | 140°/s | 0,60 s |
 
-Poängmålen är räknade, inte provspelade av människor: en perfekt bot klarar rush 2 på ungefär 12 s speltid med tre hjärtan, och hur svåra rush 6–12 är för en människa med tummarna är **inte känt** (se avsnitt 8 och 10).
+Resultat (8–12 försök per typ, varje försök på en egen bana; mätt på koden för 2.21.1-xmas.4 under arbetet, slutlig omkörning med samma antal försök för alla typer följer i verifieringen, avsnitt 8):
+
+| Typ | Första försöket i varje rush (tre hjärtan) | Serie från Rush 1 (hjärtana följer med) | Maraton: tempo när det tar slut (median) |
+|---|---|---|---|
+| C nybörjare | klarar Rush 1–5, aldrig Rush 6 | 5 rusher i rad | 9 |
+| A vanlig | klarar Rush 1–7 (tappar i snitt ett hjärta i Rush 7), aldrig Rush 8 | 7 | 9 |
+| G duktig | klarar Rush 1–9, aldrig Rush 10 | 9 | 14 |
+| E mycket duktig | klarar Rush 1–12 utan att tappa ett hjärta, aldrig Rush 13 | 12, sedan slut | 28 (kvartilerna 20 och 33) |
+| P perfekt | klarar allt (provat till Rush 40 och 15 minuters Maraton) | alla | slutar aldrig |
+
+En rush tar för E 13–39 s och för A 16–43 s; hela serien Rush 1–12 tar för E ungefär 5 minuter. **Det här är en modell, inte människor.** Typerna håller en jämn fart hela vägen, så gränserna är skarpa; riktiga spelare varierar mer (en miss här, en bra stund där) och har pekskärmens styrning, så deras gränser är mjukare och ligger troligen lägre än typernas. Hur riktiga spelare ligger till mot A, G och E är **okänt** tills någon har spelat. Det som provet visar är riktningen: med den gamla klockan klarade nybörjaren alla tolv, med den nya klarar bara en mycket duktig spelare alla tolv på första försöket, och därefter är det slut för alla utom en perfekt spelare. Alla siffror ligger samlade och går att ändra: `PRESSURE` (kAmp, decay, slackAmp …) och målformlerna i `xmas-rushes.mjs`, `GIFT_WEIGHT` och `RUSH` i `xmas-rush.mjs`. Kör provet igen efter en ändring, till exempel `node tools/xmas-flow/difficulty.mjs --skills G,A --press '{"decay":0.8}' --runs 12`.
 
 | Del | Så fungerar det |
 |---|---|
 | Start | På Stora Torget, vänd åt det håll där banan får den längsta fria gatusträckan (grundspelets `planHeading` prövas i tre riktningar). Banan läggs ut i första bildrutan från spelarens verkliga plats och riktning. |
 | Banan | Ett pärlband av paket längs långa, fria sträckor, 150–320 m framåt, 11,5 m mellan paketen på tempo 1 och 28 m på tempo 12. Aldrig i väggar, stånd, granar eller vatten (kontrollerat mot spelets egna kollisioner); sträckorna viker av vid hinder och följer gator där det finns gatudata. Hamnar man långt från banan (bussresa, omväg) börjar den om vid spelaren. Samma omplanering (grundspelets `anchorCourse`, när nästa paket ligger över 55 m bort) sker också när banan viker tillbaka längs samma gata (grundspelet släpper de paket som spelaren redan "passerat" längs deras riktning) och när ett tomtebloss eller en kryddbomb tagit paketen framför. Det kostar inget liv. |
-| Klockan | Tiden till nästa paket är sträckan med omväg vid 85 % av tempots fart plus en marginal som krymper från 9 s (tempo 1) till 2,2 s; går den ut tappar man ett hjärta. I en rush är tempot fast (nivåklockan nollas före varje steg); i Maraton stiger det var 15:e sekund. Första paketet ligger ca 12 m bort med ca 12 s på klockan. |
+| Klockan | Tiden till nästa paket är **minsta möjliga tid × k + marginal**, där minsta möjliga tid är sträckan som återstår efter fångstfältet i full fart med turbon på (7,2 m/s × tempots fart × 2). k och marginalen sjunker för varje rush: k(n) = 1 + 1,9 × 0,74^(n−1) och marginal(n) = 0,1 + 1,1 × 0,74^(n−1) sekunder, aldrig under 0,8 s. En sträcka på 30 m ger i Rush 1 6,5 s (minsta möjliga tid är 1,8 s), i Rush 6 2,1 s (1,2 s), i Rush 12 1,07 s (0,87 s) och i ÖVERTID drygt 1 s (k närmar sig 1). Första paketet i en rush får tre sekunder extra (4–10 s på klockan) så att man hinner titta sig omkring. Går klockan ut tappar man ett hjärta och kedjan bryts. I en rush är tempot fast och trycket är rushens nummer; i Maraton är trycket tempot (och därefter ett steg per tempohöjning som inte längre går att göra). Grundspelets egen klocka (`deadlineFor`: 85 % av gångfarten plus en marginal på 9 s som krymper till 2,2 s) ersätts i JulRushen genom ett byte av `setTarget` på journey-objektets egen tempoinstans (`installClock`, borttaget igen när körningen är slut), så att grundspelets klass inte ändras. Klockan är alltså räknad på att turbon är på, och JulRushen slår på den själv. |
 | Fångst | Som i TempoRush: `tempoReach` (3,6 m på tempo 1, upp till 6,5 m) eller `catchReach(fart)`, hela sträckan sedan förra steget räknas och fri sikt krävs (ingen fångst genom väggar). |
 | Poäng | Vanligt paket 10 × kedjefaktor (×2/×3/×4 vid 4/8/12 i rad som i jakten, engångsbonus 20/40/60), guldpaket 50. Därefter tempots poängfaktor och **flyt**: +12 × tempo om paketet tas med minst hälften av klockan kvar. Julstjärnan (×2) och Guldklappen (×3) gäller ovanpå. |
 | Guldpaket | Ungefär vart tredje paket på banan bär en gåva: grundspelets förmågebärare (var sjätte pärla är alltid ett, plus de som dagens fördelning ger) och dessutom var tionde vanligt paket (`RUSH.extraBearer`). Gåvan är bestämd av paketets id (samma paket, samma gåva). Varje guldpaket har en **bricka med gåvans symbol** över sig och en gyllene stråle, så att man ser vad man får innan man tar det. |
 | Sidopaket | Var fjärde pärla på banan får ett valfritt guldpaket med gåva 6–10,5 m åt sidan (en avstickare; högst fem åt gången, borta efter 40 s, alltid på fri mark med fri sikt från banan). Det räknas **inte** mot målet och rör varken klockan eller nästa mål: man tjänar bara poäng (50 × tempots faktor), kedja och gåva, och förlorar ingenting på att hoppa över det. |
 | Pil, stråle och band | Grundspelets stora riktningspil (siktar en bit längre fram på banan) och kantmarkörer när målet är utanför bilden, på en mörk platta mot snön. Nästa paket är större och har en hög grön ljusstråle och en ring på marken. Längs vägen dit rullas **julbandet** ut (6.2) i stället för grundspelets små pilar och flaggan "DITT MÅL". Radarn visar paketen och nästa paket som en grön ring. |
-| Gränssnitt | Överst: RUSH och numret (TEMPO i Maraton), en stapel för tiden till nästa paket (röd och blinkande under 30 %), hjärtan. Under: rushens namn och poäng, **målraden** (HÄMTA PAKET 5/13 eller NÅ POÄNGEN 640/1 100 med en förloppsstapel), kombo och aktiva gåvor som små brickor. Slutkort med stjärnor, paket, bästa kombo, tid, gåvor, sidopaket, tidigare rekord, serie, NÄSTA RUSH / FÖRSÖK IGEN, UTMANA EN VÄN och RUSHMENYN. På låga skärmar (högst 760 px: till exempel en iPhone i Safari med adressfältet synligt, och liggande telefon) visas de tolv rusherna i två rader om sex med bara siffra och stjärnor, så att spelaknappen syns utan att bläddra. På liggande telefon utgår ingressen i rushmenyn och huvudknappen (NÄSTA RUSH, SPELA RUSH, TA UTMANINGEN) följer med i kortets kant när kortet är högre än skärmen. Texter som klipps av sin ruta har tre pixlars luft upptill så att prickarna på Å, Ä och Ö syns (en kontroll i webbläsarverktygen mäter det). |
-| Stämplar och rekord | Julstämpeln **JULRUSHEN** delas ut första gången man klarar Rush 5 (eller når tempo 5 i Maraton); julstämpeln **TOMTEGALET** när man klarar Rush 12 (stämpelräknaren går till 9). Per rush sparas bästa poäng, tid, paket och hjärtan samt stjärnor, och längsta serie, i `karlstad-xmas:save:1` (`rush`); Maratonrekordet ligger kvar i `records.julrush`. Bara klarade rusher sparas. Mot titlarna (NYFIKEN … ÖVERTOMTE) räknas en tiondel av poängen. Att ge upp via pausmenyn (JULMENY) räknas som en förlust: ingenting av rushen sparas utöver summorna om den hade minst ett paket. |
-| Musik | Egen stämning `rush` (G – D – Em – C, 116 slag/min, slädklockor på varje åttondel, mjuk puls på varje slag). Tempot följer rushens nivå (×1,00 → ×1,33), som grundspelets musik gör i TempoRush. |
+| Gränssnitt | Överst: RUSH och numret (TEMPO i Maraton), en stapel för tiden till nästa paket (röd och blinkande under 30 %), hjärtan. Under: rushens namn och poäng, **målraden** (HÄMTA PAKET 5/25 eller NÅ POÄNGEN 640/2 000 med en förloppsstapel), kombo och aktiva gåvor som små brickor. Slutkort med stjärnor, paket, bästa kombo, tid, gåvor, sidopaket, tidigare rekord, serie, hjärtana in i nästa rush (och varför ett hjärta fylls på eller inte), NÄSTA RUSH / FÖRSÖK IGEN, UTMANA EN VÄN och RUSHMENYN. I övertiden säger kortet "LÄNGRE ÄN NÅGONSIN!" när man kommit längre än förut. På låga skärmar (högst 760 px: till exempel en iPhone i Safari med adressfältet synligt, och liggande telefon) visas de tolv rusherna i två rader om sex med bara siffra och stjärnor, så att spelaknappen syns utan att bläddra. På liggande telefon utgår ingressen i rushmenyn och huvudknappen (NÄSTA RUSH, SPELA RUSH, TA UTMANINGEN) följer med i kortets kant när kortet är högre än skärmen. Texter som klipps av sin ruta har tre pixlars luft upptill så att prickarna på Å, Ä och Ö syns (en kontroll i webbläsarverktygen mäter det). |
+| Stämplar och rekord | Julstämpeln **JULRUSHEN** delas ut första gången man klarar Rush 5 (eller når tempo 5 i Maraton); julstämpeln **TOMTEGALET** när man klarar Rush 12 (stämpelräknaren går till 9). Per rush sparas bästa poäng, tid, paket och hjärtan samt stjärnor, och längsta serie, i `karlstad-xmas:save:1` (`rush`), också för Rush 13 och uppåt (`rush.cleared` är högsta klarade rush, högst 99); Maratonrekordet ligger kvar i `records.julrush` (tempot räknar med stegen efter tempo 12). Bara klarade rusher sparas. Mot titlarna (NYFIKEN … ÖVERTOMTE) räknas en tiondel av poängen. Att ge upp via pausmenyn (JULMENY) räknas som en förlust: ingenting av rushen sparas utöver summorna om den hade minst ett paket. |
+| Musik | Egen stämning `rush` (G – D – Em – C, 116 slag/min, slädklockor på varje åttondel, mjuk puls på varje slag). Tempot följer rushens nivå (×1,00 → ×1,35, högst så), som grundspelets musik gör i TempoRush. |
 
-Julgåvorna ersätter grundspelets tolv förmågor (elva sorter; "andel" är chansen att en gåva är just den, av 24):
+Julgåvorna ersätter grundspelets tolv förmågor (femton sorter; "andel" är chansen att en gåva är just den, av 33):
 
 | Gåva | Effekt | Tid | Andel |
 |---|---|---|---|
-| RENSLÄDEN | Farten fördubblas (grundspelets raketförmåga, som turbon räknar med) | 7 s | 3/24 |
-| JULMAGNETEN | Paket inom 13 m med fri sikt (banans och sidopaketen) dras in mot dig på en kvarts sekund och tas. Genom väggar dras inget | 10 s | 3/24 |
-| TOMTESPÖKET | Ett vänligt spöke med tomteluva flyger till närmaste paket (högst 46 m bort, helst framför dig) och tar det åt dig, ett var 0,8:e sekund (ungefär nio paket) | 9 s | 2/24 |
-| JULSTJÄRNAN | Dubbla poäng och 2 m större fångstfält | 9 s | 2/24 |
-| JULKLOCKAN | +8 s till nästa paket | – | 3/24 |
-| GLÖGGPAUS | Klockan till nästa paket står still | 7 s | 2/24 |
-| GULDKLAPPEN | Allt ger tre gånger så mycket | 20 s | 2/24 |
-| TOMTEBLOSS | Tar alla paket i en rak linje framför dig (högst 16, inom 80 m och ±6 m) | – | 2/24 |
-| PEPPARKAKSSKÖLD | Räddar ett hjärta nästa gång klockan går ut (+5 s), högst två åt gången; den sällsyntaste gåvan | – | 1/24 |
-| KRYDDBOMBEN | Tar alla paket inom 24 m (högst 14), närmast först | – | 2/24 |
-| PAKETREGNET | Åtta extra paket (färre där det är trångt) på fria platser 5–13 m runt dig. De räknas inte mot målet och försvinner efter 12 s | – | 2/24 |
+| RENSLÄDEN | Farten fördubblas (grundspelets raketförmåga, som turbon räknar med) | 7 s | 3/33 |
+| **TURBOGLÖGG** | Farten ökar med hälften (×1,5) | 14 s | 3/33 |
+| **PEPPARKAKSRAKETEN** | Raketfart: tre gånger så fort (×3) en kort stund | 3,5 s | 2/33 |
+| **MEDVIND** | Farten ×1,3 och 2 m större fångstfält | 20 s | 2/33 |
+| **SKRIDSKOR** | Farten ×1,25 och kedjans fönster blir 1,5 s längre (3,4 → 4,9 s) | 25 s | 2/33 |
+| JULMAGNETEN | Paket inom 13 m med fri sikt (banans och sidopaketen) dras in mot dig på en kvarts sekund och tas. Genom väggar dras inget | 10 s | 3/33 |
+| TOMTESPÖKET | Ett vänligt spöke med tomteluva flyger till närmaste paket (högst 46 m bort, helst framför dig) och tar det åt dig, ett var 0,8:e sekund (ungefär nio paket) | 9 s | 2/33 |
+| JULSTJÄRNAN | Dubbla poäng och 2 m större fångstfält | 9 s | 2/33 |
+| JULKLOCKAN | +5 s till nästa paket | – | 3/33 |
+| GLÖGGPAUS | Klockan till nästa paket står still | 7 s | 2/33 |
+| GULDKLAPPEN | Allt ger tre gånger så mycket | 20 s | 2/33 |
+| TOMTEBLOSS | Tar alla paket i en rak linje framför dig (högst 16, inom 80 m och ±6 m) | – | 2/33 |
+| PEPPARKAKSSKÖLD | Räddar ett hjärta nästa gång klockan går ut (+3 s), högst två åt gången; den sällsyntaste gåvan | – | 1/33 |
+| KRYDDBOMBEN | Tar alla paket inom 24 m (högst 14), närmast först | – | 2/33 |
+| PAKETREGNET | Åtta extra paket (färre där det är trångt) på fria platser 5–13 m runt dig. De räknas inte mot målet och försvinner efter 12 s | – | 2/33 |
+
+**Fartgåvorna** (de fem första: släde, glögg, raket, medvind, skridskor) var förut bara en (renssläden, 3 av 24 = 12 %) och är nu 12 av 33 (36 %). De går genom grundspelets egen fartfaktor (`journey.fun.power.speedMul()`, som `last-round.js` och spelarens rörelse läser), så att de verkar på samma sätt som raketen i grundspelet. Fartgåvorna läggs **inte ihop med varandra** (den starkaste av glögg, raket, medvind och skridskor gäller, ett nytt plock av samma sort förlänger tiden) men de multipliceras med renssläden, och allt som ökar farten får **aldrig bli mer än ×4 tillsammans** (`RUSH.speedCap`, utöver turbon och tempots fart). Farten är en fördel som klockan inte väntar på: klockan är räknad på turbon och tempots fart, så en fartgåva ger marginal och flytbonus (+12 × tempo om paketet tas med minst hälften av klockan kvar), men den gör inte rushen lättare att klara än den är för en spelare som redan håller full fart. Hela tillägget sätts på journey-objektets egen instans (`installClock`) och tas bort när körningen slutar.
 
 Paket som tas av bloss, bomb, magnet eller spöke ger sina gåvor, men ett paket i ett bloss eller en bomb utlöser aldrig ett nytt bloss, en ny bomb eller ett nytt regn (annars kunde det rulla utan slut).
 
 Skillnader mot grundspelets TempoRush: grundspelets termosbaserade förmågor hoppstövlar, sonar och kombosköld finns inte i julen (de hade ingen funktion i en bana av paket); bomb, bönregn, spöke och magnet är med, i julens skepnad.
-JULKLOCKAN lägger sina åtta sekunder på *nästa* mål även om den plockas mellan två mål. I grundspelets TempoRush försvinner den tiden när nästa mål väljs (kontrollerat med grundspelets egen kod: `takeItem` plockar först, lägger sedan till tiden, och `setTarget` skriver över den). Det är lämnat som det är i grundspelet (`main` är orört).
+JULKLOCKAN lägger sina fem sekunder på *nästa* mål även om den plockas mellan två mål. I grundspelets TempoRush försvinner den tiden när nästa mål väljs (kontrollerat med grundspelets egen kod: `takeItem` plockar först, lägger sedan till tiden, och `setTarget` skriver över den). Det är lämnat som det är i grundspelet (`main` är orört).
 Grundspelets kaffemagnet tar termosar genom väggar; julmagneten gör det inte (paket flyger inte genom hus).
 
 ### 6.2 Vägledning i Julklappsjakten
@@ -214,9 +242,9 @@ Stigsökningen är grundspelets (`CityNavigation.path`, ett fält per mål: ca 9
 
 | Del | Så fungerar det |
 |---|---|
-| Topplistan | TOPPLISTA OCH UTMANING i rushmenyn (och UTMANA EN VÄN på slutkortet). Väljaren visar TOTALT (summan av bästa poäng i varje rush) eller en enskild rush, med dig och dina vänner, sorterat på poäng (lika poäng: du först). Bara de som klarat rushen finns med. |
+| Topplistan | TOPPLISTA OCH UTMANING i rushmenyn (och UTMANA EN VÄN på slutkortet). Väljaren visar TOTALT (summan av bästa poäng i varje rush), **LÄNGST I JULRUSHEN** (högsta klarade rush, och det kan vara över tolv; lika långt: störst summa först) eller en enskild rush, med dig och dina vänner, sorterat på poäng (lika poäng: du först). Bara de som klarat rushen finns med. Efter en övertidsrush (Rush 13 och uppåt) öppnar UTMANA EN VÄN listan LÄNGST. |
 | Namn | Ett smeknamn man själv skriver (högst 12 tecken: bokstäver, siffror, mellanslag, punkt, understreck, bindestreck; annat tas bort). Sparas i `karlstad-xmas:save:1`. Det är det enda som delas, tillsammans med poängen. |
-| Utmaningslänk | `https://karlstad-julklappsjakten.vercel.app/?utmaning=…` Länken bär en liten profil (namn, bästa poäng i varje rush, stjärnor) och en utmaning ("slå mina 3 120 poäng i Rush 4"). SKICKA UTMANING öppnar telefonens delningsruta (Web Share) och faller tillbaka på KOPIERA LÄNKEN. Formatet: `J1|namn|rush|klarat|stjärnor|tid|poäng ×12|kontrollsumma`, base64url. |
+| Utmaningslänk | `https://karlstad-julklappsjakten.vercel.app/?utmaning=…` Länken bär en liten profil (namn, bästa poäng i varje rush, stjärnor, och hur långt man kommit: Rush 13 och uppåt bärs av fältet "klarat") och en utmaning ("slå mina 3 120 poäng i Rush 4"). SKICKA UTMANING öppnar telefonens delningsruta (Web Share) och faller tillbaka på KOPIERA LÄNKEN. Formatet: `J1|namn|rush|klarat|stjärnor|tid|poäng ×12|kontrollsumma`, base64url (oförändrat: länkar från tidigare byggen fungerar, och "klarat" kan nu vara upp till 99). Delningstexten säger "Jag har klarat Rush 14 i Julrushen i Julklappsjakten. Kommer du längre?" när man klarat Rush 12 eller längre. |
 | Att öppna länken | Spelet visar utmaningskortet först ("ÅSA UTMANAR DIG! Slå 3 120 poäng i Rush 4 · SNÖYRA"). **En vän sparas först när man väljer det** (TA UTMANINGEN eller BARA SPARA VÄNNEN), aldrig bara av att länken öppnas. Är rushen inte upplåst startar knappen nästa rush man kan spela, och utmaningen ligger kvar tills man klarat den (så länge sidan är öppen: en omladdning glömmer utmaningen, men vännen finns kvar i topplistan och kan slås därifrån). Adressen städas (`?utmaning` tas bort) så att en omladdning inte visar kortet igen. Efter rushen jämförs resultatet: "DU SLOG ÅSA! 3 400 mot 3 120" eller "ÅSA VANN MED 280 POÄNG". |
 | Skydd | Länken kontrolleras noga när den läses: format och längd, kontrollsumma, tal inom gränser, namnet rensas. En trasig eller ändrad länk ger startvyn som vanligt med ett meddelande. Allt som visas skrivs med `textContent`. Vänlistan har högst 30 vänner (de senaste), samma namn är samma vän (bästa poäng per rush behålls). |
 
@@ -258,6 +286,8 @@ Ritanrop per bildruta (samma miljö, 20 s per läge, mätt medan en annan webbl�
 - **Så mäter du på en riktig enhet**: öppna spelet med `?perf` (både grundspelet och julversionen), gå samma runda (introduktionen är samma ruta som Clean City Explore från Torget), vänta tills mätningen är klar och tryck KOPIERA RESULTAT. Prioritera iPhone 11/Safari och MacBook Air 2018.
 
 ## 8. Vad som är verifierat, och vad som inte är det
+
+**Status för 2.21.1-xmas.4 (svårare klocka, ÖVERTID, fartgåvor):** enhetstesterna är körda (487 av 487 gröna) och webbläsarflödena körs om på den slutliga koden. Tabellen och siffrorna nedan gäller **2.21.1-xmas.3** tills resultaten för xmas.4 har lagts in här.
 
 **Utrustning som faktiskt använts:** en Linux-container med headless Chromium 141 och mjukvaruritning (SwiftShader), utan GPU. Skärmstorlekar som provats:
 mobilformat 414×896 med emulerad tryckskärm, 414×715 (höjden på en iPhone i Safari med adressfältet synligt), liggande telefon 896×414, liten telefon 375×667 och skrivbord 1000×640.
@@ -313,11 +343,12 @@ Stäng av den igen genom att sätta `enabled:false`. Se `JULKNAPPEN.md` på den 
 - Vercel-projektet och den stabila adressen finns (avsnitt 4), men Production Branch ska sättas, adressen ska öppnas och verifieras på riktiga enheter, och Git-taggen ska skapas (avsnitt 1). Julknappen kopplas in efter det.
 - Ingen test på riktig mobil. Kör `?perf` på iPhone 11 och MacBook Air 2018 och jämför med grundspelet innan publicering.
 - Tomtezombies är grundspelets zombieläge med paketmål; vidare balansering (antal zombier, tempo) bör ske efter spelartester.
-- **JulRushen är inte spelad av en människa, varken på en telefon eller en dator.** Tempot per rush (TempoRushs nivåer 1–12), de tre hjärtana, klockorna, målen (13–18 paket och 600–3 900 poäng) och hur ofta gåvor kommer (ungefär vart tredje paket, plus sidopaket) är räknade och provkörda med en bot, inte provspelade. Hur svåra Rush 6–12 är för en människa med tummarna, och om Rush 12 går att klara alls, är **okänt**. Siffrorna ligger samlade (`xmas-rushes.mjs`, `RUSH` i `xmas-rush.mjs`) och går att justera efter de första spelarna. Titlarna (NYFIKEN … ÖVERTOMTE) räknar bara en tiondel av rushpoängen.
+- **JulRushen är inte spelad av en människa, varken på en telefon eller en dator.** Svårigheten (klockan som blir trängre för varje rush, målen 25–50 paket och 2 000–14 000 poäng, hjärtareglerna, övertiden och hur ofta gåvor kommer: ungefär vart tredje paket, plus sidopaket) är räknad och provad mot **modellerade spelartyper** (`tools/xmas-flow/difficulty.mjs`, se 6.1), inte mot människor. Provet säger att en simulerad nybörjare nu stannar vid Rush 6, en vanlig vid Rush 8, en duktig vid Rush 10 och en mycket duktig vid Rush 13, men hur riktiga spelare med tummarna ligger till, om Rush 1–3 är för svåra för en riktig nybörjare, och hur ofta riktiga spelare lyckas plocka fartgåvorna i tid är **okänt**. Siffrorna ligger samlade (`PRESSURE` och målformlerna i `xmas-rushes.mjs`, `RUSH` och `GIFT_WEIGHT` i `xmas-rush.mjs`) och går att justera efter de första spelarna; provet kan köras om efter varje ändring. Titlarna (NYFIKEN … ÖVERTOMTE) räknar bara en tiondel av rushpoängen.
+- **Klockan är räknad på turbon.** JulRushen slår på turbon när en rush börjar (och återställer spelarens eget val när man lämnar den). Stänger man av turbon i en rush hinner man inte långt: det är avsiktligt, men det är inte provat med riktiga spelare att det känns rätt, och en spelare som aldrig hittar turbo-knappen får en svår start. Knappen är den vanliga TURBO-knappen från grundspelet.
 - **Ingen gemensam topplista för alla spelare.** Topplistan visar dig och de vänner som skickat dig en utmaningslänk (högst 30), sparat på enheten. En lista som alla delar kräver att namn och poäng lagras på en server (till exempel Vercel Blob eller en databas, plus en liten serverfunktion), regler för publika namn (barn spelar) och skydd mot fusk. Det är inte byggt och kräver ditt godkännande, eftersom det skapar lagring i molnet och sparar uppgifter om spelare.
 - **Utmaningslänkar går att förfalska.** Ingen server kontrollerar poängen i en länk; kontrollsumman fångar skrivfel och trasiga länkar, inte en avsiktligt handgjord länk. Det är en vänutmaning, inte en tävling med pris.
 - **Vägledningen** (pil, julband, kantmarkörer, uppdragsrad) är bara prövad i headless Chromium med mjukvaruritad grafik på tre skärmstorlekar. Hur väl den syns i solljus, på en riktig telefon och för någon som aldrig spelat är inte provat. Julbandet är högst 18 platta bitar (9 i lätt läge) och pilen och raden är vanliga HTML-element, så kostnaden bör vara liten, men det är inte mätt på någon telefon.
-- **"Saker som ökar hastigheten":** den enda gåva som direkt ökar farten är RENSLÄDEN (×2 i 7 s). Tempot (för varje rush) och grundspelets turbo påverkar farten i övrigt. Fler fartgåvor kan läggas till i `GIFTS` i `xmas-rush.mjs` (en post per gåva, med vikt och effekt).
+- **Fartgåvor:** fem gåvor ökar farten (renssläden ×2, turboglöggen ×1,5, pepparkaksraketen ×3, medvinden ×1,3 och skridskorna ×1,25; den starkaste gäller, släden multipliceras på, högst ×4 tillsammans); de fyra nya kom i 2.21.1-xmas.4. Fler kan läggas till i `GIFTS`, `RUSH.boost` och `GIFT_WEIGHT` i `xmas-rush.mjs` (en post per gåva, med vikt och effekt) och en bild i `xmas-art.js`.
 - Butiksuppdragens personal är grundspelets figurer (inte tomteklädda).
 - Förberedda butiker (Kjell & Company, Åhléns, Duvan, Värmlands Museum, Sandgrund) har data men ingen interiör eller något godkänt innehåll.
 - Julmiljön finns främst runt Stora Torget och utmed fasaderna däromkring; övriga delar av staden har snö men inte egna julföremål.

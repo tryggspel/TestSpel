@@ -1,8 +1,8 @@
 // Julklappsjakten: egen sparning (julstämplar, rekord, summor och inställningar). Egen nyckel, så grundspelets sparfiler aldrig berörs.
 // Alltid fail-soft: utan lagring (privat läge, blockerad) spelas spelet ändå, bara utan att något sparas.
-import {SAVE_KEY,STAMPS,WEATHER_ORDER,titleFor} from './xmas-config.mjs?v=2.21.1-xmas.3';
-import {RUSH_COUNT,starsFor} from './xmas-rushes.mjs?v=2.21.1-xmas.3';
-import {cleanName,cleanFriends,mergeFriend} from './xmas-board.mjs?v=2.21.1-xmas.3';
+import {SAVE_KEY,STAMPS,WEATHER_ORDER,titleFor} from './xmas-config.mjs?v=2.21.1-xmas.4';
+import {RUSH_COUNT,RUSH_MAX,starsFor} from './xmas-rushes.mjs?v=2.21.1-xmas.4';
+import {cleanName,cleanFriends,mergeFriend} from './xmas-board.mjs?v=2.21.1-xmas.4';
 
 const STAMP_IDS=new Set(STAMPS.map(s=>s.id));
 const MAXP=9999999;
@@ -17,15 +17,15 @@ export function sanitizeSave(raw){
   for(const [id,at] of Object.entries(raw.stamps||{}))if(STAMP_IDS.has(id))out.stamps[id]=num(at,4102444800000,0)||1;
   for(const [id,r] of Object.entries(raw.records||{})){
     if(!/^[a-z0-9:-]{1,40}$/.test(id)||!r||typeof r!=='object')continue;
-    out.records[id]={points:Math.floor(num(r.points,9999999)),seconds:Math.floor(num(r.seconds,99999,0)),packages:Math.floor(num(r.packages,9999)),bonus:Math.floor(num(r.bonus,999)),level:Math.floor(num(r.level,12))};
+    out.records[id]={points:Math.floor(num(r.points,9999999)),seconds:Math.floor(num(r.seconds,99999,0)),packages:Math.floor(num(r.packages,9999)),bonus:Math.floor(num(r.bonus,999)),level:Math.floor(num(r.level,99))};
   }
   const t=raw.totals||{};
   out.totals={packages:Math.floor(num(t.packages,9999999)),bonus:Math.floor(num(t.bonus,9999999)),points:Math.floor(num(t.points,99999999)),runs:Math.floor(num(t.runs,9999999))};
   out.opts.weather=WEATHER_ORDER.includes(raw.opts?.weather)?raw.opts.weather:'full';
   out.intro.done=!!raw.intro?.done||!!out.stamps.intro;
   const r=raw.rush&&typeof raw.rush==='object'?raw.rush:{};
-  out.rush.cleared=Math.floor(num(r.cleared,RUSH_COUNT));out.rush.bestStreak=Math.floor(num(r.bestStreak,99));
-  for(let n=1;n<=RUSH_COUNT;n++){
+  out.rush.cleared=Math.floor(num(r.cleared,RUSH_MAX));out.rush.bestStreak=Math.floor(num(r.bestStreak,RUSH_MAX));
+  for(let n=1;n<=RUSH_MAX;n++){
     const st=Math.floor(num(r.stars?.[n],3)),b=r.best?.[n];
     if(st>0)out.rush.stars[n]=st;
     if(b&&typeof b==='object'&&num(b.points,MAXP)>0)out.rush.best[n]={points:Math.floor(num(b.points,MAXP)),seconds:Math.floor(num(b.seconds,99999)),packages:Math.floor(num(b.packages,9999)),hearts:Math.floor(num(b.hearts,3))};
@@ -53,7 +53,7 @@ export class XmasSave{
   record(id,{points=0,seconds=0,packages=0,bonus=0,level=0}={}){
     if(!/^[a-z0-9:-]{1,40}$/.test(id))return false;
     const old=this.state.records[id],better=!old||points>old.points||(points===old.points&&seconds>0&&seconds<old.seconds);
-    if(better)this.state.records[id]={points:Math.floor(num(points,9999999)),seconds:Math.floor(num(seconds,99999)),packages:Math.floor(num(packages,9999)),bonus:Math.floor(num(bonus,999)),level:Math.floor(num(level,12))};
+    if(better)this.state.records[id]={points:Math.floor(num(points,9999999)),seconds:Math.floor(num(seconds,99999)),packages:Math.floor(num(packages,9999)),bonus:Math.floor(num(bonus,999)),level:Math.floor(num(level,99))};
     this.dirty=true;this.save();return !!better&&!!old;
   }
   addTotals({packages=0,bonus=0,points=0}={}){
@@ -63,8 +63,8 @@ export class XmasSave{
   // JulRushens nivåer. Bara klarade rusher sparas (stjärnor = hjärtan kvar). Returnerar {record, first, unlocked}: nytt rekord i rushen, första gången den klaras och om nästa rush just låstes upp.
   recordRush(n,{points=0,seconds=0,packages=0,hearts=0,cleared=false}={}){
     n=Math.floor(Number(n));const R=this.state.rush;
-    if(!cleared||!(n>=1&&n<=RUSH_COUNT))return {record:false,first:false,unlocked:false};
-    const prev=R.best[n],first=!R.stars[n],unlocked=n>=R.cleared+1&&n<RUSH_COUNT;
+    if(!cleared||!(n>=1&&n<=RUSH_MAX))return {record:false,first:false,unlocked:false};
+    const prev=R.best[n],first=!R.stars[n],unlocked=n>=R.cleared+1&&n<RUSH_MAX;
     R.stars[n]=Math.max(R.stars[n]||0,starsFor(hearts));
     const record=!prev||points>prev.points;
     if(record)R.best[n]={points:Math.floor(num(points,MAXP)),seconds:Math.floor(num(seconds,99999)),packages:Math.floor(num(packages,9999)),hearts:Math.floor(num(hearts,3))};

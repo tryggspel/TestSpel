@@ -94,8 +94,8 @@ export function drawStar(c,w,h){c.clearRect(0,0,w,h);const g=c.createRadialGradi
   c.fillStyle='#ffd845';c.strokeStyle=INK;c.lineWidth=w*.03;c.lineJoin='round';c.beginPath();for(let i=0;i<10;i++){const r=i%2?w*.14:w*.34,a=-Math.PI/2+i*Math.PI/5;c.lineTo(w/2+Math.cos(a)*r,h/2+Math.sin(a)*r);}c.closePath();c.fill();c.stroke();}
 // ── Julgåvornas brickor (JulRushen) ─────────────────────────────────────────────────────────────────────────────────────────────────────
 // En bricka per gåva (rund, i gåvans färg, med en enkel symbol) som svävar ovanför guldpaketet, så att man ser vad man är på väg att få och kan välja avstickare.
-// Bilden är 4×3 celler à 128 px i samma ordning som GIFT_KINDS: renssläde, magnet, spöke, stjärna, klocka, paus, guldklapp, bloss, sköld, bomb, regn.
-export const GIFT_ICON_COLS=4,GIFT_ICON_ROWS=3,GIFT_ICON_CELL=128;
+// Bilden är 4×4 celler à 128 px i samma ordning som GIFT_KINDS: renssläde, magnet, spöke, stjärna, klocka, paus, guldklapp, bloss, sköld, bomb, regn, glögg, pepparkaksraket, medvind, skridskor.
+export const GIFT_ICON_COLS=4,GIFT_ICON_ROWS=4,GIFT_ICON_CELL=128;
 export function drawGiftIcons(c,kinds,colors){
   const star=(cx,cy,r0,r1,fill)=>{c.beginPath();for(let i=0;i<10;i++){const r=i%2?r1:r0,a=-Math.PI/2+i*Math.PI/5;c.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);}c.closePath();c.fillStyle=fill;c.fill();c.stroke();};
   const ink=(w=5)=>{c.strokeStyle=INK;c.lineWidth=w;c.lineJoin='round';c.lineCap='round';};
@@ -142,6 +142,28 @@ export function drawGiftIcons(c,kinds,colors){
       const box=(x,y,r,col)=>{c.save();c.translate(x,y);c.rotate(r);c.fillStyle=col;c.beginPath();c.roundRect(-13,-13,26,26,4);c.fill();ink(4);c.stroke();c.fillStyle='#fff1ce';c.fillRect(-3,-13,6,26);c.fillRect(-13,-3,26,6);c.restore();};
       c.strokeStyle='#ffffffb0';c.lineWidth=4;for(const [x,y0] of [[42,22],[68,34],[88,26]]){c.beginPath();c.moveTo(x,y0);c.lineTo(x,y0+10);c.stroke();}
       ink(4);box(42,48,-.2,'#d94a4a');box(70,62,.25,'#3f9462');box(54,88,-.1,'#ffcf3f');
+    }else if(kind==='glogg'){ // glöggmugg med ånga och fartstreck
+      c.fillStyle='#8e2438';c.beginPath();c.roundRect(42,60,42,40,8);c.fill();c.stroke();
+      c.fillStyle='#fff1ce';c.beginPath();c.roundRect(40,55,46,11,5);c.fill();c.stroke();
+      ink(7);c.beginPath();c.arc(88,80,12,-1.2,1.2);c.stroke();c.strokeStyle='#8e2438';c.lineWidth=3;c.beginPath();c.arc(88,80,12,-1.2,1.2);c.stroke();
+      c.strokeStyle='#ffffff';c.lineWidth=5;for(const x of [52,63,74]){c.beginPath();c.moveTo(x,50);c.quadraticCurveTo(x+7,41,x,31);c.stroke();}
+      for(const y of [72,82,92]){c.beginPath();c.moveTo(12,y);c.lineTo(28,y);c.stroke();}
+    }else if(kind==='kaka'){ // pepparkaksraket med låga
+      c.save();c.translate(64,66);c.rotate(Math.PI/4);
+      c.fillStyle='#ffb02e';c.beginPath();c.moveTo(-9,32);c.quadraticCurveTo(0,64,9,32);c.closePath();c.fill();ink(4);c.stroke();
+      c.fillStyle='#a8692d';c.beginPath();c.moveTo(-16,12);c.lineTo(-32,36);c.lineTo(-16,32);c.closePath();c.fill();ink(5);c.stroke();c.beginPath();c.moveTo(16,12);c.lineTo(32,36);c.lineTo(16,32);c.closePath();c.fill();c.stroke();
+      c.fillStyle='#c98b4a';c.beginPath();c.moveTo(0,-46);c.quadraticCurveTo(24,-18,16,32);c.lineTo(-16,32);c.quadraticCurveTo(-24,-18,0,-46);c.closePath();c.fill();c.stroke();
+      c.fillStyle='#ffffff';c.beginPath();c.arc(0,-10,8,0,7);c.fill();ink(4);c.stroke();c.strokeStyle='#ffffff';c.lineWidth=4;c.beginPath();c.moveTo(-11,14);c.lineTo(11,14);c.stroke();
+      c.restore();
+    }else if(kind==='wind'){ // medvind: tre svängda vindstreck
+      const gust=(y,len,curl)=>{c.beginPath();c.moveTo(20,y);c.lineTo(20+len,y);c.arc(20+len,y-curl,curl,Math.PI/2,-Math.PI*.6,true);c.strokeStyle=INK;c.lineWidth=13;c.stroke();c.strokeStyle='#ffffff';c.lineWidth=6;c.stroke();};
+      gust(50,56,9);gust(68,72,11);gust(86,46,8);
+    }else if(kind==='skates'){ // skridsko med skena
+      c.fillStyle='#fff1ce';c.beginPath();c.moveTo(46,28);c.lineTo(46,70);c.lineTo(34,76);c.lineTo(34,88);c.lineTo(98,88);c.quadraticCurveTo(102,70,82,64);c.lineTo(64,58);c.lineTo(64,28);c.closePath();c.fill();c.stroke();
+      c.fillStyle='#d94a4a';c.fillRect(46,28,18,11);ink(3);c.strokeRect(46,28,18,11);
+      c.strokeStyle='#ffffff';c.lineWidth=3;for(const y of [48,58]){c.beginPath();c.moveTo(48,y);c.lineTo(62,y);c.stroke();}
+      ink(10);c.beginPath();c.moveTo(26,100);c.lineTo(102,100);c.quadraticCurveTo(112,98,108,88);c.stroke();c.strokeStyle='#e6eef7';c.lineWidth=5;c.beginPath();c.moveTo(26,100);c.lineTo(102,100);c.quadraticCurveTo(112,98,108,88);c.stroke();
+      ink(5);c.beginPath();c.moveTo(44,88);c.lineTo(44,100);c.moveTo(88,88);c.lineTo(88,100);c.stroke();
     }
     c.restore();
   });
