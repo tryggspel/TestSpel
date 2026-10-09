@@ -264,7 +264,7 @@ Stigsökningen är grundspelets (`CityNavigation.path`, ett fält per mål: ca 9
 
 ## 7. Prestanda och mätningar
 
-**Mätt här (headless Chromium med SwiftShader, 414×896, programvaruritning): relativa jämförelser, inte mobilprestanda.** Tabellen är gjord på commit `39f30d8` (2.21.1-xmas.1, introduktionen) och har inte upprepats; mätningarna av 2.21.1-xmas.3 (vägledning, rushnivåer, gåvor) står under tabellen.
+**Mätt här (headless Chromium med SwiftShader, 414×896, programvaruritning): relativa jämförelser, inte mobilprestanda.** Tabellen är gjord på commit `39f30d8` (2.21.1-xmas.1, introduktionen) och har inte upprepats; mätningarna av 2.21.1-xmas.3 (vägledning, rushnivåer, gåvor) och 2.21.1-xmas.4 (svårare klocka, turbon, fartgåvor, Tomtezombies-nivåer, fri julvandring) står under tabellen.
 
 | Mått (samma rutt, samma upplägg) | Grundspelet (Clean City Explore) | Julklappsjakten (introduktionen) |
 |---|---|---|
@@ -289,6 +289,22 @@ Stigsökningen är grundspelets (`CityNavigation.path`, ett fält per mål: ca 9
 Det är tiden julkoden själv tar i JavaScript på en server. Det är **inte** ritningen (som i den här miljön görs av processorn) och **inte** en telefons tid; en telefon är flera gånger långsammare på JavaScript, men hur många gånger är inte mätt. Tiden är i nivå med den tidigare mätningen (0,4 ms) trots att vägledningen, julbandet, gåvorna och rushmotorn tillkommit.
 
 Ritanrop per bildruta (samma miljö, 20 s per läge, mätt medan en annan webbläsarkörning pågick; antalet beror inte på belastningen): introduktionen gående 115 i snitt (p95 204, högst 209; mätningen i tabellen ovan, före vägledningen, gav 97 och högst 206 på en något annan rutt, så skillnaden stämmer med julbandet som är högst 18 platta bitar), Rush 1 92 (högst 118), Rush 12 76 (högst 128), Maraton 93 (högst 118), Tomtezombies stilla 132. Julbandet har högst 18 bitar (9 i lätt läge), gåvobrickorna högst 6, spöket 1 och sidopaketen högst 5. Ritanrop betyder olika mycket på en riktig GPU; ingen bildfrekvens är mätt på någon telefon.
+
+**2.21.1-xmas.4 (om mätt på det slutliga trädet, kontrollsumma `6a36379…`).** Samma mätning som för xmas.3 (`xmas.update` per bildruta, 30 s per läge efter 2,5 s uppvärmning, 414×896, mjukvaruritad webbläsare, ingen annan körning pågick), nu också för Tomtezombies nivå 2 och fri julvandring. Boten går nu med turbon på och gåvornas fart, alltså dubbelt så långt per sekund som i xmas.3:
+
+| Läge | Bildrutor | Snitt | p95 | Högst | Ritanrop snitt (högst) |
+|---|---|---|---|---|---|
+| Introduktionen, stilla | 199 | 0,36 ms | 0,6 ms | 2,9 ms | 128 (128) |
+| Introduktionen, gående | 192 | 0,68 ms | 1,4 ms | 10,7 ms | 121 (209) |
+| Rush 1 | 291 | 0,39 ms | 1,6 ms | 2,8 ms | 47 (110) |
+| Rush 6 | 201 | 0,67 ms | 2,1 ms | 11,5 ms | 77 (401) |
+| Rush 12 | 242 | 0,98 ms | 2,1 ms | 41,6 ms | 110 (406) |
+| Maraton | 267 | 0,93 ms | 2,2 ms | 13,8 ms | 81 (400) |
+| Tomtezombies nivå 1, stilla | 188 | 0,41 ms | 0,8 ms | 6,0 ms | 132 (133) |
+| Tomtezombies nivå 2, stilla | 204 | 0,34 ms | 0,6 ms | 2,9 ms | 129 (130) |
+| Fri julvandring, gående | 215 | 0,62 ms | 1,6 ms | 15,5 ms | 96 (203) |
+
+Snittet är i nivå med xmas.3 i introduktionen och Tomtezombies och högre i rusherna (Rush 6: 0,67 mot 0,52 ms, Rush 12: 0,98 mot 0,43 ms, Maraton: 0,93 mot 0,56 ms), troligen för att boten nu plockar dubbelt så många paket per sekund; det högsta för en enstaka bildruta är också större (Rush 12: 41,6 mot 3,2 ms). Det är inte närmare undersökt vad enstaka bildrutor på 10–40 ms beror på (ett engångsarbete som att bygga slutkortet eller en skräpsamling är rimligt, men det är inte mätt); jag har inte sett dem återkomma i 30-sekundersmätningarna av de andra lägena. Fördelningen av ritanrop i Rush 12 mättes separat (45 s, 642 bildrutor): i de 43 bildrutor som hade över 300 ritanrop (i snitt 380, boten befann sig då i en tät del av staden långt norr om Torget, x≈170, z≈−470) stod julens delar för i snitt 36 (vyn 17, dekoren 19; högst 52 + 30), resten är stadens egna ritanrop; i övriga bildrutor var totalen i snitt 36. Ingen del av julkoden kostar alltså mer än ett tiotal till några tiotals ritanrop, men siffrorna säger inget om hur en telefon klarar 400.
 
 - Julens delar kostar knappt någon CPU (0,4 ms per bildruta på servern). Skillnaden i programvaruritning är fyllnad (genomskinliga bildkort), vilket en riktig GPU hanterar mycket lättare, men det är **inte mätt på någon telefon**.
 - A/B i samma miljö visade att det stora mjuka skenet i snön kring granen var den dyraste enskilda delen; det är borttaget. Snöfallet (en enda mesh, 100 flingor) kostade inget mätbart.
