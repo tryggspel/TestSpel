@@ -208,6 +208,12 @@ body.xmas-cozy #solarWeapon,body.xmas-cozy #journeyPickupToast{display:none!impo
 body.xmas-on.round-playing #roundToast{bottom:30%}
 body.xmas-zombies #xmasHud{width:min(250px,calc(100vw - 168px))}
 body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
+/* Låg telefon (iPhone SE och liknande, ca 667 px): uppdragsraden visar bara det aktuella steget och pilen är lite mindre, så att pilen ligger över bildens mitt (rutan 28–72 % av höjden är fri) */
+@media(max-height:700px){
+ .xg-step:not([data-state="now"]):not([data-state="wait"]){display:none}
+ .xg-icon{width:26px;height:26px}.xg-line{font-size:12px}.xg-hint{font-size:9px}
+ #xmasArrow{padding:3px 11px 3px 6px}
+}
 /* Låga skärmar (telefon i Safari med adressfältet synligt är ca 715 px hög, liggande telefon ca 400): rushmenyn visar de tolv rusherna i två rader om sex, med bara siffra och stjärnor (namnet står i rutan under), så att spelaknappen syns utan att man bläddrar */
 @media(max-height:760px){
  .xmas-rushes{grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin:8px 0 6px}
