@@ -61,7 +61,7 @@ await ev(()=>{
         const el=j.elapsed;
         if(last!==null&&el>last){
           const [x,z]=window.__pos(),dx=tg.x-x,dz=tg.z-z,d=Math.hypot(dx,dz),v=7.2*window.__turbo()*window.__skill,s=Math.min(d,v*(el-last));
-          if(s>0&&d>.01)window.__tp(x+dx/d*s,z+dz/d*s,Math.atan2(-dx,-dz)*180/Math.PI,-4);
+          if(s>0&&d>.01){window.__dist=(window.__dist||0)+s;window.__tp(x+dx/d*s,z+dz/d*s,Math.atan2(-dx,-dz)*180/Math.PI,-4);}
         }
         last=el;
       }else last=null;
@@ -116,8 +116,9 @@ await ev(()=>{window.__skill=1;window.__botStart();});
 const placed=new Map();let badPlaced=0;
 const sample=async()=>{const pk=await ev(()=>window.KarlstadDebug.journey().xmas.julrush.list.map(k=>[k.id,k.x,k.z,k.kind]));for(const [id,x,z,kind] of pk)if(!placed.has(id)){placed.set(id,kind);if(await ev(([x,z])=>window.__blocked(x,z),[x,z]))badPlaced++;}};
 let sawGift=false,sawChip=false,shotMid=false,shotLevel=false,shotGift=false;
+// Spelet går i speltid och den mjukvarurenderade webbläsaren ger få bildrutor när maskinen är belastad, så klocktiden som får gå är generös: loopen avbryts så fort villkoren är uppfyllda.
 const t0=Date.now();
-while(Date.now()-t0<75000){
+while(Date.now()-t0<240000){
   await wait(500);await sample();
   const s=await rushSnap();
   if(!shotMid&&s.picked>=6){shotMid=true;await shot('r02-mitt-i-spelet');}
@@ -266,7 +267,7 @@ if(process.env.LONG){
     const j=window.KarlstadDebug.journey();window.__anch=0;window.__sup=[];
     const a=j.anchorCourse.bind(j);j.anchorCourse=p=>{window.__anch++;return a(p);};
     const s=j.supplyTempo.bind(j);j.supplyTempo=(dt,p)=>{const t=performance.now();s(dt,p);window.__sup.push(performance.now()-t);};
-    window.__skill=1.3;
+    window.__skill=1.3;window.__dist=0;
   });
   const bad=new Set(),seen=new Set();let last=null;const t1=Date.now(),limit=Number(process.env.LONG_SECONDS||1500)*1000;
   while(Date.now()-t1<limit){
@@ -277,13 +278,15 @@ if(process.env.LONG){
     if(last.state==='over'||(last.level>=12&&last.seconds>=150))break;
   }
   const mem1=await ev(()=>performance.memory?.usedJSHeapSize||0);
-  const sup=await ev(()=>{const a=[...window.__sup].sort((x,y)=>x-y);return {n:a.length,max:a.at(-1),p95:a[Math.floor(a.length*.95)],mean:a.reduce((x,y)=>x+y,0)/a.length,anch:window.__anch};});
+  const sup=await ev(()=>{const a=[...window.__sup].sort((x,y)=>x-y);return {n:a.length,max:a.at(-1),p95:a[Math.floor(a.length*.95)],mean:a.reduce((x,y)=>x+y,0)/a.length,anch:window.__anch,dist:Math.round(window.__dist||0)};});
+  const perKm=sup.anch/Math.max(.1,sup.dist/1000);
   check('R10 en bot följer banan på stadens gator till tempo 12 utan att tappa ett liv ('+Math.round(last.seconds)+' s speltid, '+last.picked+' paket)',last.state==='running'&&last.level>=12&&last.lives===3&&last.picked>=100,JSON.stringify({state:last.state,level:last.level,lives:last.lives,picked:last.picked,score:last.score}));
   check('R10b inget av '+seen.size+' paket låg på ogångbar mark under hela körningen',bad.size===0&&seen.size>=100,'ogångbara '+bad.size);
   // Grundspelets egen omplanering (anchorCourse) lägger banan på nytt vid spelaren när nästa paket ligger över 55 m bort. Det händer när banan viker tillbaka längs
   // samma gata (återvändsgränder: grundspelet släpper de paket som spelaren redan "passerat" längs deras riktning) och när ett tomtebloss tagit paketen framför.
-  // Det kostar inget liv. Här kontrolleras bara att det inte sker oftare än var 17:e sekund i snitt och att planeringen är billig.
-  check('R10c banan lades om '+sup.anch+' gånger på '+Math.round(last.seconds)+' s speltid (högst 12 tillåtna) och planeringen är billig (medel '+sup.mean.toFixed(2)+' ms, p95 '+sup.p95.toFixed(1)+' ms, värst '+sup.max.toFixed(1)+' ms)',sup.anch<=12&&sup.max<400,JSON.stringify(sup));
+  // Det kostar inget liv. Antalet följer sträckan som springs (boten går med turbon och gåvornas fart, dubbelt så långt per sekund som före 2.21.1-xmas.4), så det räknas per kilometer.
+  // Här kontrolleras att det inte sker oftare än 10 gånger per kilometer och att planeringen är billig.
+  check('R10c banan lades om '+sup.anch+' gånger på '+Math.round(last.seconds)+' s speltid och '+(sup.dist/1000).toFixed(1)+' km ('+perKm.toFixed(1)+' per km, högst 10 tillåtna) och planeringen är billig (medel '+sup.mean.toFixed(2)+' ms, p95 '+sup.p95.toFixed(1)+' ms, värst '+sup.max.toFixed(1)+' ms)',perKm<=10&&sup.max<400,JSON.stringify(sup));
   check('R10d minnet växer inte okontrollerat ('+((mem1-mem0)/1048576).toFixed(1)+' MB på körningen)',!mem0||mem1-mem0<80*1048576);
   await shot('r12-tempo12');
 }
