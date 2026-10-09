@@ -251,8 +251,8 @@ await startMarathon('xmasRushGo');await wait(2600);
 check('R8b knappen i fortsättningsmenyn leder till rushmenyn och MARATON startar JulRushen',await ev(()=>window.KarlstadDebug.journey().xmas.snapshot().mode==='rush'&&window.KarlstadDebug.journey().xmas.julrush.state==='running'));
 
 // ── R9: gåvorna i spelet ───────────────────────────────────────────────────────────────────────────────────────────────────────────
-await ev(()=>{window.__skill=1;const x=window.KarlstadDebug.journey().xmas,p=window.__pos();x.julrush.grant('sleigh',{x:p[0],z:p[1]});});await wait(500);
-const g1=await ev(()=>({rocket:document.body.classList.contains('rocket-on'),turbo:document.body.classList.contains('turbo-on'),chips:[...document.querySelectorAll('.xh-chip')].map(c=>c.textContent),mul:window.KarlstadDebug.journey().fun.power.speedMul()}));
+await ev(()=>{window.__skill=1;const x=window.KarlstadDebug.journey().xmas,p=window.__pos();for(const k of ['glogg','kaka','wind','skates','magnet','ghost'])x.julrush.timers[k]=0;/* en fartgåva som boten råkat plocka tidigare multipliceras på renssläden (högst ×4) */x.julrush.grant('sleigh',{x:p[0],z:p[1]});});
+let g1=null;for(let i=0;i<24;i++){await wait(250);g1=await ev(()=>({rocket:document.body.classList.contains('rocket-on'),turbo:document.body.classList.contains('turbo-on'),chips:[...document.querySelectorAll('.xh-chip')].map(c=>c.textContent),mul:window.KarlstadDebug.journey().fun.power.speedMul()}));if(g1.rocket&&g1.chips.some(c=>/^SLÄDE \d/.test(c)))break;}
 check('R9 renssläden: farten dubblas, raketeffekten ligger på och brickan SLÄDE räknar ned',g1.mul===2&&g1.rocket&&g1.turbo&&g1.chips.some(c=>/^SLÄDE \d/.test(c)),JSON.stringify(g1));
 await shot('r10-slade');
 await ev(()=>{const x=window.KarlstadDebug.journey().xmas,p=window.__pos();for(const k of ['glogg','kaka','wind','skates','magnet','ghost'])x.julrush.timers[k]=0;/* gåvor som boten råkat plocka tidigare (högst sex brickor ryms) */x.julrush.grant('shield',{x:p[0],z:p[1]});x.julrush.grant('star',{x:p[0],z:p[1]});x.julrush.grant('pause',{x:p[0],z:p[1]});x.julrush.grant('golden',{x:p[0],z:p[1]});});
