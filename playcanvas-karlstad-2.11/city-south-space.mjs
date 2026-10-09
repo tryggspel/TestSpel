@@ -1,4 +1,4 @@
-import {WATER_ROWS,FERRY_PORTS,EXT_BUILDINGS} from './city-south-data.mjs?v=2.21.1-xmas.2';
+import {WATER_ROWS,FERRY_PORTS,EXT_BUILDINGS} from './city-south-data.mjs?v=2.21.1-xmas.3';
 export const SOUTH_IDS=new Set(EXT_BUILDINGS.map(b=>b.id));
 // South/extension buildings with their own hand-built architecture in city-south.js.
 // Every other SOUTH_IDS building is drawn there only as a generic box, so a curated

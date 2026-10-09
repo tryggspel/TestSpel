@@ -117,6 +117,11 @@ test('bakom en vägg pekar pilen mot hörnet på gångvägen, och spåret går r
   assert.equal(s2.straight,true);assert.equal(s2.steerX,target.x);
 });
 
+test('ett fel i stigsökningen ger en rak pil, aldrig ett avstängt jultillägg',()=>{
+  const g=new XmasGuide({nav:{clear:()=>false},cityGuidance:{update:()=>{throw new Error('kaos');}}}),s=g.update({x:0,z:0},north,T(0,-30),1/60,0);
+  assert.equal(s.on,true);assert.equal(s.straight,true);assert.equal(s.steerZ,-30);assert.ok(s.segCount>=3);
+});
+
 test('utan fri sikt men utan karta: ändå en rak pil (inget kraschar)',()=>{
   const g=new XmasGuide({nav:{clear:()=>false}}),s=g.update({x:0,z:0},north,T(0,-20),1/60,0);
   assert.equal(s.on,true);assert.equal(s.straight,true);assert.equal(s.steerZ,-20);assert.ok(s.segCount>=1);

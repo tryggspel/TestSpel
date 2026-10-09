@@ -40,6 +40,23 @@ const yawTo=(px,pz,tx,tz)=>Math.atan2(-(tx-px),-(tz-pz))*180/Math.PI;
 const click=id=>ev(i=>document.getElementById(i)?.click(),id);
 const vis=sel=>ev(s=>{const e=document.querySelector(s);if(!e||e.hidden)return false;const cs=getComputedStyle(e);if(cs.display==='none'||cs.visibility==='hidden')return false;const r=e.getBoundingClientRect();return r.width>0&&r.height>0;},sel);
 const text=sel=>ev(s=>document.querySelector(s)?.textContent||'',sel);
+// Versaler med prickar eller ring (Å, Ä, Ö) når högre än resten av raden. I ett element med overflow:hidden och tät radhöjd klipps de bort ("LÄMNA" blev "LAMNA").
+// Mäter med canvas var teckenets överkant hamnar jämfört med elementets övre (padding)kant; under 1 px marginal räknas som klippt.
+const clipped=sel=>ev(s=>{
+  const out=[],cv=document.createElement('canvas').getContext('2d');
+  for(const el of document.querySelectorAll(s)){
+    const cs=getComputedStyle(el);
+    if(cs.overflowY==='visible'||!el.getClientRects().length)continue;
+    const raw=[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim();
+    const t=cs.textTransform==='uppercase'?raw.toUpperCase():raw,m=t.match(/[ÅÄÖ]/);
+    if(!m)continue;
+    cv.font=`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const g=cv.measureText(m[0]),content=g.fontBoundingBoxAscent+g.fontBoundingBoxDescent,lh=cs.lineHeight==='normal'?content:parseFloat(cs.lineHeight);
+    const room=(lh-content)/2+g.fontBoundingBoxAscent-g.actualBoundingBoxAscent+parseFloat(cs.paddingTop);
+    if(room<1)out.push({text:t.slice(0,28),room:+room.toFixed(2)});
+  }
+  return out;
+},sel);
 const walk=(tx,tz,step=1.4)=>ev(([tx,tz,step])=>new Promise(res=>{let n=0;const f=()=>{const [x,z]=window.__pos();const dx=tx-x,dz=tz-z,d=Math.hypot(dx,dz);if(d<.4||++n>700){res(d);return;}const k=Math.min(1,step/d);window.__tp(x+dx*k,z+dz*k,Math.atan2(-dx,-dz)*180/Math.PI,-5);requestAnimationFrame(f);};f();}),[tx,tz,step]);
 
 await page.goto(`http://localhost:${PORT}/?debug`);await ready();
@@ -50,6 +67,7 @@ const s0=await snap(),sp=await ev(()=>window.__pos());
 check('A1 pilen finns direkt och pekar på första paketet (rakt fram, med avstånd och namn)',s0.guide.on&&s0.guide.label==='NÄSTA PAKET'&&s0.guide.hint==='GÅ RAKT FRAM'&&s0.guide.distance>=3&&s0.guide.distance<=14&&await vis('#xmasArrow'),JSON.stringify({g:s0.guide.label,d:s0.guide.distance,h:s0.guide.hint}));
 check('A2 pilens text visar vad den pekar på och hur långt det är',/^NÄSTA PAKET · \d+ M$/.test(await text('#xmasArrow .xg-line'))&&await text('#xmasArrow .xg-hint')==='GÅ RAKT FRAM',await text('#xmasArrow .xg-line'));
 check('A3 uppdragsraden visar båda stegen: SAMLA PAKET 0/20 och LÄMNA HOS TOMTEN',s0.guide.mission==='SAMLA PAKET 0/20 › LÄMNA HOS TOMTEN'&&await vis('#xmasMission'),s0.guide.mission);
+check('A3b texterna i uppdragsraden och pilen klipps inte: prickarna på Å, Ä och Ö syns ("LÄMNA" blir inte "LAMNA")',(await clipped('#xmasMission b, #xmasArrow .xg-line, #xmasArrow .xg-hint')).length===0&&await ev(()=>document.querySelectorAll('#xmasMission b').length>=2),JSON.stringify(await clipped('#xmasMission b, #xmasArrow .xg-line, #xmasArrow .xg-hint')));
 check('A4 målstrålen lyser vid första paketet (inget band behövs när paketet är tre meter bort)',s0.view.goal===true&&s0.view.ribbon===0,JSON.stringify({ribbon:s0.view.ribbon,goal:s0.view.goal}));
 const base=await ev(()=>{const root=window.__app.root;let pips=0;root.find(e=>/^mission-arrow-/.test(e.name)&&e.enabled).forEach(()=>pips++);const flag=root.findByName('Ditt valda mål');return {pips,flag:!!flag&&flag.enabled,compass:getComputedStyle(document.getElementById('roundCompass')).display,tempoArrow:document.getElementById('tempoArrow').hidden||getComputedStyle(document.getElementById('tempoArrow')).display==='none'};});
 check('A5 grundspelets små pilar på marken, "DITT MÅL"-flaggan och kompasspillen ritas inte i Julklappsjakten',base.pips===0&&!base.flag&&base.compass==='none'&&base.tempoArrow,JSON.stringify(base));
@@ -153,7 +171,7 @@ check('F2 uppdragsraden ligger under HUD:en och överlappar den inte (zombieläg
 await shot('07-zombies');
 await ev(()=>window.KarlstadDebug.journey().xmas.startRush());await wait(3200);
 const r=await snap();
-check('F3 JulRushen: paketjaktens pil och uppdragsrad är av, grundspelets pil används',r.mode==='rush'&&!r.guide.on&&!(await vis('#xmasArrow'))&&!(await vis('#xmasMission'))&&await vis('#tempoArrow'),JSON.stringify({mode:r.mode,guide:r.guide.on}));
+check('F3 JulRushen: paketjaktens pil och uppdragsrad är av, grundspelets pil används (julbandet på marken är det enda som delas)',r.mode==='rush'&&!(await vis('#xmasArrow'))&&!(await vis('#xmasMission'))&&await vis('#tempoArrow'),JSON.stringify({mode:r.mode,ribbonState:r.guide.on,ribbonPieces:r.view.ribbon}));
 await ev(()=>window.KarlstadDebug.journey().xmas.startFree());await wait(1500);
 const fr=await snap();
 check('F4 fri vandring utan paket: ingen pil, uppdragsraden säger när nästa paketregn kommer',!fr.guide.on&&/^NÄSTA PAKETREGN OM \d+ S$/.test(fr.guide.mission),JSON.stringify({on:fr.guide.on,m:fr.guide.mission}));

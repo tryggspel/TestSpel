@@ -9,8 +9,8 @@
 //    nålsmå i den låga vinkel en telefon har (1,7 m ögonhöjd); ett långt, sammanhängande band syns tydligt på 30–40 m och visar riktningen med sin form och sina pilar.
 //    Bandet ligger fast i världen (förankrat vid målet): man går fram över det och nya bitar rullas ut längst bort.
 //  - Uppdragsraden säger alltid vad man ska göra nu och vad som kommer sedan (samla paket, lämna hos tomten).
-import {CityGuidance} from '../city-guidance.mjs?v=2.21.1-xmas.2';
-import {arrowInfo} from '../tempo-run.mjs?v=2.21.1-xmas.2';
+import {CityGuidance} from '../city-guidance.mjs?v=2.21.1-xmas.3';
+import {arrowInfo} from '../tempo-run.mjs?v=2.21.1-xmas.3';
 
 export const GUIDE=Object.freeze({
   recalcMs:90,moveEps:.4,maxAgeMs:600,          // hur ofta vägen räknas om (när man rör sig) och hur gammal den får bli
@@ -68,7 +68,7 @@ export class XmasGuide{
     let straight=true,dist=Math.hypot(t.x-p.x,t.z-p.z),steer=goal,path=this.path;
     path.length=0;path.push({x:p.x,z:p.z});
     if(this.nav&&this.nav.clear&&!this.nav.clear(p,goal)&&this.cg){
-      const g=this.cg.update(p,goal,fwd);
+      let g=null;try{g=this.cg.update(p,goal,fwd);}catch(e){g=null;} // ett fel i stigsökningen ger en rak pil, aldrig ett avstängt jultillägg
       if(g&&g.path&&g.path.length){straight=false;dist=g.distance;steer=g.next||goal;for(const q of g.path)path.push({x:q.x,z:q.z});if(path.length<2||Math.hypot(path.at(-1).x-goal.x,path.at(-1).z-goal.z)>.6)path.push({x:goal.x,z:goal.z});}
     }
     if(straight)path.push({x:goal.x,z:goal.z});

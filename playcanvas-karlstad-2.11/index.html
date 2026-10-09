@@ -30,11 +30,11 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:11px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.21.1-xmas.2">
-<link rel="stylesheet" href="./compact-hud.css?v=2.21.1-xmas.2">
-<link rel="stylesheet" href="./explore-fun.css?v=2.21.1-xmas.2">
-<link rel="stylesheet" href="./places.css?v=2.21.1-xmas.2">
-<link rel="stylesheet" href="./xmas/xmas.css?v=2.21.1-xmas.2">
+<link rel="stylesheet" href="./last-round.css?v=2.21.1-xmas.3">
+<link rel="stylesheet" href="./compact-hud.css?v=2.21.1-xmas.3">
+<link rel="stylesheet" href="./explore-fun.css?v=2.21.1-xmas.3">
+<link rel="stylesheet" href="./places.css?v=2.21.1-xmas.3">
+<link rel="stylesheet" href="./xmas/xmas.css?v=2.21.1-xmas.3">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -164,7 +164,45 @@
     <p id="xmasResultParts" class="round-fine"></p>
     <p id="xmasResultStatus" class="round-fine"></p>
     <button id="xmasResultContinue" class="round-primary xmas-primary" type="button">FORTSÄTT <span>→</span></button>
+    <button id="xmasResultShare" class="round-secondary" type="button" hidden>UTMANA EN VÄN <span>→</span></button>
     <button id="xmasResultFree" class="round-secondary" type="button">FRI JULVANDRING</button>
+  </section>
+  <section id="round-xmas-rush" class="round-card compact xmas-card" hidden>
+    <div class="episode-label"><span>JULKLAPPSJAKTEN</span><span id="xmasRushStars">★ 0 / 36</span></div>
+    <h2>JUL<em>RUSHEN.</em></h2>
+    <p id="xmasRushLead" class="round-lead">Tolv rusher med stigande tempo. Klara målet för att låsa upp nästa. Stjärnorna är hjärtana du har kvar.</p>
+    <div id="xmasRushGrid" class="xmas-rushes" role="group" aria-label="Välj rush"></div>
+    <div class="xmas-rush-info" aria-live="polite"><b id="xmasRushInfoTitle"></b><span id="xmasRushInfoGoal"></span><small id="xmasRushInfoBest"></small></div>
+    <button id="xmasRushPlay" class="round-primary xmas-primary" type="button">SPELA RUSH 1 <span>→</span></button>
+    <button id="xmasRushMarathon" class="round-secondary xmas-rush" type="button">MARATON <span>→</span></button>
+    <p id="xmasRushMarathonNote" class="round-fine"></p>
+    <button id="xmasRushBoard" class="round-secondary" type="button">TOPPLISTA OCH UTMANING <span>→</span></button>
+    <button id="xmasRushBack" class="round-tertiary" type="button">← Julmenyn</button>
+  </section>
+  <section id="round-xmas-board" class="round-card compact xmas-card" hidden>
+    <div class="episode-label"><span>JULRUSHEN</span><span>TOPPLISTA</span></div>
+    <h2>TOPP<em>LISTA.</em></h2>
+    <label class="xmas-field" for="xmasBoardRush"><span>VISA</span><select id="xmasBoardRush"></select></label>
+    <ol id="xmasBoardList" class="xmas-board"></ol>
+    <p id="xmasBoardNote" class="round-fine"></p>
+    <h3 class="xmas-sub">UTMANA EN VÄN</h3>
+    <label class="xmas-field" for="xmasBoardName"><span>DITT NAMN</span><input id="xmasBoardName" type="text" maxlength="12" autocomplete="nickname" autocapitalize="words" spellcheck="false" enterkeyhint="done"></label>
+    <p id="xmasBoardShareText" class="round-fine"></p>
+    <input id="xmasBoardLink" class="xmas-link" type="text" readonly aria-label="Din utmaningslänk">
+    <button id="xmasBoardShare" class="round-primary xmas-primary" type="button">SKICKA UTMANING <span>→</span></button>
+    <button id="xmasBoardCopy" class="round-secondary" type="button">KOPIERA LÄNKEN</button>
+    <p id="xmasBoardStatus" class="round-fine" role="status" aria-live="polite"></p>
+    <button id="xmasBoardBack" class="round-tertiary" type="button">← Tillbaka</button>
+  </section>
+  <section id="round-xmas-challenge" class="round-card compact xmas-card" hidden>
+    <div class="episode-label"><span>JULRUSHEN</span><span>UTMANING</span></div>
+    <h2 id="xmasChallengeTitle">UTMANING!</h2>
+    <p id="xmasChallengeLine" class="round-lead"></p>
+    <div id="xmasChallengeStats" class="xmas-grid"></div>
+    <p id="xmasChallengeNote" class="round-fine"></p>
+    <button id="xmasChallengeGo" class="round-primary xmas-primary" type="button">TA UTMANINGEN <span>→</span></button>
+    <button id="xmasChallengeSave" class="round-secondary" type="button">BARA SPARA VÄNNEN</button>
+    <button id="xmasChallengeSkip" class="round-tertiary" type="button">Inte nu</button>
   </section>
   <section id="round-city-intro" class="round-card city-card" hidden>
     <div class="episode-label"><span>KARLSTAD / STADSJAKTEN</span><span class="game-version">2.11.22</span></div>
@@ -320,6 +358,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.21.1-xmas.2"></script>
+<script type="module" src="./app.js?v=2.21.1-xmas.3"></script>
 </body>
 </html>

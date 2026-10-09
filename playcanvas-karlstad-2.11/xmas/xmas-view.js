@@ -5,9 +5,9 @@
 // Vägledningen (xmas-guide.mjs) ritas här: en grön stråle och en ring vid pilens mål (nästa paket, eller tomten efter målet) och ett rött julband med pilar
 // som rullas ut på marken längs gångvägen dit. Bandet ligger fast i världen: man går fram över det och nya bitar rullas ut längst bort.
 // Ingen fysik, inga ljus: allt är platta bildkort och genomskinliga cylindrar.
-import {drawBeam,drawRibbon,drawGiftIcons,drawGhostHelper,GIFT_ICON_COLS,GIFT_ICON_ROWS,GIFT_ICON_CELL} from './xmas-art.js?v=2.21.1-xmas.2';
-import {GIFT_KINDS,GIFTS} from './xmas-rush.mjs?v=2.21.1-xmas.2';
-import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.2';
+import {drawBeam,drawRibbon,drawGiftIcons,drawGhostHelper,GIFT_ICON_COLS,GIFT_ICON_ROWS,GIFT_ICON_CELL} from './xmas-art.js?v=2.21.1-xmas.3';
+import {GIFT_KINDS,GIFTS} from './xmas-rush.mjs?v=2.21.1-xmas.3';
+import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.3';
 export function createXmasView(pc,host,draw,sprites,hunt,rush=null){
   const {labelTex,texture}=draw,root=draw.root;
   const POOL=26,SHOW=54,SHOW_RUSH=96,BEAMS=4,BADGES=6,BURSTS=6,RIBBON=GUIDE.ribbon.max,RIBBON_PHASES=4;
@@ -54,7 +54,7 @@ export function createXmasView(pc,host,draw,sprites,hunt,rush=null){
   }
   function update(p,now,dt){
     const rr=!!rush&&rush.active,r=rr?null:hunt.run,live=rr||(!!r&&(r.phase==='collect'||r.phase==='deliver'||r.phase==='free'));
-    const gOn=!rr&&live&&!!guide&&guide.on;
+    const gOn=!rr&&live&&!!guide&&guide.on,rOn=live&&!!guide&&guide.on; // gOn: paketjaktens mål (stråle och ring); rOn: julbandet (paketjakten och JulRushen)
     // Målet för strålen: JulRushens nästa paket, eller pilens mål i paketjakten (paketet, eller tomten efter målet). Bara paket får en ring och blir större.
     const goalPk=rr&&rush.running?rush.targetPackage():gOn&&guide.kind!=='tomte'?{id:guide.id,x:guide.targetX,z:guide.targetZ}:null;
     const beamAt=goalPk||(gOn?{id:guide.id,x:guide.targetX,z:guide.targetZ}:null);
@@ -115,7 +115,7 @@ export function createXmasView(pc,host,draw,sprites,hunt,rush=null){
     }else if(goal.beam.enabled){goal.beam.enabled=goal.ring.enabled=false;}
     // julbandet: rullas ut längs gångvägen till målet; bitarna tonar in vid spelaren och längst bort (smalare), pilarna rör sig mot målet
     ribbonOn=0;
-    if(gOn){
+    if(rOn){
       const n=guide.segCount,ph=Math.floor(now/110)%RIBBON_PHASES,cfgW=GUIDE.ribbon.width;
       for(let i=0;i<n;i++){
         const m=guide.segs[i],e=ribbon[i],d=Math.hypot(m.x-p.x,m.z-p.z),k=clamp01((d-3)/4)*clamp01((GUIDE.ribbon.lead+GUIDE.ribbon.maxLen+6-d)/14)*.55+.45;

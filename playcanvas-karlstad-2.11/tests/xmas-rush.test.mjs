@@ -10,6 +10,7 @@ import {powerFor,POWER} from '../powerups.mjs';
 import {XmasRush,GIFTS,GIFT_KINDS,giftFor,bearsGift,RUSH,RUSH_NAMES,rushName} from '../xmas/xmas-rush.mjs';
 import {XmasSave,sanitizeSave} from '../xmas/xmas-save.mjs';
 import {COMBO,PACKAGE_POINTS,STAMPS} from '../xmas/xmas-config.mjs';
+import {RUSHES,RUSH_COUNT,goalProgress} from '../xmas/xmas-rushes.mjs';
 
 const nav=new CityNavigation(),mall={x:-135,z:98};
 const portals={'sista-rundan':{x:46,z:37,name:'O’Learys'},fikapanik:{x:8,z:6,name:'Fikapanik'},'radda-fikat':{x:-135,z:55,name:'Rädda fikat'},sandgrund:{x:-12,z:-370,name:'Sandgrund'}};
@@ -373,6 +374,12 @@ test('krokarna i grundspelets filer finns kvar (en sammanslagning från main få
   assert.ok(ui.includes("on('xmasRushStart'")&&ui.includes("on('xmasRushGo'"));
   // Grundspelets egna tempo-händelser hanteras av last-round.js och ska inte röras av julen: inga rush-hanterare där.
   assert.ok(!/rush-(start|pick|gift|level|miss|over)/.test(read('last-round.js')),'last-round.js känner inte till JulRushens händelser');
+  // Vägledningen, nivåerna, topplistan och utmaningarna: en rad i last-round.js döljer grundspelets små pilar för julens mål (quiet), tre paneler ligger i panellistan och finns i index.html
+  const lr=read('last-round.js');
+  assert.match(lr,/destination\.kind!=='wait'&&!destination\.quiet&&/,'updateRoute ritar inga pilar för julens mål (quiet)');
+  for(const id of ['xmas-rush','xmas-board','xmas-challenge']){assert.ok(lr.includes("'"+id+"'"),id+' finns i setPanel-listan');assert.ok(html.includes('id="round-'+id+'"'),'round-'+id+' finns i index.html');}
+  for(const id of ['xmasRushGrid','xmasRushPlay','xmasRushMarathon','xmasBoardList','xmasBoardName','xmasBoardLink','xmasBoardShare','xmasBoardCopy','xmasChallengeGo','xmasChallengeSave','xmasChallengeSkip','xmasResultShare'])assert.ok(html.includes('id="'+id+'"'),id+' finns i index.html');
+  assert.ok(/objective:p=>.*quiet:true/.test(read('xmas/xmas-boot.js')),'xmas-boot.js markerar julens mål som quiet');
   // Kungsgatan 14, 16 och 18: fasadmodulerna är orörda av JulRushen (inga imports av julkod).
   for(const f of ['kungsgatan-reference.mjs','photo-reference-pass3.mjs','residenset-facade.mjs','opera-facade.mjs','innerstad-reference.mjs'])assert.ok(!/xmas|JulRush/i.test(read(f).replace(/\?v=[^'"\s)]+/g,'')),f+' är orörd');
 });
@@ -537,4 +544,111 @@ test('gåvor och sidopaket i vyn: nearby och giftPackages tar med dem, och de dr
   assert.ok(c.rush.nearby(c.pos,400,60,out).every(k=>Number.isFinite(k.vx)&&Number.isFinite(k.vz)),'varje paket har en ritposition');
   const near=plain(c,c.pos.x+7,c.pos.z);c.rush.grant('magnet',c.pos);frame(c,.02);frame(c,.1);
   assert.ok(near.vx<near.x,'ritpositionen glider mot spelaren medan paketet dras in');assert.equal(near.x,c.pos.x+7,'den riktiga platsen ändras inte');
+});
+
+// ── Tolv rusher: fast tempo, mål, stjärnor, upplåsning och serier ────────────────────────────────────────────────────────────────────
+const rushed=(def,opts={})=>{const c=mk();c.rush.start({def,...opts});frame(c,.1);return c;};
+
+test('en rush har sitt tempo från första sekunden och behåller det, med hjärtan som man tog med sig',()=>{
+  const def=RUSHES[3],c=mk();c.rush.start({def,hearts:2,streak:1});frame(c,.1);
+  assert.equal(c.g.tempo.level,4);assert.equal(c.g.tempo.lives,2);assert.equal(c.g.tempo.speedMul(),tempoSpeed(4));
+  const st=ofType(c,'rush-start')[0];assert.deepEqual([st.level,st.lives,st.name,st.n,st.streak],[4,2,'SNÖYRA',4,1]);assert.deepEqual(st.goal,def.goal);
+  sleepFreeze(c); // klockan till nästa paket står still och spelaren står still, men tiden går: tempot ska ändå aldrig höjas
+  play(c,TEMPO.levelSeconds*2.2,null);
+  assert.equal(ofType(c,'rush-level').length,0,'inga tempohöjningar i en rush');assert.equal(c.g.tempo.level,4);assert.ok(c.g.tempo.levelClock<.1,'nivåklockan nollas före varje steg: '+c.g.tempo.levelClock);assert.equal(c.g.tempo.speedMul(),tempoSpeed(4));
+  const s=c.rush.snapshot();assert.equal(s.n,4);assert.equal(s.name,'SNÖYRA');assert.equal(s.goal.kind,'points');assert.equal(s.level,4);
+  // Banan följer tempot: täthet och klocka är rush 4:s, inte rush 1:s.
+  const d=started(),e=rushed(RUSHES[7]);assert.ok(e.g.tempo.deadline<d.g.tempo.deadline+6,'klockorna är rimliga');
+  const gap=c=>{const l=c.rush.list;return Math.hypot(l[1].x-l[0].x,l[1].z-l[0].z);};assert.ok(gap(e)>=gap(d)-.1,'paketen ligger glesare vid högre tempo: '+gap(e).toFixed(1)+' mot '+gap(d).toFixed(1));
+  // Maraton (utan rush) stiger fortfarande var 15:e sekund.
+  const m=started();play(m,TEMPO.levelSeconds+1);assert.equal(ofType(m,'rush-level').length,1);assert.equal(m.rush.snapshot().n,0);assert.equal(m.rush.snapshot().goal,null);
+});
+
+test('rush 1 (hämta 13 paket): målet nås, tre stjärnor utan tappade hjärtan, sparas och låser upp nästa rush',()=>{
+  const def=RUSHES[0],c=rushed(def);
+  until(c,()=>c.rush.state==='over',150);
+  assert.equal(c.rush.state,'over');const over=ofType(c,'rush-over');assert.equal(over.length,1,'ett slut');
+  const r=over[0].result,k=r.rush;
+  assert.equal(k.cleared,true);assert.equal(k.stars,3,'inga hjärtan tappades');assert.equal(k.hearts,3);assert.equal(k.n,1);assert.equal(k.next,2);assert.equal(k.nextHearts,3);assert.equal(k.first,true);assert.equal(k.unlockedNext,true);assert.equal(k.done,false);
+  assert.ok(r.collected>=def.goal.target&&r.collected<=def.goal.target+14,'plockade '+r.collected);assert.ok(r.points>0&&r.seconds<150);assert.equal(r.name,'JULMYS');assert.equal(k.bestBefore,null);
+  assert.equal(c.save.state.rush.cleared,1);assert.equal(c.save.state.rush.stars[1],3);assert.equal(c.save.state.rush.best[1].points,r.points);assert.equal(c.save.state.rush.best[1].hearts,3);
+  assert.equal(c.save.state.records.julrush,undefined,'Maratonrekordet är orört');assert.equal(c.save.state.totals.runs,1);assert.equal(r.stamp,false,'stämpeln delas ut först vid rush 5');
+  assert.equal(c.g.tempo.running,false);assert.equal(c.rush.list.length,0);assert.equal(c.rush.side.length,0);
+  const n=c.events.length;for(let i=0;i<60;i++)frame(c,1/60);assert.equal(c.events.length,n,'efter slutet händer inget mer');
+  // Andra gången: bättre eller sämre poäng ger rekord bara om det är bättre, stjärnorna är de bästa hittills.
+  assert.equal(c.save.recordRush(1,{points:r.points+100,seconds:30,packages:20,hearts:2,cleared:true}).record,true);assert.equal(c.save.state.rush.stars[1],3,'stjärnorna går aldrig ned');
+  assert.equal(c.save.recordRush(1,{points:5,seconds:30,packages:20,hearts:1,cleared:true}).record,false);assert.equal(c.save.state.rush.best[1].points,r.points+100);
+});
+
+test('rush 2 (nå poängen): poäng från banan och från sidopaket räknas, paket gör det inte',()=>{
+  const def=RUSHES[1],c=rushed(def);sleepFreeze(c);
+  assert.equal(def.goal.kind,'points');c.g.tempo.score=def.goal.target-5;
+  const k=c.rush.list.find(x=>x.kind==='regular');c.pos={x:k.x,z:k.z};frame(c,.05);
+  const over=ofType(c,'rush-over');assert.equal(over.length,1,'ett plock över målet vinner');assert.equal(over[0].result.rush.cleared,true);assert.ok(over[0].result.points>=def.goal.target);
+  // Ett sidopaket på målpoängen vinner också, men ett sidopaket mot ett paketmål ger inget paket.
+  const d=rushed(RUSHES[0]);sleepFreeze(d);until(d,()=>d.rush.side.some(x=>!x.rain),60);
+  const sp=d.rush.side.find(x=>!x.rain),picked=d.g.tempo.picked;d.rush.take(sp,d.pos);assert.equal(d.g.tempo.picked,picked);assert.equal(d.rush.state,'running','ett sidopaket klarar inte en paketrush');
+  const e=rushed(def);sleepFreeze(e);e.g.tempo.score=def.goal.target-1;until(e,()=>e.rush.side.some(x=>!x.rain),60);
+  if(e.rush.side.some(x=>!x.rain)){e.g.tempo.score=def.goal.target-1;const sp2=e.rush.side.find(x=>!x.rain);e.rush.take(sp2,e.pos);assert.equal(e.rush.state,'over','sidopaketets poäng nådde målet');}
+});
+
+test('att förlora: tre tappade hjärtan ger ingen stjärna, ingen sparning av nivån och ingen upplåsning',()=>{
+  const c=rushed(RUSHES[2]);
+  for(let i=0;i<3;i++){const k=c.rush.list.find(x=>!c.g.found.has(x.id));c.pos={x:k.x,z:k.z};frame(c,.3);}
+  play(c,200,null);
+  assert.equal(c.rush.state,'over');const r=ofType(c,'rush-over')[0].result,k=r.rush;
+  assert.equal(k.cleared,false);assert.equal(k.stars,0);assert.equal(k.hearts,0);assert.equal(k.next,0);assert.equal(k.unlockedNext,false);assert.equal(k.streak,0);
+  assert.equal(c.save.state.rush.cleared,0);assert.deepEqual(c.save.state.rush.best,{});assert.deepEqual(c.save.state.rush.stars,{});assert.equal(c.save.state.rush.bestStreak,0);
+  assert.equal(c.save.state.totals.runs,1,'körningen räknas i summorna');assert.equal(c.save.state.records.julrush,undefined);assert.equal(r.stamp,false);
+  // Att ge upp sparas inte heller som klarad.
+  const d=rushed(RUSHES[0]);for(let i=0;i<2;i++){const k2=d.rush.list.find(x=>!d.g.found.has(x.id));d.pos={x:k2.x,z:k2.z};frame(d,.3);}
+  const q=d.rush.quit();assert.equal(q.quit,true);assert.equal(q.rush.cleared,false);assert.equal(d.save.state.rush.cleared,0);
+});
+
+test('stjärnor = hjärtan kvar, och en serie tar med sig hjärtan och räknar rusher i rad',()=>{
+  for(const hearts of [3,2,1]){
+    const c=rushed(RUSHES[0],{hearts});sleepFreeze(c);c.g.tempo.picked=RUSHES[0].goal.target-1;
+    const k=c.rush.list.find(x=>x.kind==='regular');c.pos={x:k.x,z:k.z};frame(c,.05);
+    const r=ofType(c,'rush-over')[0].result.rush;assert.equal(r.stars,hearts);assert.equal(r.hearts,hearts);assert.equal(r.nextHearts,Math.min(3,hearts+1));assert.equal(c.save.state.rush.stars[1],hearts);
+  }
+  // En serie: rush 1 → 2 → 3 med hjärtan som följer med, och längsta serien sparas.
+  const save=new XmasSave(storage());let hearts=3,streak=0,left=3;
+  for(const n of [1,2,3]){
+    const g=new CityJourney(nav,mall,portals,storage());g.rush.start('clean');g.drainEvents();g.items.length=0;g.treasures.length=0;g.secrets.length=0;g.itemById.clear();
+    const rush=new XmasRush({journey:g,save});g.xmas={step:(dt,p,sw,sp)=>rush.step(dt,p,sw,sp),objective:p=>rush.objective(p)};
+    const c={g,rush,save,pos:{...START},fwd:{x:0,z:-1},events:[],base:[]};
+    rush.start({def:RUSHES[n-1],hearts,streak});frame(c,.1);assert.equal(g.tempo.lives,hearts);rush.timers.pause=9999;
+    const def=RUSHES[n-1];if(def.goal.kind==='packages')g.tempo.picked=def.goal.target-1;else g.tempo.score=def.goal.target-1;
+    g.tempo.lives=Math.max(1,left-(n===2?1:0)); // i rush 2 tappar man ett hjärta
+    const k=rush.list.find(x=>x.kind==='regular');c.pos={x:k.x,z:k.z};frame(c,.05);
+    const r=ofType(c,'rush-over')[0].result.rush;assert.equal(r.cleared,true);assert.equal(r.streak,streak+1);
+    left=r.hearts;hearts=r.nextHearts;streak=r.streak;
+  }
+  assert.equal(save.state.rush.cleared,3);assert.equal(save.state.rush.bestStreak,3);assert.deepEqual([hearts,streak],[3,3],'hjärtat som tappades i rush 2 kom tillbaka');
+});
+
+test('rush 5 ger julstämpeln och rush 12 en egen: Tomtegalet',()=>{
+  const win=n=>{const c=rushed(RUSHES[n-1]);sleepFreeze(c);const d=RUSHES[n-1];if(d.goal.kind==='packages')c.g.tempo.picked=d.goal.target-1;else c.g.tempo.score=d.goal.target-1;const k=c.rush.list.find(x=>x.kind==='regular');c.pos={x:k.x,z:k.z};frame(c,.05);return {c,r:ofType(c,'rush-over')[0].result};};
+  const a=win(4);assert.equal(a.r.stamp,false);assert.equal(a.c.save.hasStamp('julrush'),false,'inte före rush 5');
+  const b=win(5);assert.equal(b.r.stamp,true);assert.equal(b.r.stampId,'julrush');assert.equal(b.c.save.hasStamp('julrush'),true);assert.equal(b.c.save.hasStamp('julrush-12'),false);
+  const z=win(12);assert.equal(z.r.stamp,true);assert.equal(z.r.stampId,'julrush-12');assert.equal(z.c.save.hasStamp('julrush'),true,'rush 12 ger också rush 5-stämpeln första gången');assert.equal(z.c.save.hasStamp('julrush-12'),true);
+  assert.equal(z.r.rush.done,true);assert.equal(z.r.rush.next,0);assert.ok(STAMPS.some(s=>s.id==='julrush-12'&&s.label==='TOMTEGALET'));
+  // Samma stämpel delas inte ut två gånger.
+  const again=win(5);assert.equal(again.r.stamp,true,'ny spelare, ny sparfil');assert.equal(again.c.save.stampCount(),1);
+});
+
+test('sparningen av nivåerna: gamla filer saknar dem, orimliga värden begränsas och en klarad rush aldrig är låst',()=>{
+  const old=sanitizeSave({v:1,records:{}});assert.deepEqual(old.rush,{cleared:0,stars:{},best:{},bestStreak:0});assert.equal(old.name,'');assert.deepEqual(old.friends,[]);
+  const bad=sanitizeSave({v:1,rush:{cleared:99,stars:{1:7,2:-3,3:2,99:3},best:{1:{points:1e12,seconds:-1,packages:5,hearts:9},4:{points:0},5:{points:700,seconds:40,packages:12,hearts:2}},bestStreak:500}});
+  assert.equal(bad.rush.cleared,12);assert.deepEqual(bad.rush.stars,{1:3,3:2});assert.equal(bad.rush.best[1].points,9999999);assert.equal(bad.rush.best[1].hearts,3);assert.equal(bad.rush.best[4],undefined);assert.deepEqual(bad.rush.best[5],{points:700,seconds:40,packages:12,hearts:2});assert.equal(bad.rush.bestStreak,99);
+  const low=sanitizeSave({v:1,rush:{cleared:0,best:{6:{points:100,seconds:10,packages:5,hearts:1}}}});assert.equal(low.rush.cleared,6,'har man ett resultat i rush 6 är rush 6 klarad');
+  const m=new Map(),store={getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,String(v))};
+  const a=new XmasSave(store);assert.deepEqual(a.recordRush(1,{points:500,hearts:2,cleared:false}),{record:false,first:false,unlocked:false},'bara klarade rusher sparas');
+  assert.deepEqual(a.recordRush(1,{points:500,seconds:40,packages:13,hearts:2,cleared:true}),{record:false,first:true,unlocked:true});
+  assert.deepEqual(a.recordRush(1,{points:700,seconds:35,packages:13,hearts:3,cleared:true}),{record:true,first:false,unlocked:false});
+  assert.equal(a.recordRush(0,{points:5,cleared:true}).first,false);assert.equal(a.recordRush(13,{points:5,cleared:true}).first,false);
+  const b=new XmasSave(store);assert.equal(b.rush.cleared,1);assert.equal(b.rush.stars[1],3);assert.equal(b.rush.best[1].points,700);
+  assert.deepEqual(b.profile(5),{name:'',cleared:1,stars:3,bests:{1:700},total:700,at:5});
+  assert.equal(b.noteStreak(2),true);assert.equal(b.noteStreak(1),false);assert.equal(new XmasSave(store).rush.bestStreak,2);
+  assert.equal(RUSH_COUNT,12);assert.ok(goalProgress(RUSHES[0],{picked:13}).done);
 });

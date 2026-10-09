@@ -35,6 +35,48 @@
 .xmas-pause button{min-height:48px;margin-top:0!important}
 @keyframes xmasStampIn{0%{opacity:0;transform:rotate(-5deg) scale(1.9)}100%{opacity:1;transform:rotate(-5deg) scale(1)}}
 
+/* ── JulRushens nivåer, topplistan och utmaningen ──────────────────────────────────────────────────────────────────── */
+#round-xmas-rush,#round-xmas-board,#round-xmas-challenge{max-height:calc(100dvh - 36px);overflow-y:auto;touch-action:pan-y}
+#round-xmas-rush h2,#round-xmas-board h2{font-size:clamp(30px,9vw,42px)}
+#round-xmas-rush .round-lead,#round-xmas-challenge .round-lead{font-size:15px;line-height:1.4}
+.xmas-rushes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0 8px}
+.xr-tile{position:relative;display:grid;justify-items:center;align-content:center;gap:2px;min-height:60px;padding:6px 4px 5px;border-radius:8px;border:2px solid #85aa8566;background:#0c241f;color:var(--paper);font-family:system-ui,sans-serif;cursor:pointer}
+.xr-tile b{font:1000 22px/1 system-ui;color:var(--xmas-gold)}
+.xr-tile span{font:800 9.5px/1.15 system-ui;letter-spacing:.06em;color:#cfe3d5;text-align:center;overflow-wrap:anywhere}
+.xr-tile i{font:900 12px/1 system-ui;font-style:normal;letter-spacing:2px;color:#ffd36b}
+.xr-tile[data-state="done"]{border-color:#7be495aa}
+.xr-tile[data-state="locked"]{opacity:.42;border-style:dashed;cursor:default}
+.xr-tile[data-state="locked"] b{color:#9fc0a8}
+.xr-tile[aria-pressed="true"]{border-color:var(--xmas-gold);background:#14382f;box-shadow:0 0 0 2px #ffd36b66}
+.xr-tile:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.xmas-rush-info{display:grid;gap:3px;margin:4px 0 10px;padding:10px 12px;border-radius:8px;background:#0c241f;border:1px solid #85aa8544;text-align:left}
+.xmas-rush-info b{font:1000 17px/1.15 system-ui;color:var(--paper);letter-spacing:.02em}
+.xmas-rush-info span{font:800 13px/1.25 system-ui;color:var(--xmas-gold);letter-spacing:.04em}
+.xmas-rush-info small{font:700 11px/1.3 system-ui;color:#9fc0a8;letter-spacing:.05em}
+.xmas-sub{margin:18px 0 2px;font:900 13px/1.2 system-ui;letter-spacing:.16em;color:var(--xmas-gold);text-align:left}
+.xmas-field{display:grid;gap:5px;margin:10px 0;text-align:left}
+.xmas-field span{font:800 10px/1 system-ui;letter-spacing:.14em;color:#9fc0a8}
+.xmas-field input,.xmas-field select,.xmas-link{width:100%;min-height:48px;padding:0 12px;border-radius:8px;border:2px solid #85aa8588;background:#0c241f;color:var(--paper);font:800 16px/1.2 system-ui,sans-serif;box-sizing:border-box}
+.xmas-field input:focus,.xmas-field select:focus,.xmas-link:focus{outline:3px solid var(--xmas-gold);outline-offset:1px}
+.xmas-link{min-height:44px;margin:4px 0 8px;font:600 12px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfe3d5;text-overflow:ellipsis}
+.xmas-board{list-style:none;margin:10px 0 6px;padding:0;display:grid;gap:5px}
+.xmas-board li{display:grid;grid-template-columns:26px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:9px 10px;border-radius:7px;background:#0c241f;border:1px solid #85aa8544;font:800 14px/1.2 system-ui,sans-serif;color:var(--paper);text-align:left}
+.xmas-board li.you{border-color:var(--xmas-gold);background:#14382f}
+.xmas-board li.empty{display:block;color:#9fc0a8;font-weight:700;text-align:center}
+.xmas-board .rk{color:#9fc0a8;font-weight:900;text-align:center}
+/* Å, Ä och Ö når över radens överkant. Elementen som klipper (overflow:hidden) här och i .xh-goal span och .xg-step b får tre pixlars luft upptill, uppvägd av negativ marginal så att layouten är densamma */
+.xmas-board .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-top:3px;margin-top:-3px}
+.xmas-board .pt{color:var(--xmas-gold);font-weight:900}
+.xmas-board .st{color:#ffd36b;font-size:11px;letter-spacing:1px}
+#round-xmas-challenge .xr-cell b{font-size:20px}
+.xh-goal{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;align-items:baseline}
+.xh-goal[hidden]{display:none}
+.xh-goal span{font:800 11px/1.15 system-ui;letter-spacing:.08em;color:#b3c7b7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:3px;margin-top:-3px}
+.xh-goal b{font:900 13px/1 system-ui;color:var(--paper);white-space:nowrap}
+.xh-goal i{grid-column:1/-1;display:block;height:5px;border-radius:4px;background:#ffffff22;overflow:hidden}
+.xh-goal u{display:block;height:100%;width:0;text-decoration:none;background:linear-gradient(90deg,#4cc784,#ffd36b);transition:width .2s}
+.xh-goal.done b{color:#9bf0a7}
+
 /* ── HUD under spelets gång ───────────────────────────────────────────────────────────────────────────────────── */
 #xmasHud{position:absolute;z-index:6;top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));width:min(290px,calc(100vw - 132px));display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center;padding:7px 10px 8px;border-radius:10px;background:#0f2a24e8;border:1px solid #abc7ad55;border-bottom:3px solid var(--xmas-red);color:var(--paper);pointer-events:none;font-family:system-ui,sans-serif}
 #xmasHud[hidden]{display:none}
@@ -113,7 +155,7 @@ body.xmas-on #mapStoryHint,body.xmas-on .map-story-buttons{display:none!importan
 .xg-step{display:flex;align-items:center;gap:8px;min-width:0;padding:5px 10px 5px 6px;border-radius:9px;background:#0f2a24c4;border:1px solid #abc7ad33;color:#b9cfc0}
 .xg-step[hidden]{display:none}
 .xg-step i{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#ffffff1f;color:#cfe1d4;font:900 11px/1 system-ui;font-style:normal}
-.xg-step b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 12px/1.15 system-ui;letter-spacing:.05em}
+.xg-step b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 12px/1.15 system-ui;letter-spacing:.05em;padding-top:3px;margin-top:-3px}
 .xg-step[data-state="now"],.xg-step[data-state="wait"]{background:#14382ff0;border-color:var(--xmas-gold);color:#fff}
 .xg-step[data-state="now"] i,.xg-step[data-state="wait"] i{background:var(--xmas-gold);color:#3b2a00}
 .xg-step[data-state="now"] b{font-size:13px}
@@ -160,6 +202,13 @@ body.xmas-cozy #solarWeapon,body.xmas-cozy #journeyPickupToast{display:none!impo
 body.xmas-on.round-playing #roundToast{bottom:30%}
 body.xmas-zombies #xmasHud{width:min(250px,calc(100vw - 168px))}
 body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
+/* Låga skärmar (telefon i Safari med adressfältet synligt är ca 715 px hög, liggande telefon ca 400): rushmenyn visar de tolv rusherna i två rader om sex, med bara siffra och stjärnor (namnet står i rutan under), så att spelaknappen syns utan att man bläddrar */
+@media(max-height:760px){
+ .xmas-rushes{grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin:8px 0 6px}
+ .xr-tile{min-height:54px;padding:4px 2px}
+ .xr-tile span{display:none}
+ #round-xmas-rush .round-lead{font-size:14px;line-height:1.3}
+}
 @media(max-height:500px){
  #xmasHud{width:min(236px,36vw)}
  .xg-mission{top:max(80px,calc(env(safe-area-inset-top) + 74px));width:min(236px,36vw)}
@@ -169,6 +218,9 @@ body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
  #xmasGoal{top:max(16px,env(safe-area-inset-top));left:50%;max-width:40vw;font-size:14px;padding:8px 12px}
  #xmasPill{bottom:24%}
  .xmas-stamp{width:96px;height:96px}
+ /* Liggande telefon: ingressen i rushmenyn utgår (så att målet och spelaknappen får plats) och huvudknappen följer med i kanten när kortet ändå är högre än skärmen */
+ #round-xmas-rush .round-lead{display:none}
+ #xmasResultContinue,#xmasRushPlay,#xmasChallengeGo{position:sticky;bottom:6px;z-index:3;box-shadow:0 4px 0 var(--xmas-red-dark),0 0 0 7px var(--ink),0 -12px 14px 6px var(--ink)}
 }
 @media(pointer:coarse) and (max-width:520px) and (min-height:501px){
  #xmasGoal{top:max(158px,calc(env(safe-area-inset-top) + 150px));font-size:16px}

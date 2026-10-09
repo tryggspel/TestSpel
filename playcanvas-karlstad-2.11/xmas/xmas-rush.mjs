@@ -5,14 +5,17 @@
 //  - klockan (TempoRun): nytt tempo var 15:e sekund (fart och poäng stiger), tre liv, och en tid till nästa paket som blir kortare för varje nivå
 //  - pilen och fångstfältet: tempoReach(nivå) och catchReach(fart), samma fria sikt som termosar i 2.20.0
 // Det som är jul: paketen, de guldiga paketen som bär en julgåva (i stället för grundspelets förmågor), julkedjan (COMBO) och egna nivånamn.
+// Två sätt att spela: en av tolv rusher (fast tempo, ett mål och tre hjärtan; start({def}) med en post ur xmas-rushes.mjs) eller Maraton (start() utan def): tempot stiger var 15:e
+// sekund tills man är ute, precis som TempoRush. Nåd målet i en rush vinner man (stjärnor = hjärtan kvar) och nästa rush låses upp.
 // Gåvorna: elva sorter (renssläde, magnet, tomtespöke, stjärna, klocka, paus, guldklapp, tomtebloss, sköld, kryddbomb, paketregn). Var tredje till var fjärde paket på banan
 // bär en gåva, och vid sidan av banan ligger valfria sidopaket (alltid med gåva) som kräver en avstickare: de räknas inte mot målet och kostar ingen tid om man hoppar över dem.
 // Ingenting här ändrar grundspelets regler: allt sker via journey-objektets egna funktioner, och den här klassen skriver aldrig i journey.events,
 // så grundspelets tempo-hanterare (som talar om termosar) körs aldrig i julbygget.
-import {TEMPO,tempoPoints} from '../tempo-run.mjs?v=2.21.1-xmas.2';
-import {catchReach,tempoReach,TEMPO_COURSE} from '../journey-rules.mjs?v=2.21.1-xmas.2';
-import {POWER,powerFor} from '../powerups.mjs?v=2.21.1-xmas.2';
-import {PACKAGE_POINTS,COMBO,comboMult} from './xmas-config.mjs?v=2.21.1-xmas.2';
+import {TEMPO,tempoPoints} from '../tempo-run.mjs?v=2.21.1-xmas.3';
+import {catchReach,tempoReach,TEMPO_COURSE} from '../journey-rules.mjs?v=2.21.1-xmas.3';
+import {POWER,powerFor} from '../powerups.mjs?v=2.21.1-xmas.3';
+import {PACKAGE_POINTS,COMBO,comboMult} from './xmas-config.mjs?v=2.21.1-xmas.3';
+import {RUSH_COUNT,goalProgress,starsFor,seriesHearts} from './xmas-rushes.mjs?v=2.21.1-xmas.3';
 
 export const RUSH=Object.freeze({
   id:'julrush',
@@ -69,6 +72,7 @@ export class XmasRush{
     this.pk=new Map();this.list=[];this.reset();
   }
   reset(){
+    this.def=null;this.startHearts=TEMPO.lives;this.streak=0;
     this.timers={star:0,pause:0,golden:0,magnet:0,ghost:0};this.shield=0;this.pendingClock=0;
     this.chain=0;this.bestChain=0;this.lastPickAt=-1e9;this.time=0;this.golds=0;this.gifts=0;this.result=null;
     this.pk.clear();this.list.length=0;
@@ -84,8 +88,10 @@ export class XmasRush{
 
   // ── Start och slut ────────────────────────────────────────────────────────────────────────────────────────────────
   // Själva starten sker i första steget (begin), så att banan läggs ut från spelarens verkliga plats och riktning och inte från en gammal.
-  start(){
+  // def: en rush ur RUSHES (fast tempo, mål) eller null för Maraton. hearts: hjärtan att börja med (en serie tar med sig dem). streak: rusher klarade i rad före den här.
+  start({def=null,hearts=TEMPO.lives,streak=0}={}){
     this.cleanup();this.reset();this.state='starting';this.events.length=0;
+    this.def=def||null;this.startHearts=Math.max(1,Math.min(TEMPO.lives,Math.floor(Number(hearts))||TEMPO.lives));this.streak=Math.max(0,Math.floor(Number(streak))||0);
     this.j.tempo.reset();
   }
   begin(){
@@ -93,8 +99,11 @@ export class XmasRush{
     try{j.fun?.power?.reset?.();}catch{}
     j.course=null;j.lastSupply=-99;j.lastAnchor=-99;
     j.tempo.start(); // nivå 1, tre liv. Händelserna den ger används inte: grundspelets tempohanterare ska inte köras.
+    const t=j.tempo,def=this.def;
+    if(def){t.level=def.tempo;t.levelClock=0;} // en rush har sitt eget tempo från första sekunden och behåller det
+    t.lives=this.startHearts;
     this.state='running';
-    this.emit({type:'rush-start',level:1,lives:j.tempo.lives,name:rushName(1)});
+    this.emit({type:'rush-start',level:t.level,lives:t.lives,name:def?def.name:rushName(1),n:def?.n||0,goal:def?{...def.goal}:null,streak:this.streak});
   }
   // Tar bort allt paketbandet och nollställer grundspelets tempo och förmågor, så att inget ligger kvar när man går vidare till ett annat läge.
   cleanup(){
@@ -113,16 +122,30 @@ export class XmasRush{
     const over=this.j.tempo.quit();
     return this.finish(over,{quit:true});
   }
-  finish(over,{quit=false}={}){
-    const t=this.j.tempo,picked=t.picked,level=t.level,score=t.score,seconds=Math.round(t.elapsed);
+  finish(over,{quit=false,win=false}={}){
+    const t=this.j.tempo,picked=t.picked,level=t.level,score=t.score,seconds=Math.round(t.elapsed),hearts=Math.max(0,t.lives),def=this.def;
     this.state='over';
     const save=picked>=RUSH.minPicksToSave?this.save:null;
-    const record=save?save.record(RUSH.id,{points:score,seconds,packages:picked,bonus:this.golds,level}):false;
-    const stamp=save&&level>=RUSH.stampLevel?save.stamp(RUSH.id):false;
+    let record=false,stamp=false,stampId=RUSH.id,rush=null;
+    if(def){
+      // En av tolv rusher: bara klarade rusher sparas (bästa poäng och stjärnor) och låser upp nästa. Streak = rusher klarade i rad (en serie).
+      const prevBest=this.save?.state?.rush?.best?.[def.n],streak=win?this.streak+1:0,prog=win&&save?save.recordRush(def.n,{points:score,seconds,packages:picked,hearts,cleared:true}):null;
+      record=!!prog?.record;
+      if(win&&save){
+        if(def.n>=RUSH.stampLevel&&save.stamp(RUSH.id)){stamp=true;stampId=RUSH.id;}
+        if(def.n===RUSH_COUNT&&save.stamp('julrush-12')){stamp=true;stampId='julrush-12';}
+        save.noteStreak(streak);
+      }
+      rush={n:def.n,name:def.name,tempo:def.tempo,goal:{...def.goal},cleared:!!win,stars:win?starsFor(hearts):0,hearts,streak,first:!!prog?.first,unlockedNext:!!prog?.unlocked,
+        next:win&&def.n<RUSH_COUNT?def.n+1:0,nextHearts:win?seriesHearts(hearts):0,done:win&&def.n===RUSH_COUNT,bestBefore:prevBest?{...prevBest}:null};
+    }else{
+      record=save?save.record(RUSH.id,{points:score,seconds,packages:picked,bonus:this.golds,level}):false;
+      stamp=save&&level>=RUSH.stampLevel?save.stamp(RUSH.id):false;
+    }
     save?.addTotals({packages:picked,bonus:this.golds,points:Math.round(score*RUSH.titleShare)});
-    const best=this.save?.state?.records?.[RUSH.id];
-    this.result={kind:'rush',id:RUSH.id,title:'JULRUSHEN',points:score,level,name:rushName(level),collected:picked,gold:this.golds,gifts:this.gifts,bestChain:this.bestChain,seconds,misses:t.misses,
-      record:!!record,stamp:!!stamp,stampId:RUSH.id,quit,best:best?{...best}:null};
+    const best=def?this.save?.state?.rush?.best?.[def.n]:this.save?.state?.records?.[RUSH.id];
+    this.result={kind:'rush',id:RUSH.id,title:'JULRUSHEN',points:score,level,name:def?def.name:rushName(level),collected:picked,gold:this.golds,gifts:this.gifts,bestChain:this.bestChain,seconds,misses:t.misses,
+      record:!!record,stamp:!!stamp,stampId,quit,best:best?{...best}:null,rush,sideTaken:this.sideTaken};
     this.cleanup();
     this.emit({type:'rush-over',result:this.result});
     return this.result;
@@ -164,6 +187,7 @@ export class XmasRush{
       this.shield--;t.left=dt+RUSH.shieldSeconds;t.deadline+=RUSH.shieldSeconds;
       this.emit({type:'rush-shield',shield:this.shield,seconds:RUSH.shieldSeconds});
     }
+    if(this.def)t.levelClock=0; // fast tempo: inga nivåhöjningar mitt i en rush
     for(const e of t.tick(dt,{freeze:frozen})){
       if(e.type==='tempo-level')this.emit({type:'rush-level',level:e.level,name:rushName(e.level),speed:e.speed,mult:e.mult});
       else if(e.type==='tempo-miss'){this.chain=0;this.emit({type:'rush-miss',lives:e.lives});}
@@ -226,7 +250,14 @@ export class XmasRush{
     const e={type:'rush-pick',id:pk.id,x:pk.x,z:pk.z,kind:pk.kind,gold,side:!!pk.side,rain:!!pk.rain,points:t.score-before,chain:this.chain,mult:cm,pm,levelMult:pick.mult,flow:pick.flow,praise:tier?.praise||null,tierBonus:tier?.bonus||0,score:t.score,picked:t.picked,blast,by};
     this.emit(e);
     if(pk.gift)this.grant(pk.gift,p,{blast});
+    if(this.def&&this.state==='running'&&goalProgress(this.def,{picked:t.picked,score:t.score}).done)this.win();
     return e;
+  }
+  // Målet nått: rushen är klarad. Tempot stängs av och resultatet byggs (stjärnor = hjärtan kvar).
+  win(){
+    if(this.state!=='running')return null;
+    const over=this.j.tempo.quit();
+    return this.finish(over,{win:true});
   }
 
   // ── Julgåvor ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -276,11 +307,12 @@ export class XmasRush{
   rain(p){
     const j=this.j,n=RUSH.rainCount,serial=++this.sideSerial,made=[];
     for(let i=0;i<n;i++){
-      const h=hash32('rain|'+serial+'|'+i),a=(i/n+((h&255)/255)*.08)*Math.PI*2;
+      const h=hash32('rain|'+serial+'|'+i),a0=(i/n+((h&255)/255)*.08)*Math.PI*2;
       let d=RUSH.rainMin+((h>>>8)%1000)/1000*(RUSH.rainMax-RUSH.rainMin);
-      for(let tries=0;tries<3;tries++,d*=.7){
-        const x=+(p.x+Math.sin(a)*d).toFixed(1),z=+(p.z+Math.cos(a)*d).toFixed(1);
-        if(!j.freeSpot(x,z)||!j.clearLine(p.x,p.z,x,z))continue;
+      // trånga gator: prova andra vinklar (±0,4 rad) och kortare avstånd tills en fri plats hittas, men inte tätt intill ett annat regnpaket
+      for(let tries=0;tries<8;tries++,d=Math.max(RUSH.rainMin*.6,d*.82)){
+        const a=a0+[0,.4,-.4,.8,-.8][tries%5],x=+(p.x+Math.sin(a)*d).toFixed(1),z=+(p.z+Math.cos(a)*d).toFixed(1);
+        if(!j.freeSpot(x,z)||!j.clearLine(p.x,p.z,x,z)||made.some(k=>Math.hypot(k.x-x,k.z-z)<2.2))continue;
         const id='rn:'+serial+':'+i;made.push({id,x,z,vx:x,vz:z,y:0,kind:'regular',gift:null,cluster:900+serial,side:true,rain:true,born:this.time,collected:false,pull:0,pearl:{id,x,z,y:0}});break;
       }
     }
@@ -391,8 +423,8 @@ export class XmasRush{
     return out;
   }
   snapshot(){
-    const t=this.j.tempo;
-    return {state:this.state,running:this.running,level:t.level,name:rushName(t.level),lives:t.lives,maxLives:TEMPO.lives,score:t.score,picked:t.picked,gold:this.golds,gifts:this.gifts,
+    const t=this.j.tempo,def=this.def;
+    return {state:this.state,running:this.running,level:t.level,name:def?def.name:rushName(t.level),n:def?.n||0,goal:def?goalProgress(def,{picked:t.picked,score:t.score}):null,streak:this.streak,lives:t.lives,maxLives:TEMPO.lives,score:t.score,picked:t.picked,gold:this.golds,gifts:this.gifts,
       chain:this.chain,bestChain:this.bestChain,ratio:t.target&&t.deadline>0?clamp01(t.left/t.deadline):1,left:Math.max(0,t.left),hasTarget:!!t.target,urgent:!!t.target&&t.deadline>0&&t.left/t.deadline<RUSH.urgent,
       levelLeft:Math.max(0,TEMPO.levelSeconds-t.levelClock),speed:t.speedMul(),mult:t.pointMul(),shield:this.shield,seconds:t.elapsed,packages:this.list.length,
       side:this.side.reduce((n,k)=>n+(k.rain?0:1),0),rain:this.side.reduce((n,k)=>n+(k.rain?1:0),0),sideTaken:this.sideTaken,magnet:this.timers.magnet>0,ghost:this.spirit.active,result:this.result};

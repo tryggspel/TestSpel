@@ -1,10 +1,15 @@
 // Julklappsjakten: egen sparning (julstämplar, rekord, summor och inställningar). Egen nyckel, så grundspelets sparfiler aldrig berörs.
 // Alltid fail-soft: utan lagring (privat läge, blockerad) spelas spelet ändå, bara utan att något sparas.
-import {SAVE_KEY,STAMPS,WEATHER_ORDER,titleFor} from './xmas-config.mjs?v=2.21.1-xmas.2';
+import {SAVE_KEY,STAMPS,WEATHER_ORDER,titleFor} from './xmas-config.mjs?v=2.21.1-xmas.3';
+import {RUSH_COUNT,starsFor} from './xmas-rushes.mjs?v=2.21.1-xmas.3';
+import {cleanName,cleanFriends,mergeFriend} from './xmas-board.mjs?v=2.21.1-xmas.3';
 
 const STAMP_IDS=new Set(STAMPS.map(s=>s.id));
+const MAXP=9999999;
 const num=(v,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max,Number(v))):fallback;
-export const blankSave=()=>({v:1,stamps:{},records:{},totals:{packages:0,bonus:0,points:0,runs:0},opts:{weather:'full'},intro:{done:false}});
+// rush: framstegen i JulRushens tolv nivåer ({cleared: högsta klarade, stars:{n:1–3}, best:{n:{points,seconds,packages,hearts}}, bestStreak}). name och friends: topplistan (xmas-board.mjs).
+export const blankRush=()=>({cleared:0,stars:{},best:{},bestStreak:0});
+export const blankSave=()=>({v:1,stamps:{},records:{},totals:{packages:0,bonus:0,points:0,runs:0},opts:{weather:'full'},intro:{done:false},rush:blankRush(),name:'',friends:[]});
 
 export function sanitizeSave(raw){
   const out=blankSave();
@@ -18,6 +23,15 @@ export function sanitizeSave(raw){
   out.totals={packages:Math.floor(num(t.packages,9999999)),bonus:Math.floor(num(t.bonus,9999999)),points:Math.floor(num(t.points,99999999)),runs:Math.floor(num(t.runs,9999999))};
   out.opts.weather=WEATHER_ORDER.includes(raw.opts?.weather)?raw.opts.weather:'full';
   out.intro.done=!!raw.intro?.done||!!out.stamps.intro;
+  const r=raw.rush&&typeof raw.rush==='object'?raw.rush:{};
+  out.rush.cleared=Math.floor(num(r.cleared,RUSH_COUNT));out.rush.bestStreak=Math.floor(num(r.bestStreak,99));
+  for(let n=1;n<=RUSH_COUNT;n++){
+    const st=Math.floor(num(r.stars?.[n],3)),b=r.best?.[n];
+    if(st>0)out.rush.stars[n]=st;
+    if(b&&typeof b==='object'&&num(b.points,MAXP)>0)out.rush.best[n]={points:Math.floor(num(b.points,MAXP)),seconds:Math.floor(num(b.seconds,99999)),packages:Math.floor(num(b.packages,9999)),hearts:Math.floor(num(b.hearts,3))};
+  }
+  for(const n of Object.keys(out.rush.best))out.rush.cleared=Math.max(out.rush.cleared,+n);   // en klarad rush kan inte vara låst
+  out.name=cleanName(raw.name);out.friends=cleanFriends(raw.friends);
   return out;
 }
 
@@ -46,6 +60,32 @@ export class XmasSave{
     const t=this.state.totals;t.packages=Math.min(9999999,t.packages+Math.max(0,Math.floor(packages)));t.bonus=Math.min(9999999,t.bonus+Math.max(0,Math.floor(bonus)));
     t.points=Math.min(99999999,t.points+Math.max(0,Math.floor(points)));t.runs=Math.min(9999999,t.runs+1);this.dirty=true;this.save();
   }
+  // JulRushens nivåer. Bara klarade rusher sparas (stjärnor = hjärtan kvar). Returnerar {record, first, unlocked}: nytt rekord i rushen, första gången den klaras och om nästa rush just låstes upp.
+  recordRush(n,{points=0,seconds=0,packages=0,hearts=0,cleared=false}={}){
+    n=Math.floor(Number(n));const R=this.state.rush;
+    if(!cleared||!(n>=1&&n<=RUSH_COUNT))return {record:false,first:false,unlocked:false};
+    const prev=R.best[n],first=!R.stars[n],unlocked=n>=R.cleared+1&&n<RUSH_COUNT;
+    R.stars[n]=Math.max(R.stars[n]||0,starsFor(hearts));
+    const record=!prev||points>prev.points;
+    if(record)R.best[n]={points:Math.floor(num(points,MAXP)),seconds:Math.floor(num(seconds,99999)),packages:Math.floor(num(packages,9999)),hearts:Math.floor(num(hearts,3))};
+    R.cleared=Math.max(R.cleared,n);this.dirty=true;this.save();
+    return {record:!!record&&!!prev,first,unlocked};
+  }
+  noteStreak(len){const R=this.state.rush,v=Math.floor(num(len,99));if(v>R.bestStreak){R.bestStreak=v;this.dirty=true;this.save();return true;}return false;}
+  get rush(){return this.state.rush;}
+  // Summan av bästa poäng i varje klarad rush, och antalet stjärnor: det som visas på topplistan.
+  profile(at=Date.now()){
+    const R=this.state.rush,bests={};let total=0,stars=0;
+    for(const [n,b] of Object.entries(R.best)){bests[n]=b.points;total+=b.points;}
+    for(const v of Object.values(R.stars))stars+=v;
+    return {name:this.state.name,cleared:R.cleared,stars,bests,total,at};
+  }
+  get name(){return this.state.name;}
+  setName(v){const n=cleanName(v);this.state.name=n;this.dirty=true;this.save();return n;}
+  get friends(){return this.state.friends;}
+  // En väns profil (från en utmaningslänk). Returnerar {friend,isNew} eller null om profilen inte var godtagbar.
+  addFriend(profile){const r=mergeFriend(this.state.friends,profile);if(!r.friend)return null;this.state.friends=r.list;this.dirty=true;this.save();return {friend:r.friend,isNew:r.isNew};}
+  removeFriend(id){const n=this.state.friends.length;this.state.friends=this.state.friends.filter(f=>f.id!==id);if(this.state.friends.length!==n){this.dirty=true;this.save();return true;}return false;}
   setWeather(level){if(!WEATHER_ORDER.includes(level))return false;this.state.opts.weather=level;this.dirty=true;this.save();return true;}
   get weather(){return this.state.opts.weather;}
   get introDone(){return !!this.state.intro.done;}

@@ -1,20 +1,22 @@
 // Julklappsjakten: kopplar ihop motorn, vyn, gränssnittet och grundspelets system. Anropas en gång från last-round.js (bara i julbygget).
 // Allt här är fail-soft: om något i julkoden skulle kasta stängs jultilläggen av och grundspelet lever vidare (som platskoden i 2.21).
-import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.2';
-import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.2';
-import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.2';
-import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.2';
-import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.2';
-import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.2';
-import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.2';
-import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.2';
-import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.2';
-import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.2';
-import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.2';
-import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.2';
-import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.2';
-import {nextRound,roundById,buildRound} from './xmas-rounds.mjs?v=2.21.1-xmas.2';
-import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.2';
+import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.3';
+import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.3';
+import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.3';
+import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.3';
+import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.3';
+import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.3';
+import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.3';
+import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.3';
+import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.3';
+import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.3';
+import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.3';
+import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.3';
+import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.3';
+import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.3';
+import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.3';
+import {nextRound,roundById,buildRound} from './xmas-rounds.mjs?v=2.21.1-xmas.3';
+import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.3';
 
 // Julbygget har inga termosar, hemligheter eller skatter: paketen ersätter dem. Anropas direkt efter att resan skapats, innan någon vy ritas.
 export function prepareXmasJourney(journey){
@@ -59,6 +61,13 @@ export function installXmas(ctx){
     }
   }
   let resultTimer=0,resultOpen=false,rushHudAt=0;const powerBuf=[];
+  // Utmaningar: incoming = en länk någon skickat (visas när menyn öppnas), pending = en utmaning man tagit (jämförs när rushen är klarad), lastRush = senaste rushens resultat (för NÄSTA RUSH).
+  let incoming=null,pending=null,lastRush=null,boardFrom='rush',badLink=false;
+  try{
+    const tok=tokenFromSearch(location.search);
+    if(tok){incoming=decodeChallenge(tok);badLink=!incoming;}else badLink=new URLSearchParams(location.search).has('utmaning');
+    if(badLink||incoming){const u=new URL(location.href);u.searchParams.delete('utmaning');history.replaceState(null,'',u.pathname+u.search+u.hash);} // adressen städas så att en omladdning inte visar utmaningen igen
+  }catch{}
   const guideUi=createGuideUi({});
 
   function goBase(){
@@ -100,14 +109,34 @@ export function installXmas(ctx){
       ui.setProgress(hunt.run);view.clear();
     });
   }
-  function startRush(){
+  // n = 0: Maraton (tempot stiger var 15:e sekund). n = 1–12: en rush med fast tempo och ett mål. series: hjärtan och rusher i rad när man går vidare från en klarad rush.
+  function startRush(n=0,series=null){
     guard(()=>{
-      hunt.cancel('rush');enter('rush',rushSpawn());julrush.start();
-      toast('JULRUSHEN','Följ pilen och den gröna strålen till nästa paket. Tempot stiger var 15:e sekund. Tryck T för turbo.',3.6);
-      ui.showGoal('Följ pilen: hinn fram före klockan!',5500);
+      const def=n?rushDef(n):null;
+      if(n&&(!def||!isUnlocked(save.rush,n))){openRush();return;}
+      hunt.cancel('rush');enter('rush',rushSpawn());julrush.start({def,hearts:series?.hearts||3,streak:series?.streak||0});
+      try{host.music?.tempo?.(def?1+.03*(def.tempo-1):1);}catch{}
+      toast(def?'RUSH '+def.n+' · '+def.name:'JULRUSHEN · MARATON',def?goalText(def)+'. Följ pilen och den gröna strålen. Tryck T för turbo.':'Följ pilen och den gröna strålen till nästa paket. Tempot stiger var 15:e sekund. Tryck T för turbo.',3.6);
+      ui.showGoal(def?goalText(def)+'!':'Följ pilen: hinn fram före klockan!',5500);
       ui.setRush(julrush.snapshot(),julrush.powers([]),performance.now());view.clear();
     });
   }
+  function openRush(pick=0){guard(()=>{try{dismissPlaceResult?.();}catch{}ui.renderRush(pick);setPanel('xmas-rush');});}
+  function openBoard(n=0,fromResult=false){guard(()=>{boardFrom=fromResult?'result':'rush';ui.renderBoard(n,{focusName:fromResult&&!save.name});setPanel('xmas-board');});}
+  const rushNext=()=>{if(lastRush&&lastRush.next)startRush(lastRush.next,{hearts:lastRush.nextHearts,streak:lastRush.streak});else openRush();};
+  const rushAgain=()=>{if(lastRush)startRush(lastRush.n,{hearts:3,streak:0});else openRush();};
+  // Inkommande utmaning: en vän sparas först när man väljer det (aldrig bara av att öppna en länk)
+  function challengeGo(){
+    guard(()=>{
+      const ch=incoming;incoming=null;if(!ch){openMenu();return;}
+      const saved=save.addFriend(ch.profile);
+      if(!ch.focus){toast('VÄN SPARAD',ch.profile.name+' finns nu i din topplista.',2.6);openBoard(0);return;}
+      pending={focus:ch.focus,toBeat:ch.toBeat,name:ch.profile.name};void saved;
+      startRush(isUnlocked(save.rush,ch.focus)?ch.focus:nextRush(save.rush));
+    });
+  }
+  function challengeSave(){guard(()=>{const ch=incoming;incoming=null;if(ch){save.addFriend(ch.profile);toast('VÄN SPARAD',ch.profile.name+' finns nu i din topplista.',2.6);}openMenu();});}
+  function challengeSkip(){guard(()=>{incoming=null;openMenu();});}
   function startZombies(){
     guard(()=>{
       enter('zombies',INTRO.spawn);
@@ -190,7 +219,9 @@ export function installXmas(ctx){
       if(julrush.active){julrush.quit();} // att ge upp i pausmenyn sparar körningen som en förlust (om den hade några paket)
       leaveRush();try{host.music?.tempo?.(1);}catch{}
       hunt.cancel('meny');view.clear();ui.showHud(false);guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;journey.pause?.();mode='menu';caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush');
+      if(incoming){ui.renderChallenge(incoming);setPanel('xmas-challenge');return;}
       ui.renderStart(buildDetail(stamp));setPanel('xmas-intro');
+      if(badLink){badLink=false;toast('UTMANINGEN','Länken gick inte att läsa. Be din vän skicka den igen.',3.4);}
     });
   }
   function openContinue(){guard(()=>{ui.renderContinue();setPanel('xmas-continue');});}
@@ -198,7 +229,8 @@ export function installXmas(ctx){
 
   const ui=createXmasUi({save,fx:{
     cozy:()=>{if(save.introDone)openContinue();else startIntro();},
-    intro:()=>startIntro(),round:()=>startRound(),shops:()=>openShops(),free:()=>startFree(),zombies:()=>startZombies(),rush:()=>startRush(),
+    intro:()=>startIntro(),round:()=>startRound(),shops:()=>openShops(),free:()=>startFree(),zombies:()=>startZombies(),
+    openRush:()=>openRush(),rushPlay:n=>startRush(n),marathon:()=>startRush(0),rushNext,rushAgain,openBoard,boardBack:()=>{if(boardFrom==='result')setPanel('xmas-result');else openRush(ui.selectedRush());},challengeGo,challengeSave,challengeSkip,
     openMenu,openContinue,goBase,setWeather
   }});
 
@@ -243,7 +275,10 @@ export function installXmas(ctx){
     'rush-shield':(e,now)=>{sound('capture');ui.showPill('PEPPARKAKSSKÖLDEN RÄDDADE ETT LIV · +'+e.seconds+' S',2400,now,'bonus');},
     'rush-chain-lost':(e,now)=>{ui.showPill('KEDJAN BRÖTS · '+e.chain+' I RAD',1200,now,'lost');},
     'rush-over':(e,now)=>{
-      host.music?.tempo?.(1);sound(e.result.record?'win':'boss');ui.setRush(julrush.snapshot(),[],now);
+      const r=e.result,k=r.rush;lastRush=k||null;
+      // en tagen utmaning: slog du vännen? (en rush som inte klarades räknas inte, och utmaningen ligger kvar tills den är slagen)
+      if(k&&k.cleared&&pending&&pending.focus===k.n){const v=versus({points:r.points,toBeat:pending.toBeat,name:pending.name.toLocaleUpperCase('sv-SE')});if(v){r.versus=v;if(v.beat)pending=null;}}
+      host.music?.tempo?.(1);sound(r.record||(k&&k.cleared)?'win':'boss');ui.setRush(julrush.snapshot(),[],now);
       clearTimeout(resultTimer);
       resultTimer=setTimeout(()=>guard(()=>{journey.pause?.();ui.showResult(e.result);setPanel('xmas-result');resultOpen=true;}),1100);
     },
@@ -258,6 +293,12 @@ export function installXmas(ctx){
 
   // ── Vägledning i paketjakten: pil, kantmarkörer, stjärnspår och uppdragsrad (JulRushen och butiksuppdragen har egna) ───────────────────
   function updateGuide(p,now,dt){
+    // JulRushen: bara julbandet på marken (pilen, stråle och kantmarkörer är grundspelets och JulRushens egna); målet är nästa paket längs banan
+    if(mode==='rush'&&julrush.running&&!placeActive?.()){
+      const t=julrush.target(p),g=guide.update(p,host.camera.forward,t,dt,now,view.lite);
+      if(guideShown&&guideUi.arrowShown)guideUi.show(false);
+      view.setGuide(g.on?g:null);guideShown=true;return;
+    }
     const on=(mode==='cozy'||mode==='zombies')&&!!hunt.run&&hunt.active&&!placeActive?.();
     if(!on){if(guideShown||guide.state.on){guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;}return;}
     const g=guide.update(p,host.camera.forward,hunt.guideTarget(p),dt,now,view.lite);
@@ -299,13 +340,13 @@ export function installXmas(ctx){
   const api={
     hunt,save,view,ui,sprites,handlers,decor,
     get active(){return mode==='rush'?julrush.active:hunt.active;},get cozy(){return mode==='cozy';},get zombieMode(){return mode==='zombies';},get rushMode(){return mode==='rush'&&julrush.active;},julrush,
-    update,hudText,startRound,startZombies,startRush,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
+    update,hudText,startRound,startZombies,startRush,openRush,openBoard,challengeGo,rushNext,rushAgain,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
     step:(dt,p,sweep,speed)=>guard(()=>mode==='rush'?julrush.step(dt,p,sweep,speed):hunt.step(dt,p,sweep,speed)),
-    // Pilarna på marken och "DITT MÅL" i grundspelet ritas inte för julklappsjaktens mål (quiet): stjärnspåret och pilen ersätter dem. Radarn och kartan visar vägen som förut.
-    objective:p=>{if(fault)return null;if(mode==='rush')return julrush.objective(p);const o=hunt.objective(p);return o&&o.kind==='xmas'?{...o,quiet:true}:o;},
+    // Grundspelets små pilar på marken och flaggan "DITT MÅL" ritas inte för julens mål (quiet): julbandet, pilen och strålen ersätter dem (i JulRushen pilen och strålen). Radarn och kartan visar vägen som förut.
+    objective:p=>{if(fault)return null;const o=mode==='rush'?julrush.objective(p):hunt.objective(p);return o&&o.kind==='xmas'?{...o,quiet:true}:o;},
     guide,guideUi,
     gov,
-    snapshot:()=>({mode,fault,gov:{level:gov.level,ema:+gov.ema.toFixed(1),on:gov.on},hunt:hunt.snapshot(),rush:julrush.snapshot(),guide:{on:guide.state.on,id:guide.state.id,label:guide.state.label,distance:guide.state.distance,angle:+guide.state.angle.toFixed(1),hint:guide.state.hint,straight:guide.state.straight,segs:guide.state.segCount,edgeL:guide.state.edgeL,edgeR:guide.state.edgeR,mission:guideUi.missionText},view:view.snapshot(),decor:decor?decor.snapshot():null,build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone}}),
+    snapshot:()=>({mode,fault,gov:{level:gov.level,ema:+gov.ema.toFixed(1),on:gov.on},hunt:hunt.snapshot(),rush:julrush.snapshot(),guide:{on:guide.state.on,id:guide.state.id,label:guide.state.label,distance:guide.state.distance,angle:+guide.state.angle.toFixed(1),hint:guide.state.hint,straight:guide.state.straight,segs:guide.state.segCount,edgeL:guide.state.edgeL,edgeR:guide.state.edgeR,mission:guideUi.missionText},incoming:incoming?{name:incoming.profile.name,focus:incoming.focus,toBeat:incoming.toBeat}:null,pending:pending?{...pending}:null,view:view.snapshot(),decor:decor?decor.snapshot():null,build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone}}),
     onResultClosed:()=>{resultOpen=false;}
   };
   return api;
