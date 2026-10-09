@@ -164,15 +164,15 @@ De tolv rusherna (fart ×/poäng × är tempots; klockan är k × minsta tid + m
 | C nybörjare | 72 % → 40 % | 140°/s | 0,60 s |
 | H, J, K (med slarv) | som G, A och C | som G, A och C | som G, A och C, plus 12 % chans per paket att tappa ungefär en sekund |
 
-Resultat (8–12 försök per typ, varje försök på en egen bana; mätt på koden för 2.21.1-xmas.4 under arbetet, slutlig omkörning med samma antal försök för alla typer följer i verifieringen, avsnitt 8):
+Resultat (12 försök per typ utom P, som är perfekt och kördes 2 gånger; varje försök på en egen bana; `node tools/xmas-flow/difficulty.mjs --skills <typ> --runs 12 --over 1 --max 13 --mseconds 900`, mätt på koden för 2.21.1-xmas.4):
 
 | Typ | Första försöket i varje rush (tre hjärtan) | Serie från Rush 1 (hjärtana följer med) | Maraton: tempo när det tar slut (median) |
 |---|---|---|---|
 | C nybörjare | klarar Rush 1–5, aldrig Rush 6 | 5 rusher i rad | 9 |
 | A vanlig | klarar Rush 1–7 (tappar i snitt ett hjärta i Rush 7), aldrig Rush 8 | 7 | 9 |
 | G duktig | klarar Rush 1–9, aldrig Rush 10 | 9 | 14 |
-| E mycket duktig | klarar Rush 1–12 utan att tappa ett hjärta, aldrig Rush 13 | 12, sedan slut | 28 (kvartilerna 20 och 33) |
-| P perfekt | klarar allt (provat till Rush 40 och 15 minuters Maraton) | alla | slutar aldrig |
+| E mycket duktig | klarar Rush 1–12 (tappar i snitt 0,1 hjärta i Rush 12), aldrig Rush 13 | 12, sedan slut | 32 (kvartilerna 23 och 35) |
+| P perfekt | klarar allt (första försöket till Rush 16, serie till Rush 40, 15 minuters Maraton utan att förlora) | alla | slutar aldrig |
 
 En rush tar för E 13–39 s och för A 16–43 s; hela serien Rush 1–12 tar för E ungefär 5 minuter.
 
@@ -220,7 +220,7 @@ Julgåvorna ersätter grundspelets tolv förmågor (femton sorter; "andel" är c
 | KRYDDBOMBEN | Tar alla paket inom 24 m (högst 14), närmast först | – | 2/33 |
 | PAKETREGNET | Åtta extra paket (färre där det är trångt) på fria platser 5–13 m runt dig. De räknas inte mot målet och försvinner efter 12 s | – | 2/33 |
 
-**Fartgåvorna** (de fem första: släde, glögg, raket, medvind, skridskor) var förut bara en (renssläden, 3 av 24 = 12 %) och är nu 12 av 33 (36 %). De går genom grundspelets egen fartfaktor (`journey.fun.power.speedMul()`, som `last-round.js` och spelarens rörelse läser), så att de verkar på samma sätt som raketen i grundspelet. Fartgåvorna läggs **inte ihop med varandra** (den starkaste av glögg, raket, medvind och skridskor gäller, ett nytt plock av samma sort förlänger tiden) men de multipliceras med renssläden, och allt som ökar farten får **aldrig bli mer än ×4 tillsammans** (`RUSH.speedCap`, utöver turbon och tempots fart). Farten är en fördel som klockan inte väntar på: klockan är räknad på turbon och tempots fart, så en fartgåva ger marginal och flytbonus (+12 × tempo om paketet tas med minst hälften av klockan kvar), men den gör inte rushen lättare att klara än den är för en spelare som redan håller full fart. Hela tillägget sätts på journey-objektets egen instans (`installClock`) och tas bort när körningen slutar.
+**Fartgåvorna** (de fem första: släde, glögg, raket, medvind, skridskor) var förut bara en (renssläden, 3 av 24 = 12 %) och är nu 12 av 33 (36 %). De går genom grundspelets egen fartfaktor (`journey.fun.power.speedMul()`, som `last-round.js` och spelarens rörelse läser), så att de verkar på samma sätt som raketen i grundspelet. Fartgåvorna läggs **inte ihop med varandra** (den starkaste av glögg, raket, medvind och skridskor gäller, ett nytt plock av samma sort förlänger tiden) men de multipliceras med renssläden, och allt som ökar farten får **aldrig bli mer än ×4 tillsammans** (`RUSH.speedCap`, utöver turbon och tempots fart). Farten är en fördel som klockan inte väntar på: klockan är räknad på turbon och tempots fart, så en fartgåva ger marginal och flytbonus (+12 × tempo om paketet tas med minst hälften av klockan kvar), men den gör inte rushen lättare att klara än den är för en spelare som redan håller full fart. Hela tillägget sätts på journey-objektets egen instans (`installClock`) och tas bort när körningen slutar. Mätt i svårighetsprovet är en fartgåva på 40–80 % av tiden för en spelare som tar varje paket längs banan (medelfaktor ×1,2–1,6), eftersom ungefär vart tredje paket bär en gåva och var tredje gåva ökar farten. Provet räknar med dem, men antar att spelaren kan styra i den ökade farten (spelartypens andel av full fart gäller även den); det är inte provat med människor (se avsnitt 10).
 
 Paket som tas av bloss, bomb, magnet eller spöke ger sina gåvor, men ett paket i ett bloss eller en bomb utlöser aldrig ett nytt bloss, en ny bomb eller ett nytt regn (annars kunde det rulla utan slut).
 
@@ -359,6 +359,7 @@ Stäng av den igen genom att sätta `enabled:false`. Se `JULKNAPPEN.md` på den 
 - **Ingen gemensam topplista för alla spelare.** Topplistan visar dig och de vänner som skickat dig en utmaningslänk (högst 30), sparat på enheten. En lista som alla delar kräver att namn och poäng lagras på en server (till exempel Vercel Blob eller en databas, plus en liten serverfunktion), regler för publika namn (barn spelar) och skydd mot fusk. Det är inte byggt och kräver ditt godkännande, eftersom det skapar lagring i molnet och sparar uppgifter om spelare.
 - **Utmaningslänkar går att förfalska.** Ingen server kontrollerar poängen i en länk; kontrollsumman fångar skrivfel och trasiga länkar, inte en avsiktligt handgjord länk. Det är en vänutmaning, inte en tävling med pris.
 - **Vägledningen** (pil, julband, kantmarkörer, uppdragsrad) är bara prövad i headless Chromium med mjukvaruritad grafik på tre skärmstorlekar. Hur väl den syns i solljus, på en riktig telefon och för någon som aldrig spelat är inte provat. Julbandet är högst 18 platta bitar (9 i lätt läge) och pilen och raden är vanliga HTML-element, så kostnaden bör vara liten, men det är inte mätt på någon telefon.
+- **Hög fart är inte provad med människor.** Med turbon, tempo 12 (×1,88) och fartgåvor (högst ×4 tillsammans) kan farten bli upp till 15 gånger gångfarten (ungefär 100 m/s) en kort stund; grundspelets egen högsta fart i TempoRush är ×7,5 (renssläde, turbo och tempo 12). Rörelsen delas i delsteg så att inga väggar hoppas över, men hur svårt det är att *styra* i den farten på en telefon är okänt. Är det för svårt är `RUSH.speedCap` (4) och `RUSH.boost` (glögg ×1,5, raket ×3, medvind ×1,3, skridskor ×1,25) i `xmas-rush.mjs` de siffror att sänka; kör sedan svårighetsprovet igen.
 - **Fartgåvor:** fem gåvor ökar farten (renssläden ×2, turboglöggen ×1,5, pepparkaksraketen ×3, medvinden ×1,3 och skridskorna ×1,25; den starkaste gäller, släden multipliceras på, högst ×4 tillsammans); de fyra nya kom i 2.21.1-xmas.4. Fler kan läggas till i `GIFTS`, `RUSH.boost` och `GIFT_WEIGHT` i `xmas-rush.mjs` (en post per gåva, med vikt och effekt) och en bild i `xmas-art.js`.
 - Butiksuppdragens personal är grundspelets figurer (inte tomteklädda).
 - Förberedda butiker (Kjell & Company, Åhléns, Duvan, Värmlands Museum, Sandgrund) har data men ingen interiör eller något godkänt innehåll.
