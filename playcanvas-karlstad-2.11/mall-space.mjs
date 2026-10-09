@@ -31,16 +31,26 @@ const atrium={minx:-155,maxx:-99,minz:83,maxz:125};
 const voidBox={minx:-142.6,maxx:-113,minz:96,maxz:112};
 const columns=[[-148,88],[-148,120],[-107,88],[-107,120]];
 const tables=[[-127,104],[-116,103],[-119,112]];
+// Butikernas framsida mot atriet är öppen (hela väggen mot atriet saknas), men gångytorna tar slut 0,45 m från varje vägg. Där atriets gångyta och butikens gångyta möttes blev det en
+// spärrad remsa på 10–20 cm (köpcentrets byggnadsruta täcker den): en osynlig vägg tvärs över hela butiksfronten som man fastnade i på väg in och på väg ut om steget råkade sluta i remsan.
+// Tröskeln, där butikens golv och atriet överlappar (hela fronten, utom 0,45 m från sidoväggarna), är därför gångbar.
+function doorwayBox(r){
+  const wallEastWest=Math.abs(Math.sin(r.door.yaw*Math.PI/180))>.5;
+  const ov={minx:Math.max(r.minx,atrium.minx),maxx:Math.min(r.maxx,atrium.maxx),minz:Math.max(r.minz,atrium.minz),maxz:Math.min(r.maxz,atrium.maxz)};
+  return wallEastWest?{minx:ov.minx,maxx:ov.maxx,minz:ov.minz+.45,maxz:ov.maxz-.45}:{minx:ov.minx+.45,maxx:ov.maxx-.45,minz:ov.minz,maxz:ov.maxz};
+}
+export const MALL_DOORWAYS=Object.freeze(MALL_ROOMS.map(r=>Object.freeze({id:r.id,floor:r.floor,...doorwayBox(r)})));
+const inDoorway=(x,z,upper)=>MALL_DOORWAYS.some(d=>d.floor===Number(upper)&&x>d.minx&&x<d.maxx&&z>d.minz&&z<d.maxz);
 const furniture=(x,z,upper)=>MALL_ROOMS.some(r=>r.floor===Number(upper)&&inside(x,z,r.counter,-.45))||columns.some(([cx,cz])=>Math.abs(x-cx)<.83&&Math.abs(z-cz)<.83)||(!upper&&tables.some(([cx,cz])=>Math.abs(x-cx)<2.4&&Math.abs(z-cz)<1.4));
 export function mallNear(x,z){return x>-205&&x<-68&&z>31&&z<169;}
 export function mallInside(p){return !!mallRoom(p)||inside(p.x,p.z,atrium)||MALL_CORRIDORS.some(b=>inside(p.x,p.z,b,.1));}
-export function mallPassage(x,z,margin=.45,upper=false){return MALL_ROOMS.some(r=>r.floor===Number(upper)&&inside(x,z,r,margin))|| inside(x,z,atrium,margin)||MALL_CORRIDORS.some(b=>inside(x,z,b,margin));}
+export function mallPassage(x,z,margin=.45,upper=false){return MALL_ROOMS.some(r=>r.floor===Number(upper)&&inside(x,z,r,margin))|| inside(x,z,atrium,margin)||MALL_CORRIDORS.some(b=>inside(x,z,b,margin))||inDoorway(x,z,upper);}
 export function escalatorAt(x,z){return ESCALATORS.find(b=>inside(x,z,b,.1));}
 const rampHeight=z=>Math.max(0,Math.min(5.4,(113-z)/18*5.4));
 export function mallWalkable(x,z,upper=false){
   if(furniture(x,z,upper))return false;
   if(!upper)return mallPassage(x,z);
-  if(MALL_ROOMS.some(r=>r.floor===1&&inside(x,z,r,.5)))return true;
+  if(MALL_ROOMS.some(r=>r.floor===1&&inside(x,z,r,.5))||inDoorway(x,z,1))return true;
   if(!inside(x,z,atrium,.5))return false;
   return !inside(x,z,voidBox,-.38)||!!escalatorAt(x,z);
 }

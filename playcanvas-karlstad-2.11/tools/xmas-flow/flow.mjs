@@ -28,7 +28,7 @@ await page.route(/cdn\.jsdelivr\.net\/npm\/playcanvas/,r=>r.fulfill({contentType
 // app.js får fyra hjälpfunktioner för testet (teleportera, position, blockerad ruta, appen). Ingen fil på disk ändras.
 await page.route(/\/app\.js/,r=>{
   if(!r.request().url().includes('localhost:'+PORT))return r.continue();
-  const s=fs.readFileSync(path.join(root,'app.js'),'utf8').replace("app.on('update',update);","window.__app=app;window.__blocked=blocked;window.__tp=(x,z,h,t)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=h;pitch=t;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);};window.__pos=()=>{const p=player.getPosition();return [p.x,p.z]};window.__turbo=()=>lastRound?.turboScale?.()||1;app.on('update',update);");
+  const s=fs.readFileSync(path.join(root,'app.js'),'utf8').replace("app.on('update',update);","window.__app=app;window.__blocked=blocked;window.__tp=(x,z,h,t)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=h;pitch=t;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);};window.__pos=()=>{const p=player.getPosition();return [p.x,p.z]};window.__turbo=()=>lastRound?.turboScale?.()||1;window.__tryMove=tryMove;app.on('update',update);");
   r.fulfill({contentType:'text/javascript',body:s});
 });
 const results=[];let failed=0;
@@ -121,6 +121,27 @@ if(fa.r[0]){const r=fa.r[0],d=Math.hypot(r.x,r.z)||1,px=r.x-r.x/d*34,pz=r.z-r.z/
 // Julens ljus är egna objekt framför husen. Fasadmodulerna (bl.a. Kungsgatan 14, 16 och 18) är oförändrade mot grundspelet (JULVERSION.md, avsnitt 5).
 check('K3 fasadljusen ligger på husen längs torget',fa.w.length>0&&fa.r.length>0,JSON.stringify({fonster:env.facadeWindows,tak:env.facadeRoofs}));
 
+// ── L: fri julvandring: paketen tar inte slut ─────────────────────────────────────────────────────────────────────────────────────────
+const until=async(fn,max=60)=>{const t0=Date.now();while(Date.now()-t0<max*1000){if(await ev(fn))return true;await wait(250);}return false;};
+await ev(()=>window.KarlstadDebug.journey().xmas.startFree());await wait(800);
+const gotRain=await until(()=>window.KarlstadDebug.journey().xmas.hunt.run.rains.length>=1,90);
+const rn1=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {t:+r.t.toFixed(1),rains:r.rains.length,packages:r.packages.filter(k=>!k.collected).length};});
+// (Paketen läggs på fria platser: i trånga gator blir det färre än de åtta till tolv som begärs. På stadens karta gav 82 provpunkter i snitt 9,5 vanliga paket och aldrig färre än sex.)
+check('L1 fri julvandring: första paketregnet kommer inom åtta sekunder speltid med minst sju paket (sex vanliga och ett bonus)',gotRain&&rn1.t<=8.5&&rn1.packages>=7,JSON.stringify(rn1));
+await shot('free-1-regn');
+// Plocka allt som finns (teleport till varje paket), fyra varv: när allt är plockat kommer nästa regn inom några sekunder i stället för efter en minut eller mer.
+const runT=()=>ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.t),uncollected=()=>ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.packages.filter(k=>!k.collected).map(k=>({x:k.x,z:k.z})));
+let worst=0,collected=0;
+for(let round=0;round<4;round++){
+  for(const k of await uncollected()){await tp(k.x,k.z,0,-4,320);collected++;}
+  let left=await uncollected();for(let again=0;again<3&&left.length;again++){for(const k of left){await tp(k.x,k.z,0,-4,320);}left=await uncollected();}
+  const t0=await runT();
+  const got=await until(()=>window.KarlstadDebug.journey().xmas.hunt.run.packages.some(k=>!k.collected),60);
+  worst=Math.max(worst,got?(await runT())-t0:999);
+}
+check('L2 när paketen tagit slut kommer nästa regn inom elva sekunder speltid (fyra varv, längsta tid utan paket '+worst.toFixed(1)+' s, '+collected+' paket plockade)',worst<=11&&collected>=20,JSON.stringify({worst:+worst.toFixed(1),collected}));
+await shot('free-2-nytt-regn');
+
 // ── E: butiksuppdrag ─────────────────────────────────────────────────────────────────────────────────────────────
 await ev(()=>window.KarlstadDebug.journey().xmas.startFree());await wait(1200);
 const a=await ev(()=>window.KarlstadDebug.journey().places.arrivalFor('pressbyran'));await tp(a.x,a.z,a.yaw,-4,1200);
@@ -148,6 +169,18 @@ const items=await ev(()=>window.KarlstadDebug.journey().places.run?.items.map(i=
 for(const it of items||[]){await tp(it.x,it.z,0,-8,700);}
 await tp(c.x,c.z,c.yaw,-4,600);await ev(()=>window.KarlstadDebug.use());await wait(1000);
 check('E4 Cervera: Tomtarnas fikabord ger stämpel',await ev(()=>!!window.KarlstadDebug.journey().xmas.save.state.stamps.cervera));
+// E4c: in och ut genom butiksfronten till fots. Provet går med små steg (som på en riktig enhet med 60 bilder per sekund; i den här webbläsaren är stegen annars stora och hoppar över
+// en smal spärr) genom spelets egen rörelse och kollision (tryMove), över hela fronten, i båda riktningar. Förut fanns en osynlig, 10 cm tjock vägg tvärs över fronten.
+const door=await ev(()=>{
+  const e=window.KarlstadDebug.journey().places.get('cervera').entrance,a=e.yaw*Math.PI/180,n={x:Math.sin(a),z:Math.cos(a)},t={x:Math.cos(a),z:-Math.sin(a)},res=[];
+  for(const step of [.03,.07,.11,.2])for(const off of [-3,0,3])for(const sgn of [-1,1]){
+    const sx=e.x-sgn*n.x*2.5+t.x*off,sz=e.z-sgn*n.z*2.5+t.z*off;window.__tp(sx,sz,0,-4);
+    let moved=0;for(let i=0;i<500&&moved<5;i++){window.__tryMove(sgn*n.x*step,sgn*n.z*step,1/60);const [x,z]=window.__pos();moved=(x-sx)*sgn*n.x+(z-sz)*sgn*n.z;}
+    res.push({dir:sgn<0?'in':'ut',step,off,moved:+moved.toFixed(2)});
+  }
+  return res;
+});
+check('E4c man går in i och ut ur Cervera genom hela butiksfronten med små steg (24 gånger in och 24 ut, ingen fastnar)',door.every(r=>r.moved>=4.9),JSON.stringify(door.filter(r=>r.moved<4.9).slice(0,4))||'');
 
 // ── F: Tomtezombies ──────────────────────────────────────────────────────────────────────────────────────────────
 await ev(()=>window.KarlstadDebug.journey().xmas.startZombies());await wait(2600);
@@ -164,6 +197,47 @@ check('F3 högst sex aktiva zombier (grundspelets gräns)',act<=6,String(act));
 await ev(()=>{const j=window.KarlstadDebug.journey();j.health=1;const p=window.__pos();const a=j.actors.find(a=>!a.active)||j.actors[0];j.spawn(a,{x:p[0]+.3,z:p[1]-.3},'walker');j.contactCooldown=0;});await wait(3500);
 check('F4 när liven tar slut visas eget slutkort med Försök igen',await ev(()=>!document.getElementById('round-xmas-result').hidden&&/FÖRSÖK IGEN/.test(document.getElementById('xmasResultContinue').textContent)));
 await shot('21-tomtezombies-slut');
+
+// F4b–F11: Tomtezombies har nivåer. Efter ett förlorat försök kan samma nivå göras om, en klarad nivå leder till nästa i stället för till Julklappsjaktens meny, och nivå 2 är en annan bana med fler
+// paket, snabbare och tätare tomtezombier. Spelet går på riktigt (paket plockas, tomten tar emot dem); zombierna hålls borta bara medan paketen plockas så att provet inte förlorar på vägen.
+const failCard=await ev(()=>({title:document.getElementById('xmasResultTitle').textContent,line:document.getElementById('xmasResultLine').textContent,b1:document.getElementById('xmasResultContinue').textContent.trim(),b2:document.getElementById('xmasResultFree').textContent.trim()}));
+check('F4b slutkortet efter att man blivit tagen säger nivån: "FÖRSÖK IGEN · NIVÅ 1" och JULMENYN',failCard.title==='DU BLEV TAGEN!'&&/^FÖRSÖK IGEN · NIVÅ 1/.test(failCard.b1)&&failCard.b2==='JULMENYN'&&/^Nivå 1\./.test(failCard.line),JSON.stringify(failCard));
+await click('xmasResultContinue');await wait(2800);
+const again=await ev(()=>{const x=window.KarlstadDebug.journey().xmas,r=x.hunt.run;return {lv:x.zombieLevel?.n,goal:r.goal,collected:r.collected,mode:x.snapshot().mode,health:Math.round(window.KarlstadDebug.journey().health)};});
+check('F5 FÖRSÖK IGEN startar samma nivå (nivå 1, tjugo paket, noll insamlade) med full hälsa',again.lv===1&&again.goal===20&&again.collected===0&&again.mode==='zombies'&&again.health>=90,JSON.stringify(again));
+check('F5b HUD:en visar nivån framför poängen ("NIVÅ 1 · JULPOÄNG")',await ev(()=>document.querySelector('.xh-points span').textContent)==='NIVÅ 1 · JULPOÄNG');
+const calm=()=>ev(()=>{const j=window.KarlstadDebug.journey();j.actors.forEach(a=>{a.active=false;});j.rush.nextPatrol=1e9;j.health=100;});
+const collectGoal=async()=>{
+  await calm();
+  for(let round=0;round<4;round++){
+    const left=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return r.collected>=r.goal?[]:r.packages.filter(k=>!k.collected&&k.kind==='regular').slice(0,r.goal-r.collected).map(k=>({x:k.x,z:k.z}));});
+    if(!left.length)break;
+    for(const k of left){await calm();await tp(k.x,k.z,0,-4,330);}
+  }
+};
+await collectGoal();
+const tomte=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.tomte);await calm();await tp(tomte.x,tomte.z,0,-4,2800);
+const z1=await ev(()=>({shown:!document.getElementById('round-xmas-result').hidden,kicker:document.getElementById('xmasResultKicker').textContent,title:document.getElementById('xmasResultTitle').textContent,line:document.getElementById('xmasResultLine').textContent,
+  b1:document.getElementById('xmasResultContinue').textContent.trim(),b2:document.getElementById('xmasResultFree').textContent.trim(),cleared:window.KarlstadDebug.journey().xmas.save.state.zombies.cleared,stamp:!!window.KarlstadDebug.journey().xmas.save.state.stamps.zombies}));
+check('F6 klarad nivå 1: kortet säger NIVÅ 1 KLARAD, erbjuder NÄSTA NIVÅ · 2 (inte Julklappsjaktens meny) och JULMENYN, sparar nivån och ger stämpeln',z1.shown&&/NIVÅ 1 KLARAD/.test(z1.title)&&/^NÄSTA NIVÅ · 2/.test(z1.b1)&&z1.b2==='JULMENYN'&&z1.cleared===1&&z1.stamp&&/Nästa nivå: 2 · TORGET, med 22 paket/.test(z1.line),JSON.stringify(z1));
+await shot('22-zombies-nivå-klar');
+await click('xmasResultContinue');await wait(3000);
+const z2=await ev(()=>{
+  const j=window.KarlstadDebug.journey(),x=j.xmas,r=x.hunt.run,p=window.__pos(),a=j.actors.find(q=>!q.active);j.spawn(a,{x:p[0]+6,z:p[1]-6},'walker');
+  return {mode:x.snapshot().mode,lv:x.zombieLevel?.n,layout:x.zombieLevel?.layout,id:r.id,goal:r.goal,packages:r.packages.filter(k=>k.kind==='regular').length,label:document.querySelector('.xh-points span').textContent,speed:+a.speed.toFixed(3),tuned:Object.prototype.hasOwnProperty.call(j,'spawn'),title:r.title};
+});
+check('F7 NÄSTA NIVÅ startar nivå 2 på Torget: 22 paket att samla, HUD "NIVÅ 2 · JULPOÄNG" och snabbare tomtezombier (Paket-Pelle ×1,05)',z2.mode==='zombies'&&z2.lv===2&&z2.layout==='round-torget'&&z2.id==='zombies-2'&&z2.goal===22&&z2.packages>=22&&z2.label==='NIVÅ 2 · JULPOÄNG'&&Math.abs(z2.speed-1.65*1.05)<.01&&z2.tuned,JSON.stringify(z2));
+await wait(1500);
+const z2b=await ev(()=>{const r=window.KarlstadDebug.journey().rush;return {ahead:+(r.nextPatrol-r.spent).toFixed(2),state:r.state};});
+check('F8 nästa patrull ligger högst 11 s fram på nivå 2 (grundspelets egen takt är 14 s i början)',z2b.state==='playing'&&z2b.ahead<=11.05,JSON.stringify(z2b));
+await shot('23-zombies-nivå-2');
+await ev(()=>window.KarlstadDebug.journey().xmas.openMenu());await wait(900);
+const z3=await ev(()=>({intro:!document.getElementById('round-xmas-intro').hidden,btn:document.getElementById('xmasZombies').textContent.replace(/\s+/g,' ').trim(),note:document.getElementById('xmasZombieNote').textContent,tuned:Object.prototype.hasOwnProperty.call(window.KarlstadDebug.journey(),'spawn')}));
+check('F9 i startvyn står nästa nivå på Tomtezombies-knappen och raden under säger hur långt man kommit; zombiefarten är återställd',z3.intro&&/^TOMTEZOMBIES · NIVÅ 2/.test(z3.btn)&&/Du har klarat 1 nivå\. Nästa: nivå 2 · TORGET \(22 paket/.test(z3.note)&&!z3.tuned,JSON.stringify(z3));
+await shot('24-zombies-startvy');
+await click('xmasZombies');await wait(2800);
+check('F10 knappen startar nästa nivå (nivå 2) och inte om nivå 1',await ev(()=>window.KarlstadDebug.journey().xmas.zombieLevel?.n===2));
+await ev(()=>window.KarlstadDebug.journey().xmas.openMenu());await wait(600);
 
 // ── G: Julklappsjakten har inga zombier ──────────────────────────────────────────────────────────────────────────
 await ev(()=>window.KarlstadDebug.journey().xmas.startIntro());await wait(6000);

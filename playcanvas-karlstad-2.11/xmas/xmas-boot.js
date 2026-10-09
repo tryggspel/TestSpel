@@ -16,6 +16,7 @@ import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.4';
 import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.4';
 import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.4';
 import {nextRound,roundById,buildRound} from './xmas-rounds.mjs?v=2.21.1-xmas.4';
+import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.4';
 import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.4';
 
 // Julbygget har inga termosar, hemligheter eller skatter: paketen ersätter dem. Anropas direkt efter att resan skapats, innan någon vy ritas.
@@ -29,7 +30,7 @@ export function installXmas(ctx){
   registerXmasProps();
   const save=new XmasSave(storage);
   let fault=false;
-  const guard=(fn,fallback)=>{if(fault)return fallback;try{return fn();}catch(e){fault=true;console.error('[Jultillägget stängdes av efter fel]',e);try{hunt.cancel('fel');julrush.cleanup();ui.showHud(false);view.clear();document.body.classList.remove('xmas-on','xmas-cozy','xmas-zombies','xmas-rush');journey.xmas=null;}catch{}return fallback;}}; // grundspelets HUD och regler tar över igen
+  const guard=(fn,fallback)=>{if(fault)return fallback;try{return fn();}catch(e){fault=true;console.error('[Jultillägget stängdes av efter fel]',e);try{hunt.cancel('fel');julrush.cleanup();zombieTune.off();ui.showHud(false);view.clear();document.body.classList.remove('xmas-on','xmas-cozy','xmas-zombies','xmas-rush');journey.xmas=null;}catch{}return fallback;}}; // grundspelets HUD och regler tar över igen
 
   const nav={blocked:(x,z)=>host.blocked(x,z),snap:p=>{try{const q=journey.nav.point(p);return {x:q.x,z:q.z};}catch{return null;}}};
   // Spelets egen gångbara karta för rundorna (rutter, hinder, fri sikt).
@@ -44,6 +45,18 @@ export function installXmas(ctx){
   try{decor=createXmasDecor(pc,host,{root,texture,labelTex,indoors,params:{weather:save.weather}},sprites);}catch(e){console.error('[Julmiljön hoppades över]',e);}
   const baseUrl=baseGameUrl(location.search,location.hostname);
   let stamp=baseStamp,mode='menu'; // menu | cozy | zombies | rush
+  let rainToastAt=-1e9; // när den senaste hela PAKETREGN-fanfaren visades (fri julvandring)
+  // Tomtezombies-nivåer (xmas-zombie-levels.mjs): zLevel = nivån som spelas, lastZombie = senaste klarade nivåns resultat (för NÄSTA NIVÅ). Tomtezombierna blir snabbare genom att farten sätts när
+  // en zombie skapas (ett byte av spawn på journey-objektets egen instans, borttaget när läget lämnas) och tätare genom att nästa patrull aldrig ligger längre fram än nivåns takt (update).
+  let zLevel=null,lastZombie=null,lastZombieN=0;
+  const zombieTune={
+    on(level){
+      this.off();if(!(level.speedMul>1))return;
+      const base=journey.spawn;
+      journey.spawn=function(a,p,kind){const r=base.call(this,a,p,kind);if(a&&Number.isFinite(a.speed))a.speed*=level.speedMul;return r;};
+    },
+    off(){if(Object.prototype.hasOwnProperty.call(journey,'spawn'))delete journey.spawn;}
+  };
   let turboBefore=null; // spelarens eget turbo-val före rushen (rushen slår på turbon); det återställs när man lämnar rushen
   let caughtAt=0;
   // Automatisk lättnad vid segt spel: mäter riktiga bildrutetider (inte spelets klippta dt) och minskar julens effekter ett steg i taget.
@@ -79,7 +92,7 @@ export function installXmas(ctx){
   function enter(kind,spawn=null){
     try{dismissPlaceResult?.();}catch{} // grundspelets resultatkort från ett butiksuppdrag ska inte ligga kvar över nästa läge
     const zombies=kind==='zombies',rushing=kind==='rush';
-    leaveRush();if(!rushing)restoreTurbo();
+    leaveRush();if(!rushing)restoreTurbo();zombieTune.off();if(!zombies)zLevel=null;
     mode=zombies?'zombies':rushing?'rush':'cozy';caughtAt=0;
     document.body.classList.add('xmas-on');document.body.classList.toggle('xmas-cozy',!zombies);document.body.classList.toggle('xmas-zombies',zombies);document.body.classList.toggle('xmas-rush',rushing);
     startCity(zombies?'free':'clean');
@@ -141,22 +154,33 @@ export function installXmas(ctx){
   }
   function challengeSave(){guard(()=>{const ch=incoming;incoming=null;if(ch){save.addFriend(ch.profile);toast('VÄN SPARAD',ch.profile.name+' finns nu i din topplista.',2.6);}openMenu();});}
   function challengeSkip(){guard(()=>{incoming=null;openMenu();});}
-  function startZombies(){
+  // n = 0: nästa nivå att spela (den efter den högsta klarade). Nivå 1 är spiralen runt granen, därefter julrundornas banor med fler paket och snabbare tomtezombier.
+  function startZombies(n=0){
     guard(()=>{
-      enter('zombies',INTRO.spawn);
-      hunt.startRun({kind:'zombies',id:'zombies',title:'TOMTEZOMBIES',goal:INTRO_GOAL,packages:INTRO.packages,tomte:INTRO.tomte,spawn:INTRO.spawn,tree:INTRO.tree,windowSec:4.6,soft:0,stampId:'zombies',ordered:true});
-      toast('TOMTEZOMBIES','Samla '+INTRO_GOAL+' paket och lämna dem hos tomten. Tomtezombierna jagar dig: skjut med SOLSTÖT.',4.4);
-      ui.showGoal('Samla '+INTRO_GOAL+' paket. Tomtezombierna jagar dig!',7500);
+      const lv=zombieLevel(n&&isZombieUnlocked(save.zombies,n)?n:nextZombieLevel(save.zombies));
+      let layout={packages:INTRO.packages,tomte:INTRO.tomte,spawn:INTRO.spawn,tree:INTRO.tree,windowSec:4.6,ordered:true,goal:lv.goal};
+      if(lv.layout!=='intro'){
+        const run=buildRound(roundById(lv.layout),roundNav),regular=run.packages.filter(k=>k.kind==='regular').length;
+        layout={packages:run.packages,tomte:run.tomte,spawn:run.spawn,tree:run.tree,windowSec:4.6,ordered:!!run.route,goal:Math.min(lv.goal,regular)};
+      }
+      zLevel=lv;lastZombieN=lv.n;
+      enter('zombies',layout.spawn);
+      zombieTune.on(lv);ui.setZombieLevel(lv.n);
+      hunt.startRun({kind:'zombies',id:lv.id,title:lv.title,level:lv.n,goal:layout.goal,packages:layout.packages,tomte:layout.tomte,spawn:layout.spawn,tree:layout.tree,windowSec:layout.windowSec,soft:0,stampId:'zombies',ordered:layout.ordered});
+      toast(lv.n>1?lv.title+' · '+lv.place:'TOMTEZOMBIES','Samla '+layout.goal+' paket och lämna dem hos tomten. Tomtezombierna jagar dig: skjut med SOLSTÖT.'+(lv.n>1?' Fler och snabbare tomtezombier än förra nivån.':''),4.4);
+      ui.showGoal('Samla '+layout.goal+' paket. Tomtezombierna jagar dig!',7500);
       ui.setProgress(hunt.run);view.clear();
     });
   }
+  const zombiesNext=()=>{if(lastZombie&&lastZombie.next)startZombies(lastZombie.next);else openMenu();};
+  const zombiesAgain=()=>startZombies(lastZombieN||0);
   // Grundspelet anropar detta när liven tar slut i zombieläget. true = hanterat här (ingen återhämtning, run avslutas med ett eget kort).
   function caught(){
     if(mode!=='zombies')return false;
     if(caughtAt)return true;
     const r=hunt.run;if(!r||!hunt.active)return true;
     caughtAt=performance.now();
-    const res={kind:'zombies',failed:true,collected:r.collected,goal:r.goal,regularTotal:r.regularTotal,bonusCollected:r.bonusCollected,bonusTotal:r.bonusTotal,bestChain:r.bestChain,seconds:Math.round(r.t),points:r.points};
+    const res={kind:'zombies',failed:true,level:zLevel?.n||r.level||1,collected:r.collected,goal:r.goal,regularTotal:r.regularTotal,bonusCollected:r.bonusCollected,bonusTotal:r.bonusTotal,bestChain:r.bestChain,seconds:Math.round(r.t),points:r.points};
     hunt.cancel('tagen');journey.pause?.();journey.actors.forEach(a=>{a.active=false;});
     clearTimeout(resultTimer);
     resultTimer=setTimeout(()=>guard(()=>{ui.showResult(res);setPanel('xmas-result');resultOpen=true;}),900);
@@ -221,7 +245,7 @@ export function installXmas(ctx){
     guard(()=>{
       try{dismissPlaceResult?.();}catch{}clearTimeout(resultTimer);
       if(julrush.active){julrush.quit();} // att ge upp i pausmenyn sparar körningen som en förlust (om den hade några paket)
-      leaveRush();restoreTurbo();try{host.music?.tempo?.(1);}catch{}
+      leaveRush();restoreTurbo();zombieTune.off();try{host.music?.tempo?.(1);}catch{}
       hunt.cancel('meny');view.clear();ui.showHud(false);guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;journey.pause?.();mode='menu';caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush');
       if(incoming){ui.renderChallenge(incoming);setPanel('xmas-challenge');return;}
       ui.renderStart(buildDetail(stamp));setPanel('xmas-intro');
@@ -233,7 +257,7 @@ export function installXmas(ctx){
 
   const ui=createXmasUi({save,fx:{
     cozy:()=>{if(save.introDone)openContinue();else startIntro();},
-    intro:()=>startIntro(),round:()=>startRound(),shops:()=>openShops(),free:()=>startFree(),zombies:()=>startZombies(),
+    intro:()=>startIntro(),round:()=>startRound(),shops:()=>openShops(),free:()=>startFree(),zombies:()=>startZombies(),zombiesNext,zombiesAgain,
     openRush:()=>openRush(),rushPlay:n=>startRush(n),marathon:()=>startRush(0),rushNext,rushAgain,openBoard,boardBack:()=>{if(boardFrom==='result')setPanel('xmas-result');else openRush(ui.selectedRush());},challengeGo,challengeSave,challengeSkip,
     openMenu,openContinue,goBase,setWeather
   }});
@@ -256,7 +280,8 @@ export function installXmas(ctx){
     },
     'xmas-goal':(e,now)=>{sound('win');[523.25,659.25,783.99,1046.5].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.28,.08),i*90));ui.showGoal('Bra! Lämna paketen hos tomten.',5500,now);fanfare(e.goal+' PAKET!','Följ pilen till tomten och lämna dem.',2.4,'win');ui.setProgress(hunt.run);},
     'xmas-chain-lost':(e,now)=>{ui.showPill('KEDJAN BRÖTS · '+e.chain+' I RAD',1200,now,'lost');},
-    'xmas-rain':(e,now)=>{sound('energy');ui.showGoal('Tomtarna tappade fler paket! Följ pilen.',5200,now);fanfare('PAKETREGN!',e.count+' paket och ett bonuspaket. Följ pilen.',2.6,'energy');},
+    // Regnen kommer tätt (var 22–38:e sekund, snabbare när paketen i närheten tar slut): hela fanfaren bara om den förra är mer än 25 s gammal, annars en kort rad.
+    'xmas-rain':(e,now)=>{sound('energy');if(now-rainToastAt>25000){rainToastAt=now;ui.showGoal('Tomtarna tappade fler paket! Följ pilen.',5200,now);fanfare('PAKETREGN!',e.count+' paket och ett bonuspaket. Följ pilen.',2.6,'energy');}else ui.showPill('NYTT PAKETREGN · '+e.count+' PAKET',1600,now);},
     'xmas-rain-gone':(e,now)=>{if(e.missed>0)ui.showPill('PAKETREGNET FÖRSVANN',1400,now,'lost');},
     'xmas-late':(e,now)=>{ui.showPill('SEN, MEN DET GÅR ATT LÄMNA IN',2000,now,'lost');},
     // JulRushen
@@ -289,6 +314,11 @@ export function installXmas(ctx){
       resultTimer=setTimeout(()=>guard(()=>{journey.pause?.();ui.showResult(e.result);setPanel('xmas-result');resultOpen=true;}),1100);
     },
     'xmas-deliver':(e,now)=>{
+      // Tomtezombies: en klarad nivå sparas och låser upp nästa; resultatkortet får veta vilken nivå som kommer.
+      if(e.result.kind==='zombies'){
+        const n=e.result.level||zLevel?.n||1,prog=save.recordZombies(n,{points:e.result.points,seconds:e.result.seconds,packages:e.result.collected}),nx=n<ZOMBIE_MAX?zombieLevel(n+1):null;
+        e.result={...e.result,level:n,next:nx?nx.n:0,nextPlace:nx?nx.place:'',nextGoal:nx?nx.goal:0,levelFirst:prog.first,levelRecord:prog.record};lastZombie=e.result;
+      }
       sound('win');[523.25,659.25,783.99,1046.5,1318.5].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.34,.09),i*100));
       ui.setProgress(hunt.run);view.burst(hunt.run.tomte.x,hunt.run.tomte.z,{big:true,y:1.4});ui.showGoal('Tack! Du räddade julen.',4000,now);
       clearTimeout(resultTimer);
@@ -315,6 +345,8 @@ export function installXmas(ctx){
   // ── Varje bildruta ──────────────────────────────────────────────────────────────────────────────────────────────
   function update(p,now,dt){
     guard(()=>{
+      // Tomtezombies från nivå 2: nästa patrull ligger aldrig längre fram än nivåns takt (grundspelets egen takt är 14 s i början).
+      if(mode==='zombies'&&zLevel?.patrolEvery&&hunt.active){const zr=journey.rush;if(zr&&zr.state==='playing'){const cap=zr.spent+zLevel.patrolEvery;if(zr.nextPatrol>cap)zr.nextPatrol=cap;}}
       handle(now);
       updateGuide(p,now,dt);
       view.update(p,now,dt);
@@ -345,7 +377,7 @@ export function installXmas(ctx){
   ui.renderStart(buildDetail(stamp));
   const api={
     hunt,save,view,ui,sprites,handlers,decor,
-    get active(){return mode==='rush'?julrush.active:hunt.active;},get cozy(){return mode==='cozy';},get zombieMode(){return mode==='zombies';},get rushMode(){return mode==='rush'&&julrush.active;},julrush,
+    get active(){return mode==='rush'?julrush.active:hunt.active;},get cozy(){return mode==='cozy';},get zombieMode(){return mode==='zombies';},get zombieLevel(){return zLevel;},get rushMode(){return mode==='rush'&&julrush.active;},julrush,
     update,hudText,startRound,startZombies,startRush,openRush,openBoard,challengeGo,rushNext,rushAgain,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
     step:(dt,p,sweep,speed)=>guard(()=>mode==='rush'?julrush.step(dt,p,sweep,speed):hunt.step(dt,p,sweep,speed)),
     // Grundspelets små pilar på marken och flaggan "DITT MÅL" ritas inte för julens mål (quiet): julbandet, pilen och strålen ersätter dem (i JulRushen pilen och strålen). Radarn och kartan visar vägen som förut.

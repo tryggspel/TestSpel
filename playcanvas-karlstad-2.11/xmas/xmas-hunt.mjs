@@ -35,7 +35,7 @@ export class XmasHunt{
     const regular=packages.filter(p=>p.kind==='regular').length,bonus=packages.length-regular;
     this.run={serial:++this.serial,kind:def.kind,id:def.id,title:def.title||'',phase:def.phase||(def.kind==='free'?'free':'collect'),goal:def.goal||0,packages,byId:new Map(packages.map(p=>[p.id,p])),
       collected:0,bonusCollected:0,regularTotal:regular,bonusTotal:bonus,points:0,chain:0,bestChain:0,lastPickAt:-1e9,t:0,tomte:def.tomte||null,spawn:def.spawn||null,tree:def.tree||null,
-      windowSec:def.windowSec||COMBO.window,soft:def.soft||0,ordered:!!def.ordered,late:false,stampId:def.stampId||null,lastPickT:0,nextRainAt:def.kind==='free'?FREE_RAIN.first:Infinity,rains:[],rainSerial:0,result:null};
+      windowSec:def.windowSec||COMBO.window,soft:def.soft||0,ordered:!!def.ordered,late:false,stampId:def.stampId||null,level:def.level||0,lastPickT:0,nextRainAt:def.kind==='free'?FREE_RAIN.first:Infinity,rains:[],rainSerial:0,result:null};
     this.lastStep=null;this.guideId='';
     this.emit({type:'xmas-start',kind:def.kind,id:def.id,title:this.run.title,goal:this.run.goal,total:regular,bonusTotal:bonus});
     return this.run;
@@ -74,7 +74,7 @@ export class XmasHunt{
       if(!this.inCatch(pkg,p,reach,sweep))continue;
       this.take(pkg);if(++taken>=4)break;
     }
-    if(r.kind==='free')this.stepRain(p);
+    if(r.kind==='free')this.stepRain(p,dt);
     if(r.phase==='deliver'&&r.tomte&&Math.hypot(p.x-r.tomte.x,p.z-r.tomte.z)<=r.tomte.radius)this.deliver();
   }
 
@@ -99,47 +99,62 @@ export class XmasHunt{
     const recordId=r.id;const record=this.save?this.save.record(recordId,{points:total,seconds,packages:r.collected,bonus:r.bonusCollected}):false;
     this.save?.addTotals({packages:r.collected,bonus:r.bonusCollected,points:total});
     r.result={kind:r.kind,id:r.id,title:r.title,points:total,parts:{packages:r.points,delivery:DELIVERY.points,time:tb},seconds,collected:r.collected,goal:r.goal,regularTotal:r.regularTotal,
-      bonusCollected:r.bonusCollected,bonusTotal:r.bonusTotal,bestChain:r.bestChain,stamp,stampId:r.stampId,record,late:r.late};
+      bonusCollected:r.bonusCollected,bonusTotal:r.bonusTotal,bestChain:r.bestChain,stamp,stampId:r.stampId,record,late:r.late,level:r.level};
     this.emit({type:'xmas-deliver',result:r.result});
     return r.result;
   }
 
   // ── Fri julvandring: tydliga, tidsbegränsade paketregn med egna ID ─────────────────────────────────────────────────
-  stepRain(p){
-    const r=this.run;
+  stepRain(p,dt=0){
+    const r=this.run,F=FREE_RAIN;
     for(const rain of r.rains){
       if(rain.gone)continue;
       const left=r.packages.filter(k=>k.rain===rain.serial&&!k.collected);
-      if(!left.length||r.t-rain.at>=FREE_RAIN.life){rain.gone=true;for(const k of left)k.expired=true;r.packages=r.packages.filter(k=>!k.expired);r.byId=new Map(r.packages.map(k=>[k.id,k]));this.emit({type:'xmas-rain-gone',rain:rain.serial,missed:left.length});}
+      rain.away=Math.hypot(rain.x-p.x,rain.z-p.z)>F.leaveDistance?(rain.away||0)+dt:0; // ett regn man lämnat långt bakom sig räknas bort efter en stund
+      if(!left.length||r.t-rain.at>=F.life||rain.away>=F.leaveSeconds){rain.gone=true;for(const k of left)k.expired=true;r.packages=r.packages.filter(k=>!k.expired);r.byId=new Map(r.packages.map(k=>[k.id,k]));this.emit({type:'xmas-rain-gone',rain:rain.serial,missed:left.length});}
     }
     r.rains=r.rains.filter(x=>!x.gone);
-    if(r.t<r.nextRainAt||r.rains.length>=FREE_RAIN.maxActive)return;
+    if(r.rains.length>=F.maxActive)return;
+    // Har man snart plockat allt i närheten kommer nästa regn snabbare (högst ett var topUpEvery:e sekund), och nedräkningen i uppdragsraden följer med.
+    let near=0;for(const k of r.packages)if(!k.collected&&Math.hypot(k.x-p.x,k.z-p.z)<F.nearRadius)near++;
+    if(near<F.lowWater){const soon=(r.lastRainAt??(F.first-F.topUpEvery))+F.topUpEvery;if(soon<r.nextRainAt)r.nextRainAt=Math.max(soon,r.t);}
+    if(r.t<r.nextRainAt)return;
     const rain=this.makeRain(p);
-    if(!rain){r.nextRainAt=r.t+8;return;}
-    r.nextRainAt=r.t+FREE_RAIN.every[0]+this.rand()*(FREE_RAIN.every[1]-FREE_RAIN.every[0]);
+    if(!rain){r.nextRainAt=r.t+4;return;}
+    r.lastRainAt=r.t;
+    r.nextRainAt=r.t+F.every[0]+this.rand()*(F.every[1]-F.every[0]);
   }
+  // Ett regn är en klunga paket runt en punkt på gångbar mark, 30–85 m från spelaren. Navigeringsrutnätet har tre meter breda rutor, så att lägga paketen på rutnätets punkter gav stapplade paket
+  // och bara fyra till sex paket per regn. I stället läggs paketen på riktiga fria platser (inte blockerade, fri sikt till mitten, minst spacing meter från varandra); i trånga kvarter får
+  // ett regn färre paket, men aldrig färre än fyra vanliga och ett bonus. Några mitter provas och det regn som blev fullast används.
   makeRain(p){
-    const r=this.run;
-    for(let attempt=0;attempt<14;attempt++){
-      const ang=this.rand()*Math.PI*2,dist=FREE_RAIN.minDistance+this.rand()*(FREE_RAIN.maxDistance-FREE_RAIN.minDistance);
+    const r=this.run,F=FREE_RAIN,free=(x,z)=>!this.nav.blocked(x,z);
+    const sight=(c,x,z)=>{const n=Math.ceil(Math.hypot(x-c.x,z-c.z)/.5);for(let i=1;i<=n;i++)if(!free(c.x+(x-c.x)*i/n,c.z+(z-c.z)*i/n))return false;return true;};
+    let best=null;
+    for(let attempt=0;attempt<F.tries;attempt++){
+      const ang=this.rand()*Math.PI*2,dist=F.minDistance+this.rand()*(F.maxDistance-F.minDistance);
       const c=this.nav.snap({x:p.x+Math.sin(ang)*dist,z:p.z+Math.cos(ang)*dist});
-      if(!c||Math.hypot(c.x-p.x,c.z-p.z)<FREE_RAIN.minDistance*.7)continue;
-      const n=FREE_RAIN.count[0]+Math.floor(this.rand()*(FREE_RAIN.count[1]-FREE_RAIN.count[0]+1)),made=[];
-      const serial=++r.rainSerial;
-      for(let i=0;i<n;i++){
-        const a=i/n*Math.PI*2+this.rand()*.6,rr=1.6+this.rand()*2.4,x=c.x+Math.sin(a)*rr,z=c.z+Math.cos(a)*rr;
-        const q=this.nav.snap({x,z});if(!q||Math.hypot(q.x-x,q.z-z)>1.4||this.nav.blocked(q.x,q.z))continue;
-        made.push({id:'f'+r.serial+'.'+serial+':'+i,x:+q.x.toFixed(2),z:+q.z.toFixed(2),y:0,kind:'regular',cluster:serial,collected:false,at:0,rain:serial});
+      if(!c||Math.hypot(c.x-p.x,c.z-p.z)<F.minDistance*.7||!free(c.x,c.z))continue;
+      const want=F.count[0]+Math.floor(this.rand()*(F.count[1]-F.count[0]+1)),phase=this.rand()*Math.PI*2,spots=[];
+      for(let i=0;i<want;i++){
+        for(let t=0;t<4;t++){
+          const a=phase+i*2.39996+(t?(this.rand()-.5)*1.4:0),rr=F.ringMin+(F.ringMax-F.ringMin)*Math.sqrt((i+.5)/want)+(t?(this.rand()-.5)*1.6:0);
+          const x=c.x+Math.sin(a)*rr,z=c.z+Math.cos(a)*rr;
+          if(!free(x,z)||!sight(c,x,z)||spots.some(s=>Math.hypot(s.x-x,s.z-z)<F.spacing))continue;
+          spots.push({x,z});break;
+        }
       }
-      if(made.length<4){r.rainSerial--;continue;}
-      made.push({id:'f'+r.serial+'.'+serial+':b',x:+c.x.toFixed(2),z:+c.z.toFixed(2),y:0,kind:'bonus',cluster:serial,collected:false,at:0,rain:serial});
-      r.packages.push(...made);for(const k of made)r.byId.set(k.id,k);
-      const rain={serial,at:r.t,x:c.x,z:c.z,count:made.length-1};r.rains.push(rain);
-      r.regularTotal+=made.length-1;r.bonusTotal+=1;
-      this.emit({type:'xmas-rain',rain:serial,x:c.x,z:c.z,count:made.length-1,life:FREE_RAIN.life});
-      return rain;
+      if(spots.length>=4&&(!best||spots.length>best.spots.length))best={c,spots};
+      if(best&&best.spots.length>=want)break;
     }
-    return null;
+    if(!best)return null;
+    const {c,spots}=best,serial=++r.rainSerial,made=spots.map((s,i)=>({id:'f'+r.serial+'.'+serial+':'+i,x:+s.x.toFixed(2),z:+s.z.toFixed(2),y:0,kind:'regular',cluster:serial,collected:false,at:0,rain:serial}));
+    made.push({id:'f'+r.serial+'.'+serial+':b',x:+c.x.toFixed(2),z:+c.z.toFixed(2),y:0,kind:'bonus',cluster:serial,collected:false,at:0,rain:serial});
+    r.packages.push(...made);for(const k of made)r.byId.set(k.id,k);
+    const rain={serial,at:r.t,x:c.x,z:c.z,count:made.length-1};r.rains.push(rain);
+    r.regularTotal+=made.length-1;r.bonusTotal+=1;
+    this.emit({type:'xmas-rain',rain:serial,x:c.x,z:c.z,count:made.length-1,life:FREE_RAIN.life});
+    return rain;
   }
 
   // ── Frågor från vyn och vägledningen ────────────────────────────────────────────────────────────────────────────

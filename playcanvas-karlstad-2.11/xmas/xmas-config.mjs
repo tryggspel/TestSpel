@@ -29,7 +29,12 @@ export const DELIVERY=Object.freeze({points:100,fast:45,slow:110,maxTimeBonus:10
 export const timeBonus=(seconds,{fast=DELIVERY.fast,slow=DELIVERY.slow}={})=>Math.max(0,Math.min(DELIVERY.maxTimeBonus,Math.round((slow-seconds)/(slow-fast)*DELIVERY.maxTimeBonus)));
 
 // Fortsättning: nya paketregn i fri julvandring. Varje regn har egna paket-ID, så inget paket kan ge poäng två gånger.
-export const FREE_RAIN=Object.freeze({first:18,every:Object.freeze([70,110]),minDistance:42,maxDistance:105,count:Object.freeze([7,10]),life:240,maxActive:2});
+// 2.21.1-xmas.4: paketen tog slut och det var för långt mellan regnen (ett regn var 70–110:e sekund, högst två åt gången, och två övergivna regn kunde stoppa alla nya i fyra minuter).
+// Nu: första regnet efter fem sekunder, sedan ett nytt var 22–38:e sekund, högst tre åt gången, åtta till tolv paket per regn 30–85 m bort, och har man färre än lowWater paket kvar inom
+// nearRadius kommer nästa regn med högst topUpEvery sekunders mellanrum. Ett regn man lämnat långt bakom sig (leaveDistance i leaveSeconds) räknas bort så att övergivna regn inte stoppar nya.
+// Paketen läggs på fria platser mellan ringMin och ringMax meter från regnets mitt, minst spacing meter från varandra (tries: så många mitter som provas innan det bästa används).
+export const FREE_RAIN=Object.freeze({first:5,every:Object.freeze([22,38]),minDistance:30,maxDistance:85,count:Object.freeze([8,12]),life:200,maxActive:3,
+  lowWater:7,nearRadius:110,topUpEvery:6,leaveDistance:170,leaveSeconds:20,tries:6,ringMin:1.8,ringMax:4.6,spacing:1.4});
 
 export const WEATHER=Object.freeze({full:Object.freeze({label:'FULLT',flakes:100,decor:1}),light:Object.freeze({label:'LÄTT',flakes:50,decor:.5}),off:Object.freeze({label:'AV',flakes:0,decor:0})});
 export const WEATHER_ORDER=Object.freeze(['full','light','off']);

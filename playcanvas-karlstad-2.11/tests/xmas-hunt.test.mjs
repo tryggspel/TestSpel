@@ -194,6 +194,78 @@ test('fri julvandring: nya paketregn med egna ID, tydligt utlagda och som försv
   const pts=h3.run.points;assert.ok(pts>0);for(const k of pk)h3.step(.016,{x:k.x,z:k.z,y:1.68},null,0);assert.equal(h3.run.points,pts);
 });
 
+test('fri julvandring: första regnet kommer efter fem sekunder, och paketen tar aldrig slut för den som plockar (nytt regn inom några sekunder)',()=>{
+  const h=new XmasHunt({rand:seededRandom(11),nav:{snap:q=>q,blocked:()=>false}});h.startFree();h.drain();
+  const p={x:0,z:0,y:1.68};let first=null,gapNow=0,maxGap=0,rains=0,picked=0;
+  for(let i=0;i<4*600;i++){ // tio minuter, en bildruta var fjärde sekund-del
+    h.step(.25,p,null,0);
+    for(const e of h.drain()){if(e.type==='xmas-rain'){rains++;if(first==null)first=h.run.t;}if(e.type==='xmas-pick')picked++;}
+    // en snabb spelare: går rakt till närmaste paket (högst 400 m/s i provet, dvs. på en bildruta)
+    const near=h.nearest(p);if(near){p.x=near.pkg.x;p.z=near.pkg.z;}
+    const left=h.run.packages.filter(k=>!k.collected).length;
+    gapNow=left===0?gapNow+.25:0;maxGap=Math.max(maxGap,gapNow);
+  }
+  assert.ok(first>=FREE_RAIN.first-.01&&first<=FREE_RAIN.first+.5,'första regnet efter '+first+' s');
+  assert.ok(rains>=14,'regn på tio minuter för den som plockar: '+rains+' (förut ett var 70–110:e sekund, alltså 6–8)');
+  assert.ok(picked>=rains*FREE_RAIN.count[0]*.8,'paket plockade: '+picked);
+  assert.ok(maxGap<=FREE_RAIN.topUpEvery+5,'längsta tiden utan ett enda paket: '+maxGap+' s');
+});
+
+test('fri julvandring: nedräkningen visar när nästa regn kommer, och den kortas när paketen i närheten tar slut',()=>{
+  const h=new XmasHunt({rand:seededRandom(5),nav:{snap:q=>q,blocked:()=>false}});h.startFree();h.drain();
+  const p={x:0,z:0,y:1.68};
+  for(let i=0;i<4*8;i++)h.step(.25,p,null,0);                 // första regnet har kommit
+  assert.equal(h.run.rains.length,1);
+  // plocka allt i regnet: nästa regn dyker upp inom topUpEvery sekunder (och nedräkningen säger det), inte först efter hela mellanrummet
+  for(const k of h.run.packages)h.step(.016,{x:k.x,z:k.z,y:1.68},null,0);
+  assert.equal(h.run.packages.filter(k=>!k.collected).length,0);
+  h.step(.25,p,null,0);assert.ok(h.run.nextRainAt-h.run.t<=FREE_RAIN.topUpEvery+.3,'nedräkning '+(h.run.nextRainAt-h.run.t).toFixed(1));
+  const t0=h.run.t;let next=null;for(let i=0;i<4*30&&!next;i++){h.step(.25,p,null,0);next=h.drain().find(e=>e.type==='xmas-rain')||null;}
+  assert.ok(next&&h.run.t-t0<=FREE_RAIN.topUpEvery+1,'nytt regn efter '+(h.run.t-t0).toFixed(1)+' s');
+});
+
+test('fri julvandring: övergivna regn stoppar inte nya (ett regn man lämnat långt bakom sig räknas bort)',()=>{
+  const h=new XmasHunt({rand:seededRandom(9),nav:{snap:q=>q,blocked:()=>false}});h.startFree();h.drain();
+  let p={x:0,z:0,y:1.68},gone=0,rains=0,maxActive=0;
+  // spelaren gör aldrig något: efter varje regn går den 300 m bort och rör inga paket
+  for(let i=0;i<4*400;i++){
+    h.step(.25,p,null,0);
+    for(const e of h.drain()){if(e.type==='xmas-rain'){rains++;p={x:p.x+300,z:p.z,y:1.68};}if(e.type==='xmas-rain-gone'){gone++;assert.ok(e.missed>0);}}
+    maxActive=Math.max(maxActive,h.run.rains.length);
+  }
+  assert.ok(maxActive<=FREE_RAIN.maxActive,'högst '+FREE_RAIN.maxActive+' regn åt gången: '+maxActive);
+  assert.ok(rains>=8,'nya regn fortsätter komma: '+rains);assert.ok(gone>=rains-FREE_RAIN.maxActive,'övergivna regn räknas bort: '+gone+' av '+rains);
+});
+
+test('fri julvandring: paketen i ett regn ligger på fria platser med avstånd, även när navigeringen bara har en grov ruta på tre meter',()=>{
+  // En gata där bara |x| < 7 är gångbart. Navigeringen snäpper till tre meters rutor och flyttar spelaren in på gatan, som stadens riktiga (CityNavigation med cell = 3).
+  const wall=(x,z)=>Math.abs(x)>=7;
+  const street={blocked:wall,snap:q=>{const x=Math.round(q.x/3)*3,z=Math.round(q.z/3)*3;return wall(x,z)?{x:Math.sign(x)*6,z}:{x,z};}};
+  const open={blocked:()=>false,snap:q=>({x:Math.round(q.x/3)*3,z:Math.round(q.z/3)*3})};
+  const firstRain=(seed,nav)=>{
+    const h=new XmasHunt({rand:seededRandom(seed),nav});h.startFree();h.drain();const p={x:0,z:0,y:1.68};
+    for(let i=0;i<4*8;i++)h.step(.25,p,null,0);
+    const rain=h.run.rains[0];return {h,rain,pk:h.run.packages.filter(k=>k.rain===rain.serial)};
+  };
+  let counts={street:[],open:[]};
+  for(let seed=1;seed<=40;seed++){
+    for(const [name,nav] of [['street',street],['open',open]]){
+      const {rain,pk}=firstRain(seed,nav),regular=pk.filter(k=>k.kind==='regular'),bonus=pk.filter(k=>k.kind==='bonus');
+      counts[name].push(regular.length);
+      assert.ok(regular.length>=4&&regular.length<=FREE_RAIN.count[1],name+' '+seed+': '+regular.length+' vanliga paket');assert.equal(bonus.length,1);
+      for(const k of pk){
+        assert.ok(!nav.blocked(k.x,k.z),name+' '+seed+': paket på blockerad plats '+k.x+','+k.z);
+        // fri sikt från regnets mitt (bonuspaketet) till varje paket
+        const n=Math.ceil(Math.hypot(k.x-rain.x,k.z-rain.z)/.25);for(let i=1;i<=n;i++)assert.ok(!nav.blocked(rain.x+(k.x-rain.x)*i/n,rain.z+(k.z-rain.z)*i/n),name+' '+seed+': ingen fri sikt');
+      }
+      for(let i=0;i<regular.length;i++)for(let j=i+1;j<regular.length;j++)assert.ok(Math.hypot(regular[i].x-regular[j].x,regular[i].z-regular[j].z)>=FREE_RAIN.spacing-.02,name+' '+seed+': två paket ovanpå varandra');
+    }
+  }
+  const avg=a=>a.reduce((s,v)=>s+v,0)/a.length;
+  assert.ok(avg(counts.open)>=FREE_RAIN.count[0],'i öppen terräng nästan alltid fullt: '+avg(counts.open).toFixed(1));
+  assert.ok(avg(counts.street)>=6,'i en 14 m bred gata i snitt minst sex paket: '+avg(counts.street).toFixed(1));
+});
+
 test('rundor har mjuk tid: sen leverans ger ingen tidsbonus men går alltid att göra',()=>{
   const save=new XmasSave(mem());const h=new XmasHunt({save});
   h.startRun({kind:'round',id:'round-torget',title:'T',goal:2,packages:[{id:'r1',x:0,z:0,kind:'regular'},{id:'r2',x:2,z:0,kind:'regular'}],tomte:{x:6,z:0,radius:3},soft:10,stampId:'round-torget'});h.drain();
