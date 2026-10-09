@@ -1,5 +1,5 @@
-// Julklappsjakten: vägledningens gränssnitt: den stora pilen (alltid på skärmen, med avstånd och vad den pekar på), kantmarkörerna som lyser åt det håll man ska
-// vända sig och uppdragsraden (vad man ska göra nu och sedan). Byggs med textContent (aldrig HTML-strängar med data) och ritar bara om när något ändrats.
+// Julklappsjakten: vägledningens gränssnitt: pilen (med avstånd och vad den pekar på; en kompakt platta sist i uppdragsraden uppe i hörnet, så att den inte skymmer framsynen),
+// kantmarkörerna som lyser åt det håll man ska vända sig och uppdragsraden (vad man ska göra nu och sedan). Byggs med textContent (aldrig HTML-strängar med data) och ritar bara om när något ändrats.
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 
 export function createGuideUi({mount=document.getElementById('roundOverlay')}={}){
@@ -8,7 +8,7 @@ export function createGuideUi({mount=document.getElementById('roundOverlay')}={}
   const arrow=el('div','xg-arrow');arrow.id='xmasArrow';arrow.hidden=true;arrow.setAttribute('aria-hidden','true');
   const icon=el('i','xg-icon'),line=el('b','xg-line'),hint=el('small','xg-hint');arrow.append(icon,line,hint);
   const mission=el('div','xg-mission');mission.id='xmasMission';mission.hidden=true;mission.setAttribute('role','status');mission.setAttribute('aria-live','polite');
-  mount.append(edgeL,edgeR,arrow,mission);
+  mission.append(arrow);mount.append(edgeL,edgeR,mission); // pilen ligger sist i uppdragsraden (CSS order), så den följer med oavsett hur många rader som visas
   let rot='',txt='',hin='',cls='',eL=-1,eR=-1,missionKey='',behind=false;
   const rows=[];
 
@@ -20,7 +20,7 @@ export function createGuideUi({mount=document.getElementById('roundOverlay')}={}
     const t=g.label+' · '+g.distance+' M';if(t!==txt){txt=t;line.textContent=t;}
     if(g.hint!==hin){hin=g.hint;hint.textContent=g.hint;}
     const c=g.ahead?'ahead':g.behind?'behind':'turn';if(c!==cls){cls=c;arrow.className='xg-arrow '+c;}
-    const ql=Math.round(g.edgeL*10),qr=Math.round(g.edgeR*10);
+    const hintOnly=g.kind==='trail',ql=hintOnly?0:Math.round(g.edgeL*10),qr=hintOnly?0:Math.round(g.edgeR*10);
     if(ql!==eL){eL=ql;edgeL.hidden=ql<=0;edgeL.style.opacity=String(ql/10);}
     if(qr!==eR){eR=qr;edgeR.hidden=qr<=0;edgeR.style.opacity=String(qr/10);}
     if(g.behind!==behind){behind=g.behind;edgeL.classList.toggle('behind',behind);edgeR.classList.toggle('behind',behind);}

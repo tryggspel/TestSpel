@@ -189,6 +189,38 @@ export function drawRibbon(c,w,h){
   c.strokeStyle='#fff3c4';c.lineWidth=w*.11;
   for(const cy of [h*.27,h*.77]){c.beginPath();c.moveTo(w*.24,cy+h*.11);c.lineTo(w*.5,cy-h*.07);c.lineTo(w*.76,cy+h*.11);c.stroke();}
 }
+// Tomtarnas spår i snön: ett vänsterfots- och ett högerfotsavtryck i samma bild (två celler bredvid varandra), tån uppåt. En mörkblå fördjupning med en ljus snökant och ett ljust sken runt,
+// så att avtrycken syns på både vit snö och mörk asfalt, och några mönsterränder på sulan så att det ser ut som en stövel på nära håll.
+export function drawFootprints(c,w,h){
+  c.clearRect(0,0,w,h);
+  const cw=w/2;
+  // sulans form: en sammanhängande kontur (bred framfot, smal vrist på insidan, rundad häl); koordinaterna är bråkdelar av cellens halva bredd (x) och höjd (y)
+  const sole=()=>{
+    const X=v=>v*cw,Y=v=>v*h;
+    c.beginPath();c.moveTo(X(.02),Y(.06));
+    c.bezierCurveTo(X(.30),Y(.06),X(.34),Y(.24),X(.31),Y(.40));
+    c.bezierCurveTo(X(.29),Y(.50),X(.17),Y(.54),X(.16),Y(.62));
+    c.bezierCurveTo(X(.15),Y(.72),X(.24),Y(.78),X(.22),Y(.88));
+    c.bezierCurveTo(X(.20),Y(.96),X(-.20),Y(.96),X(-.22),Y(.88));
+    c.bezierCurveTo(X(-.24),Y(.78),X(-.30),Y(.66),X(-.30),Y(.56));
+    c.bezierCurveTo(X(-.31),Y(.40),X(-.34),Y(.20),X(-.26),Y(.12));
+    c.bezierCurveTo(X(-.20),Y(.07),X(-.10),Y(.06),X(.02),Y(.06));
+    c.closePath();
+  };
+  for(let i=0;i<2;i++){
+    c.save();c.translate(cw*i+cw/2,0);c.scale(i?-1:1,1); // höger fot = vänster fot spegelvänd
+    c.shadowColor='#d6ebffd9';c.shadowBlur=w*.05;c.fillStyle='#5c78a6f2';sole();c.fill();                    // sken och fördjupning
+    c.shadowBlur=0;
+    c.save();sole();c.clip();                                                                                 // djupare mitt och mönsterränder, klippta mot sulan
+    c.fillStyle='#3a537ed0';c.beginPath();c.ellipse(.02*cw,.30*h,.2*cw,.16*h,0,0,6.2832);c.fill();c.beginPath();c.ellipse(-.01*cw,.80*h,.14*cw,.09*h,0,0,6.2832);c.fill();
+    c.strokeStyle='#f2f8ff99';c.lineWidth=w*.017;c.lineCap='round';
+    for(const y of [.2,.28,.36,.44]){c.beginPath();c.moveTo(-.3*cw,y*h);c.lineTo(.3*cw,y*h-.012*h);c.stroke();}
+    for(const y of [.75,.83,.9]){c.beginPath();c.moveTo(-.2*cw,y*h);c.lineTo(.2*cw,y*h);c.stroke();}
+    c.restore();
+    c.lineWidth=w*.024;c.strokeStyle='#f4f9ffef';c.lineJoin='round';sole();c.stroke();                       // ljus snökant
+    c.restore();
+  }
+}
 export function drawSnowflake(c,w,h){c.clearRect(0,0,w,h);const g=c.createRadialGradient(w/2,h/2,1,w/2,h/2,w/2);g.addColorStop(0,'#ffffffff');g.addColorStop(.55,'#ffffffcc');g.addColorStop(1,'#ffffff00');c.fillStyle=g;c.beginPath();c.arc(w/2,h/2,w/2,0,7);c.fill();}
 export function drawSparkle(c,w,h,col='#fff2a8'){c.clearRect(0,0,w,h);sparkle(c,w/2,h/2,w*.42,col);const g=c.createRadialGradient(w/2,h/2,1,w/2,h/2,w*.5);g.addColorStop(0,col+'aa');g.addColorStop(1,col+'00');c.fillStyle=g;c.fillRect(0,0,w,h);}
 export function drawGlow(c,w,h,col='#ffd86b'){c.clearRect(0,0,w,h);const g=c.createRadialGradient(w/2,h/2,1,w/2,h/2,w/2);g.addColorStop(0,col+'ee');g.addColorStop(.5,col+'55');g.addColorStop(1,col+'00');c.fillStyle=g;c.fillRect(0,0,w,h);}

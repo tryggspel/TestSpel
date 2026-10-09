@@ -32,13 +32,21 @@ export function installXmas(ctx){
   let fault=false;
   const guard=(fn,fallback)=>{if(fault)return fallback;try{return fn();}catch(e){fault=true;console.error('[Jultillägget stängdes av efter fel]',e);try{hunt.cancel('fel');julrush.cleanup();zombieTune.off();ui.showHud(false);view.clear();document.body.classList.remove('xmas-on','xmas-cozy','xmas-zombies','xmas-rush');journey.xmas=null;}catch{}return fallback;}}; // grundspelets HUD och regler tar över igen
 
-  const nav={blocked:(x,z)=>host.blocked(x,z),snap:p=>{try{const q=journey.nav.point(p);return {x:q.x,z:q.z};}catch{return null;}}};
+  // route: gångvägen mellan två punkter (för tomtarnas spår i snön i fri julvandring); null om det inte finns någon, då blir spåret en rak linje.
+  const nav={blocked:(x,z)=>host.blocked(x,z),snap:p=>{try{const q=journey.nav.point(p);return {x:q.x,z:q.z};}catch{return null;}},
+    // Bara de sista 160 m av vägen behövs (ett spår har högst 90 avtryck), så utjämningen av en lång omväg blir inte dyr.
+    route:(a,b)=>{try{
+      const raw=journey.nav.path(a,b);if(!Array.isArray(raw)||raw.length<2)return null;
+      let L=0,from=0;for(let i=raw.length-1;i>0;i--){L+=Math.hypot(raw[i].x-raw[i-1].x,raw[i].z-raw[i-1].z);if(L>160){from=i;break;}}
+      return smoothPath(journey.nav,from>0?raw.slice(from):raw);
+    }catch{return null;}}};
   // Spelets egen gångbara karta för rundorna (rutter, hinder, fri sikt).
   const roundNav={point:p=>journey.nav.point(p),path:(a,b)=>journey.nav.path(a,b),clear:(a,b)=>journey.nav.clear(a,b),blocked:(x,z)=>host.blocked(x,z),smooth:p=>smoothPath(journey.nav,p)};
   const hunt=new XmasHunt({save,nav});
   const julrush=new XmasRush({journey,save}); // JulRushen: TempoRushs bana och klocka (journey.tempo) med julens paket, gåvor och poäng
   const guide=new XmasGuide({nav:journey.nav}); // pilen, kantmarkörerna, stjärnspåret och uppdragsraden i paketjakten (inte i JulRushen, som har grundspelets pil)
   let guideShown=false,missionAt=0;
+  const rushArrow=document.getElementById('tempoArrow');let rushArrowAt=0,rushArrowTop=-1;
   const sprites=createSprites(pc,host,{texture,root});
   const view=createXmasView(pc,host,{labelTex,root,texture},sprites,hunt,julrush);
   let decor=null; // julmiljön: gran, stånd, ljus, tomtar och snöfall. Fail-soft: går något fel i den fortsätter spelet utan.
@@ -237,7 +245,7 @@ export function installXmas(ctx){
       const keep=mode==='cozy'&&isPlaying();
       if(!keep)enter('free');else{setPanel(null);resume?.();}
       hunt.startFree();setPanel(null);
-      toast('FRI JULVANDRING','Gå runt i julstaden. Tomtarna tappar nya paket här och där: följ pilen.',3.2);
+      toast('FRI JULVANDRING','Tomtarna tappar paket här och där i staden. Leta efter deras spår i snön och följ dem till paketen.',4);
       ui.showHud(true);ui.setProgress(hunt.run);view.clear();
     });
   }
@@ -280,9 +288,10 @@ export function installXmas(ctx){
     },
     'xmas-goal':(e,now)=>{sound('win');[523.25,659.25,783.99,1046.5].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.28,.08),i*90));ui.showGoal('Bra! Lämna paketen hos tomten.',5500,now);fanfare(e.goal+' PAKET!','Följ pilen till tomten och lämna dem.',2.4,'win');ui.setProgress(hunt.run);},
     'xmas-chain-lost':(e,now)=>{ui.showPill('KEDJAN BRÖTS · '+e.chain+' I RAD',1200,now,'lost');},
-    // Regnen kommer tätt (var 22–38:e sekund, snabbare när paketen i närheten tar slut): hela fanfaren bara om den förra är mer än 25 s gammal, annars en kort rad.
-    'xmas-rain':(e,now)=>{sound('energy');if(now-rainToastAt>25000){rainToastAt=now;ui.showGoal('Tomtarna tappade fler paket! Följ pilen.',5200,now);fanfare('PAKETREGN!',e.count+' paket och ett bonuspaket. Följ pilen.',2.6,'energy');}else ui.showPill('NYTT PAKETREGN · '+e.count+' PAKET',1600,now);},
-    'xmas-rain-gone':(e,now)=>{if(e.missed>0)ui.showPill('PAKETREGNET FÖRSVANN',1400,now,'lost');},
+    // Tomtarna tappar paket tätt (var 22–38:e sekund, snabbare när paketen i närheten tar slut): hela fanfaren bara om den förra är mer än 25 s gammal, annars en kort rad.
+    // Det finns ingen pil: spåren i snön leder till paketen (fri julvandring är sök och hitta).
+    'xmas-rain':(e,now)=>{sound('energy');if(now-rainToastAt>25000){rainToastAt=now;ui.showGoal('Tomtarna tappade paket! Leta efter deras spår i snön.',5200,now);fanfare('TAPPADE PAKET!','Följ tomtarnas spår i snön och leta upp '+e.count+' paket och ett bonuspaket.',2.6,'energy');}else ui.showPill('NYA SPÅR I SNÖN · '+e.count+' PAKET',1600,now);},
+    'xmas-rain-gone':(e,now)=>{if(e.missed>0)ui.showPill('SNÖN TÄCKTE SPÅREN',1400,now,'lost');},
     'xmas-late':(e,now)=>{ui.showPill('SEN, MEN DET GÅR ATT LÄMNA IN',2000,now,'lost');},
     // JulRushen
     'rush-start':(e,now)=>{ui.setRush(julrush.snapshot(),julrush.powers([]),now);},
@@ -339,12 +348,19 @@ export function installXmas(ctx){
     if(!on){if(guideShown||guide.state.on){guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;}return;}
     const g=guide.update(p,host.camera.forward,hunt.guideTarget(p),dt,now,view.lite);
     guideUi.set(g);view.setGuide(g.on?g:null);guideShown=true;
-    if(now-missionAt>140){missionAt=now;guideUi.setMission(missionView(hunt.run));}
+    if(now-missionAt>140){missionAt=now;guideUi.setMission(missionView(hunt.run,p));}
   }
 
   // ── Varje bildruta ──────────────────────────────────────────────────────────────────────────────────────────────
   function update(p,now,dt){
     guard(()=>{
+      // JulRushens pil (grundspelets #tempoArrow) ligger strax under HUD:ens underkant, som växer när fler gåvor är på; läses högst fyra gånger i sekunden.
+      if(rushArrow){
+        if(mode==='rush'){if(now-rushArrowAt>250){rushArrowAt=now;const b=Math.round(ui.hud.getBoundingClientRect().bottom)+8;if(b!==rushArrowTop&&b>20){rushArrowTop=b;rushArrow.style.top=b+'px';}}}
+        else if(rushArrowTop!==-1){rushArrowTop=-1;rushArrow.style.top='';}
+      }
+      // Blickriktningen: det första tappade paketet i fri julvandring läggs framför spelaren så att spåret syns direkt.
+      {const f=host.camera.forward,h=hunt.facing||(hunt.facing={x:0,z:0});h.x=f.x;h.z=f.z;}
       // Tomtezombies från nivå 2: nästa patrull ligger aldrig längre fram än nivåns takt (grundspelets egen takt är 14 s i början).
       if(mode==='zombies'&&zLevel?.patrolEvery&&hunt.active){const zr=journey.rush;if(zr&&zr.state==='playing'){const cap=zr.spent+zLevel.patrolEvery;if(zr.nextPatrol>cap)zr.nextPatrol=cap;}}
       handle(now);
@@ -368,8 +384,9 @@ export function installXmas(ctx){
     if(!hunt.run)return;
     const r=hunt.run,t=hunt.target(p);
     els.score.textContent=r.points.toLocaleString('sv-SE');
+    if(r.kind==='free'){els.compassText.textContent='LETA SPÅR I SNÖN';els.compassArrow.textContent='⌖';els.compassArrow.style.transform='none';return;} // sök och hitta: ingen kompass mot paketen
     if(t){const ang=Math.atan2(t.x-p.x,t.z-p.z)-Math.atan2(host.camera.forward.x,host.camera.forward.z);els.compassArrow.style.transform='rotate('+(-ang*180/Math.PI)+'deg)';els.compassArrow.textContent='↑';els.compassText.textContent=t.kind==='tomte'?'TILL TOMTEN · '+Math.round(t.distance)+' M':t.label+' · '+Math.round(t.distance)+' M';}
-    else{els.compassText.textContent=r.kind==='free'?'VÄNTA PÅ PAKETREGN':'KLART';els.compassArrow.textContent='⌖';els.compassArrow.style.transform='none';}
+    else{els.compassText.textContent='KLART';els.compassArrow.textContent='⌖';els.compassArrow.style.transform='none';}
   }
 
   // ── Start ───────────────────────────────────────────────────────────────────────────────────────────────────────

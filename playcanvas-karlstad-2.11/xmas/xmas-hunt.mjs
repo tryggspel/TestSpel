@@ -7,9 +7,10 @@
 //  - Introduktionen har ingen tidsgräns. Rundor har en mjuk tid: den ger bara tidsbonus, man kan alltid lämna in.
 //  - Fri julvandring delar ut nya paketregn med jämna mellanrum; varje regn har egna ID och en tydlig varning, och försvinner efter en stund.
 import {CATCH,catchReach} from '../journey-rules.mjs?v=2.21.1-xmas.4';
-import {PACKAGE_POINTS,COMBO,comboMult,DELIVERY,timeBonus,FREE_RAIN,STAMPS} from './xmas-config.mjs?v=2.21.1-xmas.4';
+import {PACKAGE_POINTS,COMBO,comboMult,DELIVERY,timeBonus,FREE_RAIN,TRAILS,STAMPS} from './xmas-config.mjs?v=2.21.1-xmas.4';
 import {INTRO,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.4';
 import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.4';
+import {trailPrints} from './xmas-tracks.mjs?v=2.21.1-xmas.4';
 
 function closestOnSegment(px,pz,ax,az,bx,bz){
   const dx=bx-ax,dz=bz-az,len2=dx*dx+dz*dz,t=len2>0?Math.max(0,Math.min(1,((px-ax)*dx+(pz-az)*dz)/len2)):0,x=ax+dx*t,z=az+dz*t;
@@ -21,6 +22,7 @@ export class XmasHunt{
   constructor({save=null,nav={},rand=Math.random,reward=null}={}){
     this.save=save;this.nav={blocked:()=>false,snap:p=>p,...nav};this.rand=rand;this.reward=reward;
     this.run=null;this.events=[];this.serial=0;this.lastStep=null;this.guideId='';
+    this.facing=null; // åt vilket håll spelaren tittar ({x,z}, sätts av spelet varje bildruta): det första tappade paketet i fri julvandring läggs framför spelaren
   }
   get active(){return !!this.run&&this.run.phase!=='done'&&this.run.phase!=='ended';}
   emit(e){this.events.push(e);}
@@ -40,7 +42,7 @@ export class XmasHunt{
     this.emit({type:'xmas-start',kind:def.kind,id:def.id,title:this.run.title,goal:this.run.goal,total:regular,bonusTotal:bonus});
     return this.run;
   }
-  startFree(){return this.startRun({kind:'free',id:'free',title:'FRI JULVANDRING',goal:0,packages:[],tomte:null,windowSec:COMBO.window});}
+  startFree(){return this.startRun({kind:'free',id:'free',title:'FRI JULVANDRING',goal:0,packages:[],tomte:null,windowSec:FREE_RAIN.chainWindow});}
   cancel(reason='avbruten'){
     if(!this.run)return;const r=this.run;
     if(this.active){r.phase='ended';this.emit({type:'xmas-cancel',kind:r.kind,id:r.id,reason});}
@@ -86,6 +88,7 @@ export class XmasHunt{
     const tier=COMBO.tiers.find(t=>t.chain===r.chain);if(tier){tierBonus=tier.bonus;praise=tier.praise;points+=tierBonus;}
     r.points+=points;
     if(isBonus)r.bonusCollected++;else r.collected++;
+    if(pkg.rain){const rn=r.rains.find(x=>x.serial===pkg.rain);if(rn)rn.left--;}
     this.emit({type:'xmas-pick',id:pkg.id,x:pkg.x,z:pkg.z,kind:pkg.kind,points,chain:r.chain,mult,praise,tierBonus,collected:r.collected,goal:r.goal,total:r.regularTotal,bonusCollected:r.bonusCollected,bonusTotal:r.bonusTotal,rain:pkg.rain||0,score:r.points});
     if(r.phase==='collect'&&r.goal&&r.collected>=r.goal){r.phase='deliver';this.emit({type:'xmas-goal',kind:r.kind,id:r.id,collected:r.collected,goal:r.goal,tomte:r.tomte});}
   }
@@ -132,7 +135,9 @@ export class XmasHunt{
     const sight=(c,x,z)=>{const n=Math.ceil(Math.hypot(x-c.x,z-c.z)/.5);for(let i=1;i<=n;i++)if(!free(c.x+(x-c.x)*i/n,c.z+(z-c.z)*i/n))return false;return true;};
     let best=null;
     for(let attempt=0;attempt<F.tries;attempt++){
-      const ang=this.rand()*Math.PI*2,dist=F.minDistance+this.rand()*(F.maxDistance-F.minDistance);
+      // Första gången (och bara då) ligger platsen framför spelaren, inom ±60° från blickriktningen, så att spåret syns direkt; därefter åt alla håll (sök och hitta).
+      const fwd=r.rainSerial===0&&attempt<4&&this.facing&&(this.facing.x||this.facing.z)?Math.atan2(this.facing.x,this.facing.z)+(this.rand()-.5)*2.1:null;
+      const ang=fwd!==null?fwd:this.rand()*Math.PI*2,dist=F.minDistance+this.rand()*(F.maxDistance-F.minDistance);
       const c=this.nav.snap({x:p.x+Math.sin(ang)*dist,z:p.z+Math.cos(ang)*dist});
       if(!c||Math.hypot(c.x-p.x,c.z-p.z)<F.minDistance*.7||!free(c.x,c.z))continue;
       const want=F.count[0]+Math.floor(this.rand()*(F.count[1]-F.count[0]+1)),phase=this.rand()*Math.PI*2,spots=[];
@@ -151,9 +156,14 @@ export class XmasHunt{
     const {c,spots}=best,serial=++r.rainSerial,made=spots.map((s,i)=>({id:'f'+r.serial+'.'+serial+':'+i,x:+s.x.toFixed(2),z:+s.z.toFixed(2),y:0,kind:'regular',cluster:serial,collected:false,at:0,rain:serial}));
     made.push({id:'f'+r.serial+'.'+serial+':b',x:+c.x.toFixed(2),z:+c.z.toFixed(2),y:0,kind:'bonus',cluster:serial,collected:false,at:0,rain:serial});
     r.packages.push(...made);for(const k of made)r.byId.set(k.id,k);
-    const rain={serial,at:r.t,x:c.x,z:c.z,count:made.length-1};r.rains.push(rain);
+    // Tomtarnas spår: fotavtryck längs gångvägen från en punkt nära spelaren till platsen där paketen tappades (rak linje om spelet inte har någon väg att erbjuda).
+    let route=null;try{route=typeof this.nav.route==='function'?this.nav.route(p,c):null;}catch{route=null;}
+    const path=Array.isArray(route)&&route.length>=2?route:[{x:p.x,z:p.z},{x:c.x,z:c.z}];
+    const trail=trailPrints(path,{blocked:(x,z)=>!free(x,z),phase:serial*1.7});
+    const head=trail.length?{x:trail[0].x,z:trail[0].z}:{x:c.x,z:c.z};
+    const rain={serial,at:r.t,x:c.x,z:c.z,count:made.length-1,left:made.length,trail,head};r.rains.push(rain);
     r.regularTotal+=made.length-1;r.bonusTotal+=1;
-    this.emit({type:'xmas-rain',rain:serial,x:c.x,z:c.z,count:made.length-1,life:FREE_RAIN.life});
+    this.emit({type:'xmas-rain',rain:serial,x:c.x,z:c.z,count:made.length-1,life:FREE_RAIN.life,head,prints:trail.length});
     return rain;
   }
 
@@ -182,6 +192,8 @@ export class XmasHunt{
   // än det nuvarande för att pilen ska byta, så att den inte fladdrar mellan två lika nära paket.
   guideTarget(p){
     const r=this.run;if(!r||!this.active&&r.phase!=='free')return null;
+    // Fri julvandring är sök och hitta: ingen pil till paketen. Har man gått länge utan att hitta något (och inte är nära ett spår eller paket) pekar en liten pil mot närmaste spårs början.
+    if(r.kind==='free')return this.trailHint(p);
     if(r.phase==='deliver'&&r.tomte)return {x:r.tomte.x,z:r.tomte.z,id:'xmas-tomte',kind:'tomte',label:'TOMTEN',radius:r.tomte.radius,distance:Math.hypot(r.tomte.x-p.x,r.tomte.z-p.z)};
     let best=null,bd=Infinity,cur=null,cd=Infinity,seen=0;
     for(const k of r.packages){
@@ -198,8 +210,22 @@ export class XmasHunt{
     return {x:best.x,z:best.z,id:best.id,kind:best.kind,label:best.kind==='bonus'?'BONUSPAKET':'NÄSTA PAKET',radius:1.6,distance:bd};
   }
   idleSeconds(){const r=this.run;return r?r.t-r.lastPickT:0;}
+  // Hjälp i fri julvandring: närmaste spårs början, bara när det gått TRAILS.idleAssist sekunder sedan senaste fyndet och man varken står vid ett spår eller har ett paket i närheten.
+  trailHint(p){
+    const r=this.run;if(!r||r.kind!=='free'||this.idleSeconds()<TRAILS.idleAssist)return null;
+    let best=null,bd=Infinity;
+    for(const rain of r.rains){
+      if(rain.gone||!(rain.left>0))continue;
+      const d=Math.hypot(rain.head.x-p.x,rain.head.z-p.z);
+      if(d<TRAILS.assistClear||Math.hypot(rain.x-p.x,rain.z-p.z)<TRAILS.nearDrop*2)return null;
+      if(d<bd){bd=d;best=rain;}
+    }
+    if(!best)return null;
+    return {x:best.head.x,z:best.head.z,id:'trail:'+best.serial,kind:'trail',label:'SPÅR I SNÖN',radius:2,distance:bd};
+  }
   objective(p){
     const r=this.run;if(!r||!this.active&&r.phase!=='free')return null;
+    if(r.kind==='free')return {x:p.x,z:p.z,id:'xmas-wait',kind:'wait',label:'FRI JULVANDRING',radius:2}; // inga pilar på marken och ingen flagga: spåren i snön visar vägen
     const t=this.target(p);
     if(!t)return {x:p.x,z:p.z,id:'xmas-wait',kind:'wait',label:'FRI JULVANDRING',radius:2};
     // Pilarna på marken: alltid mot tomten efter målet, annars bara när nästa paket är långt bort eller det går trögt.
@@ -208,7 +234,7 @@ export class XmasHunt{
   }
   snapshot(){
     const r=this.run;if(!r)return {active:false};
-    return {active:this.active,kind:r.kind,id:r.id,phase:r.phase,t:+r.t.toFixed(2),goal:r.goal,collected:r.collected,bonusCollected:r.bonusCollected,total:r.regularTotal,bonusTotal:r.bonusTotal,points:r.points,chain:r.chain,bestChain:r.bestChain,late:r.late,left:r.packages.filter(k=>!k.collected).length,rains:r.rains.length,result:r.result};
+    return {active:this.active,kind:r.kind,id:r.id,phase:r.phase,t:+r.t.toFixed(2),goal:r.goal,collected:r.collected,bonusCollected:r.bonusCollected,total:r.regularTotal,bonusTotal:r.bonusTotal,points:r.points,chain:r.chain,bestChain:r.bestChain,late:r.late,left:r.packages.filter(k=>!k.collected).length,rains:r.rains.length,prints:r.rains.reduce((n,x)=>n+(x.trail?x.trail.length:0),0),result:r.result};
   }
 }
 export const STAMP_LABEL=id=>STAMPS.find(s=>s.id===id)?.label||id;

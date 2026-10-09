@@ -40,6 +40,18 @@ const yawTo=(px,pz,tx,tz)=>Math.atan2(-(tx-px),-(tz-pz))*180/Math.PI;
 const click=id=>ev(i=>document.getElementById(i)?.click(),id);
 const vis=sel=>ev(s=>{const e=document.querySelector(s);if(!e||e.hidden)return false;const cs=getComputedStyle(e);if(cs.display==='none'||cs.visibility==='hidden')return false;const r=e.getBoundingClientRect();return r.width>0&&r.height>0;},sel);
 const text=sel=>ev(s=>document.querySelector(s)?.textContent||'',sel);
+// Pilens plats (2.21.1-xmas.5): en kompakt platta under uppdragsraden uppe i hörnet. Den får inte skymma framsynen (mitten av bilden), inte vara större än en liten platta och inte ligga över uppdragsraden eller HUD:en.
+const arrowGeo=()=>ev(()=>{
+  const R=e=>{const b=document.querySelector(e)?.getBoundingClientRect();return b?{x:b.x,y:b.y,r:b.right,b:b.bottom,w:b.width,h:b.height}:null;};
+  const rows=[...document.querySelectorAll('#xmasMission .xg-step')].filter(r=>!r.hidden&&r.getClientRects().length).map(r=>r.getBoundingClientRect().bottom);
+  return {arrow:R('#xmasArrow'),hud:R('#xmasHud'),rowsBottom:rows.length?Math.max(...rows):0,vw:innerWidth,vh:innerHeight};
+});
+const arrowOk=g=>{
+  const a=g.arrow;if(!a)return {ok:false,why:'ingen pil'};
+  const cz={x:g.vw*.3,r:g.vw*.7,y:g.vh*.28,b:g.vh*.72},hit=!(a.r<=cz.x||a.x>=cz.r||a.b<=cz.y||a.y>=cz.b);
+  const inside=a.x>=0&&a.y>=0&&a.r<=g.vw&&a.b<=g.vh,below=a.y>=g.rowsBottom-1,hudFree=!g.hud||a.y>=g.hud.b-1||a.r<=g.hud.x||a.x>=g.hud.r,small=a.w<=270&&a.h<=66;
+  return {ok:inside&&below&&hudFree&&small&&!hit,why:JSON.stringify({inside,below,hudFree,small,skymmerMitten:hit,a:{x:Math.round(a.x),y:Math.round(a.y),w:Math.round(a.w),h:Math.round(a.h)},rowsBottom:Math.round(g.rowsBottom),vh:g.vh})};
+};
 // Versaler med prickar eller ring (Å, Ä, Ö) når högre än resten av raden. I ett element med overflow:hidden och tät radhöjd klipps de bort ("LÄMNA" blev "LAMNA").
 // Mäter med canvas var teckenets överkant hamnar jämfört med elementets övre (padding)kant; under 1 px marginal räknas som klippt.
 const clipped=sel=>ev(s=>{
@@ -68,6 +80,8 @@ check('A1 pilen finns direkt och pekar på första paketet (rakt fram, med avst�
 check('A2 pilens text visar vad den pekar på och hur långt det är',/^NÄSTA PAKET · \d+ M$/.test(await text('#xmasArrow .xg-line'))&&await text('#xmasArrow .xg-hint')==='GÅ RAKT FRAM',await text('#xmasArrow .xg-line'));
 check('A3 uppdragsraden visar båda stegen: SAMLA PAKET 0/20 och LÄMNA HOS TOMTEN',s0.guide.mission==='SAMLA PAKET 0/20 › LÄMNA HOS TOMTEN'&&await vis('#xmasMission'),s0.guide.mission);
 check('A3b texterna i uppdragsraden och pilen klipps inte: prickarna på Å, Ä och Ö syns ("LÄMNA" blir inte "LAMNA")',(await clipped('#xmasMission b, #xmasArrow .xg-line, #xmasArrow .xg-hint')).length===0&&await ev(()=>document.querySelectorAll('#xmasMission b').length>=2),JSON.stringify(await clipped('#xmasMission b, #xmasArrow .xg-line, #xmasArrow .xg-hint')));
+const geoA=arrowOk(await arrowGeo());
+check('A3c pilen är en kompakt platta under uppdragsraden uppe i hörnet och skymmer inte framsynen (mitten av bilden är fri)',geoA.ok,geoA.why);
 check('A4 målstrålen lyser vid första paketet (inget band behövs när paketet är tre meter bort)',s0.view.goal===true&&s0.view.ribbon===0,JSON.stringify({ribbon:s0.view.ribbon,goal:s0.view.goal}));
 const base=await ev(()=>{const root=window.__app.root;let pips=0;root.find(e=>/^mission-arrow-/.test(e.name)&&e.enabled).forEach(()=>pips++);const flag=root.findByName('Ditt valda mål');return {pips,flag:!!flag&&flag.enabled,compass:getComputedStyle(document.getElementById('roundCompass')).display,tempoArrow:document.getElementById('tempoArrow').hidden||getComputedStyle(document.getElementById('tempoArrow')).display==='none'};});
 check('A5 grundspelets små pilar på marken, "DITT MÅL"-flaggan och kompasspillen ritas inte i Julklappsjakten',base.pips===0&&!base.flag&&base.compass==='none'&&base.tempoArrow,JSON.stringify(base));
@@ -85,8 +99,16 @@ check('B2 målet till vänster: pilen pekar åt vänster, hint SVÄNG VÄNSTER o
 const back=await angleAt(toward+180);
 check('B3 målet bakom: VÄND DIG OM och båda kanterna lyser',Math.abs(back.angle)>150&&back.hint==='VÄND DIG OM'&&back.edgeL>0&&back.edgeR>0,JSON.stringify({a:back.angle,h:back.hint}));
 await shot('03-bakom');
+const geoB=arrowOk(await arrowGeo());
+check('B3b pilen skymmer inte framsynen heller när den visar SVÄNG/VÄND DIG OM (två rader)',geoB.ok,geoB.why);
 const edgesShown=await ev(()=>({l:!document.getElementById('xmasEdgeL').hidden,r:!document.getElementById('xmasEdgeR').hidden}));
 check('B4 kantmarkörerna finns i sidan när målet ligger bakom',edgesShown.l&&edgesShown.r,JSON.stringify(edgesShown));
+const edgeGeo=await ev(()=>{
+  const R=id=>{const b=document.getElementById(id)?.getBoundingClientRect();return b?{x:b.x,y:b.y,r:b.right,b:b.bottom,w:b.width}:null;},hit=(a,b)=>!!a&&!!b&&!(a.r<=b.x||a.x>=b.r||a.b<=b.y||a.y>=b.b);
+  const l=R('xmasEdgeL'),r=R('xmasEdgeR'),pause=R('roundPause'),radar=R('roundRadarButton');
+  return {w:[l.w,r.w],top:[l.y/innerHeight,r.y/innerHeight],bottom:[l.b/innerHeight,r.b/innerHeight],pause:hit(l,pause)||hit(r,pause),radar:hit(l,radar)||hit(r,radar)};
+});
+check('B4b kantmarkörerna är smala streck mitt på sidorna (högst 16 px breda, mellan en fjärdedel och tre fjärdedelar av höjden) och döljer varken pausknappen eller radarn',edgeGeo.w.every(w=>w>=6&&w<=16)&&edgeGeo.top.every(t=>t>=.25)&&edgeGeo.bottom.every(t=>t<=.75)&&!edgeGeo.pause&&!edgeGeo.radar,JSON.stringify(edgeGeo));
 const rot=await ev(()=>document.querySelector('#xmasArrow .xg-icon').style.transform);
 check('B5 pilens ikon vrids (CSS-rotation) när vinkeln ändras',/rotate\(-?\d+(\.\d)?deg\)/.test(rot)&&!/rotate\(-?0\.0deg\)/.test(rot),rot);
 const front=await angleAt(toward);
@@ -174,8 +196,40 @@ const r=await snap();
 check('F3 JulRushen: paketjaktens pil och uppdragsrad är av, grundspelets pil används (julbandet på marken är det enda som delas)',r.mode==='rush'&&!(await vis('#xmasArrow'))&&!(await vis('#xmasMission'))&&await vis('#tempoArrow'),JSON.stringify({mode:r.mode,ribbonState:r.guide.on,ribbonPieces:r.view.ribbon}));
 await ev(()=>window.KarlstadDebug.journey().xmas.startFree());await wait(1500);
 const fr=await snap();
-check('F4 fri vandring utan paket: ingen pil, uppdragsraden säger när nästa paketregn kommer',!fr.guide.on&&/^NÄSTA PAKETREGN OM \d+ S$/.test(fr.guide.mission),JSON.stringify({on:fr.guide.on,m:fr.guide.mission}));
+check('F4 fri vandring utan paket: ingen pil, uppdragsraden säger när nya spår kommer',!fr.guide.on&&/^NYA SPÅR OM \d+ S$/.test(fr.guide.mission),JSON.stringify({on:fr.guide.on,m:fr.guide.mission}));
 await shot('08-fri-vandring');
+// Sök och hitta: när tomtarna tappat paket finns spår i snön, men ingen pil, stråle, ring eller band mot paketen.
+let rainSeen=false;for(let i=0;i<80&&!rainSeen;i++){rainSeen=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.rains.length>=1);if(!rainSeen)await wait(400);}
+const rn=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run.rains[0];return r?{x:r.x,z:r.z,head:r.head,trail:r.trail.map(p=>[p.x,p.z]),n:r.trail.length}:null;});
+await ev(()=>{window.KarlstadDebug.journey().xmas.hunt.stepRain=()=>{};});                // inga fler tappade paket under kontrollerna (ett nytt kommer annars när man flyttat sig långt)
+await tp(...(await ev(()=>window.__pos())),0,-4,700);                                   // stå still en stund så att vyn hinner skriva om spåren
+const f1=await snap();
+check('F4b fri vandring är sök och hitta: spår i snön finns men ingen pil, målstråle, ring eller julband mot paketen, och raden säger HITTA TOMTARNAS SPÅR',!!rn&&rn.n>=6&&!f1.guide.on&&f1.view.goal===false&&f1.view.ribbon===0&&!(await vis('#xmasArrow'))&&f1.guide.mission==='HITTA TOMTARNAS SPÅR'&&f1.hunt.prints>=6,JSON.stringify({on:f1.guide.on,goal:f1.view.goal,ribbon:f1.view.ribbon,m:f1.guide.mission,prints:f1.hunt.prints}));
+// Står man vid ett avtryck ritas spåret i vyn och raden säger FÖLJ SPÅREN; nära paketen LETA RUNT.
+const pr=rn.trail[Math.floor(rn.trail.length/2)],pr2=rn.trail[Math.min(rn.trail.length-1,Math.floor(rn.trail.length/2)+3)];
+await tp(pr[0],pr[1],yawTo(pr[0],pr[1],pr2[0],pr2[1]),-6,1500);
+const f2=await snap();
+check('F4c vid spåret ritas avtrycken i vyn (en enda mesh) och raden säger FÖLJ SPÅREN',f2.view.prints>=4&&f2.guide.mission==='FÖLJ SPÅREN',JSON.stringify({prints:f2.view.prints,m:f2.guide.mission}));
+await shot('08b-spar-i-snon');
+const end=rn.trail.at(-1);
+await tp(end[0],end[1],yawTo(end[0],end[1],rn.x,rn.z),-6,1500);
+const f3=await snap();
+check('F4d nära paketen säger raden PAKETEN ÄR NÄRA! och paketen syns i vyn',f3.guide.mission==='PAKETEN ÄR NÄRA!'&&f3.view.shown>=3,JSON.stringify({m:f3.guide.mission,shown:f3.view.shown}));
+await shot('08c-paketen-ar-nara');
+// Paketen syns först på nära håll (34 m): längre bort ritas de inte, hur många det än finns.
+const faraway={x:rn.x+60,z:rn.z+60};
+await tp(faraway.x,faraway.z,0,-4,1100);
+const f4=await snap();
+check('F4e paketen syns inte på långt håll i fri vandring (sök och hitta): inga paket ritas 85 m bort',f4.view.shown===0,JSON.stringify({shown:f4.view.shown}));
+// Efter en lång stund utan fynd pekar en liten pil mot närmaste spårs början (aldrig mot paketen). Står man vid spåret försvinner den.
+await ev(()=>{const h=window.KarlstadDebug.journey().xmas.hunt;h.run.lastPickT=h.run.t-60;});
+await tp(faraway.x,faraway.z,0,-4,1300);
+const f5=await snap(),geoH=arrowOk(await arrowGeo());
+check('F4f efter 40 sekunder utan fynd visas en liten hjälp-pil mot närmaste spår ("SPÅR I SNÖN", inte "NÄSTA PAKET") som inte skymmer framsynen',f5.guide.on&&f5.guide.label==='SPÅR I SNÖN'&&f5.view.goal===false&&f5.view.ribbon===0&&await vis('#xmasArrow')&&geoH.ok,JSON.stringify({g:f5.guide.label,why:geoH.why}));
+await shot('08d-hjalp-pil');
+await tp(rn.head.x,rn.head.z,0,-4,1300);
+const f6=await snap();
+check('F4g står man vid spårets början försvinner hjälp-pilen',!f6.guide.on&&!(await vis('#xmasArrow')),JSON.stringify({on:f6.guide.on}));
 const a=await ev(()=>window.KarlstadDebug.journey().places.arrivalFor('pressbyran'));await tp(a.x,a.z,a.yaw,-4,1200);
 await ev(()=>window.KarlstadDebug.use());await wait(900);
 const q=await snap();

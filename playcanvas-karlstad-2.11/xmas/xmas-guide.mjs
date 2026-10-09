@@ -11,6 +11,8 @@
 //  - Uppdragsraden säger alltid vad man ska göra nu och vad som kommer sedan (samla paket, lämna hos tomten).
 import {CityGuidance} from '../city-guidance.mjs?v=2.21.1-xmas.4';
 import {arrowInfo} from '../tempo-run.mjs?v=2.21.1-xmas.4';
+import {TRAILS} from './xmas-config.mjs?v=2.21.1-xmas.4';
+import {nearestPrint} from './xmas-tracks.mjs?v=2.21.1-xmas.4';
 
 export const GUIDE=Object.freeze({
   recalcMs:90,moveEps:.4,maxAgeMs:600,          // hur ofta vägen räknas om (när man rör sig) och hur gammal den får bli
@@ -95,13 +97,20 @@ export class XmasGuide{
 }
 
 // Uppdragsraden: vad man ska göra nu och sedan. Rader: {id,text,state} där state är now | next | done | wait. `key` ändras bara när något ska ritas om.
-export function missionView(run){
+// p (valfri): spelarens plats. I fri julvandring (sök och hitta) säger raden först att man ska hitta tomtarnas spår, sedan att man ska följa dem, och nära paketen att man ska leta runt.
+// Raderna är korta (högst 20 tecken): de får plats på en smal telefon utan att klippas.
+export function missionView(run,p=null){
   if(!run)return null;
   const rows=[];
   if(run.kind==='free'){
     const left=run.packages.reduce((n,k)=>n+(k.collected?0:1),0);
-    if(left>0)rows.push({id:'free',text:'PLOCKA PAKETEN · '+left+' KVAR',state:'now'});
-    else rows.push({id:'wait',text:'NÄSTA PAKETREGN OM '+Math.max(1,Math.ceil((run.nextRainAt-run.t)||0))+' S',state:'wait'});
+    if(left>0){
+      let near=false;
+      if(p)for(const rain of run.rains){if(!rain.gone&&rain.left>0&&Math.hypot(rain.x-p.x,rain.z-p.z)<=TRAILS.nearDrop){near=true;break;}}
+      if(near)rows.push({id:'search-near',text:'PAKETEN ÄR NÄRA!',state:'now'});
+      else if(p&&nearestPrint(run.rains,p.x,p.z)<=5)rows.push({id:'follow',text:'FÖLJ SPÅREN',state:'now'});
+      else rows.push({id:'search',text:'HITTA TOMTARNAS SPÅR',state:'now'});
+    }else rows.push({id:'wait',text:'NYA SPÅR OM '+Math.max(1,Math.ceil((run.nextRainAt-run.t)||0))+' S',state:'wait'});
   }else if(run.kind==='delivery'){
     rows.push({id:'deliver',text:'BÄR FIKAT TILL TOMTEN',state:run.phase==='done'?'done':'now'});
   }else{

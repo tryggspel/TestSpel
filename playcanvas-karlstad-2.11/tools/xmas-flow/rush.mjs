@@ -96,6 +96,9 @@ check('R1b kroppsklasserna är rätt (xmas-rush, xmas-cozy, xmas-on) och julens 
 check('R1c banan är utlagd och de första paketen och målstrålen syns',r1.rush.packages>=8&&r1.view.shown>=2&&r1.view.goal===true,JSON.stringify({packages:r1.rush.packages,shown:r1.view.shown,goal:r1.view.goal}));
 const arrow=await ev(()=>({vis:!document.getElementById('tempoArrow').hidden,disp:getComputedStyle(document.getElementById('tempoArrow')).display,dist:document.getElementById('tempoArrowDist').textContent,hint:document.getElementById('tempoArrowHint').textContent}));
 check('R1d den stora riktningspilen visas med avstånd och text',arrow.vis&&arrow.disp!=='none'&&/ M$/.test(arrow.dist)&&arrow.hint.length>2,JSON.stringify(arrow));
+const rgeo=await ev(()=>{const a=document.getElementById('tempoArrow').getBoundingClientRect(),h=document.getElementById('xmasHud').getBoundingClientRect(),vw=innerWidth,vh=innerHeight,cz={x:vw*.3,r:vw*.7,y:vh*.28,b:vh*.72};
+  return {a:{x:Math.round(a.x),y:Math.round(a.y),w:Math.round(a.width),h:Math.round(a.height)},hudBottom:Math.round(h.bottom),hit:!(a.right<=cz.x||a.x>=cz.r||a.bottom<=cz.y||a.y>=cz.b),inside:a.x>=0&&a.y>=0&&a.right<=vw&&a.bottom<=vh};});
+check('R1d2 JulRushens pil är en kompakt platta strax under HUD:en uppe i hörnet och skymmer inte vägen framför (mitten av bilden är fri)',rgeo.inside&&rgeo.a.y>=rgeo.hudBottom-1&&rgeo.a.y<=rgeo.hudBottom+40&&rgeo.a.w<=200&&rgeo.a.h<=60&&!rgeo.hit,JSON.stringify(rgeo));
 const hud0=await hudText();
 check('R1e HUD:en visar TEMPO 1, tre hjärtan, poäng 0 och tempots namn',hud0.label==='TEMPO'&&hud0.count==='1'&&hud0.hearts==='♥♥♥'&&hud0.pts==='0'&&hud0.name==='JULMYS',JSON.stringify(hud0));
 const base0=await ev(()=>({thermosCards:window.KarlstadDebug.journey().xmas.rushMode,beam:document.getElementById('tempoHud')&&getComputedStyle(document.getElementById('funHud')).display}));

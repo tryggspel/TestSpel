@@ -125,9 +125,9 @@ check('K3 fasadljusen ligger på husen längs torget',fa.w.length>0&&fa.r.length
 const until=async(fn,max=60)=>{const t0=Date.now();while(Date.now()-t0<max*1000){if(await ev(fn))return true;await wait(250);}return false;};
 await ev(()=>window.KarlstadDebug.journey().xmas.startFree());await wait(800);
 const gotRain=await until(()=>window.KarlstadDebug.journey().xmas.hunt.run.rains.length>=1,90);
-const rn1=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {t:+r.t.toFixed(1),rains:r.rains.length,packages:r.packages.filter(k=>!k.collected).length};});
+const rn1=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {t:+r.t.toFixed(1),rains:r.rains.length,packages:r.packages.filter(k=>!k.collected).length,prints:r.rains.reduce((n,x)=>n+x.trail.length,0)};});
 // (Paketen läggs på fria platser: i trånga gator blir det färre än de åtta till tolv som begärs. På stadens karta gav 82 provpunkter i snitt 9,5 vanliga paket och aldrig färre än sex.)
-check('L1 fri julvandring: första paketregnet kommer inom åtta sekunder speltid med minst sju paket (sex vanliga och ett bonus)',gotRain&&rn1.t<=8.5&&rn1.packages>=7,JSON.stringify(rn1));
+check('L1 fri julvandring: första tappade paketen kommer inom åtta sekunder speltid, minst sex (fem vanliga och ett bonus), med ett spår av avtryck till dem',gotRain&&rn1.t<=8.5&&rn1.packages>=6&&rn1.prints>=6,JSON.stringify(rn1));
 await shot('free-1-regn');
 // Plocka allt som finns (teleport till varje paket), fyra varv: när allt är plockat kommer nästa regn inom några sekunder i stället för efter en minut eller mer.
 const runT=()=>ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.t),uncollected=()=>ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.packages.filter(k=>!k.collected).map(k=>({x:k.x,z:k.z})));

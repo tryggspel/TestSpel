@@ -3,6 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {GUIDE,hintFor,edgeLevels,ribbonSegments,XmasGuide,missionView} from '../xmas/xmas-guide.mjs';
+import {TRAILS} from '../xmas/xmas-config.mjs';
 import {XmasHunt} from '../xmas/xmas-hunt.mjs';
 import {INTRO} from '../xmas/xmas-layout.mjs';
 import {CityNavigation} from '../city-missions.mjs';
@@ -162,11 +163,22 @@ test('målvalet: oordnade körningar tar det närmaste, plockade paket hoppas ö
   d.run.phase='done';assert.equal(d.guideTarget({x:0,z:0}),null,'ingen pil när körningen är slut');
   assert.equal(new XmasHunt({}).guideTarget({x:0,z:0}),null,'ingen körning, ingen pil');
 });
-test('målvalet i fri vandring: närmaste paketet i regnet, ingen pil medan man väntar',()=>{
+test('fri vandring är sök och hitta: ingen pil till paketen, bara en liten hjälp mot närmaste spår efter en lång stund utan fynd',()=>{
   const h=new XmasHunt({nav:{snap:p=>p,blocked:()=>false}});h.startFree();
   assert.equal(h.guideTarget({x:0,z:0}),null);
   h.run.t=1e3;h.stepRain({x:0,z:0});assert.ok(h.run.packages.length>=4);
-  const t=h.guideTarget({x:0,z:0});assert.ok(t&&t.kind==='regular');
+  h.run.lastPickT=h.run.t;                                   // nyss hittat något
+  assert.equal(h.guideTarget({x:0,z:0}),null,'ingen pil mot paketen, hur nära de än ligger');
+  assert.equal(h.objective({x:0,z:0}).kind,'wait','inga pilar på marken och ingen flagga');
+  h.run.lastPickT=h.run.t-TRAILS.idleAssist-1;              // länge utan fynd
+  const rain=h.run.rains[0],far={x:rain.x+90,z:rain.z};
+  const t=h.guideTarget(far);assert.ok(t&&t.kind==='trail'&&t.label==='SPÅR I SNÖN',JSON.stringify(t));
+  assert.equal(t.x,rain.head.x);assert.equal(t.z,rain.head.z,'pekar på spårets början, inte på paketen');
+  assert.ok(Math.abs(t.distance-Math.hypot(rain.head.x-far.x,rain.head.z-far.z))<1e-6);
+  assert.equal(h.guideTarget({x:rain.head.x+3,z:rain.head.z}),null,'står man vid spåret behövs ingen hjälp');
+  assert.equal(h.guideTarget({x:rain.x+10,z:rain.z}),null,'är man nära paketen behövs ingen hjälp');
+  for(const k of h.run.packages)h.run.rains[0].left=0;
+  assert.equal(h.guideTarget(far),null,'inga paket kvar, inget spår att peka på');
 });
 
 // ── Uppdragsraden ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -181,6 +193,18 @@ test('uppdragsraden säger vad man ska göra nu och sedan i varje läge',()=>{
   const d=new XmasHunt({});d.startRun({kind:'delivery',id:'d',title:'Fika',goal:0,packages:[],tomte:{x:5,z:5,radius:3},phase:'deliver',windowSec:3});
   assert.deepEqual(txt(missionView(d.run)),['now:BÄR FIKAT TILL TOMTEN']);
   const f=new XmasHunt({nav:{snap:p=>p,blocked:()=>false}});f.startFree();
-  const w=missionView(f.run);assert.equal(w.rows.length,1);assert.equal(w.rows[0].state,'wait');assert.match(w.rows[0].text,/^NÄSTA PAKETREGN OM \d+ S$/);
-  f.run.t=1e3;f.stepRain({x:0,z:0});const r=missionView(f.run);assert.equal(r.rows[0].state,'now');assert.match(r.rows[0].text,/^PLOCKA PAKETEN · \d+ KVAR$/);
+  const w=missionView(f.run);assert.equal(w.rows.length,1);assert.equal(w.rows[0].state,'wait');assert.match(w.rows[0].text,/^NYA SPÅR OM \d+ S$/);
+  f.run.t=1e3;f.stepRain({x:0,z:0});const r=missionView(f.run);assert.equal(r.rows[0].state,'now');assert.equal(r.rows[0].text,'HITTA TOMTARNAS SPÅR');
+});
+test('uppdragsraden i fri vandring: hitta spåren, följ dem och leta runt när paketen är nära (korta rader som får plats på en smal telefon)',()=>{
+  const f=new XmasHunt({nav:{snap:p=>p,blocked:()=>false}});f.startFree();f.run.t=1e3;f.stepRain({x:0,z:0});
+  const rain=f.run.rains[0],pr=rain.trail[0];                         // spårets början ligger långt från paketen
+  const far={x:rain.x+120,z:rain.z+120};
+  assert.equal(missionView(f.run,far).rows[0].text,'HITTA TOMTARNAS SPÅR');
+  assert.equal(missionView(f.run).rows[0].text,'HITTA TOMTARNAS SPÅR','utan spelarens plats: grundtexten');
+  assert.equal(missionView(f.run,{x:pr.x+2,z:pr.z}).rows[0].text,'FÖLJ SPÅREN','nära ett avtryck');
+  assert.equal(missionView(f.run,{x:rain.x+5,z:rain.z}).rows[0].text,'PAKETEN ÄR NÄRA!','nära platsen där paketen ligger');
+  const all=[missionView(f.run,far),missionView(f.run,{x:pr.x,z:pr.z}),missionView(f.run,{x:rain.x,z:rain.z})];
+  for(const v of all)for(const row of v.rows)assert.ok(row.text.length<=20,row.text+' är för lång: '+row.text.length);
+  assert.notEqual(all[0].key,all[1].key);assert.notEqual(all[1].key,all[2].key);
 });
