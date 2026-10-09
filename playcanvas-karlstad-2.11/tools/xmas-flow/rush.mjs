@@ -157,8 +157,10 @@ const stats0=await rushSnap();
 // Gåvor som hunnit bli aktiva under körningen ovan (spöket plockar paket, magneten drar, skölden räddar ett liv) skulle blanda sig i missarna nedan: de tas bort först.
 await ev(()=>{const r=window.KarlstadDebug.journey().xmas.julrush;for(const k of Object.keys(r.timers))r.timers[k]=0;r.shield=0;r.spirit.active=false;r.spirit.target=null;r.pulled.length=0;});
 // Klockan är trång (några sekunder per paket): en stillastående bot skulle annars tappa ett hjärta av sig själv medan provet väntar. Klockan sätts därför om till en lång tid först.
-await ev(()=>{const t=window.KarlstadDebug.journey().tempo;t.deadline=12;t.left=2.6;});await wait(400);
-const urgent=await ev(()=>({hud:document.getElementById('xmasHud').classList.contains('urgent'),arrow:document.getElementById('tempoArrow').classList.contains('urgent')}));
+await ev(()=>{const t=window.KarlstadDebug.journey().tempo;t.deadline=12;t.left=2.6;});
+// Väntar på att spelet hunnit rita om (en belastad, mjukvarurenderad webbläsare ger få bildrutor): högst 2,2 s, innan klockan på 2,6 s hunnit gå ut
+let urgent={hud:false,arrow:false};
+for(let i=0;i<14;i++){await wait(150);urgent=await ev(()=>({hud:document.getElementById('xmasHud').classList.contains('urgent'),arrow:document.getElementById('tempoArrow').classList.contains('urgent')}));if(urgent.hud&&urgent.arrow)break;}
 check('R3a när under 30 % av tiden återstår blir HUD:en och pilen brådskande (röda)',urgent.hud&&urgent.arrow,JSON.stringify(urgent));
 await shot('r03b-bradskande');
 // Varje miss tvingas fram och provet väntar på att hjärtat verkligen försvinner (den mjukvarurenderade webbläsaren ger få bildrutor, så en fast väntetid räcker inte alltid).
