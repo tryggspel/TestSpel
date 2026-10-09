@@ -2,6 +2,8 @@
 // Allt här är fail-soft: om något i julkoden skulle kasta stängs jultilläggen av och grundspelet lever vidare (som platskoden i 2.21).
 import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.2';
 import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.2';
+import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.2';
+import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.2';
 import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.2';
 import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.2';
 import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.2';
@@ -32,6 +34,8 @@ export function installXmas(ctx){
   const roundNav={point:p=>journey.nav.point(p),path:(a,b)=>journey.nav.path(a,b),clear:(a,b)=>journey.nav.clear(a,b),blocked:(x,z)=>host.blocked(x,z),smooth:p=>smoothPath(journey.nav,p)};
   const hunt=new XmasHunt({save,nav});
   const julrush=new XmasRush({journey,save}); // JulRushen: TempoRushs bana och klocka (journey.tempo) med julens paket, gåvor och poäng
+  const guide=new XmasGuide({nav:journey.nav}); // pilen, kantmarkörerna, stjärnspåret och uppdragsraden i paketjakten (inte i JulRushen, som har grundspelets pil)
+  let guideShown=false,missionAt=0;
   const sprites=createSprites(pc,host,{texture,root});
   const view=createXmasView(pc,host,{labelTex,root,texture},sprites,hunt,julrush);
   let decor=null; // julmiljön: gran, stånd, ljus, tomtar och snöfall. Fail-soft: går något fel i den fortsätter spelet utan.
@@ -55,6 +59,7 @@ export function installXmas(ctx){
     }
   }
   let resultTimer=0,resultOpen=false,rushHudAt=0;const powerBuf=[];
+  const guideUi=createGuideUi({});
 
   function goBase(){
     try{save.save();journey.save?.();}catch{}
@@ -106,7 +111,7 @@ export function installXmas(ctx){
   function startZombies(){
     guard(()=>{
       enter('zombies',INTRO.spawn);
-      hunt.startRun({kind:'zombies',id:'zombies',title:'TOMTEZOMBIES',goal:INTRO_GOAL,packages:INTRO.packages,tomte:INTRO.tomte,spawn:INTRO.spawn,tree:INTRO.tree,windowSec:4.6,soft:0,stampId:'zombies'});
+      hunt.startRun({kind:'zombies',id:'zombies',title:'TOMTEZOMBIES',goal:INTRO_GOAL,packages:INTRO.packages,tomte:INTRO.tomte,spawn:INTRO.spawn,tree:INTRO.tree,windowSec:4.6,soft:0,stampId:'zombies',ordered:true});
       toast('TOMTEZOMBIES','Samla '+INTRO_GOAL+' paket och lämna dem hos tomten. Tomtezombierna jagar dig: skjut med SOLSTÖT.',4.4);
       ui.showGoal('Samla '+INTRO_GOAL+' paket. Tomtezombierna jagar dig!',7500);
       ui.setProgress(hunt.run);view.clear();
@@ -129,7 +134,7 @@ export function installXmas(ctx){
       const def=(id&&roundById(id))||nextRound(save);
       const run=buildRound(def,roundNav);
       enter('round',run.spawn);
-      hunt.startRun({kind:'round',id:run.id,title:run.title,goal:run.goal,packages:run.packages,tomte:run.tomte,spawn:run.spawn,tree:run.tree,windowSec:run.windowSec,soft:run.soft,stampId:run.stampId});
+      hunt.startRun({kind:'round',id:run.id,title:run.title,goal:run.goal,packages:run.packages,tomte:run.tomte,spawn:run.spawn,tree:run.tree,windowSec:run.windowSec,soft:run.soft,stampId:run.stampId,ordered:!!run.route});
       toast(def.title,def.blurb,3.6);
       ui.showGoal('Samla '+run.goal+' paket och lämna dem hos tomten.',7500);
       ui.setProgress(hunt.run);view.clear();
@@ -184,7 +189,7 @@ export function installXmas(ctx){
       try{dismissPlaceResult?.();}catch{}clearTimeout(resultTimer);
       if(julrush.active){julrush.quit();} // att ge upp i pausmenyn sparar körningen som en förlust (om den hade några paket)
       leaveRush();try{host.music?.tempo?.(1);}catch{}
-      hunt.cancel('meny');view.clear();ui.showHud(false);journey.pause?.();mode='menu';caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush');
+      hunt.cancel('meny');view.clear();ui.showHud(false);guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;journey.pause?.();mode='menu';caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush');
       ui.renderStart(buildDetail(stamp));setPanel('xmas-intro');
     });
   }
@@ -247,10 +252,20 @@ export function installXmas(ctx){
   };
   const handle=(now)=>{for(const e of hunt.drain())handlers[e.type]?.(e,now);for(const e of julrush.drain())handlers[e.type]?.(e,now);};
 
+  // ── Vägledning i paketjakten: pil, kantmarkörer, stjärnspår och uppdragsrad (JulRushen och butiksuppdragen har egna) ───────────────────
+  function updateGuide(p,now,dt){
+    const on=(mode==='cozy'||mode==='zombies')&&!!hunt.run&&hunt.active&&!placeActive?.();
+    if(!on){if(guideShown||guide.state.on){guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;}return;}
+    const g=guide.update(p,host.camera.forward,hunt.guideTarget(p),dt,now,view.lite);
+    guideUi.set(g);view.setGuide(g.on?g:null);guideShown=true;
+    if(now-missionAt>140){missionAt=now;guideUi.setMission(missionView(hunt.run));}
+  }
+
   // ── Varje bildruta ──────────────────────────────────────────────────────────────────────────────────────────────
   function update(p,now,dt){
     guard(()=>{
       handle(now);
+      updateGuide(p,now,dt);
       view.update(p,now,dt);
       if(mode==='rush'&&julrush.active&&now-rushHudAt>60){rushHudAt=now;ui.setRush(julrush.snapshot(),julrush.powers(powerBuf),now);}
       ui.tick(mode==='rush'?julrush.comboView():hunt.run,now);
@@ -282,9 +297,11 @@ export function installXmas(ctx){
     get active(){return mode==='rush'?julrush.active:hunt.active;},get cozy(){return mode==='cozy';},get zombieMode(){return mode==='zombies';},get rushMode(){return mode==='rush'&&julrush.active;},julrush,
     update,hudText,startRound,startZombies,startRush,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
     step:(dt,p,sweep,speed)=>guard(()=>mode==='rush'?julrush.step(dt,p,sweep,speed):hunt.step(dt,p,sweep,speed)),
-    objective:p=>fault?null:mode==='rush'?julrush.objective(p):hunt.objective(p),
+    // Pilarna på marken och "DITT MÅL" i grundspelet ritas inte för julklappsjaktens mål (quiet): stjärnspåret och pilen ersätter dem. Radarn och kartan visar vägen som förut.
+    objective:p=>{if(fault)return null;if(mode==='rush')return julrush.objective(p);const o=hunt.objective(p);return o&&o.kind==='xmas'?{...o,quiet:true}:o;},
+    guide,guideUi,
     gov,
-    snapshot:()=>({mode,fault,gov:{level:gov.level,ema:+gov.ema.toFixed(1),on:gov.on},hunt:hunt.snapshot(),rush:julrush.snapshot(),view:view.snapshot(),decor:decor?decor.snapshot():null,build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone}}),
+    snapshot:()=>({mode,fault,gov:{level:gov.level,ema:+gov.ema.toFixed(1),on:gov.on},hunt:hunt.snapshot(),rush:julrush.snapshot(),guide:{on:guide.state.on,id:guide.state.id,label:guide.state.label,distance:guide.state.distance,angle:+guide.state.angle.toFixed(1),hint:guide.state.hint,straight:guide.state.straight,segs:guide.state.segCount,edgeL:guide.state.edgeL,edgeR:guide.state.edgeR,mission:guideUi.missionText},view:view.snapshot(),decor:decor?decor.snapshot():null,build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone}}),
     onResultClosed:()=>{resultOpen=false;}
   };
   return api;

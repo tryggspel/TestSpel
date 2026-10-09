@@ -9,6 +9,7 @@
 import {CATCH,catchReach} from '../journey-rules.mjs?v=2.21.1-xmas.2';
 import {PACKAGE_POINTS,COMBO,comboMult,DELIVERY,timeBonus,FREE_RAIN,STAMPS} from './xmas-config.mjs?v=2.21.1-xmas.2';
 import {INTRO,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.2';
+import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.2';
 
 function closestOnSegment(px,pz,ax,az,bx,bz){
   const dx=bx-ax,dz=bz-az,len2=dx*dx+dz*dz,t=len2>0?Math.max(0,Math.min(1,((px-ax)*dx+(pz-az)*dz)/len2)):0,x=ax+dx*t,z=az+dz*t;
@@ -19,7 +20,7 @@ export const seededRandom=seed=>{let s=(seed>>>0)||1;return()=>{s^=s<<13;s>>>=0;
 export class XmasHunt{
   constructor({save=null,nav={},rand=Math.random,reward=null}={}){
     this.save=save;this.nav={blocked:()=>false,snap:p=>p,...nav};this.rand=rand;this.reward=reward;
-    this.run=null;this.events=[];this.serial=0;this.lastStep=null;
+    this.run=null;this.events=[];this.serial=0;this.lastStep=null;this.guideId='';
   }
   get active(){return !!this.run&&this.run.phase!=='done'&&this.run.phase!=='ended';}
   emit(e){this.events.push(e);}
@@ -27,15 +28,15 @@ export class XmasHunt{
 
   // ── Starta körningar ──────────────────────────────────────────────────────────────────────────────────────────
   startIntro(){
-    return this.startRun({kind:'intro',id:'intro',title:'HJÄLP TOMTEN!',goal:INTRO_GOAL,packages:INTRO.packages,tomte:INTRO.tomte,spawn:INTRO.spawn,windowSec:COMBO.introWindow,soft:0,tree:INTRO.tree,stampId:'intro'});
+    return this.startRun({kind:'intro',id:'intro',title:'HJÄLP TOMTEN!',goal:INTRO_GOAL,packages:INTRO.packages,tomte:INTRO.tomte,spawn:INTRO.spawn,windowSec:COMBO.introWindow,soft:0,tree:INTRO.tree,stampId:'intro',ordered:true});
   }
   startRun(def){
     const packages=def.packages.map(p=>({id:p.id,x:p.x,z:p.z,y:p.y||0,kind:p.kind==='bonus'?'bonus':'regular',cluster:p.cluster??0,collected:false,at:0}));
     const regular=packages.filter(p=>p.kind==='regular').length,bonus=packages.length-regular;
     this.run={serial:++this.serial,kind:def.kind,id:def.id,title:def.title||'',phase:def.phase||(def.kind==='free'?'free':'collect'),goal:def.goal||0,packages,byId:new Map(packages.map(p=>[p.id,p])),
       collected:0,bonusCollected:0,regularTotal:regular,bonusTotal:bonus,points:0,chain:0,bestChain:0,lastPickAt:-1e9,t:0,tomte:def.tomte||null,spawn:def.spawn||null,tree:def.tree||null,
-      windowSec:def.windowSec||COMBO.window,soft:def.soft||0,late:false,stampId:def.stampId||null,lastPickT:0,nextRainAt:def.kind==='free'?FREE_RAIN.first:Infinity,rains:[],rainSerial:0,result:null};
-    this.lastStep=null;
+      windowSec:def.windowSec||COMBO.window,soft:def.soft||0,ordered:!!def.ordered,late:false,stampId:def.stampId||null,lastPickT:0,nextRainAt:def.kind==='free'?FREE_RAIN.first:Infinity,rains:[],rainSerial:0,result:null};
+    this.lastStep=null;this.guideId='';
     this.emit({type:'xmas-start',kind:def.kind,id:def.id,title:this.run.title,goal:this.run.goal,total:regular,bonusTotal:bonus});
     return this.run;
   }
@@ -159,6 +160,27 @@ export class XmasHunt{
     if(r.phase==='deliver'&&r.tomte)return {x:r.tomte.x,z:r.tomte.z,id:'xmas-tomte',kind:'tomte',label:'TOMTEN',radius:r.tomte.radius,distance:Math.hypot(r.tomte.x-p.x,r.tomte.z-p.z)};
     const near=this.nearest(p);if(!near)return null;
     return {x:near.pkg.x,z:near.pkg.z,id:near.pkg.id,kind:near.pkg.kind,label:near.pkg.kind==='bonus'?'BONUSPAKET':'NÄSTA PAKET',radius:1.6,distance:near.distance};
+  }
+  // Pilens mål. Efter målet: tomten. Annars paketet som pilen ska peka på: i ordnade körningar (introduktionen, rutterundorna, Tomtezombies) det närmaste av
+  // de fyra närmaste ej plockade paketen i ordning (så att pilen följer spåret och inte hoppar över till nästa varv av spiralen), annars det närmaste ej
+  // plockade. Bonuspaketen är valfria avstickare och pekas bara ut när inga vanliga paket finns kvar (fri vandring). Ett nytt mål måste vara klart närmare
+  // än det nuvarande för att pilen ska byta, så att den inte fladdrar mellan två lika nära paket.
+  guideTarget(p){
+    const r=this.run;if(!r||!this.active&&r.phase!=='free')return null;
+    if(r.phase==='deliver'&&r.tomte)return {x:r.tomte.x,z:r.tomte.z,id:'xmas-tomte',kind:'tomte',label:'TOMTEN',radius:r.tomte.radius,distance:Math.hypot(r.tomte.x-p.x,r.tomte.z-p.z)};
+    let best=null,bd=Infinity,cur=null,cd=Infinity,seen=0;
+    for(const k of r.packages){
+      if(k.collected||k.kind!=='regular')continue;
+      if(r.ordered&&seen++>=GUIDE.window)break;
+      const d=Math.hypot(k.x-p.x,k.z-p.z);
+      if(d<bd){bd=d;best=k;}
+      if(k.id===this.guideId){cur=k;cd=d;}
+    }
+    if(!best){for(const k of r.packages){if(k.collected)continue;const d=Math.hypot(k.x-p.x,k.z-p.z);if(d<bd){bd=d;best=k;}}cur=null;}
+    if(!best){this.guideId='';return null;}
+    if(cur&&best!==cur&&!(bd*GUIDE.keep+GUIDE.keepExtra<cd)){best=cur;bd=cd;}
+    this.guideId=best.id;
+    return {x:best.x,z:best.z,id:best.id,kind:best.kind,label:best.kind==='bonus'?'BONUSPAKET':'NÄSTA PAKET',radius:1.6,distance:bd};
   }
   idleSeconds(){const r=this.run;return r?r.t-r.lastPickT:0;}
   objective(p){

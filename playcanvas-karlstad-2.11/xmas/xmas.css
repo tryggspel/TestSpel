@@ -89,6 +89,42 @@ body.xmas-on #mapStoryHint,body.xmas-on .map-story-buttons{display:none!importan
 .xh-hp u,.xh-sun u{display:block;height:100%;width:100%;text-decoration:none;transition:width .12s}
 .xh-hp u{background:linear-gradient(90deg,#e8554e,#7be3a0)}.xh-hp[data-low="1"]{outline:1px solid #ff8f84}.xh-sun u{background:linear-gradient(90deg,#ffb347,#ffe27a)}
 
+/* ── Vägledning i Julklappsjakten (xmas-guide-ui.js): stor pil, kantmarkörer och uppdragsrad ─────────────────────────────────────
+   Pilen sitter fast mitt på skärmen och pekar mot nästa kurva på gångvägen, med avstånd och vad den pekar på. Kanterna lyser åt det håll man ska vända sig.
+   Uppdragsraden under HUD:en säger vad man ska göra nu och sedan. Allt ligger på mörka plattor: snön är nästan vit och vit text försvinner annars. */
+#xmasArrow{position:absolute;z-index:6;left:50%;top:max(27%,calc(env(safe-area-inset-top) + 232px));transform:translateX(-50%);display:grid;justify-items:center;gap:1px;min-width:150px;padding:6px 14px 7px;border-radius:16px;background:#0f2a24dc;border:2px solid #ffd36b99;box-shadow:0 4px 12px #0007;pointer-events:none;text-align:center;font-family:system-ui,sans-serif}
+#xmasArrow[hidden]{display:none}
+.xg-icon{display:block;width:48px;height:48px;background:linear-gradient(#ffe27a,#ffb347);clip-path:polygon(50% 0,100% 58%,72% 58%,72% 100%,28% 100%,28% 58%,0 58%);transition:transform .05s linear}
+#xmasArrow.ahead .xg-icon{background:linear-gradient(#b8ffc6,#4fe07d)}
+#xmasArrow.behind .xg-icon{background:linear-gradient(#ffb0a0,#ff5a4a)}
+#xmasArrow.ahead{border-color:#7be495aa}
+#xmasArrow.behind{border-color:#ff7a6a}
+.xg-line{font:900 15px/1.15 system-ui;letter-spacing:.03em;color:#fff;white-space:nowrap}
+.xg-hint{font:900 11px/1.2 system-ui;letter-spacing:.14em;color:#ffe9b0}
+#xmasArrow.ahead .xg-hint{color:#a8f5b8}
+.xg-edge{position:absolute;z-index:5;top:0;bottom:0;width:min(22vw,120px);pointer-events:none}
+.xg-edge[hidden]{display:none}
+.xg-l{left:0;background:linear-gradient(90deg,#ffd36bcc,#ffd36b00)}
+.xg-r{right:0;background:linear-gradient(270deg,#ffd36bcc,#ffd36b00)}
+.xg-l.behind{background:linear-gradient(90deg,#ff6a5acc,#ff6a5a00)}
+.xg-r.behind{background:linear-gradient(270deg,#ff6a5acc,#ff6a5a00)}
+.xg-mission{position:absolute;z-index:6;left:max(10px,env(safe-area-inset-left));top:max(82px,calc(env(safe-area-inset-top) + 76px));width:min(290px,calc(100vw - 132px));display:grid;gap:3px;pointer-events:none;font-family:system-ui,sans-serif}
+.xg-mission[hidden]{display:none}
+.xg-step{display:flex;align-items:center;gap:8px;min-width:0;padding:5px 10px 5px 6px;border-radius:9px;background:#0f2a24c4;border:1px solid #abc7ad33;color:#b9cfc0}
+.xg-step[hidden]{display:none}
+.xg-step i{flex:none;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#ffffff1f;color:#cfe1d4;font:900 11px/1 system-ui;font-style:normal}
+.xg-step b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 12px/1.15 system-ui;letter-spacing:.05em}
+.xg-step[data-state="now"],.xg-step[data-state="wait"]{background:#14382ff0;border-color:var(--xmas-gold);color:#fff}
+.xg-step[data-state="now"] i,.xg-step[data-state="wait"] i{background:var(--xmas-gold);color:#3b2a00}
+.xg-step[data-state="now"] b{font-size:13px}
+.xg-step[data-state="done"]{color:#9bf0a7;border-color:#4cc78466}
+.xg-step[data-state="done"] i{background:#4cc784;color:#06301a}
+body.xmas-zombies .xg-mission{top:max(112px,calc(env(safe-area-inset-top) + 106px));width:min(250px,calc(100vw - 168px))}
+/* Zombieläget har en högre HUD (liv och sol), så målrutan hamnar under uppdragsraden */
+body.xmas-zombies #xmasGoal{top:max(182px,calc(env(safe-area-inset-top) + 176px));font-size:15px;padding:9px 14px}
+body.xmas-zombies #xmasArrow{top:max(31%,calc(env(safe-area-inset-top) + 272px))}
+@media(prefers-reduced-motion:reduce){.xg-icon{transition:none}}
+
 /* Målrad och poängpuffar */
 #xmasGoal{position:absolute;z-index:7;left:50%;top:max(150px,calc(env(safe-area-inset-top) + 144px));transform:translate(-50%,-6px);max-width:min(430px,calc(100vw - 28px));padding:11px 16px;border-radius:12px;background:var(--xmas-snow);color:#17352b;border:3px solid var(--xmas-red);box-shadow:0 5px 0 #0a1f1a88;font:900 17px/1.25 system-ui,sans-serif;letter-spacing:-.01em;text-align:center;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s}
 #xmasGoal.on{opacity:1;transform:translate(-50%,0)}
@@ -104,7 +140,8 @@ body.xmas-on #roundPhase,body.xmas-on #roundTactic,body.xmas-on #ghostHud,body.x
 body.xmas-on #cityJourneyHud{display:none!important}
 /* JulRushen använder grundspelets stora riktningspil och kantmarkörer (last-round.js updateTempoArrow) men visar dem inte i övriga julläget */
 body.xmas-on:not(.xmas-rush) #tempoArrow,body.xmas-on:not(.xmas-rush) #tempoEdgeL,body.xmas-on:not(.xmas-rush) #tempoEdgeR{display:none!important}
-body.xmas-rush #roundCompass{display:none!important}
+/* Grundspelets lilla kompasspill ersätts av pilen och uppdragsraden (xmas-guide-ui.js) i alla julklappslägen */
+body.xmas-on #roundCompass{display:none!important}
 /* Pilen får en mörk platta: snön är nästan vit och vit text försvinner annars. Den lugna (ljusare) varianten från grundspelet används inte här. */
 body.xmas-rush #tempoArrow{padding:7px 16px 6px;border-radius:16px;background:#0f2a24d6;border:2px solid #ffd36b88;box-shadow:0 4px 12px #0007}
 body.xmas-rush #tempoArrow.calm,body.xmas-rush #tempoArrow.calm.urgent{opacity:.9}
@@ -120,18 +157,16 @@ body.xmas-rush #tempoArrowHint{color:#ffe9b0;text-shadow:none}
  body.xmas-rush #xmasPill{bottom:max(41%,calc(env(safe-area-inset-bottom) + 300px))}
 }
 body.xmas-cozy #solarWeapon,body.xmas-cozy #journeyPickupToast{display:none!important}
-body.xmas-on.round-playing #roundCompass{top:max(86px,calc(env(safe-area-inset-top) + 80px));left:max(10px,env(safe-area-inset-left));max-width:min(330px,calc(100vw - 132px));background:#0f2a24dd;border:1px solid #abc7ad44}
-body.xmas-on.round-playing #roundCompassText{font-weight:900}
-body.xmas-on.round-playing #roundCompassArrow{color:var(--xmas-gold)}
 body.xmas-on.round-playing #roundToast{bottom:30%}
-body.xmas-zombies.round-playing #roundCompass{top:max(106px,calc(env(safe-area-inset-top) + 100px))}
 body.xmas-zombies #xmasHud{width:min(250px,calc(100vw - 168px))}
-body.xmas-zombies.round-playing #roundCompass{max-width:min(300px,calc(100vw - 168px))}
 body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
 @media(max-height:500px){
  #xmasHud{width:min(236px,36vw)}
+ .xg-mission{top:max(80px,calc(env(safe-area-inset-top) + 74px));width:min(236px,36vw)}
+ body.xmas-zombies .xg-mission{top:max(104px,calc(env(safe-area-inset-top) + 98px));width:min(236px,36vw)}
+ .xg-step:not([data-state="now"]):not([data-state="wait"]){display:none}
+ #xmasArrow,body.xmas-zombies #xmasArrow{top:15%;min-width:130px;padding:5px 12px}.xg-icon{width:38px;height:38px}.xg-line{font-size:14px}.xg-hint{font-size:10px}
  #xmasGoal{top:max(16px,env(safe-area-inset-top));left:50%;max-width:40vw;font-size:14px;padding:8px 12px}
- body.xmas-on.round-playing #roundCompass{top:max(80px,calc(env(safe-area-inset-top) + 74px));max-width:36vw}
  #xmasPill{bottom:24%}
  .xmas-stamp{width:96px;height:96px}
 }

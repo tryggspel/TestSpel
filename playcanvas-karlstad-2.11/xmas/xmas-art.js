@@ -92,6 +92,16 @@ export const TOMTE_ATLAS={w:TOMTE_CELL.w*6,h:TOMTE_CELL.h*2,cols:6,rows:2};
 // ── Små ikoner och effekter ────────────────────────────────────────────────────────────────────────────────────────
 export function drawStar(c,w,h){c.clearRect(0,0,w,h);const g=c.createRadialGradient(w/2,h/2,2,w/2,h/2,w/2);g.addColorStop(0,'#fff6b8ff');g.addColorStop(.4,'#ffe27a99');g.addColorStop(1,'#ffe27a00');c.fillStyle=g;c.fillRect(0,0,w,h);
   c.fillStyle='#ffd845';c.strokeStyle=INK;c.lineWidth=w*.03;c.lineJoin='round';c.beginPath();for(let i=0;i<10;i++){const r=i%2?w*.14:w*.34,a=-Math.PI/2+i*Math.PI/5;c.lineTo(w/2+Math.cos(a)*r,h/2+Math.sin(a)*r);}c.closePath();c.fill();c.stroke();}
+// Julbandet på marken: ett rött band med gyllene kanter och ljusa pilar som pekar framåt (uppåt i bilden). Två pilar per tavla; bilden går att rulla runt (REPEAT)
+// så att pilarna kan flytta sig mot målet. Rött syns bäst mot snö, och de gyllene kanterna håller bandet synligt även på mörk asfalt.
+export function drawRibbon(c,w,h){
+  c.clearRect(0,0,w,h);c.lineJoin='miter';c.lineCap='butt';
+  const x0=w*.06,x1=w*.94,g=c.createLinearGradient(x0,0,x1,0);g.addColorStop(0,'#c0302b');g.addColorStop(.5,'#e8554e');g.addColorStop(1,'#c0302b');
+  c.globalAlpha=.88;c.fillStyle=g;c.fillRect(x0,0,x1-x0,h);c.globalAlpha=1;
+  c.fillStyle='#ffd36b';c.fillRect(x0,0,w*.08,h);c.fillRect(x1-w*.08,0,w*.08,h);
+  c.strokeStyle='#fff3c4';c.lineWidth=w*.11;
+  for(const cy of [h*.27,h*.77]){c.beginPath();c.moveTo(w*.24,cy+h*.11);c.lineTo(w*.5,cy-h*.07);c.lineTo(w*.76,cy+h*.11);c.stroke();}
+}
 export function drawSnowflake(c,w,h){c.clearRect(0,0,w,h);const g=c.createRadialGradient(w/2,h/2,1,w/2,h/2,w/2);g.addColorStop(0,'#ffffffff');g.addColorStop(.55,'#ffffffcc');g.addColorStop(1,'#ffffff00');c.fillStyle=g;c.beginPath();c.arc(w/2,h/2,w/2,0,7);c.fill();}
 export function drawSparkle(c,w,h,col='#fff2a8'){c.clearRect(0,0,w,h);sparkle(c,w/2,h/2,w*.42,col);const g=c.createRadialGradient(w/2,h/2,1,w/2,h/2,w*.5);g.addColorStop(0,col+'aa');g.addColorStop(1,col+'00');c.fillStyle=g;c.fillRect(0,0,w,h);}
 export function drawGlow(c,w,h,col='#ffd86b'){c.clearRect(0,0,w,h);const g=c.createRadialGradient(w/2,h/2,1,w/2,h/2,w/2);g.addColorStop(0,col+'ee');g.addColorStop(.5,col+'55');g.addColorStop(1,col+'00');c.fillStyle=g;c.fillRect(0,0,w,h);}

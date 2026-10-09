@@ -396,7 +396,7 @@ export function createLastRound(pc, host) {
     journeyView.update(p,now,game);plazaSign.enabled=!isJourney();guardSign.enabled=!isJourney();
   }
   function updateRoute(p,destination){
-    const visible=!isPush()&&game.phase==='playing'&&destination.kind!=='wait'&&(isJourney()||selectedMission!=='fikapanik');
+    const visible=!isPush()&&game.phase==='playing'&&destination.kind!=='wait'&&!destination.quiet&&(isJourney()||selectedMission!=='fikapanik'); // quiet: julen ritar egna markeringar (xmas/xmas-guide.mjs)
     const path=visible?(guidance?.path||navigation.path(p,destination)):[];
     // 2.12: evenly spaced arrows along the smoothed route, starting just ahead of the player.
     const arrows=arrowPlacements(path.length===1?[{x:p.x,z:p.z,y:path[0].y},path[0]]:path,p),mat=routeMaterial(destination.kind);
