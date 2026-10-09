@@ -255,8 +255,10 @@ await ev(()=>{window.__skill=1;const x=window.KarlstadDebug.journey().xmas,p=win
 const g1=await ev(()=>({rocket:document.body.classList.contains('rocket-on'),turbo:document.body.classList.contains('turbo-on'),chips:[...document.querySelectorAll('.xh-chip')].map(c=>c.textContent),mul:window.KarlstadDebug.journey().fun.power.speedMul()}));
 check('R9 renssläden: farten dubblas, raketeffekten ligger på och brickan SLÄDE räknar ned',g1.mul===2&&g1.rocket&&g1.turbo&&g1.chips.some(c=>/^SLÄDE \d/.test(c)),JSON.stringify(g1));
 await shot('r10-slade');
-await ev(()=>{const x=window.KarlstadDebug.journey().xmas,p=window.__pos();for(const k of ['glogg','kaka','wind','skates','magnet','ghost'])x.julrush.timers[k]=0;/* gåvor som boten råkat plocka tidigare (högst sex brickor ryms) */x.julrush.grant('shield',{x:p[0],z:p[1]});x.julrush.grant('star',{x:p[0],z:p[1]});x.julrush.grant('pause',{x:p[0],z:p[1]});x.julrush.grant('golden',{x:p[0],z:p[1]});});await wait(700);
-const g2=await ev(()=>[...document.querySelectorAll('.xh-chip')].map(c=>c.textContent));
+await ev(()=>{const x=window.KarlstadDebug.journey().xmas,p=window.__pos();for(const k of ['glogg','kaka','wind','skates','magnet','ghost'])x.julrush.timers[k]=0;/* gåvor som boten råkat plocka tidigare (högst sex brickor ryms) */x.julrush.grant('shield',{x:p[0],z:p[1]});x.julrush.grant('star',{x:p[0],z:p[1]});x.julrush.grant('pause',{x:p[0],z:p[1]});x.julrush.grant('golden',{x:p[0],z:p[1]});});
+// HUD:en ritas om i spelets bildruta: vänta på att den hunnit (högst 6 s) i stället för en fast tid
+let g2=[];
+for(let i=0;i<24;i++){await wait(250);g2=await ev(()=>[...document.querySelectorAll('.xh-chip')].map(c=>c.textContent));if(['SKÖLD','STJÄRNA','PAUS','×3'].every(t=>g2.some(c=>c.startsWith(t))))break;}
 check('R9b flera gåvor syns samtidigt som brickor (sköld, stjärna, paus, guldklapp)',['SKÖLD','STJÄRNA','PAUS','×3'].every(t=>g2.some(c=>c.startsWith(t))),g2.join(' | '));
 await shot('r11-gavor');
 

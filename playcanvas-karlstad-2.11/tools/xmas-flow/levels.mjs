@@ -229,8 +229,10 @@ check('L7e de fyra nya fartgåvorna syns som brickor (GLÖGG, RAKET, VIND, SKRID
 check('L7e2 brickornas texter klipps inte',(await clipped('.xh-chip')).length===0,JSON.stringify(await clipped('.xh-chip')));
 await shot('l07e-fartgavor');
 // Fler än sex gåvor samtidigt: högst sex brickor syns, skölden visas alltid och resten räknas som "+N"
-await ev(()=>{const r=window.KarlstadDebug.journey().xmas.julrush,p=window.__pos();for(const k of ['magnet','ghost','golden','shield'])r.grant(k,{x:p[0],z:p[1],y:1.68});});await wait(700);
-const many=await ev(()=>({chips:[...document.querySelectorAll('.xh-chip')].map(c=>c.textContent),fit:[...document.querySelectorAll('.xh-chip')].every(c=>{const r=c.getBoundingClientRect();return r.left>=0&&r.right<=window.innerWidth;})}));
+await ev(()=>{const r=window.KarlstadDebug.journey().xmas.julrush,p=window.__pos();for(const k of ['magnet','ghost','golden','shield'])r.grant(k,{x:p[0],z:p[1],y:1.68});});
+// HUD:en ritas om i spelets bildruta (högst var 60:e ms): en belastad, mjukvarurenderad webbläsare ger få bildrutor, så vi väntar på att den hunnit (högst 6 s)
+let many=null;
+for(let i=0;i<24;i++){await wait(250);many=await ev(()=>({chips:[...document.querySelectorAll('.xh-chip')].map(c=>c.textContent),fit:[...document.querySelectorAll('.xh-chip')].every(c=>{const r=c.getBoundingClientRect();return r.left>=0&&r.right<=window.innerWidth;})}));if(many.chips.length===7&&many.chips.some(c=>/^SKÖLD/.test(c)))break;}
 check('L7f fler än sex gåvor samtidigt: högst sex brickor plus en "+N"-bricka, skölden syns alltid och allt ryms på skärmen',many.chips.length===7&&/^\+\d+$/.test(many.chips.at(-1))&&many.chips.some(c=>/^SKÖLD/.test(c))&&many.fit,JSON.stringify(many));
 await shot('l07f-manga-gavor');
 await ev(()=>{window.__skill=0;});
