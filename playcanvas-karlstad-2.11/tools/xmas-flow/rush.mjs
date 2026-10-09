@@ -150,18 +150,25 @@ check('R2g banan växer inte okontrollerat (högst 100 pärlor i journey) och gr
 await ev(()=>{window.__skill=0;});await wait(300);
 const stats0=await rushSnap();
 // Brådskande klocka: mindre än 30 % kvar gör HUD:en och pilen röda.
+// Gåvor som hunnit bli aktiva under körningen ovan (spöket plockar paket, magneten drar, skölden räddar ett liv) skulle blanda sig i missarna nedan: de tas bort först.
+await ev(()=>{const r=window.KarlstadDebug.journey().xmas.julrush;for(const k of Object.keys(r.timers))r.timers[k]=0;r.shield=0;r.spirit.active=false;r.spirit.target=null;r.pulled.length=0;});
 // Klockan är trång (några sekunder per paket): en stillastående bot skulle annars tappa ett hjärta av sig själv medan provet väntar. Klockan sätts därför om till en lång tid först.
 await ev(()=>{const t=window.KarlstadDebug.journey().tempo;t.deadline=12;t.left=2.6;});await wait(400);
 const urgent=await ev(()=>({hud:document.getElementById('xmasHud').classList.contains('urgent'),arrow:document.getElementById('tempoArrow').classList.contains('urgent')}));
 check('R3a när under 30 % av tiden återstår blir HUD:en och pilen brådskande (röda)',urgent.hud&&urgent.arrow,JSON.stringify(urgent));
 await shot('r03b-bradskande');
-const hearts=[];let pill1='';
+// Varje miss tvingas fram och provet väntar på att hjärtat verkligen försvinner (den mjukvarurenderade webbläsaren ger få bildrutor, så en fast väntetid räcker inte alltid).
+const hearts=[];let pill1='',prevH=(await hudText()).hearts;
 for(let i=0;i<3;i++){
   await ev(()=>{window.KarlstadDebug.journey().tempo.left=.02;});
-  await wait(i===0?350:850);
-  if(i===0)pill1=await ev(()=>document.getElementById('xmasPill').textContent);
-  await wait(i===0?500:0);
-  hearts.push((await hudText()).hearts);
+  let h=prevH;
+  for(const tm=Date.now();Date.now()-tm<8000;){
+    await wait(80);
+    if(i===0&&!/FÖR SENT/.test(pill1)){const pp=await ev(()=>document.getElementById('xmasPill').textContent);if(/FÖR SENT/.test(pp))pill1=pp;}
+    h=(await hudText()).hearts;if(h!==prevH)break;
+  }
+  if(i===0&&!/FÖR SENT/.test(pill1))pill1=await ev(()=>document.getElementById('xmasPill').textContent);
+  hearts.push(h);prevH=h;
 }
 check('R3 varje missad klocka tar ett liv: hjärtana blir ♥♥♡ → ♥♡♡ → ♡♡♡',JSON.stringify(hearts)===JSON.stringify(['♥♥♡','♥♡♡','♡♡♡']),hearts.join(' → '));
 check('R3b missen visas för spelaren ("FÖR SENT! 2 LIV KVAR")',/FÖR SENT! 2 LIV KVAR/.test(pill1),pill1);
@@ -186,8 +193,8 @@ const r4=await ev(()=>({panel:document.getElementById('round-xmas-result').hidde
 check('R4 EN RUSH TILL börjar om från noll: tempo 1, tre liv, noll poäng, nytt paketband',r4.panel&&r4.mode==='rush'&&r4.s.state==='running'&&r4.s.level===1&&r4.s.lives===3&&r4.s.score===0&&r4.s.picked===0&&r4.hearts==='♥♥♥'&&r4.dyn>=8&&r4.dyn<=40,JSON.stringify({s:r4.s.state,lvl:r4.s.level,lives:r4.s.lives,score:r4.s.score,dyn:r4.dyn}));
 
 // R4b: stänger man av turbon (klockan är räknad på den) och missar en klocka, säger meddelandet varför
-await ev(()=>{window.__skill=0;window.KarlstadDebug.turbo(false);const t=window.KarlstadDebug.journey().tempo;t.deadline=12;t.left=.02;});await wait(450);
-const nt=await ev(()=>({pill:document.getElementById('xmasPill').textContent,on:window.KarlstadRound.snapshot().turbo.on}));
+await ev(()=>{window.__skill=0;window.KarlstadDebug.turbo(false);const t=window.KarlstadDebug.journey().tempo;t.deadline=12;t.left=.02;});
+let nt;for(const tm=Date.now();Date.now()-tm<8000;){await wait(80);nt=await ev(()=>({pill:document.getElementById('xmasPill').textContent,on:window.KarlstadRound.snapshot().turbo.on}));if(/FÖR SENT/.test(nt.pill))break;}
 check('R4b stänger man av turbon och missar en klocka säger meddelandet "SLÅ PÅ TURBON"',nt.on===false&&/FÖR SENT! \d LIV KVAR · SLÅ PÅ TURBON/.test(nt.pill),JSON.stringify(nt));
 await shot('r04b-turbo-av');
 await ev(()=>{window.KarlstadDebug.turbo(true);window.__skill=1;});
