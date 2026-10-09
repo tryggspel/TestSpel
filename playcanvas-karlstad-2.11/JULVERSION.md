@@ -162,6 +162,7 @@ De tolv rusherna (fart ×/poäng × är tempots; klockan är k × minsta tid + m
 | G duktig | 92 % → 72 % | 290°/s | 0,22 s |
 | A vanlig | 85 % → 55 % | 200°/s | 0,38 s |
 | C nybörjare | 72 % → 40 % | 140°/s | 0,60 s |
+| H, J, K (med slarv) | som G, A och C | som G, A och C | som G, A och C, plus 12 % chans per paket att tappa ungefär en sekund |
 
 Resultat (8–12 försök per typ, varje försök på en egen bana; mätt på koden för 2.21.1-xmas.4 under arbetet, slutlig omkörning med samma antal försök för alla typer följer i verifieringen, avsnitt 8):
 
@@ -173,7 +174,17 @@ Resultat (8–12 försök per typ, varje försök på en egen bana; mätt på ko
 | E mycket duktig | klarar Rush 1–12 utan att tappa ett hjärta, aldrig Rush 13 | 12, sedan slut | 28 (kvartilerna 20 och 33) |
 | P perfekt | klarar allt (provat till Rush 40 och 15 minuters Maraton) | alla | slutar aldrig |
 
-En rush tar för E 13–39 s och för A 16–43 s; hela serien Rush 1–12 tar för E ungefär 5 minuter. **Det här är en modell, inte människor.** Typerna håller en jämn fart hela vägen, så gränserna är skarpa; riktiga spelare varierar mer (en miss här, en bra stund där) och har pekskärmens styrning, så deras gränser är mjukare och ligger troligen lägre än typernas. Hur riktiga spelare ligger till mot A, G och E är **okänt** tills någon har spelat. Det som provet visar är riktningen: med den gamla klockan klarade nybörjaren alla tolv, med den nya klarar bara en mycket duktig spelare alla tolv på första försöket, och därefter är det slut för alla utom en perfekt spelare. Alla siffror ligger samlade och går att ändra: `PRESSURE` (kAmp, decay, slackAmp …) och målformlerna i `xmas-rushes.mjs`, `GIFT_WEIGHT` och `RUSH` i `xmas-rush.mjs`. Kör provet igen efter en ändring, till exempel `node tools/xmas-flow/difficulty.mjs --skills G,A --press '{"decay":0.8}' --runs 12`.
+En rush tar för E 13–39 s och för A 16–43 s; hela serien Rush 1–12 tar för E ungefär 5 minuter.
+
+Typerna ovan är jämna: de håller samma fart hela vägen, så gränserna är skarpa. Människor är inte det, så tre typer till är lika snabba som C, A och G men har **slarv**: vid varje nytt paket är det 12 % chans att de tittar bort, missar svängen eller trycker fel och tappar ungefär en sekund (0,5–1,5 s). Det är en gissning om hur en människa spelar, inte en mätning. Resultat (20 försök per typ):
+
+| Typ | Första försöket i varje rush (andel som klarar, hjärtan kvar) | Serie från Rush 1 | Maraton (tempo, median) |
+|---|---|---|---|
+| H duktig med slarv (som G) | Rush 1–3: 100 %, Rush 4: 100 % (2,8 hjärtan), Rush 5: 90 %, Rush 6–7: 60 %, Rush 8–9: 35–45 %, från Rush 10: 0 % | 5 i rad (längst 7) | 10 |
+| J vanlig med slarv (som A) | Rush 1–4: 100 %, Rush 5: 75 %, Rush 6: 50 %, Rush 7: 20 %, från Rush 8: 0 % | 5 i rad (längst 6) | 9 |
+| K nybörjare med slarv (som C) | Rush 1–3: 100 % (2,6 hjärtan kvar i Rush 3), Rush 4: 95 % (1,8), Rush 5: 60 %, från Rush 6: 0 % | 4 i rad (längst 5) | 8 |
+
+Med slarv blir gränserna mjukare och ligger lägre: Rush 1–2 är trygga även för en nybörjare, och därefter kostar varje rush hjärtan. **Det här är en modell, inte människor.** Typerna håller en jämn fart hela vägen, så gränserna är skarpa; riktiga spelare varierar mer (en miss här, en bra stund där) och har pekskärmens styrning, så deras gränser är mjukare och ligger troligen lägre än typernas. Hur riktiga spelare ligger till mot A, G och E är **okänt** tills någon har spelat. Det som provet visar är riktningen: med den gamla klockan klarade nybörjaren alla tolv, med den nya klarar bara en mycket duktig spelare alla tolv på första försöket, och därefter är det slut för alla utom en perfekt spelare. Alla siffror ligger samlade och går att ändra: `PRESSURE` (kAmp, decay, slackAmp …) och målformlerna i `xmas-rushes.mjs`, `GIFT_WEIGHT` och `RUSH` i `xmas-rush.mjs`. Kör provet igen efter en ändring, till exempel `node tools/xmas-flow/difficulty.mjs --skills G,A --press '{"decay":0.8}' --runs 12`.
 
 | Del | Så fungerar det |
 |---|---|

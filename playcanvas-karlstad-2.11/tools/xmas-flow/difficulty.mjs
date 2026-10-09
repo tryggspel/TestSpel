@@ -37,7 +37,8 @@ export const SKILLS=Object.freeze({
   // Samma som G och A men med slarv: vid varje nytt paket är det en viss chans (slip) att spelaren tittar bort, missar svängen eller trycker fel, och tappar ungefär slipT sekunder.
   // Människor är oftare så än jämna: gränserna blir mjukare och ligger lägre (se JULVERSION.md 6.1).
   H:{name:'duktig med slarv',speed1:.92,speed12:.72,turn:290,lag:.22,noise:.08,slip:.12,slipT:1},
-  J:{name:'vanlig med slarv',speed1:.85,speed12:.55,turn:200,lag:.38,noise:.12,slip:.12,slipT:1}
+  J:{name:'vanlig med slarv',speed1:.85,speed12:.55,turn:200,lag:.38,noise:.12,slip:.12,slipT:1},
+  K:{name:'nybörjare med slarv',speed1:.72,speed12:.4,turn:140,lag:.6,noise:.16,slip:.12,slipT:1}
 });
 const fraction=(sk,level)=>sk.speed1+(sk.speed12-sk.speed1)*(Math.max(1,Math.min(12,level))-1)/11;
 
