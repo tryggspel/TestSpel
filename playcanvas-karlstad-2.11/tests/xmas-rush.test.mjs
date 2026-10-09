@@ -668,6 +668,8 @@ test('övertid i sparningen: Rush 13 och uppåt sparas och låser upp nästa, oc
   assert.equal(a.rush.cleared,13);assert.equal(a.rush.stars[13],2);assert.equal(a.rush.best[13].points,2000);
   const b=new XmasSave(store);assert.equal(b.rush.cleared,13,'sparas');assert.equal(b.profile().cleared,13);
   assert.equal(a.recordRush(99,{points:9,seconds:1,packages:1,hearts:1,cleared:true}).unlocked,false,'efter Rush 99 finns ingen mer');
+  // Profilen (topplistan och länken) bär bara de tolv namngivna rusherna, så att din summa går att jämföra med vännernas; hur långt du kommit syns i cleared.
+  const p=a.profile(5);assert.equal(p.cleared,99);assert.deepEqual(Object.keys(p.bests).map(Number),[1,2,3,4,5,6,7,8,9,10,11,12]);assert.equal(p.total,100*(1+2+3+4+5+6+7+8+9+10+11+12));assert.equal(p.stars,36,'högst tre stjärnor per namngiven rush');
 });
 
 // ── 2.21.1-xmas.4: fler fartgåvor, trängre klocka, Maraton efter tempo 12 och övertid efter Rush 12 ─────────────────────────────────────────────────────

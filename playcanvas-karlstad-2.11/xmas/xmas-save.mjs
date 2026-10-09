@@ -73,11 +73,12 @@ export class XmasSave{
   }
   noteStreak(len){const R=this.state.rush,v=Math.floor(num(len,99));if(v>R.bestStreak){R.bestStreak=v;this.dirty=true;this.save();return true;}return false;}
   get rush(){return this.state.rush;}
-  // Summan av bästa poäng i varje klarad rush, och antalet stjärnor: det som visas på topplistan.
+  // Summan av bästa poäng i varje klarad rush (de tolv namngivna), och antalet stjärnor: det som visas på topplistan och går med i utmaningslänken (som bara bär de tolv).
+  // Hur långt man kommit i övertiden (Rush 13 och uppåt) syns i `cleared` och i listan LÄNGST; övertidens poäng och stjärnor räknas inte in här, så att din summa är jämförbar med vännernas.
   profile(at=Date.now()){
     const R=this.state.rush,bests={};let total=0,stars=0;
-    for(const [n,b] of Object.entries(R.best)){bests[n]=b.points;total+=b.points;}
-    for(const v of Object.values(R.stars))stars+=v;
+    for(const [n,b] of Object.entries(R.best)){if(+n>RUSH_COUNT)continue;bests[n]=b.points;total+=b.points;}
+    for(const [n,v] of Object.entries(R.stars))if(+n<=RUSH_COUNT)stars+=v;
     return {name:this.state.name,cleared:R.cleared,stars,bests,total,at};
   }
   get name(){return this.state.name;}

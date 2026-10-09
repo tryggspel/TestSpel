@@ -71,6 +71,7 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
   }
   // JulRushen: raden överst visar tempo och tiden till nästa paket (stapeln), under den namnet på tempot och poängen. s = XmasRush.snapshot().
   let powersKey='',heartsText='';
+  const CHIPS_MAX=6;
   function setRush(s,list,now){
     const fixed=s.n>0,lbl=fixed?'RUSH':'TEMPO';if(label.textContent!==lbl)label.textContent=lbl;const lv=String(fixed?s.n:s.level);if(count.textContent!==lv)count.textContent=lv;
     if(s.goal){
@@ -88,7 +89,10 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
     const key=list.map(x=>x.kind+':'+Math.ceil(x.left)+':'+x.label).join('|');
     if(key!==powersKey){
       powersKey=key;powers.replaceChildren();powers.hidden=list.length===0;
-      for(const x of list){const chip=el('span','xh-chip',x.label+(x.left>0?' '+Math.ceil(x.left):''));chip.dataset.kind=x.kind;powers.append(chip);}
+      // Högst sex brickor syns (fem fartgåvor och fem andra kan vara på samtidigt): skölden, som räddar ett liv, visas alltid, och resten räknas som "+N".
+      let shown=list;if(list.length>CHIPS_MAX){shown=list.slice(0,CHIPS_MAX);const sh=list.find(x=>x.kind==='shield');if(sh&&!shown.includes(sh))shown[CHIPS_MAX-1]=sh;}
+      for(const x of shown){const chip=el('span','xh-chip',x.label+(x.left>0?' '+Math.ceil(x.left):''));chip.dataset.kind=x.kind;powers.append(chip);}
+      if(list.length>shown.length){const more=el('span','xh-chip','+'+(list.length-shown.length));more.dataset.kind='more';powers.append(more);}
     }
   }
   function hitHearts(){hearts.classList.remove('hit');void hearts.offsetWidth;hearts.classList.add('hit');}

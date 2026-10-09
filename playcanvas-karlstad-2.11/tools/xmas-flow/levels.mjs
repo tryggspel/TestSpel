@@ -228,6 +228,11 @@ const fg=await ev(()=>({chips:[...document.querySelectorAll('.xh-chip')].map(c=>
 check('L7e de fyra nya fartgåvorna syns som brickor (GLÖGG, RAKET, VIND, SKRIDSKOR), den starkaste gäller (raketen: farten ×3, med turbon ×'+(2*3*1.88).toFixed(1)+') och alla brickor ryms på skärmen',['GLÖGG','RAKET','VIND','SKRIDSKOR'].every(t=>fg.chips.some(c=>c.startsWith(t)))&&fg.mul===3&&Math.abs(fg.scale-2*3*1.88)<.05&&fg.rocket&&fg.turbo&&fg.fit,JSON.stringify(fg));
 check('L7e2 brickornas texter klipps inte',(await clipped('.xh-chip')).length===0,JSON.stringify(await clipped('.xh-chip')));
 await shot('l07e-fartgavor');
+// Fler än sex gåvor samtidigt: högst sex brickor syns, skölden visas alltid och resten räknas som "+N"
+await ev(()=>{const r=window.KarlstadDebug.journey().xmas.julrush,p=window.__pos();for(const k of ['magnet','ghost','golden','shield'])r.grant(k,{x:p[0],z:p[1],y:1.68});});await wait(700);
+const many=await ev(()=>({chips:[...document.querySelectorAll('.xh-chip')].map(c=>c.textContent),fit:[...document.querySelectorAll('.xh-chip')].every(c=>{const r=c.getBoundingClientRect();return r.left>=0&&r.right<=window.innerWidth;})}));
+check('L7f fler än sex gåvor samtidigt: högst sex brickor plus en "+N"-bricka, skölden syns alltid och allt ryms på skärmen',many.chips.length===7&&/^\+\d+$/.test(many.chips.at(-1))&&many.chips.some(c=>/^SKÖLD/.test(c))&&many.fit,JSON.stringify(many));
+await shot('l07f-manga-gavor');
 await ev(()=>{window.__skill=0;});
 // sidopaket: botten springer en stund på en lugn nivå (Rush 12 har glest, så starta Rush 1) och sidopaket ska dyka upp med gåva
 await ev(()=>window.KarlstadDebug.journey().xmas.openMenu());await wait(600);

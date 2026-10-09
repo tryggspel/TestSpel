@@ -231,3 +231,4 @@ body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
 .xr-tile.xr-ot{grid-column:1/-1;grid-template-columns:auto auto auto;justify-content:center;align-items:center;gap:6px 12px;border-color:#ff9f5a88}
 .xr-tile.xr-ot span{display:block;font-size:11px;letter-spacing:.12em;color:#ffd7b0}
 .xr-tile.xr-ot[data-state="locked"]{border-color:#85aa8566}
+.xh-chip[data-kind="more"]{background:rgba(255,255,255,.22);color:#fff}

@@ -67,6 +67,7 @@ function frame(c,sk,rnd){
     let v=0;
     if(c.lag>0)c.lag-=DT;
     else v=7.2*2*t.speedMul()*g.fun.power.speedMul()*fraction(sk,t.level)*align*(1+(rnd()-.5)*2*sk.noise);
+    const boost=g.fun.power.speedMul();c.moveT=(c.moveT||0)+DT;c.boostSum=(c.boostSum||0)+boost*DT;if(boost>1.0001)c.boostUp=(c.boostUp||0)+DT;
     const s=v*DT;c.pos={x:c.pos.x+Math.sin(c.heading)*s,z:c.pos.z+Math.cos(c.heading)*s};
   }
   const before=t.target&&t.deadline>0?t.left/t.deadline:null,beforeId=t.target?.id;
@@ -81,7 +82,7 @@ function playOne(sk,rnd,{def=null,hearts=3,streak=0,seed=1,maxSeconds=MAXSEC}={}
   while(c.rush.state!=='over'&&n++<limit)frame(c,sk,rnd);
   const r=c.rush.result;
   if(!r){c.rush.quit?.();return {win:false,timeout:true,hearts:0,seconds:maxSeconds,picked:c.g.tempo.picked,level:c.g.tempo.level,score:c.g.tempo.score};}
-  return {margins:c.margins,win:!!r.rush?.cleared,hearts:r.rush?.hearts??0,seconds:r.seconds,picked:r.collected,level:r.level,score:r.points,next:r.rush?.next||0,nextHearts:r.rush?.nextHearts||0,misses:r.misses,gifts:r.gifts};
+  return {boost:c.moveT?c.boostSum/c.moveT:1,up:c.moveT?c.boostUp/c.moveT:0,margins:c.margins,win:!!r.rush?.cleared,hearts:r.rush?.hearts??0,seconds:r.seconds,picked:r.collected,level:r.level,score:r.points,next:r.rush?.next||0,nextHearts:r.rush?.nextHearts||0,misses:r.misses,gifts:r.gifts};
 }
 const pct=(a,n)=>Math.round(100*a/n)+'%';
 const quant=(a,q)=>{const s=[...a].sort((x,y)=>x-y);return s[Math.min(s.length-1,Math.floor(q*s.length))];};
@@ -95,9 +96,9 @@ for(const key of wantSkills){
   if(DO.attempts){
     const row=[];
     for(let n=Math.max(1,Number(args.from||1));n<=Math.min(count+(args.over?Number(args.over):0),MAXN);n++){
-      const def=RUSHES.rushDef(n);let wins=0,secs=0,hs=0,pk=0,ws=0,sc=0;const mg=[];
-      for(let r=0;r<RUNS;r++){const rnd=seededRandom(hashSeed(key+'a'+n+'x'+r));const o=playOne(sk,rnd,{def,seed:r+1});if(o.win){wins++;hs+=o.hearts;pk+=o.picked;ws+=o.seconds;sc+=o.score;}secs+=o.seconds;if(o.margins)mg.push(...o.margins);if(VERBOSE)console.log('  rush',n,'försök',r,JSON.stringify(o));}
-      row.push(n+':'+pct(wins,RUNS)+(wins?'('+(hs/wins).toFixed(1)+'♥'+(args.detail?' '+Math.round(pk/wins)+'pk '+Math.round(ws/wins)+'s '+Math.round(sc/pk)+'p/pk':'')+')':'')+(args.margins&&mg.length?'[kvar p10 '+quant(mg,.1).toFixed(2)+']':''));
+      const def=RUSHES.rushDef(n);let wins=0,secs=0,hs=0,pk=0,ws=0,sc=0,bsum=0,bup=0;const mg=[];
+      for(let r=0;r<RUNS;r++){const rnd=seededRandom(hashSeed(key+'a'+n+'x'+r));const o=playOne(sk,rnd,{def,seed:r+1});if(o.win){wins++;hs+=o.hearts;pk+=o.picked;ws+=o.seconds;sc+=o.score;bsum+=o.boost;bup+=o.up;}secs+=o.seconds;if(o.margins)mg.push(...o.margins);if(VERBOSE)console.log('  rush',n,'försök',r,JSON.stringify(o));}
+      row.push(n+':'+pct(wins,RUNS)+(wins?'('+(hs/wins).toFixed(1)+'♥'+(args.detail?' '+Math.round(pk/wins)+'pk '+Math.round(ws/wins)+'s '+Math.round(sc/pk)+'p/pk ×'+(bsum/wins).toFixed(2)+' fartgåva '+Math.round(100*bup/wins)+'%':'')+')':'')+(args.margins&&mg.length?'[kvar p10 '+quant(mg,.1).toFixed(2)+']':''));
     }
     log('första försöket per rush (andel som klarar, snitt hjärtan kvar): '+row.join('  '));
   }
