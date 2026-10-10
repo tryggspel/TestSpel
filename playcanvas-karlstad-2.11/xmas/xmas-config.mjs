@@ -28,15 +28,21 @@ export const comboMult=chain=>COMBO.tiers.reduce((m,t)=>chain>=t.chain?t.mult:m,
 export const DELIVERY=Object.freeze({points:100,fast:45,slow:110,maxTimeBonus:100});
 export const timeBonus=(seconds,{fast=DELIVERY.fast,slow=DELIVERY.slow}={})=>Math.max(0,Math.min(DELIVERY.maxTimeBonus,Math.round((slow-seconds)/(slow-fast)*DELIVERY.maxTimeBonus)));
 
-// Fortsättning: nya paketregn i fri julvandring. Varje regn har egna paket-ID, så inget paket kan ge poäng två gånger.
-// 2.21.1-xmas.4: paketen tog slut och det var för långt mellan regnen (ett regn var 70–110:e sekund, högst två åt gången, och två övergivna regn kunde stoppa alla nya i fyra minuter).
-// Nu: första regnet efter fem sekunder, sedan ett nytt var 22–38:e sekund, högst tre åt gången, åtta till tolv paket per regn 30–85 m bort, och har man färre än lowWater paket kvar inom
-// nearRadius kommer nästa regn med högst topUpEvery sekunders mellanrum. Ett regn man lämnat långt bakom sig (leaveDistance i leaveSeconds) räknas bort så att övergivna regn inte stoppar nya.
+// Tappade paket (kallas "regn" i koden): så delas de ut i fri julvandring och i Julklappsjakten (introduktionen och rundorna). Varje regn har egna paket-ID, så inget paket kan ge poäng två gånger.
+// Historik: 2.21.1-xmas.4 gav ett nytt regn var 22–38:e sekund, högst tre åt gången och nästa regn inom 6 s när paketen i närheten tog slut. Det gjorde att många paket och spår låg tätt
+// inpå varandra direkt efter ett fynd. 2.21.1-xmas.6 sprider ut dem i tid och rum:
+//  - every: planerat mellanrum mellan två regn (s). afterDone: när ett regn är klart (allt hittat eller borta) och inget annat finns kvar kommer nästa regn tidigast efter afterDone[0] och senast
+//    efter afterDone[1] sekunder, aldrig direkt efter ett fynd. maxActive: högst så många regn åt gången.
+//  - minDistance/maxDistance: hur långt från spelaren ett nytt regn läggs (m). separation: minsta avstånd mellan ett nytt regns mitt och de aktiva och senaste regnens (recent st) mitt.
+//    spread: minsta vinkel (grader) mellan riktningarna från spelaren till två aktiva regn, så att två spår inte börjar på samma ställe. busyRadius: ingen ny hög medan man står så här nära en
+//    hög man håller på att plocka. Kan inget sådant läge hittas (trånga kvarter) lättas kraven i två steg i stället för att regnen uteblir.
+//  - count: paket per regn (vanliga, och dessutom ett bonuspaket i mitten). reserve: i ett uppdrag med mål läggs inga fler regn så länge paketen på kartan räcker till målet plus så här många extra.
 // Paketen läggs på fria platser mellan ringMin och ringMax meter från platsen där de tappats, minst spacing meter från varandra (tries: så många platser som provas innan den fullaste används).
-// 2.21.1-xmas.5: fri julvandring är sök och hitta. Paketen ligger utspridda (upp till sju meter från mitten) och syns först på nära håll (showRadius, i vyn); vägen dit visas av tomtarnas spår i snön (TRAILS).
-// chainWindow: sekunder mellan två fynd för att kombon ska leva (längre än i jakterna, för att man letar).
-export const FREE_RAIN=Object.freeze({first:5,every:Object.freeze([22,38]),minDistance:30,maxDistance:85,count:Object.freeze([8,12]),life:200,maxActive:3,
-  lowWater:7,nearRadius:110,topUpEvery:6,leaveDistance:170,leaveSeconds:20,tries:6,ringMin:2.2,ringMax:7,spacing:1.8,showRadius:34,bonusBeam:44,radarRadius:22,chainWindow:9});
+// 2.21.1-xmas.5: sök och hitta. Paketen ligger utspridda (upp till sju meter från mitten) och syns först på nära håll (showRadius, i vyn); vägen dit visas av tomtarnas spår i snön (TRAILS).
+// chainWindow: sekunder mellan två fynd för att kombon ska leva (längre än i jakterna med ordnade paket, för att man letar).
+export const FREE_RAIN=Object.freeze({first:5,every:Object.freeze([48,72]),afterDone:Object.freeze([8,14]),maxActive:2,
+  minDistance:50,maxDistance:105,separation:60,spread:55,recent:3,busyRadius:30,count:Object.freeze([6,9]),reserve:2,
+  life:200,leaveDistance:170,leaveSeconds:20,tries:10,ringMin:2.2,ringMax:7,spacing:1.8,showRadius:34,bonusBeam:44,radarRadius:22,chainWindow:9});
 
 // Tomtarnas spår i snön (xmas-tracks.mjs): fotspår som leder från en punkt nära spelaren (lead meter längs vägen) till platsen där paketen tappades. Ett spår per tappad hög och det försvinner
 // när alla paketen i högen är hittade eller snöat igen. step: meter mellan två fotspår, side: hur långt åt sidan ett fotavtryck ligger från mittlinjen, wobble/wobbleLen: tomtens svaj (meter, våglängd),

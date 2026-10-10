@@ -16,10 +16,12 @@ const nav=new CityNavigation(),mall={x:-135,z:98};
 const portals={'sista-rundan':{x:46,z:37,name:'O’Learys'},fikapanik:{x:8,z:6,name:'Fikapanik'},'radda-fikat':{x:-135,z:55,name:'Rädda fikat'},sandgrund:{x:-12,z:-370,name:'Sandgrund'}};
 const storage=()=>{const m=new Map();return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k),m};};
 const START={x:-19,z:35};
+// Dagen är fast i proven: banans paket, vilka som bär en gåva och förmågorna beror annars på dagens datum, och några prov (spöket, magneten, de femton gåvorna, sidopaketen) räknar med en viss mängd paket nära start.
+const DAY_PIN=Date.parse('2026-10-10T12:00:00Z');
 
 // Ett julbygge i miniatyr: samma journey som spelet, utan termosar, med JulRushen inkopplad där grundspelet anropar xmas.step.
 function mk({wall=null,at=START}={}){
-  const g=new CityJourney(wall?new CityNavigation(wall):nav,mall,portals,storage());g.rush.start('clean');g.drainEvents();
+  const g=new CityJourney(wall?new CityNavigation(wall):nav,mall,portals,storage());g.fun.clock=()=>new Date(DAY_PIN);g.rush.start('clean');g.drainEvents();
   g.items.length=0;g.treasures.length=0;g.secrets.length=0;g.itemById.clear(); // som prepareXmasJourney
   const save=new XmasSave(storage()),rush=new XmasRush({journey:g,save});
   g.xmas={step:(dt,p,sweep,speed)=>rush.step(dt,p,sweep,speed),objective:p=>rush.objective(p)};

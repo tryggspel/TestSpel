@@ -1,13 +1,13 @@
 // Julklappsjakten: gränssnittet. Startvyn, fortsättningsmenyn och resultatkortet är vanliga paneler i index.html; HUD:en och pausmenyns
 // tillägg byggs här med textContent (aldrig HTML-strängar med data). Små mål: knappar är minst 52 px höga och spelvärlden syns ovanför.
 // JulRushen använder samma HUD: tempo och klockan i raden överst (stapeln är tiden till nästa paket), liv som hjärtan, poäng, kombo och gåvorna som små brickor.
-import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.5';
-import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.5';
-import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.5';
-import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.5';
-import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.5';
-import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.5';
-import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.5';
+import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.6';
+import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.6';
+import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.6';
+import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.6';
+import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.6';
+import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.6';
+import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.6';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 export const mmss=s=>{const n=Math.max(0,Math.round(s));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};
@@ -38,10 +38,10 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
     if(!run)return;
     const g=run.goal||0;
     state={goal:g,total:run.regularTotal,kind:run.kind,phase:run.phase};
-    if(run.kind==='free'){label.textContent='PAKET';count.textContent=String(run.collected);fill.style.width='0%';}
+    if(run.kind==='free'){label.textContent='JULKLAPPAR';count.textContent=String(run.collected);fill.style.width='0%';}
     else if(run.kind==='delivery'){label.textContent='LEVERERA';count.textContent='☕';fill.style.width='100%';}
     else if(run.phase==='deliver'||run.phase==='done'){label.textContent='LÄMNA';count.textContent=run.collected+'/'+g;fill.style.width='100%';}
-    else{label.textContent='PAKET';count.textContent=run.collected+'/'+g;fill.style.width=Math.min(100,Math.round(run.collected/Math.max(1,g)*100))+'%';}
+    else{label.textContent=run.drops?'JULKLAPPAR':'PAKET';count.textContent=run.collected+'/'+g;fill.style.width=Math.min(100,Math.round(run.collected/Math.max(1,g)*100))+'%';}
     ptsVal.textContent=run.points.toLocaleString('sv-SE');
     hud.dataset.phase=run.phase;
   }
@@ -160,13 +160,13 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
     $('xmasResultKicker').textContent=zombies?(res.stamp?'NY JULSTÄMPEL!':res.levelRecord?'NYTT REKORD!':'NIVÅ '+zl+' KLAR!'):res.stamp?'NY JULSTÄMPEL!':res.late?'KLART · SENT MEN GOTT':'KLART!';
     $('xmasResultTitle').textContent=res.kind==='intro'?'TOMTEN ÄR RÄDDAD!':res.kind==='delivery'?'FIKAT ÄR LEVERERAT!':zombies?'TOMTEJAKTEN · NIVÅ '+zl+' KLARAD!':'JULRUNDAN ÄR KLAR!';
     $('xmasResultLine').textContent=res.kind==='intro'
-      ?'Tomten får tillbaka sina paket och skickar dig vidare med en julstämpel.':res.kind==='delivery'?'Tomten fick sin julfika, precis som beställt. Tack för hjälpen!':zombies?(res.stamp?'Tomten fick sina paket trots tomtezombierna. Stämpeln är din!':'Du samlade '+res.collected+' paket trots tomtezombierna och lämnade dem hos tomten.')+(res.next?' Nästa nivå: '+res.next+' · '+res.nextPlace+', med '+res.nextGoal+' paket och snabbare tomtezombier.':' Du har klarat den sista nivån!'):'Tomtarna tackar för hjälpen och tappar säkert fler paket i morgon.';
+      ?(res.drops?'Du följde tomtarnas spår i snön, hittade julklapparna och räddade julen. Tomten skickar dig vidare med en julstämpel.':'Tomten får tillbaka sina paket och skickar dig vidare med en julstämpel.'):res.kind==='delivery'?'Tomten fick sin julfika, precis som beställt. Tack för hjälpen!':zombies?(res.stamp?'Tomten fick sina paket trots tomtezombierna. Stämpeln är din!':'Du samlade '+res.collected+' paket trots tomtezombierna och lämnade dem hos tomten.')+(res.next?' Nästa nivå: '+res.next+' · '+res.nextPlace+', med '+res.nextGoal+' paket och snabbare tomtezombier.':' Du har klarat den sista nivån!'):res.drops?'Du hittade '+res.collected+' julklappar genom att följa tomtarnas spår och lämnade dem hos tomten. De tappar säkert fler i morgon.':'Tomtarna tackar för hjälpen och tappar säkert fler paket i morgon.';
     const stamp=STAMPS.find(s=>s.id===res.stampId);
     stampCv.hidden=!stamp;
     if(stamp){stampCv.width=stampCv.height=220;drawXmasStamp(stampCv.getContext('2d'),220,{label:stamp.label,sub:stamp.sub});}
     $('xmasResultPoints').textContent=res.points.toLocaleString('sv-SE')+' JULPOÄNG';
     const grid=$('xmasResultGrid');grid.replaceChildren();
-    const cells=res.kind==='delivery'?[['TID',mmss(res.seconds)],['JULPOÄNG',res.points.toLocaleString('sv-SE')]]:[['PAKET',res.collected+'/'+res.regularTotal],['BONUS',res.bonusCollected+'/'+res.bonusTotal],['BÄSTA KOMBO',String(res.bestChain)],['TID',mmss(res.seconds)]];
+    const cells=res.kind==='delivery'?[['TID',mmss(res.seconds)],['JULPOÄNG',res.points.toLocaleString('sv-SE')]]:[[res.drops?'JULKLAPPAR':'PAKET',res.drops?String(res.collected):res.collected+'/'+res.regularTotal],['BONUS',res.bonusCollected+'/'+res.bonusTotal],['BÄSTA KOMBO',String(res.bestChain)],['TID',mmss(res.seconds)]];
     for(const [k,v] of cells){const c=el('div','xr-cell');c.append(el('b',null,v),el('span',null,k));grid.append(c);}
     $('xmasResultParts').textContent=(res.kind==='delivery'?'Leverans '+res.parts.delivery:'Paket '+res.parts.packages+' + leverans '+res.parts.delivery)+(res.parts.time?' + snabbhet '+res.parts.time:'')+(res.record?' · NYTT REKORD':'');
     $('xmasResultStatus').textContent='JULSTÄMPLAR '+save.stampCount()+' / '+save.stampTotal()+' · '+save.title();
@@ -176,7 +176,7 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
   function renderStart(build){
     const s=save.state,done=save.introDone;
     $('xmasCozy').firstChild.textContent=done?'JULKLAPPSJAKTEN 🎁 ':'JULKLAPPSJAKTEN 🎁 ';
-    $('xmasCozyNote').textContent=done?'Fortsätt julen: nya rundor, butiksuppdrag och fri julvandring.':'Mysigt paketäventyr på Stora Torget. Inga zombies. Första uppdraget tar ungefär en minut.';
+    $('xmasCozyNote').textContent=done?'Fortsätt julen: nya julklappsjakter, butiksutmaningar och fri julvandring.':'Gå runt på Stora Torget, följ tomtarnas spår i snön och hitta julklapparna. Inga zombier. Första uppdraget tar ungefär två minuter.';
     const rec=s.records.intro;
     $('xmasStatus').textContent='JULSTÄMPLAR '+save.stampCount()+' / '+save.stampTotal()+' · '+save.title()+(rec?' · REKORD '+rec.points+' P':'');
     if(build)$('xmasBuild').textContent=build;

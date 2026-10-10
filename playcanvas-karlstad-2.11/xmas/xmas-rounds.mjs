@@ -4,9 +4,10 @@
 //
 // Samma regler som introduktionen: paketen ligger på gångbar mark inom ett par meter från rutten, grupperna 11–15 m isär (en insamling var
 // 2–4 sekund på normal gångfart), allt som krävs för målet går att nå, och bonuspaketen är valfria avstickare 4–9 m från rutten.
-import {SHAPES,TORGET_PROPS,distanceToPath,TREE,INTRO} from './xmas-layout.mjs?v=2.21.1-xmas.5';
-import {STALLS,ARCH} from './xmas-decor-data.mjs?v=2.21.1-xmas.5';
-import {seededRandom} from './xmas-hunt.mjs?v=2.21.1-xmas.5';
+import {SHAPES,TORGET_PROPS,distanceToPath,TREE,INTRO} from './xmas-layout.mjs?v=2.21.1-xmas.6';
+import {STALLS,ARCH} from './xmas-decor-data.mjs?v=2.21.1-xmas.6';
+import {seededRandom} from './xmas-hunt.mjs?v=2.21.1-xmas.6';
+import {FREE_RAIN} from './xmas-config.mjs?v=2.21.1-xmas.6';
 
 const hashStr=s=>{let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;};
 // Platser i staden (meter öster/söder om Stora Torget). Stannar på gångbar mark genom att nav.point flyttar dem till närmaste gångbara punkt.
@@ -14,13 +15,22 @@ export const WAYPOINTS=Object.freeze({
   torget:{x:0,z:27},tomte:INTRO.tomte,pressbyran14:{x:31,z:-53},domkyrkan:{x:160,z:-84},radhuset:{x:-64,z:-4},
   mitticity:{x:-117,z:36},espresso15:{x:-52,z:179},pressbyran20:{x:-158,z:158},espresso22:{x:-188,z:157},stadshotellet:{x:-132,z:-50},oleary:{x:48,z:45}
 });
+// kind/soft/goalShare/via beskriver den gamla ordnade rundan (buildRound, som Tomtezombies-nivåerna använder). search beskriver Julklappsjakten som sök och hitta (buildSearch): mål, var tomtarna
+// tappar julklappar (plaza = Stora Torget, route = längs gatan, allt längre fram) och hur de delas ut (FREE_RAIN med ändringar). soft i en sökrunda är 0: det finns ingen klocka.
+const SEARCH_CFG=Object.freeze({first:4,count:Object.freeze([6,9]),maxActive:2});
 export const ROUNDS=Object.freeze([
-  Object.freeze({id:'round-torget',title:'TORGETS PAKETREGN',blurb:'Tomtarna har tappat paket över hela torget. Plocka dem i valfri ordning.',kind:'scatter',soft:150,goalShare:.68}),
-  Object.freeze({id:'round-kungsgatan',title:'KUNGSGATANS JULRUNDA',blurb:'Följ paketen längs Kungsgatan och tillbaka till tomten vid granen.',kind:'route',soft:165,goalShare:.56,
-    via:Object.freeze(['torget','pressbyran14','domkyrkan','radhuset','torget'])}),
-  Object.freeze({id:'round-drottninggatan',title:'DROTTNINGGATANS JULRUNDA',blurb:'En lång runda genom Mitt i City och längs Drottninggatan, tillbaka till granen.',kind:'route',soft:180,goalShare:.5,
-    via:Object.freeze(['torget','mitticity','espresso15','pressbyran20','mitticity','torget'])})
+  Object.freeze({id:'round-torget',title:'TORGETS JULKLAPPSJAKT',blurb:'Tomtarna har tappat julklappar över hela torget. Leta efter deras spår i snön och följ dem.',kind:'scatter',soft:150,goalShare:.68,
+    search:Object.freeze({goal:18,area:'plaza',cfg:Object.freeze({...SEARCH_CFG,minDistance:34,maxDistance:80,separation:48,spread:45})})}),
+  Object.freeze({id:'round-kungsgatan',title:'KUNGSGATANS JULRUNDA',blurb:'Gå Kungsgatan fram, leta spår i snön och hitta julklapparna. Lämna dem hos tomten vid granen.',kind:'route',soft:165,goalShare:.56,
+    via:Object.freeze(['torget','pressbyran14','domkyrkan','radhuset','torget']),
+    search:Object.freeze({goal:24,area:'route',route:Object.freeze({ahead:Object.freeze([45,105]),spacing:75,lateral:10}),cfg:Object.freeze({...SEARCH_CFG,minDistance:30,maxDistance:130,separation:55,spread:45})})}),
+  Object.freeze({id:'round-drottninggatan',title:'DROTTNINGGATANS JULRUNDA',blurb:'En lång runda genom Mitt i City och längs Drottninggatan. Följ tomtarnas spår i snön och hitta julklapparna.',kind:'route',soft:180,goalShare:.5,
+    via:Object.freeze(['torget','mitticity','espresso15','pressbyran20','mitticity','torget']),
+    search:Object.freeze({goal:28,area:'route',route:Object.freeze({ahead:Object.freeze([45,105]),spacing:75,lateral:10}),cfg:Object.freeze({...SEARCH_CFG,minDistance:30,maxDistance:130,separation:55,spread:45})})})
 ]);
+// Det första uppdraget: Stora Torget, en hög i taget så att det är lätt att se vad som händer. Målet nås efter två tre högar.
+export const INTRO_SEARCH=Object.freeze({id:'intro',title:'HJÄLP TOMTEN!',blurb:'Tomtarna har tappat julklappar på Stora Torget. Leta efter deras spår i snön och följ dem.',stampId:'intro',
+  search:Object.freeze({goal:14,area:'plaza',cfg:Object.freeze({first:3,every:Object.freeze([30,45]),afterDone:Object.freeze([8,14]),maxActive:1,count:Object.freeze([6,8]),minDistance:32,maxDistance:75,separation:45,spread:40})})});
 export const roundById=id=>ROUNDS.find(r=>r.id===id)||null;
 // Nästa runda att spela: första utan stämpel, annars i tur och ordning efter hur många rundor man spelat.
 export function nextRound(save){
@@ -145,3 +155,24 @@ export function buildRound(def,nav){
   const yaw=(Math.atan2(-(first.x-start.x),-(first.z-start.z))*180/Math.PI+360)%360;
   return {kind:'round',id:def.id,title:def.title,goal,packages,tomte:{...INTRO.tomte},spawn:{x:start.x,z:start.z,yaw:Math.round(yaw)},tree:{...TREE},soft:def.soft,stampId:def.id,windowSec:3.6,length:Math.round(length),route:pts};
 }
+
+// ── Julklappsjakten som sök och hitta ──────────────────────────────────────────────────────────────────────────────────
+// Stora Torget som yta: allt inom rektangeln utom platser som ska vara fria (granen, portalen, stånden, tomten och grundspelets bänkar, planteringar och lyktor).
+export const PLAZA=Object.freeze({minx:-46,maxx:46,minz:-26,maxz:34});
+export function plazaArea(){
+  const keepOut=[{x:TREE.x,z:TREE.z,r:8},{x:ARCH.x,z:ARCH.z,r:7},...STALLS.map(s=>({x:s.x,z:s.z,r:6})),...TORGET_PROPS.map(([x,z])=>({x,z,r:3})),{x:INTRO.tomte.x,z:INTRO.tomte.z,r:7}];
+  return {kind:'rect',...PLAZA,keepOut};
+}
+// Bygger ett uppdrag (introduktionen eller en runda) till ett run-objekt för XmasHunt.startSearch(). Inga paket finns från början: tomtarna tappar dem under spelets gång (se xmas-hunt.mjs: stepRain).
+// def: INTRO_SEARCH eller en post i ROUNDS. nav: spelets gångbara karta (bara rutterundorna behöver den: point, path, clear, blocked och valfritt smooth).
+export function buildSearch(def,nav){
+  const s=def.search,cfg={...s.cfg};let area,spawn=INTRO.spawn,length=0;
+  if(s.area==='route'){
+    const pts=resample(routePolyline(def,nav),1),first=pts[Math.min(pts.length-1,12)],start=WAYPOINTS.torget;
+    area={kind:'route',pts,ahead:[...s.route.ahead],spacing:s.route.spacing,lateral:s.route.lateral};length=pts.at(-1)?.s||0;
+    spawn={x:start.x,z:start.z,yaw:Math.round((Math.atan2(-(first.x-start.x),-(first.z-start.z))*180/Math.PI+360)%360)};
+  }else area=plazaArea();
+  return {kind:def.id==='intro'?'intro':'round',id:def.id,title:def.title,goal:s.goal,tomte:{...INTRO.tomte},spawn:{...spawn},tree:{...TREE},stampId:def.stampId||def.id,windowSec:FREE_RAIN.chainWindow,soft:0,
+    drops:{cfg,area},length:Math.round(length)};
+}
+

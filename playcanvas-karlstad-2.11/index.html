@@ -30,11 +30,11 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:11px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.21.1-xmas.5">
-<link rel="stylesheet" href="./compact-hud.css?v=2.21.1-xmas.5">
-<link rel="stylesheet" href="./explore-fun.css?v=2.21.1-xmas.5">
-<link rel="stylesheet" href="./places.css?v=2.21.1-xmas.5">
-<link rel="stylesheet" href="./xmas/xmas.css?v=2.21.1-xmas.5">
+<link rel="stylesheet" href="./last-round.css?v=2.21.1-xmas.6">
+<link rel="stylesheet" href="./compact-hud.css?v=2.21.1-xmas.6">
+<link rel="stylesheet" href="./explore-fun.css?v=2.21.1-xmas.6">
+<link rel="stylesheet" href="./places.css?v=2.21.1-xmas.6">
+<link rel="stylesheet" href="./xmas/xmas.css?v=2.21.1-xmas.6">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -128,7 +128,7 @@
   <section id="round-xmas-intro" class="round-card xmas-card" hidden>
     <div class="episode-label"><span>KARLSTAD / JULEN</span><span class="game-version">2.21.1-xmas.1</span></div>
     <h1>JULKLAPPS<br><em>JAKTEN.</em></h1>
-    <p class="round-lead">Tomtarna har tappat julklapparna runt om i Karlstad. Hjälp dem hitta paketen!</p>
+    <p class="round-lead">Tomtarna har tappat julklapparna runt om i Karlstad. Gå runt, följ deras spår i snön och hitta dem!</p>
     <button id="xmasCozy" class="round-primary xmas-primary" type="button">JULKLAPPSJAKTEN 🎁 <span>→</span></button>
     <p id="xmasCozyNote" class="round-fine"></p>
     <button id="xmasRushStart" class="round-secondary xmas-rush" type="button">JULRUSHEN <span>→</span></button>
@@ -143,13 +143,14 @@
     <div class="episode-label"><span>JULKLAPPSJAKTEN</span><span>FORTSÄTT JULEN</span></div>
     <h2>VAD<br><em>NU?</em></h2>
     <p id="xmasContinueStatus" class="round-fine"></p>
-    <button id="xmasRound" class="round-primary xmas-primary" type="button">NY JULRUNDA · 2–3 MIN <span>→</span></button>
+    <button id="xmasRound" class="round-primary xmas-primary" type="button">NÄSTA JULKLAPPSJAKT <span>→</span></button>
     <p id="xmasRoundNote" class="round-fine"></p>
     <button id="xmasRushGo" class="round-secondary xmas-rush" type="button">JULRUSHEN <span>→</span></button>
     <p id="xmasRushGoNote" class="round-fine"></p>
-    <button id="xmasShops" class="round-secondary" type="button">BUTIKSUPPDRAG <span>→</span></button>
+    <button id="xmasShops" class="round-secondary" type="button">BUTIKSUTMANINGAR <span>→</span></button>
+    <p id="xmasShopsNote" class="round-fine">Hjälp tomtarna i Cervera och Pressbyrån. De ligger också på vägen när du går runt och letar spår.</p>
     <button id="xmasFree" class="round-secondary" type="button">FRI JULVANDRING <span>→</span></button>
-    <p id="xmasFreeNote" class="round-fine">Tomtarna tappar paket i staden. Leta efter deras spår i snön och hitta dem.</p>
+    <p id="xmasFreeNote" class="round-fine">Ingen gräns och inget mål: gå runt i staden, leta efter tomtarnas spår i snön och hitta julklapparna.</p>
     <ul id="xmasStampList" class="xmas-stamps"></ul>
     <button id="xmasContinueIntro" class="round-tertiary" type="button">Spela första uppdraget igen</button>
     <button id="xmasContinueMenu" class="round-tertiary" type="button">Startmenyn</button>
@@ -359,6 +360,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.21.1-xmas.5"></script>
+<script type="module" src="./app.js?v=2.21.1-xmas.6"></script>
 </body>
 </html>

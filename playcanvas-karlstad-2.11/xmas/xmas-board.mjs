@@ -7,7 +7,7 @@
 //
 // Länkens innehåll är text som går att skriva för hand, så den kontrolleras noga när den läses: format, längd, tal inom gränser, kontrollsumma. Ett trasigt eller manipulerat
 // värde ger null (aldrig ett fel) och allt som visas skrivs med textContent.
-import {RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.5';
+import {RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.6';
 
 export const NAME_MAX=12,FRIENDS_MAX=30,MAX_POINTS=9999999;
 const TOKEN_RE=/^[A-Za-z0-9_-]{16,420}$/;

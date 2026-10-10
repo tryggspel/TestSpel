@@ -9,10 +9,10 @@
 //    nålsmå i den låga vinkel en telefon har (1,7 m ögonhöjd); ett långt, sammanhängande band syns tydligt på 30–40 m och visar riktningen med sin form och sina pilar.
 //    Bandet ligger fast i världen (förankrat vid målet): man går fram över det och nya bitar rullas ut längst bort.
 //  - Uppdragsraden säger alltid vad man ska göra nu och vad som kommer sedan (samla paket, lämna hos tomten).
-import {CityGuidance} from '../city-guidance.mjs?v=2.21.1-xmas.5';
-import {arrowInfo} from '../tempo-run.mjs?v=2.21.1-xmas.5';
-import {TRAILS} from './xmas-config.mjs?v=2.21.1-xmas.5';
-import {nearestPrint} from './xmas-tracks.mjs?v=2.21.1-xmas.5';
+import {CityGuidance} from '../city-guidance.mjs?v=2.21.1-xmas.6';
+import {arrowInfo} from '../tempo-run.mjs?v=2.21.1-xmas.6';
+import {TRAILS} from './xmas-config.mjs?v=2.21.1-xmas.6';
+import {nearestPrint} from './xmas-tracks.mjs?v=2.21.1-xmas.6';
 
 export const GUIDE=Object.freeze({
   recalcMs:90,moveEps:.4,maxAgeMs:600,          // hur ofta vägen räknas om (när man rör sig) och hur gammal den får bli
@@ -97,20 +97,32 @@ export class XmasGuide{
 }
 
 // Uppdragsraden: vad man ska göra nu och sedan. Rader: {id,text,state} där state är now | next | done | wait. `key` ändras bara när något ska ritas om.
-// p (valfri): spelarens plats. I fri julvandring (sök och hitta) säger raden först att man ska hitta tomtarnas spår, sedan att man ska följa dem, och nära paketen att man ska leta runt.
+// p (valfri): spelarens plats. I sök och hitta (fri julvandring, introduktionen och rundorna) säger raden först att man ska hitta tomtarnas spår, sedan att man ska följa dem, och nära paketen att man
+// ska leta runt. Ett uppdrag med mål har en andra rad (lämna hos tomten), och nära en butik med en butiksutmaning kommer en tredje (shop: korta texten, t.ex. "UPPDRAG: PRESSBYRÅN", eller {text,near}: near = inom 25 m, då är raden ett aktuellt steg som syns även på låga skärmar).
 // Raderna är korta (högst 20 tecken): de får plats på en smal telefon utan att klippas.
-export function missionView(run,p=null){
+function searchRow(run,p){
+  const left=run.packages.reduce((n,k)=>n+(k.collected?0:1),0);
+  if(left<=0)return {id:'wait',text:'NYA SPÅR OM '+Math.max(1,Math.ceil((run.nextRainAt-run.t)||0))+' S',state:'wait'};
+  let near=false;
+  if(p)for(const rain of run.rains){if(!rain.gone&&rain.left>0&&Math.hypot(rain.x-p.x,rain.z-p.z)<=TRAILS.nearDrop){near=true;break;}}
+  if(near)return {id:'search-near',text:'JULKLAPPARNA NÄRA!',state:'now'};
+  if(p&&nearestPrint(run.rains,p.x,p.z)<=5)return {id:'follow',text:'FÖLJ SPÅREN',state:'now'};
+  return {id:'search',text:'HITTA TOMTARNAS SPÅR',state:'now'};
+}
+export function missionView(run,p=null,shop=null){
   if(!run)return null;
   const rows=[];
-  if(run.kind==='free'){
-    const left=run.packages.reduce((n,k)=>n+(k.collected?0:1),0);
-    if(left>0){
-      let near=false;
-      if(p)for(const rain of run.rains){if(!rain.gone&&rain.left>0&&Math.hypot(rain.x-p.x,rain.z-p.z)<=TRAILS.nearDrop){near=true;break;}}
-      if(near)rows.push({id:'search-near',text:'PAKETEN ÄR NÄRA!',state:'now'});
-      else if(p&&nearestPrint(run.rains,p.x,p.z)<=5)rows.push({id:'follow',text:'FÖLJ SPÅREN',state:'now'});
-      else rows.push({id:'search',text:'HITTA TOMTARNAS SPÅR',state:'now'});
-    }else rows.push({id:'wait',text:'NYA SPÅR OM '+Math.max(1,Math.ceil((run.nextRainAt-run.t)||0))+' S',state:'wait'});
+  if(run.errand){
+    rows.push({id:'errand',text:'BÄR FIKAT TILL TOMTEN',state:'now'});
+  }else if(run.drops){
+    if(run.phase==='free'||run.phase==='collect'){
+      rows.push(searchRow(run,p));
+      if(run.goal>0)rows.push({id:'deliver',text:'LÄMNA HOS TOMTEN',state:'next'});
+      if(shop){const t=typeof shop==='string'?shop:shop.text;if(t)rows.push({id:'shop',text:t,state:shop.near?'now':'next'});} // nära butiken (och på låga skärmar, där bara aktuella steg visas) lyser raden som ett aktuellt steg
+    }else{
+      rows.push({id:'collect',text:'JULKLAPPAR '+run.goal+'/'+run.goal,state:'done'});
+      rows.push({id:'deliver',text:'LÄMNA HOS TOMTEN',state:run.phase==='done'?'done':'now'});
+    }
   }else if(run.kind==='delivery'){
     rows.push({id:'deliver',text:'BÄR FIKAT TILL TOMTEN',state:run.phase==='done'?'done':'now'});
   }else{

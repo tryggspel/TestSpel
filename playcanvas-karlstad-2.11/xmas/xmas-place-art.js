@@ -1,7 +1,7 @@
 // Julklappsjakten: julens föremål i butiksuppdragen (lussebulle, pepparkaka, glögg). Samma stil som place-art.js: tjock mörk kontur, platta
 // färger, 256×256-ruta. Läggs in med registerProp så att grundspelets fil inte behöver ändras för varje ny sak.
-import {registerProp} from '../place-art.js?v=2.21.1-xmas.5';
-export {hasProp,drawProp,drawItemCard,drawMenuBoard} from '../place-art.js?v=2.21.1-xmas.5'; // samma modulinstans som föremålen registreras i
+import {registerProp} from '../place-art.js?v=2.21.1-xmas.6';
+export {hasProp,drawProp,drawItemCard,drawMenuBoard} from '../place-art.js?v=2.21.1-xmas.6'; // samma modulinstans som föremålen registreras i
 const INK='#122b2b';
 function shape(c,fill,fn,lw=7){c.beginPath();fn();c.fillStyle=fill;c.fill();c.lineWidth=lw;c.strokeStyle=INK;c.lineJoin='round';c.lineCap='round';c.stroke();}
 function line(c,color,lw,fn){c.beginPath();fn();c.strokeStyle=color;c.lineWidth=lw;c.lineCap='round';c.lineJoin='round';c.stroke();}

@@ -1,6 +1,6 @@
 // Enda källan för versionsnumret i spelet. Uppdateras av tools/set-version.mjs.
 // 2.11.22 render-routing root fix: one module key everywhere, curated facades always use the Kungsgatan route.
-export const GAME_VERSION='2.21.1-xmas.5';
+export const GAME_VERSION='2.21.1-xmas.6';
 // Julgrenen (release/jul-2026): ett fristående bygge av grundspelet. Basen är en känd commit på main; bygget visar både versionen
 // och det deployade commit-ID:t (från /api/build-info) så att man alltid kan se exakt vilket bygge som körs.
 export const GAME_FLAVOR='xmas';

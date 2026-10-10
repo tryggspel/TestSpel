@@ -277,7 +277,8 @@ test('Temporush: pärlor som man sprungit förbi försvinner så att pilen aldri
   const first=g.course.pearls[0];
   // Spring 60 m längs banans egen riktning förbi första pärlan.
   const ahead={x:first.x+first.hx*60,z:first.z+first.hz*60};
-  for(let i=0;i<4;i++)g.step(.3,{x:ahead.x,z:ahead.z,y:1.68},fwd);g.drainEvents();
+  // Målet byts ut under några bildrutor efter att banan rensats (en bildruta av tre saknar mål, och vilken beror på dagens bana): vänta tills ett mål finns.
+  for(let i=0;i<12&&(i<4||!g.tempo.target);i++)g.step(.3,{x:ahead.x,z:ahead.z,y:1.68},fwd);g.drainEvents();
   assert.equal(g.itemById.has(first.id),false,'första pärlan togs bort när man passerat');
   const t=g.tempo.target;assert.ok(t,'ett mål finns');
   const full=g.itemById.get(t.id);assert.equal(g.passed(full,ahead,1),false,'målet ligger inte bakom längs banan');

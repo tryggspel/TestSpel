@@ -6,7 +6,7 @@
 // Allt är deterministiskt (samma väg ger samma spår), så att tester och skärmbilder är jämförbara.
 //
 // Avtrycken i utdata: {x,z (mitt), hx,hz (enhetsvektor: åt vilket håll tån pekar), side (0 = vänster fot, 1 = höger fot)}.
-import {TRAILS} from './xmas-config.mjs?v=2.21.1-xmas.5';
+import {TRAILS} from './xmas-config.mjs?v=2.21.1-xmas.6';
 
 const hash01=n=>{const s=Math.sin(n*12.9898+78.233)*43758.5453;return s-Math.floor(s);};
 export const pathLength=path=>{let L=0;if(Array.isArray(path))for(let i=1;i<path.length;i++)L+=Math.hypot(path[i].x-path[i-1].x,path[i].z-path[i-1].z);return L;};

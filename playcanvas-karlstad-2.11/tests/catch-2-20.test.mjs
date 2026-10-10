@@ -12,6 +12,8 @@ const portals={'sista-rundan':{x:46,z:37,name:'O’Learys'},fikapanik:{x:8,z:6,n
 const storage=()=>{const m=new Map();return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,String(v)),m};};
 const day=()=>stockholmDay(new Date());
 const plain=g=>g.items.filter(t=>!t.y&&rarityFor(t.id,day())==='common'&&!powerFor(t.id,day())&&!/^(kil|marieberg)-/.test(t.id));
+// En vanlig termos som ingen annan termos ligger nära: vilka termosar som är vanliga beror på dagens datum, och en granne i närheten skulle ge fler träffar än provet väntar sig.
+const lone=(g,r=45)=>plain(g).find(t=>!g.items.some(q=>q!==t&&!q.y&&Math.hypot(q.x-t.x,q.z-t.z)<r))||plain(g)[0];
 const make=(mode,nav=new CityNavigation())=>{const g=new CityJourney(nav,mall,portals,storage());if(mode)g.rush.start(mode);g.drainEvents();return g;};
 // Spring längs x med farten v (m/s) i 60 bilder/s, sidled z0 från termosen. Returnerar alla termos-händelser.
 function run(g,t,v,lateral){
@@ -29,14 +31,14 @@ test('fångstradien växer med farten: 2,4 m till fots, mer i sprint och turbo, 
 });
 
 test('City Explore: en termos 3,2 m vid sidan tas i turbo men inte på långsam promenad',()=>{
-  const slow=make('clean'),a=plain(slow)[0];
+  const slow=make('clean'),a=lone(slow);
   assert.equal(run(slow,a,3.6,3.2).filter(e=>e.id===a.id).length,0,'långsamt: utanför 2,4 m');
-  const fast=make('clean'),b=plain(fast)[0];
+  const fast=make('clean'),b=lone(fast);
   assert.equal(run(fast,b,14.4,3.2).filter(e=>e.id===b.id).length,1,'turbo: fångas i farten');
 });
 
 test('City Explore: en termos tas inte genom en vägg eller över vatten',()=>{
-  const g0=make('clean'),t=plain(g0)[0];
+  const g0=make('clean'),t=lone(g0);
   const wall=(x,z)=>Math.abs(x-t.x)<25&&z>t.z+.8&&z<t.z+2.4;
   const g=make('clean',new CityNavigation(wall));
   assert.equal(run(g,t,14.4,3.2).filter(e=>e.id===t.id).length,0,'väggen stoppar fångsten');
@@ -47,14 +49,14 @@ test('City Explore: en termos tas inte genom en vägg eller över vatten',()=>{
 
 test('Termosrundan och zombiejakten får samma fångstfält som City Explore',()=>{
   for(const mode of ['trail',null]){
-    const slow=make(mode),a=plain(slow)[0],fast=make(mode),b=plain(fast)[0];
+    const slow=make(mode),a=lone(slow),fast=make(mode),b=lone(fast);
     assert.equal(run(slow,a,3.6,3).filter(e=>e.id===a.id).length,0,(mode||'zombie')+': långsamt');
     assert.equal(run(fast,b,11.2,3).filter(e=>e.id===b.id).length,1,(mode||'zombie')+': sprint fångar 3 m från banan');
   }
 });
 
 test('stillastående och teleport: radien följer verklig fart, inte hopp',()=>{
-  const g=make('clean'),t=plain(g)[0];
+  const g=make('clean'),t=lone(g);
   g.step(1/60,{x:t.x+3,z:t.z,y:1.68},{x:1,z:0});assert.equal(g.drainEvents().filter(e=>e.type==='thermos').length,0,'3 m bort utan fart tas den inte');
   assert.ok(g.speed<1,'fart ~0');
   g.step(1/60,{x:t.x+3,z:t.z,y:1.68},{x:1,z:0});g.lastStep=null;g.speed=0;
@@ -62,7 +64,7 @@ test('stillastående och teleport: radien följer verklig fart, inte hopp',()=>{
 });
 
 test('kaffemagneten fungerar som förut: 16 m, högst tre per steg, genom väggar',()=>{
-  const g0=make('clean'),t=plain(g0)[0],g=make('clean',new CityNavigation((x,z)=>Math.abs(x-(t.x+5))<1&&Math.abs(z-t.z)<30));
+  const g0=make('clean'),t=lone(g0),g=make('clean',new CityNavigation((x,z)=>Math.abs(x-(t.x+5))<1&&Math.abs(z-t.z)<30));
   g.fun.boosters.magnet=20;g.step(.1,{x:t.x+10,z:t.z,y:1.68},{x:1,z:0});
   const ev=g.drainEvents().filter(e=>e.type==='thermos');assert.ok(ev.some(e=>e.id===t.id)&&ev.length<=3,'magnet tar den över muren: '+ev.length);
 });

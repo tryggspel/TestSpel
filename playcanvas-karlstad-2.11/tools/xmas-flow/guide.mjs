@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// Verifiering i riktig webbläsare av vägledningen i Julklappsjakten (pil, kanter, stjärnspår, stråle, uppdragsrad): att den finns, pekar åt rätt håll
-// när man vänder sig, följer gångvägen runt hinder, byter mål när man plockar paket och efter målet pekar mot tomten, att grundspelets små markeringar
-// och kompasspill inte ritas, att den finns i Tomtezombies, att JulRushen behåller grundspelets pil och att butiksuppdragen får vara ifred.
+// Verifiering i riktig webbläsare av vägledningen i Julklappsjakten. Två sorters körningar: ordnade (spiralen runt granen som Tomtezombies nivå 1 använder) med pil, kanter, stjärnspår, stråle
+// och uppdragsrad som pekar åt rätt håll, följer gångvägen runt hinder, byter mål när man plockar paket och efter målet pekar mot tomten; och sök och hitta (Julklappsjakten, rundorna och fri
+// julvandring) där ingen pil pekar på paketen utan spåren i snön visar vägen. Dessutom: grundspelets små markeringar och kompasspill ritas inte, Tomtezombies har vägledningen, JulRushen behåller
+// grundspelets pil och butiksuppdragen får vara ifred.
 // Startar det riktiga spelet i headless Chromium. Avslutar med kod 1 om något avviker. SHOTS=katalog sparar skärmbilder.
 //
 //   python3 -m http.server 8902      (i spelkatalogen, på julgrenen)
@@ -71,10 +72,25 @@ const clipped=sel=>ev(s=>{
 },sel);
 const walk=(tx,tz,step=1.4)=>ev(([tx,tz,step])=>new Promise(res=>{let n=0;const f=()=>{const [x,z]=window.__pos();const dx=tx-x,dz=tz-z,d=Math.hypot(dx,dz);if(d<.4||++n>700){res(d);return;}const k=Math.min(1,step/d);window.__tp(x+dx*k,z+dz*k,Math.atan2(-dx,-dz)*180/Math.PI,-5);requestAnimationFrame(f);};f();}),[tx,tz,step]);
 
+// Första raden i uppdragsraden (sök och hitta): raderna efter den är "LÄMNA HOS TOMTEN" och ev. en butiksrad.
+const firstRow=m=>(m||'').split(' › ')[0];
+const until=async(fn,max=60)=>{const t0=Date.now();while(Date.now()-t0<max*1000){if(await ev(fn))return true;await wait(250);}return false;};
+// Som en spelare som följer spåren: till närmaste ej plockade paket, väntar på nästa hög när inget finns. Stannar när fasen inte längre är "collect".
+const collectHunt=async(maxSec=200)=>{
+  const t0=Date.now();
+  while(Date.now()-t0<maxSec*1000){
+    const st=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;if(!r)return {phase:'none',best:null};const p=window.__pos();let best=null,bd=1e9;for(const k of r.packages){if(k.collected)continue;const d=Math.hypot(k.x-p[0],k.z-p[1]);if(d<bd){bd=d;best={x:k.x,z:k.z};}}return {phase:r.phase,best};});
+    if(st.phase!=='collect'&&st.phase!=='free')return st.phase;
+    if(st.best)await walk(st.best.x,st.best.z,1.4);else await wait(250);
+  }
+  return 'timeout';
+};
+
 await page.goto(`http://localhost:${PORT}/?debug`);await ready();
 
-// ── A: introduktionen visar pil, spår, stråle och uppdragsrad direkt ────────────────────────────────────────────────────
-await click('xmasCozy');await wait(2800);
+// ── A: en ordnad körning (spiralen runt granen) visar pil, spår, stråle och uppdragsrad direkt ─────────────────────────────────────
+await click('xmasCozy');await wait(1200);
+await ev(()=>window.KarlstadDebug.journey().xmas.hunt.startSpiral());await wait(1600);
 const s0=await snap(),sp=await ev(()=>window.__pos());
 check('A1 pilen finns direkt och pekar på första paketet (rakt fram, med avstånd och namn)',s0.guide.on&&s0.guide.label==='NÄSTA PAKET'&&s0.guide.hint==='GÅ RAKT FRAM'&&s0.guide.distance>=3&&s0.guide.distance<=14&&await vis('#xmasArrow'),JSON.stringify({g:s0.guide.label,d:s0.guide.distance,h:s0.guide.hint}));
 check('A2 pilens text visar vad den pekar på och hur långt det är',/^NÄSTA PAKET · \d+ M$/.test(await text('#xmasArrow .xg-line'))&&await text('#xmasArrow .xg-hint')==='GÅ RAKT FRAM',await text('#xmasArrow .xg-line'));
@@ -143,6 +159,52 @@ await walk(tomte.x,tomte.z,1.8);await wait(1800);
 check('D4 efter leverans är pilen och uppdragsraden borta (resultatkortet visas)',!(await vis('#xmasArrow'))&&await ev(()=>!document.getElementById('round-xmas-result').hidden));
 await click('xmasResultFree');await wait(1200);
 
+// ── S: Julklappsjakten (introduktionen) är sök och hitta: spår i snön, ingen pil till paketen, raderna säger vad som gäller ───────────────
+await ev(()=>window.KarlstadDebug.journey().xmas.startIntro());await wait(1100);
+const q0=await snap();
+check('S1 före första spåret: ingen pil, uppdragsraden säger NYA SPÅR OM … S och LÄMNA HOS TOMTEN (bara två rader: ingen butiksrad i första uppdraget)',!q0.guide.on&&!(await vis('#xmasArrow'))&&/^NYA SPÅR OM \d+ S › LÄMNA HOS TOMTEN$/.test(q0.guide.mission),q0.guide.mission);
+const gotRain=await until(()=>window.KarlstadDebug.journey().xmas.hunt.run.rains.length>=1,30);await wait(700);
+const q1=await snap();
+check('S2 efter första spåret: raden säger HITTA TOMTARNAS SPÅR eller FÖLJ SPÅREN, ingen pil, ingen stråle, ingen ring och inget julband mot paketen, men avtryck ritas i snön',gotRain&&/^(HITTA TOMTARNAS SPÅR|FÖLJ SPÅREN)$/.test(firstRow(q1.guide.mission))&&!q1.guide.on&&q1.view.goal===false&&q1.view.ribbon===0&&q1.view.prints>=2&&!(await vis('#xmasArrow')),JSON.stringify({m:q1.guide.mission,goal:q1.view.goal,ribbon:q1.view.ribbon,prints:q1.view.prints}));
+const rn1=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run.rains[0];return {x:r.x,z:r.z,head:r.head,trail:r.trail.map(p=>[p.x,p.z])};});
+const m1=rn1.trail[Math.floor(rn1.trail.length/2)],m2=rn1.trail[Math.min(rn1.trail.length-1,Math.floor(rn1.trail.length/2)+3)];
+await tp(m1[0],m1[1],yawTo(m1[0],m1[1],m2[0],m2[1]),-6,1500);
+const q2=await snap();
+check('S3 mitt i spåret säger raden FÖLJ SPÅREN och avtrycken ritas i vyn (en enda mesh)',firstRow(q2.guide.mission)==='FÖLJ SPÅREN'&&q2.view.prints>=4&&q2.view.printQuads===q2.view.prints,JSON.stringify({m:q2.guide.mission,prints:q2.view.prints,quads:q2.view.printQuads}));
+await shot('S1-spar');
+const e1=rn1.trail.at(-1);
+await tp(e1[0],e1[1],yawTo(e1[0],e1[1],rn1.x,rn1.z),-6,1500);
+const q3=await snap();
+check('S4 nära paketen säger raden JULKLAPPARNA NÄRA! och paketen syns i vyn (men fortfarande ingen pil)',firstRow(q3.guide.mission)==='JULKLAPPARNA NÄRA!'&&q3.view.shown>=3&&!q3.guide.on,JSON.stringify({m:q3.guide.mission,shown:q3.view.shown,on:q3.guide.on}));
+await shot('S2-narmar');
+const hudS=await ev(()=>({label:document.querySelector('.xh-label').textContent,count:document.querySelector('.xh-count').textContent}));
+check('S4b HUD:en säger JULKLAPPAR och räknar mot målet (0/14)',hudS.label==='JULKLAPPAR'&&hudS.count==='0/14',JSON.stringify(hudS));
+const endPhase=await collectHunt(220);
+await wait(600);
+const q4=await snap();
+check('S5 målet nått (14 julklappar): raderna blir JULKLAPPAR 14/14 (klar) och LÄMNA HOS TOMTEN (nu), pilen pekar på tomten och strålen står hos tomten, men inget julband',endPhase==='deliver'&&q4.hunt.phase==='deliver'&&/^JULKLAPPAR 14\/14 › LÄMNA HOS TOMTEN$/.test(q4.guide.mission)&&q4.guide.on&&q4.guide.label==='TOMTEN'&&q4.view.goal===true&&q4.view.ribbon===0,JSON.stringify({ph:endPhase,m:q4.guide.mission,label:q4.guide.label,goal:q4.view.goal,ribbon:q4.view.ribbon}));
+const rowsS=await ev(()=>[...document.querySelectorAll('#xmasMission .xg-step')].filter(r=>!r.hidden).map(r=>r.dataset.state));
+check('S5b steg 1 är klart (✓) och steg 2 är nu',rowsS.join()==='done,now',rowsS.join());
+const geoS=arrowOk(await arrowGeo());
+check('S5c pilen mot tomten är en kompakt platta som inte skymmer framsynen',geoS.ok,geoS.why);
+await shot('S3-till-tomten');
+const tomteS=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.tomte);
+await walk(tomteS.x,tomteS.z,1.8);await wait(1800);
+check('S6 efter leverans är pilen och uppdragsraden borta (resultatkortet visas)',!(await vis('#xmasArrow'))&&!(await vis('#xmasMission'))&&await ev(()=>!document.getElementById('round-xmas-result').hidden));
+await click('xmasResultFree');await wait(1200);
+// En runda (Kungsgatan) har samma upplägg men med butiksrad: nära Pressbyrån (Kungsgatan 14) kommer en tredje rad. Raderna är korta och klipps inte.
+await ev(()=>window.KarlstadDebug.journey().xmas.startRound('round-kungsgatan'));await wait(1200);
+const pb=await ev(()=>window.KarlstadDebug.journey().places.arrivalFor('pressbyran'));
+await tp(pb.x,pb.z,pb.yaw,-4,1500);
+const q5=await snap();
+const rowsR=await ev(()=>[...document.querySelectorAll('#xmasMission .xg-step b')].filter(b=>b.getClientRects().length).map(b=>b.textContent));
+const tallS=await ev(()=>innerHeight>700);
+check('S7 i en runda nära Pressbyrån kommer en butiksrad (UPPDRAG: PRESSBYRÅN) som lyser som ett aktuellt steg: tre rader på en hög skärm (jakten, LÄMNA, butiken) och två på en låg (≤ 700 px: bara aktuella steg), alla högst 20 tecken, ingen pil',rowsR.length===(tallS?3:2)&&/^UPPDRAG: /.test(rowsR.at(-1))&&rowsR.every(t=>t.length<=20)&&!q5.guide.on,JSON.stringify({rowsR,hög:tallS}));
+check('S7b raderna klipps inte (prickarna på Å, Ä och Ö syns) och arean under uppdragsraden är fri för pilen',(await clipped('#xmasMission b')).length===0,JSON.stringify(await clipped('#xmasMission b')));
+await shot('S4-butiksrad');
+const mg=await ev(()=>{const m=document.getElementById('xmasMission').getBoundingClientRect(),h=document.getElementById('xmasHud').getBoundingClientRect();return {missionTop:Math.round(m.top),hudBottom:Math.round(h.bottom),bottom:Math.round(m.bottom),vh:innerHeight};});
+check('S7c den tre rader höga uppdragsraden ligger under HUD:en och går inte längre ner än mitten av bilden',mg.missionTop>=mg.hudBottom-1&&mg.bottom<=mg.vh*.5,JSON.stringify(mg));
+
 // ── E: vägen runt hinder (ett paket bakom ett kvarter) ───────────────────────────────────────────────────────────────
 await ev(()=>window.KarlstadDebug.journey().xmas.startFree());await wait(1000);
 const hit=await ev(()=>{
@@ -196,7 +258,7 @@ const r=await snap();
 check('F3 JulRushen: paketjaktens pil och uppdragsrad är av, grundspelets pil används (julbandet på marken är det enda som delas)',r.mode==='rush'&&!(await vis('#xmasArrow'))&&!(await vis('#xmasMission'))&&await vis('#tempoArrow'),JSON.stringify({mode:r.mode,ribbonState:r.guide.on,ribbonPieces:r.view.ribbon}));
 await ev(()=>window.KarlstadDebug.journey().xmas.startFree());await wait(1500);
 const fr=await snap();
-check('F4 fri vandring utan paket: ingen pil, uppdragsraden säger när nya spår kommer',!fr.guide.on&&/^NYA SPÅR OM \d+ S$/.test(fr.guide.mission),JSON.stringify({on:fr.guide.on,m:fr.guide.mission}));
+check('F4 fri vandring utan paket: ingen pil, uppdragsraden säger när nya spår kommer',!fr.guide.on&&/^NYA SPÅR OM \d+ S/.test(fr.guide.mission),JSON.stringify({on:fr.guide.on,m:fr.guide.mission}));
 await shot('08-fri-vandring');
 // Sök och hitta: när tomtarna tappat paket finns spår i snön, men ingen pil, stråle, ring eller band mot paketen.
 let rainSeen=false;for(let i=0;i<80&&!rainSeen;i++){rainSeen=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.rains.length>=1);if(!rainSeen)await wait(400);}
@@ -205,17 +267,17 @@ await ev(()=>{window.KarlstadDebug.journey().xmas.hunt.stepRain=()=>{};});      
 await tp(...(await ev(()=>window.__pos())),0,-4,700);                                   // stå still en stund så att vyn hinner skriva om spåren
 const f1=await snap();
 check('F4b0 inga gamla avtryck ligger kvar i meshen: antalet ritade fyrkanter är lika med antalet avtryck i närheten',f1.view.printQuads===f1.view.prints&&f1.view.prints>0,JSON.stringify({quads:f1.view.printQuads,prints:f1.view.prints}));
-check('F4b fri vandring är sök och hitta: spår i snön finns men ingen pil, målstråle, ring eller julband mot paketen, och raden säger HITTA TOMTARNAS SPÅR',!!rn&&rn.n>=6&&!f1.guide.on&&f1.view.goal===false&&f1.view.ribbon===0&&!(await vis('#xmasArrow'))&&f1.guide.mission==='HITTA TOMTARNAS SPÅR'&&f1.hunt.prints>=6,JSON.stringify({on:f1.guide.on,goal:f1.view.goal,ribbon:f1.view.ribbon,m:f1.guide.mission,prints:f1.hunt.prints}));
+check('F4b fri vandring är sök och hitta: spår i snön finns men ingen pil, målstråle, ring eller julband mot paketen, och raden säger HITTA TOMTARNAS SPÅR',!!rn&&rn.n>=6&&!f1.guide.on&&f1.view.goal===false&&f1.view.ribbon===0&&!(await vis('#xmasArrow'))&&firstRow(f1.guide.mission)==='HITTA TOMTARNAS SPÅR'&&f1.hunt.prints>=6,JSON.stringify({on:f1.guide.on,goal:f1.view.goal,ribbon:f1.view.ribbon,m:f1.guide.mission,prints:f1.hunt.prints}));
 // Står man vid ett avtryck ritas spåret i vyn och raden säger FÖLJ SPÅREN; nära paketen LETA RUNT.
 const pr=rn.trail[Math.floor(rn.trail.length/2)],pr2=rn.trail[Math.min(rn.trail.length-1,Math.floor(rn.trail.length/2)+3)];
 await tp(pr[0],pr[1],yawTo(pr[0],pr[1],pr2[0],pr2[1]),-6,1500);
 const f2=await snap();
-check('F4c vid spåret ritas avtrycken i vyn (en enda mesh) och raden säger FÖLJ SPÅREN',f2.view.prints>=4&&f2.guide.mission==='FÖLJ SPÅREN',JSON.stringify({prints:f2.view.prints,m:f2.guide.mission}));
+check('F4c vid spåret ritas avtrycken i vyn (en enda mesh) och raden säger FÖLJ SPÅREN',f2.view.prints>=4&&firstRow(f2.guide.mission)==='FÖLJ SPÅREN',JSON.stringify({prints:f2.view.prints,m:f2.guide.mission}));
 await shot('08b-spar-i-snon');
 const end=rn.trail.at(-1);
 await tp(end[0],end[1],yawTo(end[0],end[1],rn.x,rn.z),-6,1500);
 const f3=await snap();
-check('F4d nära paketen säger raden PAKETEN ÄR NÄRA! och paketen syns i vyn',f3.guide.mission==='PAKETEN ÄR NÄRA!'&&f3.view.shown>=3,JSON.stringify({m:f3.guide.mission,shown:f3.view.shown}));
+check('F4d nära paketen säger raden JULKLAPPARNA NÄRA! och paketen syns i vyn',firstRow(f3.guide.mission)==='JULKLAPPARNA NÄRA!'&&f3.view.shown>=3,JSON.stringify({m:f3.guide.mission,shown:f3.view.shown}));
 await shot('08c-paketen-ar-nara');
 // Paketen syns först på nära håll (34 m): längre bort ritas de inte, hur många det än finns.
 const faraway={x:rn.x+60,z:rn.z+60};

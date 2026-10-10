@@ -4,7 +4,7 @@
 // spelas julrundornas banor (Torget, Kungsgatan, Drottninggatan) i tur och ordning, med fler paket att samla och tomtezombier som kommer tätare och går snabbare. En nivå klaras när målet är nått
 // och paketen lämnats hos tomten; nästa nivå låses då upp (i ordning, högst nivå 99). Hjärtan och energi är grundspelets egna, och zombieklasserna rörs inte: farten sätts när en zombie skapas
 // och tätheten genom att nästa patrull aldrig ligger längre fram än nivåns takt (xmas-boot.js).
-import {INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.5';
+import {INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.6';
 
 export const ZOMBIE_MAX=99;
 // Banorna i den ordning de kommer: nivå 1 är introduktionens spiral, därefter julrundornas banor om och om igen.

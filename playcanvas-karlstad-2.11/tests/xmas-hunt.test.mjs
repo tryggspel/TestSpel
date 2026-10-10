@@ -7,6 +7,7 @@ import {XmasSave,sanitizeSave,blankSave} from '../xmas/xmas-save.mjs';
 import {COMBO,comboMult,timeBonus,DELIVERY,FREE_RAIN,STAMPS,titleFor,baseGameUrl,BASE_GAME_URL,WEATHER,WEATHER_ORDER} from '../xmas/xmas-config.mjs';
 import {namespacedStorage,installNamespacedStorage} from '../xmas/xmas-storage.mjs';
 import {CATCH,catchReach} from '../journey-rules.mjs';
+import {missionView} from '../xmas/xmas-guide.mjs';
 
 const mem=()=>{const m=new Map();return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k),get length(){return m.size;},key:i=>[...m.keys()][i]??null,m};};
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
@@ -76,7 +77,7 @@ test('introduktionen tar ungefär 60–90 sekunder för en ny spelare och är sn
 });
 
 test('hela slingan går att samla på gångfart: 20 paket, leverans hos tomten, stämpel och rekord',()=>{
-  const save=new XmasSave(mem());const hunt=new XmasHunt({save});hunt.startIntro();
+  const save=new XmasSave(mem());const hunt=new XmasHunt({save});hunt.startSpiral();
   assert.deepEqual(hunt.drain().map(e=>e.type),['xmas-start']);
   walk(hunt,trail(),CATCH.walk);
   const ev=hunt.drain();
@@ -95,7 +96,7 @@ test('hela slingan går att samla på gångfart: 20 paket, leverans hos tomten, 
 });
 
 test('målet nås före tomten: vägledningen byter från paket till tomte, och leverans kräver tomten',()=>{
-  const hunt=new XmasHunt({save:new XmasSave(mem())});hunt.startIntro();hunt.drain();
+  const hunt=new XmasHunt({save:new XmasSave(mem())});hunt.startSpiral();hunt.drain();
   const reg=INTRO.packages.filter(p=>p.kind==='regular');
   walk(hunt,[INTRO.spawn,...reg.slice(0,20)],CATCH.walk);
   const e=hunt.drain();const goalEv=e.find(x=>x.type==='xmas-goal');assert.ok(goalEv);assert.equal(goalEv.collected,20,'målhändelsen kommer vid exakt 20');assert.equal(hunt.run.phase,'deliver');assert.ok(hunt.run.collected>=20&&hunt.run.collected<=22);
@@ -109,7 +110,7 @@ test('målet nås före tomten: vägledningen byter från paket till tomte, och 
 });
 
 test('ett plockat paket ger aldrig poäng igen, hur man än går tillbaka',()=>{
-  const hunt=new XmasHunt({save:null});hunt.startIntro();hunt.drain();
+  const hunt=new XmasHunt({save:null});hunt.startSpiral();hunt.drain();
   const reg=INTRO.packages.filter(p=>p.kind==='regular');
   const p0=reg[0];hunt.step(.016,{x:p0.x,z:p0.z,y:1.68},null,0);
   assert.ok(hunt.run.collected>=1&&hunt.run.collected<=2);const points=hunt.run.points;
@@ -154,11 +155,11 @@ test('kombo: kedjan växer inom fönstret, poängen stiger i tydliga steg och br
 });
 
 test('bonuspaket ger extra belöning men krävs inte för att klara uppdraget',()=>{
-  const save=new XmasSave(mem());const h=new XmasHunt({save});h.startIntro();h.drain();
+  const save=new XmasSave(mem());const h=new XmasHunt({save});h.startSpiral();h.drain();
   walk(h,trail(),CATCH.walk);const del=h.drain().find(e=>e.type==='xmas-deliver');
   assert.equal(del.result.bonusCollected,0,'bonuspaketen ligger vid sidan av spåret (valfria avstickare)');assert.equal(del.result.bonusTotal,3);assert.ok(del.result.stamp);
   const bon=INTRO.packages.filter(p=>p.kind==='bonus');
-  const h2=new XmasHunt({});h2.startIntro();h2.drain();
+  const h2=new XmasHunt({});h2.startSpiral();h2.drain();
   for(const b of bon)h2.step(.016,{x:b.x,z:b.z,y:1.68},null,0);
   assert.equal(h2.run.bonusCollected,3);assert.equal(h2.run.collected,0,'bonuspaket räknas inte mot målet');assert.equal(h2.run.points,150);
 });
@@ -168,7 +169,7 @@ test('timeBonus: snabbare ger mer, ingen tidsgräns som misslyckas',()=>{
   assert.ok(timeBonus(60)>timeBonus(90));assert.equal(timeBonus(10),DELIVERY.maxTimeBonus);
   // rundor skalar med sin mjuka tid: halva tiden ger nästan full bonus, hela tiden ingen
   assert.equal(timeBonus(60,{fast:150*.45,slow:150}),100);assert.equal(timeBonus(90,{fast:150*.45,slow:150}),Math.round((150-90)/(150-67.5)*100));assert.equal(timeBonus(150,{fast:67.5,slow:150}),0);
-  const h=new XmasHunt({save:new XmasSave(mem())});h.startIntro();h.drain();
+  const h=new XmasHunt({save:new XmasSave(mem())});h.startSpiral();h.drain();
   for(let i=0;i<4000;i++)h.step(.5,{x:0,z:60,y:1.68},null,0);// 2000 sekunder långt från paketen
   assert.equal(h.active,true,'ingen förlust av att vara långsam');
 });
@@ -194,34 +195,41 @@ test('fri julvandring: nya paketregn med egna ID, tydligt utlagda och som försv
   const pts=h3.run.points;assert.ok(pts>0);for(const k of pk)h3.step(.016,{x:k.x,z:k.z,y:1.68},null,0);assert.equal(h3.run.points,pts);
 });
 
-test('fri julvandring: första regnet kommer efter fem sekunder, och paketen tar aldrig slut för den som plockar (nytt regn inom några sekunder)',()=>{
+test('fri julvandring: första regnet kommer efter fem sekunder, nya kommer med god tid emellan (aldrig direkt efter ett fynd) och utan långa uppehåll',()=>{
   const h=new XmasHunt({rand:seededRandom(11),nav:{snap:q=>q,blocked:()=>false}});h.startFree();h.drain();
-  const p={x:0,z:0,y:1.68};let first=null,gapNow=0,maxGap=0,rains=0,picked=0;
+  const p={x:0,z:0,y:1.68};let first=null,gapNow=0,maxGap=0,rains=0,picked=0,doneAt=null,minAfterDone=1e9;
   for(let i=0;i<4*600;i++){ // tio minuter, en bildruta var fjärde sekund-del
     h.step(.25,p,null,0);
-    for(const e of h.drain()){if(e.type==='xmas-rain'){rains++;if(first==null)first=h.run.t;}if(e.type==='xmas-pick')picked++;}
-    // en snabb spelare: går rakt till närmaste paket (högst 400 m/s i provet, dvs. på en bildruta)
+    for(const e of h.drain()){
+      if(e.type==='xmas-rain'){rains++;if(first==null)first=h.run.t;if(doneAt!=null){minAfterDone=Math.min(minAfterDone,h.run.t-doneAt);doneAt=null;}}
+      if(e.type==='xmas-pick')picked++;
+      if(e.type==='xmas-rain-gone'&&e.done)doneAt=h.run.t;
+    }
+    // en snabb spelare: går rakt till närmaste paket (400 m/s i provet, dvs. på en bildruta)
     const near=h.nearest(p);if(near){p.x=near.pkg.x;p.z=near.pkg.z;}
     const left=h.run.packages.filter(k=>!k.collected).length;
     gapNow=left===0?gapNow+.25:0;maxGap=Math.max(maxGap,gapNow);
   }
   assert.ok(first>=FREE_RAIN.first-.01&&first<=FREE_RAIN.first+.5,'första regnet efter '+first+' s');
-  assert.ok(rains>=14,'regn på tio minuter för den som plockar: '+rains+' (förut ett var 70–110:e sekund, alltså 6–8)');
+  assert.ok(rains>=30,'regn på tio minuter för en spelare som plockar allt direkt: '+rains);
   assert.ok(picked>=rains*FREE_RAIN.count[0]*.8,'paket plockade: '+picked);
-  assert.ok(maxGap<=FREE_RAIN.topUpEvery+5,'längsta tiden utan ett enda paket: '+maxGap+' s');
+  assert.ok(minAfterDone>=FREE_RAIN.afterDone[0]-.26,'nästa regn kom '+minAfterDone.toFixed(2)+' s efter att det förra blev klart (tidigast '+FREE_RAIN.afterDone[0]+' s)');
+  assert.ok(maxGap<=FREE_RAIN.afterDone[1]+.6,'längsta tiden utan ett enda paket: '+maxGap+' s');
 });
 
-test('fri julvandring: nedräkningen visar när nästa regn kommer, och den kortas när paketen i närheten tar slut',()=>{
+test('fri julvandring: nedräkningen visar när nästa regn kommer, och den ligger mellan afterDone när ett regn är klart',()=>{
   const h=new XmasHunt({rand:seededRandom(5),nav:{snap:q=>q,blocked:()=>false}});h.startFree();h.drain();
   const p={x:0,z:0,y:1.68};
   for(let i=0;i<4*8;i++)h.step(.25,p,null,0);                 // första regnet har kommit
   assert.equal(h.run.rains.length,1);
-  // plocka allt i regnet: nästa regn dyker upp inom topUpEvery sekunder (och nedräkningen säger det), inte först efter hela mellanrummet
+  // plocka allt i regnet: nästa regn kommer efter afterDone[0]–afterDone[1] sekunder (och nedräkningen säger det), inte direkt och inte först efter hela det planerade mellanrummet
   for(const k of h.run.packages)h.step(.016,{x:k.x,z:k.z,y:1.68},null,0);
   assert.equal(h.run.packages.filter(k=>!k.collected).length,0);
-  h.step(.25,p,null,0);assert.ok(h.run.nextRainAt-h.run.t<=FREE_RAIN.topUpEvery+.3,'nedräkning '+(h.run.nextRainAt-h.run.t).toFixed(1));
-  const t0=h.run.t;let next=null;for(let i=0;i<4*30&&!next;i++){h.step(.25,p,null,0);next=h.drain().find(e=>e.type==='xmas-rain')||null;}
-  assert.ok(next&&h.run.t-t0<=FREE_RAIN.topUpEvery+1,'nytt regn efter '+(h.run.t-t0).toFixed(1)+' s');
+  h.step(.25,p,null,0);const left=h.run.nextRainAt-h.run.t;
+  assert.ok(left>=FREE_RAIN.afterDone[0]-.3&&left<=FREE_RAIN.afterDone[1]+.3,'nedräkning '+left.toFixed(1));
+  assert.match(missionView(h.run).rows[0].text,/^NYA SPÅR OM \d+ S$/);
+  h.drain();const t0=h.run.t;let next=null;for(let i=0;i<4*30&&!next;i++){h.step(.25,p,null,0);next=h.drain().find(e=>e.type==='xmas-rain')||null;}
+  assert.ok(next&&h.run.t-t0>=FREE_RAIN.afterDone[0]-.5&&h.run.t-t0<=FREE_RAIN.afterDone[1]+.5,'nytt regn efter '+(h.run.t-t0).toFixed(1)+' s');
 });
 
 test('fri julvandring: övergivna regn stoppar inte nya (ett regn man lämnat långt bakom sig räknas bort)',()=>{

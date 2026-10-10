@@ -77,7 +77,8 @@ test('rariteter: silver, guld och regnbåge ger mer, och regnbågen en superkraf
 });
 
 test('kaffemagnet: plockar termosar inom 16 meter, högst tre per steg',()=>{
-  const g=clean(),t=commonItems(g)[0];
+  // Vilka termosar som är vanliga beror på dagens datum (rarityFor): välj en vanlig termos som ingen annan termos ligger intill 10 m bort från, så att provet inte beror på vilken dag det körs.
+  const g=clean(),commons=commonItems(g),t=commons.find(c=>!g.items.some(q=>!q.y&&Math.hypot(q.x-(c.x+10),q.z-c.z)<7))||commons[0];
   const around=g.items.filter(q=>!q.y&&Math.hypot(q.x-t.x,q.z-t.z)<15);assert.ok(around.length>=1);
   assert.equal(step(g,{x:t.x+10,z:t.z}).filter(e=>e.type==='thermos').length,0,'utan magnet: för långt bort');
   g.fun.boosters.magnet=20;const ev=step(g,{x:t.x+10,z:t.z}).filter(e=>e.type==='thermos');
@@ -123,7 +124,7 @@ test('busslinjer: nätet finns i City Explore, de gamla hållplatserna i övriga
 
 test('nivåer och dagsmål följer med poängen och sparas',()=>{
   const store=storage(),g=clean(store);
-  const ev=[];for(const t of g.items.filter(q=>!q.y).slice(0,14)){ev.push(...step(g,t));}
+  const ev=[];for(const t of commonItems(g).slice(0,14)){ev.push(...step(g,t));} // vanliga termosar: en kaffemagnet (dagens superkraft) skulle annars plocka fler än en per steg, och vilka som har en superkraft beror på dagens datum
   assert.ok(g.lifetime>=300,'över 300 poäng: '+g.lifetime);assert.ok(ev.some(e=>e.type==='level-up'&&e.level>=2),'nivåhöjning meddelas');assert.equal(g.fun.state.levelSeen,levelFor(g.lifetime).level);
   assert.equal(ev.filter(e=>e.type==='level-up').length,new Set(ev.filter(e=>e.type==='level-up').map(e=>e.level)).size,'varje nivå meddelas en gång');
   g.save();const saved=JSON.parse(store.getItem(FUN_KEY));assert.equal(saved.dayCount,14);assert.ok(saved.collected.length>=14);

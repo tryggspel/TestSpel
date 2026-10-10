@@ -1,23 +1,23 @@
 // Julklappsjakten: kopplar ihop motorn, vyn, gränssnittet och grundspelets system. Anropas en gång från last-round.js (bara i julbygget).
 // Allt här är fail-soft: om något i julkoden skulle kasta stängs jultilläggen av och grundspelet lever vidare (som platskoden i 2.21).
-import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.5';
-import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.5';
-import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.5';
-import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.5';
-import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.5';
-import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.5';
-import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.5';
-import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.5';
-import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.5';
-import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.5';
-import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.5';
-import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.5';
-import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.5';
-import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.5';
-import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.5';
-import {nextRound,roundById,buildRound} from './xmas-rounds.mjs?v=2.21.1-xmas.5';
-import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.5';
-import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.5';
+import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.6';
+import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.6';
+import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.6';
+import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.6';
+import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.6';
+import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.6';
+import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.6';
+import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.6';
+import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.6';
+import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.6';
+import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.6';
+import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.6';
+import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.6';
+import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.6';
+import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.6';
+import {nextRound,roundById,buildRound,buildSearch,INTRO_SEARCH} from './xmas-rounds.mjs?v=2.21.1-xmas.6';
+import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.6';
+import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.6';
 
 // Julbygget har inga termosar, hemligheter eller skatter: paketen ersätter dem. Anropas direkt efter att resan skapats, innan någon vy ritas.
 export function prepareXmasJourney(journey){
@@ -53,7 +53,8 @@ export function installXmas(ctx){
   try{decor=createXmasDecor(pc,host,{root,texture,labelTex,indoors,params:{weather:save.weather}},sprites);}catch(e){console.error('[Julmiljön hoppades över]',e);}
   const baseUrl=baseGameUrl(location.search,location.hostname);
   let stamp=baseStamp,mode='menu'; // menu | cozy | zombies | rush
-  let rainToastAt=-1e9; // när den senaste hela PAKETREGN-fanfaren visades (fri julvandring)
+  let rainToastAt=-1e9; // när den senaste hela fanfaren om tappade julklappar visades
+  let shopTipShown=false; // tipset om butiksutmaningarna visas en gång per spelstart
   // Tomtezombies-nivåer (xmas-zombie-levels.mjs): zLevel = nivån som spelas, lastZombie = senaste klarade nivåns resultat (för NÄSTA NIVÅ). Tomtezombierna blir snabbare genom att farten sätts när
   // en zombie skapas (ett byte av spawn på journey-objektets egen instans, borttaget när läget lämnas) och tätare genom att nästa patrull aldrig ligger längre fram än nivåns takt (update).
   let zLevel=null,lastZombie=null,lastZombieN=0;
@@ -125,11 +126,13 @@ export function installXmas(ctx){
     const yaw=best?(Math.atan2(-Math.sin(best.h),-Math.cos(best.h))*180/Math.PI+360)%360:s.yaw;
     return {x:s.x,z:s.z,yaw:Math.round(yaw)};
   }
+  // Julklappsjakten är sök och hitta (2.21.1-xmas.6): tomtarna tappar julklappar här och där, och man hittar dem genom att följa deras spår i snön. Ingen pil eller julband visar vägen till paketen.
   function startIntro(){
     guard(()=>{
-      enter('intro');hunt.startIntro();
-      toast('JULKLAPPSJAKTEN','Följ paketen runt granen. De syns på långt håll.',3);
-      ui.showGoal('Hjälp tomten! Samla 20 paket.',7000);
+      const def=buildSearch(INTRO_SEARCH,roundNav);
+      enter('intro',def.spawn);hunt.startSearch(def);
+      toast('JULKLAPPSJAKTEN','Tomtarna har tappat julklappar! Leta efter deras spår i snön och följ dem.',4);
+      ui.showGoal('Hjälp tomten! Hitta '+def.goal+' julklappar.',7000);
       ui.setProgress(hunt.run);view.clear();
     });
   }
@@ -197,17 +200,16 @@ export function installXmas(ctx){
   function startRound(id=null){
     guard(()=>{
       const def=(id&&roundById(id))||nextRound(save);
-      const run=buildRound(def,roundNav);
-      enter('round',run.spawn);
-      hunt.startRun({kind:'round',id:run.id,title:run.title,goal:run.goal,packages:run.packages,tomte:run.tomte,spawn:run.spawn,tree:run.tree,windowSec:run.windowSec,soft:run.soft,stampId:run.stampId,ordered:!!run.route});
-      toast(def.title,def.blurb,3.6);
-      ui.showGoal('Samla '+run.goal+' paket och lämna dem hos tomten.',7500);
+      const run=buildSearch(def,roundNav);
+      enter('round',run.spawn);hunt.startSearch(run);
+      toast(def.title,def.blurb,4.2);
+      ui.showGoal('Hitta '+run.goal+' julklappar och lämna dem hos tomten.',7500);
       ui.setProgress(hunt.run);view.clear();
     });
   }
   // ── Butiksuppdrag: stämplar och leverans till tomten ────────────────────────────────────────────────────────────────
-  // En runda eller introduktionen går före butikerna (annars skulle två uppdrag tävla om samma pil och samma knapp).
-  const runBusy=()=>(mode==='rush'&&julrush.active)||(!!hunt.run&&hunt.active&&(hunt.run.kind==='intro'||hunt.run.kind==='round'));
+  // Butiksutmaningarna går att göra mitt i Julklappsjakten och fri julvandring (det finns ingen pil som tävlar om platsen). JulRushen går före butikerna.
+  const runBusy=()=>mode==='rush'&&julrush.active;
   function tomteSpotFor(place){
     const t=place.talk||place.where;
     for(const r of [12,9,15,7])for(let k=0;k<12;k++){
@@ -228,7 +230,16 @@ export function installXmas(ctx){
     if(!e||e.type!=='place-complete')return;
     guard(()=>{
       const place=journey.places?.get?.(e.placeId);if(!place)return;
-      if(e.placeId==='pressbyran'){startDelivery(place);return;}
+      if(e.placeId==='pressbyran'){
+        // Mitt i en jakt (Julklappsjakten, fri julvandring) avbryts inte jakten: leveransen till tomten utanför är ett ärende vid sidan om. Annars är leveransen ett eget uppdrag.
+        if(hunt.run&&hunt.active&&hunt.run.drops){
+          const spot=tomteSpotFor(place);
+          hunt.startErrand({id:'delivery-'+place.id,title:place.activity.title,tomte:{x:spot.x,z:spot.z,radius:3.2},stampId:place.id});
+          ui.showGoal('Bär fikat till tomten som väntar utanför!',7000);
+          toast('TOMTEN VÄNTAR','Följ pilen och lämna fikat. Tomten står '+Math.round(Math.hypot(spot.x-host.player.getPosition().x,spot.z-host.player.getPosition().z))+' m bort. Jakten på julklappar väntar på dig.',3.6);
+        }else startDelivery(place);
+        return;
+      }
       const first=save.stamp(e.placeId);
       save.addTotals({points:e.points||0});
       if(first){ui.showPill('JULSTÄMPEL! '+(e.stamp?.label||place.name),2600,performance.now());sound('win');}
@@ -245,7 +256,7 @@ export function installXmas(ctx){
       const keep=mode==='cozy'&&isPlaying();
       if(!keep)enter('free');else{setPanel(null);resume?.();}
       hunt.startFree();setPanel(null);
-      toast('FRI JULVANDRING','Tomtarna tappar paket här och där i staden. Leta efter deras spår i snön och följ dem till paketen.',4);
+      toast('FRI JULVANDRING','Tomtarna tappar julklappar här och där i staden. Leta efter deras spår i snön och följ dem.',4);
       ui.showHud(true);ui.setProgress(hunt.run);view.clear();
     });
   }
@@ -286,12 +297,20 @@ export function installXmas(ctx){
       if(e.praise){fanfare(e.praise,'+'+e.tierBonus+' poäng',1.3,'chain');}
       ui.setProgress(hunt.run);
     },
-    'xmas-goal':(e,now)=>{sound('win');[523.25,659.25,783.99,1046.5].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.28,.08),i*90));ui.showGoal('Bra! Lämna paketen hos tomten.',5500,now);fanfare(e.goal+' PAKET!','Följ pilen till tomten och lämna dem.',2.4,'win');ui.setProgress(hunt.run);},
+    'xmas-goal':(e,now)=>{sound('win');[523.25,659.25,783.99,1046.5].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.28,.08),i*90));ui.showGoal('Bra! Lämna julklapparna hos tomten.',5500,now);fanfare(e.goal+' JULKLAPPAR!','Följ pilen till tomten och lämna dem.',2.4,'win');ui.setProgress(hunt.run);},
     'xmas-chain-lost':(e,now)=>{ui.showPill('KEDJAN BRÖTS · '+e.chain+' I RAD',1200,now,'lost');},
-    // Tomtarna tappar paket tätt (var 22–38:e sekund, snabbare när paketen i närheten tar slut): hela fanfaren bara om den förra är mer än 25 s gammal, annars en kort rad.
-    // Det finns ingen pil: spåren i snön leder till paketen (fri julvandring är sök och hitta).
-    'xmas-rain':(e,now)=>{sound('energy');if(now-rainToastAt>25000){rainToastAt=now;ui.showGoal('Tomtarna tappade paket! Leta efter deras spår i snön.',5200,now);fanfare('TAPPADE PAKET!','Följ tomtarnas spår i snön och leta upp '+e.count+' paket och ett bonuspaket.',2.6,'energy');}else ui.showPill('NYA SPÅR I SNÖN · '+e.count+' PAKET',1600,now);},
-    'xmas-rain-gone':(e,now)=>{if(e.missed>0)ui.showPill('SNÖN TÄCKTE SPÅREN',1400,now,'lost');},
+    // Tomtarna tappar julklappar med god tid emellan (xmas-drops.mjs): hela fanfaren bara om den förra är mer än 25 s gammal, annars en kort rad.
+    // Det finns ingen pil: spåren i snön leder till julklapparna (fri julvandring och Julklappsjakten är sök och hitta).
+    'xmas-rain':(e,now)=>{sound('energy');if(now-rainToastAt>25000){rainToastAt=now;ui.showGoal('Tomtarna tappade julklappar! Leta efter deras spår i snön.',5200,now);fanfare('TAPPADE JULKLAPPAR!','Följ tomtarnas spår i snön och leta upp '+e.count+' julklappar och ett bonuspaket.',2.6,'energy');}else ui.showPill('NYA SPÅR I SNÖN · '+e.count+' JULKLAPPAR',1600,now);},
+    'xmas-rain-gone':(e,now)=>{
+      if(e.done){
+        ui.showPill('ALLA JULKLAPPAR HITTADE!',1500,now,'bonus');
+        // En enda gång per spelstart: berätta att butikerna har utmaningar (Pressbyrån på Kungsgatan 14, Cervera i Mitt i City) medan man går runt.
+        if(!shopTipShown&&hunt.run&&hunt.run.drops&&hunt.run.phase!=='deliver'&&(!save.hasStamp('pressbyran')||!save.hasStamp('cervera'))){shopTipShown=true;setTimeout(()=>guard(()=>{if(mode==='cozy'&&hunt.active)toast('BUTIKSUTMANINGAR','Pressbyrån på Kungsgatan 14 och Cervera i Mitt i City har uppdrag åt tomtarna. Gå dit och prata med dem.',4.6);}),1800);}
+      }else if(e.missed>0)ui.showPill('SNÖN TÄCKTE SPÅREN',1400,now,'lost');
+    },
+    // Ett ärende (leveransen efter Pressbyrån) klart mitt i jakten: poäng och stämpel, och jakten fortsätter.
+    'xmas-errand-done':(e,now)=>{sound('win');[523.25,659.25,783.99,1046.5,1318.5].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.3,.08),i*90));ui.showPill(e.stamp?'JULSTÄMPEL! '+(STAMPS.find(s=>s.id===e.stampId)?.label||'')+' · +'+e.points:'FIKAT LEVERERAT! +'+e.points,2600,now,'bonus');ui.showGoal('Tack! Tomten fick sitt fika. Nu fortsätter jakten på julklappar.',4200,now);ui.setProgress(hunt.run);},
     'xmas-late':(e,now)=>{ui.showPill('SEN, MEN DET GÅR ATT LÄMNA IN',2000,now,'lost');},
     // JulRushen
     'rush-start':(e,now)=>{ui.setRush(julrush.snapshot(),julrush.powers([]),now);},
@@ -336,6 +355,17 @@ export function installXmas(ctx){
   };
   const handle=(now)=>{for(const e of hunt.drain())handlers[e.type]?.(e,now);for(const e of julrush.drain())handlers[e.type]?.(e,now);};
 
+  // Butiksutmaningar nära spelaren (Cervera, Pressbyrån): en rad i uppdragsraden när man är inom 60 m från en butik man inte har stämpel från. Ingen pil: butiken syns på marknaden.
+  function shopRow(p){
+    try{
+      let best=null,bd=60;
+      for(const pl of journey.places?.list?.()||[]){
+        const t=pl.talk;if(!t||pl.status==='future'||save.hasStamp(pl.id))continue;
+        const d=Math.hypot(t.x-p.x,t.z-p.z);if(d<bd){bd=d;best=pl;}
+      }
+      return best?{text:'UPPDRAG: '+best.name.toUpperCase(),near:bd<=25}:null;
+    }catch{return null;}
+  }
   // ── Vägledning i paketjakten: pil, kantmarkörer, stjärnspår och uppdragsrad (JulRushen och butiksuppdragen har egna) ───────────────────
   function updateGuide(p,now,dt){
     // JulRushen: bara julbandet på marken (pilen, stråle och kantmarkörer är grundspelets och JulRushens egna); målet är nästa paket längs banan
@@ -348,7 +378,8 @@ export function installXmas(ctx){
     if(!on){if(guideShown||guide.state.on){guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;}return;}
     const g=guide.update(p,host.camera.forward,hunt.guideTarget(p),dt,now,view.lite);
     guideUi.set(g);view.setGuide(g.on?g:null);guideShown=true;
-    if(now-missionAt>140){missionAt=now;guideUi.setMission(missionView(hunt.run,p));}
+    // Butiksraden visas inte i det första uppdraget (bara jakten): där räcker spår och tomte.
+    if(now-missionAt>140){missionAt=now;guideUi.setMission(missionView(hunt.run,p,hunt.run.drops&&mode==='cozy'&&hunt.run.kind!=='intro'?shopRow(p):null));}
   }
 
   // ── Varje bildruta ──────────────────────────────────────────────────────────────────────────────────────────────
@@ -388,7 +419,7 @@ export function installXmas(ctx){
     if(!hunt.run)return;
     const r=hunt.run,t=hunt.target(p);
     els.score.textContent=r.points.toLocaleString('sv-SE');
-    if(r.kind==='free'){els.compassText.textContent='LETA SPÅR I SNÖN';els.compassArrow.textContent='⌖';els.compassArrow.style.transform='none';return;} // sök och hitta: ingen kompass mot paketen
+    if(r.drops&&(r.phase==='free'||r.phase==='collect')&&!r.errand){els.compassText.textContent='LETA SPÅR I SNÖN';els.compassArrow.textContent='⌖';els.compassArrow.style.transform='none';return;} // sök och hitta: ingen kompass mot paketen
     if(t){const ang=Math.atan2(t.x-p.x,t.z-p.z)-Math.atan2(host.camera.forward.x,host.camera.forward.z);els.compassArrow.style.transform='rotate('+(-ang*180/Math.PI)+'deg)';els.compassArrow.textContent='↑';els.compassText.textContent=t.kind==='tomte'?'TILL TOMTEN · '+Math.round(t.distance)+' M':t.label+' · '+Math.round(t.distance)+' M';}
     else{els.compassText.textContent='KLART';els.compassArrow.textContent='⌖';els.compassArrow.style.transform='none';}
   }
@@ -400,7 +431,8 @@ export function installXmas(ctx){
     hunt,save,view,ui,sprites,handlers,decor,
     get active(){return mode==='rush'?julrush.active:hunt.active;},get cozy(){return mode==='cozy';},get zombieMode(){return mode==='zombies';},get zombieLevel(){return zLevel;},get rushMode(){return mode==='rush'&&julrush.active;},julrush,
     update,hudText,startRound,startZombies,startRush,openRush,openBoard,challengeGo,rushNext,rushAgain,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
-    step:(dt,p,sweep,speed)=>guard(()=>mode==='rush'?julrush.step(dt,p,sweep,speed):hunt.step(dt,p,sweep,speed)),
+    // Medan ett butiksuppdrag pågår står jaktens tid still (inga nya tappade julklappar, inget som försvinner).
+    step:(dt,p,sweep,speed)=>guard(()=>mode==='rush'?julrush.step(dt,p,sweep,speed):hunt.step(placeActive?.()?0:dt,p,sweep,speed)),
     // Grundspelets små pilar på marken och flaggan "DITT MÅL" ritas inte för julens mål (quiet): julbandet, pilen och strålen ersätter dem (i JulRushen pilen och strålen). Radarn och kartan visar vägen som förut.
     objective:p=>{if(fault)return null;const o=mode==='rush'?julrush.objective(p):hunt.objective(p);return o&&o.kind==='xmas'?{...o,quiet:true}:o;},
     guide,guideUi,
