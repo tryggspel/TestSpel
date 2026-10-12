@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-05T03:30:54.559415+00:00",
+  "updated": "2026-10-12T03:33:05.974590+00:00",
   "source": "OpenStreetMap API 0.6 map extract",
   "bbox": [
     13.4974,
@@ -9,7 +9,7 @@
   ],
   "counts": {
     "buildings": 267,
-    "roads": 576,
+    "roads": 577,
     "environment": 41,
     "trees": 265
   }
