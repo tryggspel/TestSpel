@@ -46,7 +46,7 @@ const until=async(fn,max=60)=>{const t0=Date.now();while(Date.now()-t0<max*1000)
 const snap=()=>ev(()=>window.KarlstadDebug.journey().xmas.hunt.snapshot());
 // Sök och hitta (introduktionen, rundorna, fri julvandring) är utan pilar till paketen. Testet går som en spelare som följer spåren: till närmaste ej plockade paket (i små steg genom spelets egen
 // fångstlogik), och väntar på nästa tappade hög när inget finns. Stannar när fasen inte längre är "collect" (målet nått). Läser också av var varje ny hög hamnade (avstånd mellan högarna).
-const collectHunt=async(maxSec=180,onPick=null)=>{
+const collectHunt=async(maxSec=400,onPick=null)=>{
   const t0=Date.now(),centres=new Map();let picked=0;
   while(Date.now()-t0<maxSec*1000){
     const st=await ev(()=>{
@@ -90,8 +90,8 @@ check('B2b spåren syns i snön men ingen pil, strålband eller ring pekar på p
 const goalTxt2=await ev(()=>document.getElementById('xmasGoal').textContent);
 check('B3b när de första spåren kommer säger spelet att man ska följa dem ("spår i snön")',/spår i snön/.test(goalTxt2),goalTxt2);
 await shot('02-intro-start');
-let nShot=0;
-const hx=await collectHunt(200,async()=>{if(++nShot===6){await wait(90);await shot('03-intro-samlar');}return false;});
+let shot3=false;
+const hx=await collectHunt(400,async n=>{if(n>=6&&!shot3){shot3=true;await wait(90);await shot('03-intro-samlar');}return false;});
 const s1=await snap();
 check('B4 målet nås genom att följa spåren och fasen blir leverans (minst två högar behövdes, '+hx.picked+' paket plockades på '+hx.secs+' s)',s1.phase==='deliver'&&s1.collected>=14&&hx.rains>=2,JSON.stringify({phase:s1.phase,collected:s1.collected,rains:hx.rains}));
 check('B4b högarna ligger långt från varandra (minst 27 m mellan varje ny hög och den förra: '+hx.gaps.join('/')+' m)',hx.gaps.length>=1&&hx.gaps.every(g=>g>=27),hx.gaps.join('/'));
@@ -124,10 +124,10 @@ for(const [id,goal] of [['round-torget',18],['round-kungsgatan',24],['round-drot
   if(id==='round-kungsgatan')await shot('07-runda-start');
 }
 await ev(()=>window.KarlstadDebug.journey().xmas.startRound('round-kungsgatan'));await wait(1000);
-let nShot2=0;
-const hx2=await collectHunt(260,async()=>{if(++nShot2===8)await shot('08-runda-igang');return false;});
+let shot8=false;
+const hx2=await collectHunt(400,async n=>{if(n>=8&&!shot8){shot8=true;await shot('08-runda-igang');}return false;});
 const s2=await snap();
-check('D3 Kungsgatans runda: målet (24) nås genom att följa spåren längs gatan, minst tre högar, och högarna ligger långt från varandra ('+hx2.gaps.join('/')+' m)',s2.phase==='deliver'&&s2.collected>=24&&hx2.rains>=3&&hx2.gaps.every(g=>g>=50),JSON.stringify({phase:s2.phase,collected:s2.collected,rains:hx2.rains,gaps:hx2.gaps,secs:hx2.secs}));
+check('D3 Kungsgatans runda: målet (24) nås genom att följa spåren längs gatan, minst tre högar, och högarna ligger långt från varandra (minst 33 m, det lättade läget; '+hx2.gaps.join('/')+' m)',s2.phase==='deliver'&&s2.collected>=24&&hx2.rains>=3&&hx2.gaps.every(g=>g>=33),JSON.stringify({phase:s2.phase,collected:s2.collected,rains:hx2.rains,gaps:hx2.gaps,secs:hx2.secs}));
 const tm2=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.tomte);await walk(tm2.x,tm2.z,2.2);await wait(2800);
 const r2=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run?.result);
 check('D4 Kungsgatans runda går att klara och ger sin stämpel',!!r2&&r2.stampId==='round-kungsgatan'&&r2.stamp===true&&r2.drops===true,JSON.stringify({points:r2?.points,collected:r2?.collected,goal:r2?.goal}));
@@ -164,7 +164,8 @@ for(let round=0;round<4;round++){
   for(const k of await uncollected()){await tp(k.x,k.z,0,-4,320);collected++;}
   let left=await uncollected();for(let again=0;again<3&&left.length;again++){for(const k of left){await tp(k.x,k.z,0,-4,320);}left=await uncollected();}
   const t0=await runT();
-  const got=await until(()=>window.KarlstadDebug.journey().xmas.hunt.run.packages.some(k=>!k.collected),60);
+  // Speltiden går långsammare än klockan när bildrutorna är få (mjukvaruritad webbläsare på ett stort fönster): vänta länge i klocktid, men mät i speltid.
+  const got=await until(()=>window.KarlstadDebug.journey().xmas.hunt.run.packages.some(k=>!k.collected),300);
   const gap=got?(await runT())-t0:999;worst=Math.max(worst,gap);best=Math.min(best,gap);
   await noteRains();
 }
@@ -221,17 +222,23 @@ const door=await ev(()=>{
 });
 check('E4c man går in i och ut ur Cervera genom hela butiksfronten med små steg (24 gånger in och 24 ut, ingen fastnar)',door.every(r=>r.moved>=4.9),JSON.stringify(door.filter(r=>r.moved<4.9).slice(0,4))||'');
 
-// E5: butiksutmaningarna är en del av Julklappsjakten: Cervera-uppdraget går att göra mitt i Torgets runda utan att jakten tappas bort (samma körning, fortfarande i insamlingsfasen).
+// E5: butiksutmaningarna är en del av Julklappsjakten: Pressbyrån-ordern går att göra mitt i Torgets runda, och leveransen till tomten utanför är ett ärende vid sidan om (samma körning, fortfarande insamling, +100 poäng när man nått tomten).
+// (Cervera går inte att göra igen direkt efter E4: personalen ber en att vänta en stund efter ett klart uppdrag. Pressbyrån har ingen väntetid eftersom Cervera var det senaste.)
 await ev(()=>window.KarlstadDebug.journey().xmas.startRound('round-torget'));await wait(1000);
-const r5=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {serial:r.serial,id:r.id};});
-const c5=await ev(()=>window.KarlstadDebug.journey().places.arrivalFor('cervera'));await tp(c5.x,c5.z,c5.yaw,-4,1500);
-await ev(()=>window.KarlstadDebug.use());await wait(700);
-const items5=await ev(()=>window.KarlstadDebug.journey().places.run?.items.map(i=>({x:i.x,z:i.z})));
-for(const it of items5||[]){await tp(it.x,it.z,0,-8,700);}
-await tp(c5.x,c5.z,c5.yaw,-4,600);await ev(()=>window.KarlstadDebug.use());await wait(1200);
-const after5=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {serial:r.serial,id:r.id,phase:r.phase,items:!!window.KarlstadDebug.journey().places.run};});
-check('E5 butiksutmaningen i Cervera går att göra mitt i Torgets julklappsjakt: jakten är kvar (samma körning, fortfarande insamling) och uppdraget har startat',!!items5&&items5.length>0&&after5.serial===r5.serial&&after5.id===r5.id&&after5.phase==='collect',JSON.stringify({före:r5,efter:after5,föremål:items5?.length}));
+const r5=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {serial:r.serial,id:r.id,points:r.points};});
+// Grundspelets butiksuppdrag är tillgängliga först när staden hunnit starta om efter att rundan börjat: vänta på det i stället för en fast tid, och tryck igen om första trycket kom för tidigt.
+const avail5=await until(()=>window.KarlstadDebug.journey().places.available(),30);
+const a5=await ev(()=>window.KarlstadDebug.journey().places.arrivalFor('pressbyran'));await tp(a5.x,a5.z,a5.yaw,-4,1500);
+let ord5=null;for(let t=0;t<3&&!ord5;t++){await ev(()=>window.KarlstadDebug.use());await wait(700);ord5=await ev(()=>window.KarlstadDebug.journey().places.run?.order?.items||null);}
+for(const id of ord5||[]){await ev(i=>window.KarlstadDebug.journey().places.pick(i),id);await wait(150);}
+await wait(1200);
 await ev(()=>{const r=document.getElementById('placeResult');if(r&&!r.hidden)r.querySelector('.pr-close').click();});
+const e5=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {serial:r.serial,id:r.id,phase:r.phase,errand:r.errand?r.errand.id:null};});
+check('E5 Pressbyrån-ordern går att göra mitt i Torgets julklappsjakt: jakten är kvar (samma körning, fortfarande insamling) och leveransen är ett ärende vid sidan om',!!ord5&&ord5.length>0&&e5.serial===r5.serial&&e5.id===r5.id&&e5.phase==='collect'&&e5.errand==='delivery-pressbyran',JSON.stringify({före:r5,efter:e5,order:ord5?.length,tillgänglig:avail5}));
+const t5=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return r.errand?r.errand.tomte:null;});
+if(t5){await walk(t5.x,t5.z,1.8);await wait(1000);}
+const f5=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {serial:r.serial,phase:r.phase,errand:r.errand,points:r.points};});
+check('E5b ärendet i rundan ger +100 poäng och jakten fortsätter i samma körning (inget resultatkort)',!!t5&&f5.errand===null&&f5.serial===r5.serial&&f5.phase==='collect'&&f5.points>=r5.points+100&&await ev(()=>document.getElementById('round-xmas-result').hidden),JSON.stringify({efter:f5,före:r5.points}));
 
 // ── F: Tomtezombies ──────────────────────────────────────────────────────────────────────────────────────────────
 await ev(()=>window.KarlstadDebug.journey().xmas.startZombies());await wait(2600);

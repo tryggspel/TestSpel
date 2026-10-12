@@ -76,7 +76,7 @@ const walk=(tx,tz,step=1.4)=>ev(([tx,tz,step])=>new Promise(res=>{let n=0;const 
 const firstRow=m=>(m||'').split(' › ')[0];
 const until=async(fn,max=60)=>{const t0=Date.now();while(Date.now()-t0<max*1000){if(await ev(fn))return true;await wait(250);}return false;};
 // Som en spelare som följer spåren: till närmaste ej plockade paket, väntar på nästa hög när inget finns. Stannar när fasen inte längre är "collect".
-const collectHunt=async(maxSec=200)=>{
+const collectHunt=async(maxSec=400)=>{
   const t0=Date.now();
   while(Date.now()-t0<maxSec*1000){
     const st=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;if(!r)return {phase:'none',best:null};const p=window.__pos();let best=null,bd=1e9;for(const k of r.packages){if(k.collected)continue;const d=Math.hypot(k.x-p[0],k.z-p[1]);if(d<bd){bd=d;best={x:k.x,z:k.z};}}return {phase:r.phase,best};});
@@ -106,7 +106,10 @@ await shot('01-start');
 // ── B: vänder man sig vrids pilen åt rätt håll och kanterna lyser ───────────────────────────────────────────────────────
 const t0=await ev(()=>{const g=window.KarlstadDebug.journey().xmas.guide.state;return {x:g.targetX,z:g.targetZ};});
 const [px,pz]=sp,toward=yawTo(px,pz,t0.x,t0.z);
-const angleAt=async yaw=>{await tp(px,pz,yaw,-4,900);const s=await snap();return s.guide;};
+// Pilens vinkel rörs mjukt (7/s i speltid) och en mjukvaruritad webbläsare ritar bara någon bildruta i sekunden på ett stort fönster: vänta på ett antal bildrutor (app.frame), inte på en tid.
+const frames=()=>ev(()=>window.__app.frame);
+const afterFrames=async(n,maxMs=60000)=>{const f0=await frames(),t0=Date.now();while(Date.now()-t0<maxMs&&(await frames())-f0<n)await wait(100);};
+const angleAt=async yaw=>{await tp(px,pz,yaw,-4,200);await afterFrames(24);return (await snap()).guide;};
 const right=await angleAt(toward+90);   // kameran vänd 90° åt vänster ⇒ målet ligger 90° till höger
 check('B1 målet till höger: pilen pekar åt höger, hint SVÄNG HÖGER och högra kanten lyser',right.angle<-60&&right.angle>-120&&right.hint==='SVÄNG HÖGER'&&right.edgeR>.5&&right.edgeL===0,JSON.stringify({a:right.angle,h:right.hint,l:right.edgeL,r:right.edgeR}));
 await shot('02-hoger');
@@ -128,7 +131,7 @@ check('B4b kantmarkörerna är smala streck mitt på sidorna (högst 16 px breda
 const rot=await ev(()=>document.querySelector('#xmasArrow .xg-icon').style.transform);
 check('B5 pilens ikon vrids (CSS-rotation) när vinkeln ändras',/rotate\(-?\d+(\.\d)?deg\)/.test(rot)&&!/rotate\(-?0\.0deg\)/.test(rot),rot);
 const front=await angleAt(toward);
-check('B6 vänder man sig mot målet är pilen rak, grön och kanterna släcks',Math.abs(front.angle)<6&&front.hint==='GÅ RAKT FRAM'&&front.edgeL===0&&front.edgeR===0&&await ev(()=>document.getElementById('xmasArrow').classList.contains('ahead')));
+check('B6 vänder man sig mot målet är pilen rak, grön och kanterna släcks',Math.abs(front.angle)<6&&front.hint==='GÅ RAKT FRAM'&&front.edgeL===0&&front.edgeR===0&&await ev(()=>document.getElementById('xmasArrow').classList.contains('ahead')),JSON.stringify({a:front.angle,h:front.hint,l:front.edgeL,r:front.edgeR}));
 
 // ── C: plocka paket: raden räknar, pilen byter mål och spåret flyttar sig ───────────────────────────────────────────────
 const ids=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.packages.filter(k=>k.kind==='regular').map(k=>({id:k.id,x:k.x,z:k.z})));
@@ -178,8 +181,8 @@ const q3=await snap();
 check('S4 nära paketen säger raden JULKLAPPARNA NÄRA! och paketen syns i vyn (men fortfarande ingen pil)',firstRow(q3.guide.mission)==='JULKLAPPARNA NÄRA!'&&q3.view.shown>=3&&!q3.guide.on,JSON.stringify({m:q3.guide.mission,shown:q3.view.shown,on:q3.guide.on}));
 await shot('S2-narmar');
 const hudS=await ev(()=>({label:document.querySelector('.xh-label').textContent,count:document.querySelector('.xh-count').textContent}));
-check('S4b HUD:en säger JULKLAPPAR och räknar mot målet (0/14)',hudS.label==='JULKLAPPAR'&&hudS.count==='0/14',JSON.stringify(hudS));
-const endPhase=await collectHunt(220);
+check('S4b HUD:en säger JULKLAPPAR och räknar mot målet (n/14; vid paketen har man hunnit plocka någon)',hudS.label==='JULKLAPPAR'&&/^\d+\/14$/.test(hudS.count),JSON.stringify(hudS));
+const endPhase=await collectHunt(400);
 await wait(600);
 const q4=await snap();
 check('S5 målet nått (14 julklappar): raderna blir JULKLAPPAR 14/14 (klar) och LÄMNA HOS TOMTEN (nu), pilen pekar på tomten och strålen står hos tomten, men inget julband',endPhase==='deliver'&&q4.hunt.phase==='deliver'&&/^JULKLAPPAR 14\/14 › LÄMNA HOS TOMTEN$/.test(q4.guide.mission)&&q4.guide.on&&q4.guide.label==='TOMTEN'&&q4.view.goal===true&&q4.view.ribbon===0,JSON.stringify({ph:endPhase,m:q4.guide.mission,label:q4.guide.label,goal:q4.view.goal,ribbon:q4.view.ribbon}));
@@ -243,7 +246,7 @@ check('H3 tittar man åt sidan lyser kanten och pilen säger åt vilket håll ma
 const ph0=await ev(()=>{const e=window.__app.root.findByName('Julband 0');return e&&e.enabled?e.render.meshInstances[0].material.emissiveMapOffset.y:null;});await wait(130);
 const ph1=await ev(()=>{const e=window.__app.root.findByName('Julband 0');return e&&e.enabled?e.render.meshInstances[0].material.emissiveMapOffset.y:null;});
 await tp(0,14,yawTo(0,14,34,14),-4,400);
-const seen=new Set();for(let i=0;i<14;i++){seen.add(await ev(()=>{const e=window.__app.root.findByName('Julband 0');return e&&e.enabled?e.render.meshInstances[0].material.emissiveMapOffset.y:null;}));await wait(70);}
+const seen=new Set();{const f0=await frames(),t0=Date.now();while(Date.now()-t0<60000&&((await frames())-f0<40||seen.size<2)&&(await frames())-f0<400){seen.add(await ev(()=>{const e=window.__app.root.findByName('Julband 0');return e&&e.enabled?e.render.meshInstances[0].material.emissiveMapOffset.y:null;}));await wait(70);}} // (fasen byts med speltiden: få bildrutor ger få byten per sekund, så provtagningen går på bildrutor och fortsätter tills två faser setts)
 check('H4 bandets pilar rör sig (faserna växlar med tiden, utan att något material uppdateras varje bildruta)',seen.size>=2,[...seen].join(','));
 
 // ── F: Tomtezombies har samma vägledning, JulRushen behåller grundspelets pil, butiksuppdrag lämnas ifred ─────────────────────
