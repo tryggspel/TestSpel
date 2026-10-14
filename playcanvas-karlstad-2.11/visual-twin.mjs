@@ -1,7 +1,7 @@
-import {VISUAL_STREETS as CITY_STREETS} from './city-streets.mjs?v=2.21.1';
-import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.21.1';
-import {INNERSTAD_PROFILES} from './innerstad-reference.mjs?v=2.21.1';
-import {PHOTO_REFERENCE_PROFILES} from './photo-reference-pass3.mjs?v=2.21.1';
+import {VISUAL_STREETS as CITY_STREETS} from './city-streets.mjs?v=2.21.2';
+import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.21.2';
+import {INNERSTAD_PROFILES} from './innerstad-reference.mjs?v=2.21.2';
+import {PHOTO_REFERENCE_PROFILES} from './photo-reference-pass3.mjs?v=2.21.2';
 
 // Karlstad Visual Twin: one data-driven facade system for ordinary city buildings.
 // Curated Street View/reference facades always win. Generated profiles are deliberately

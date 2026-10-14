@@ -1,9 +1,9 @@
 // 2.21: gränssnitt för uppdrag på interaktiva platser: uppdragsremsa, beställningsknappar, resultatkort och Karlstadpasset.
 // Byggs med vanliga DOM-element (textContent, aldrig HTML-strängar med data) och ligger i #roundOverlay, så allt göms automatiskt
 // när en panel öppnas. Små mål: remsan är en rad, knapparna är minst 52 px och spelvärlden syns ovanför.
-import {drawProp,drawStamp} from './place-art.js?v=2.21.1';
-import {EVENT_TYPES,LOCAL_SCOPE_NOTE} from './partner-events.mjs?v=2.21.1';
-import {PASS_TEXT,visitsLabel} from './places.mjs?v=2.21.1';
+import {drawProp,drawStamp} from './place-art.js?v=2.21.2';
+import {EVENT_TYPES,LOCAL_SCOPE_NOTE} from './partner-events.mjs?v=2.21.2';
+import {PASS_TEXT,visitsLabel} from './places.mjs?v=2.21.2';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 const mmss=s=>{const n=Math.max(0,Math.ceil(s));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};

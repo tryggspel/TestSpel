@@ -1,4 +1,10 @@
-# Karlstad City — 2.21.1 · Butiksuppdrag och Karlstadpasset
+# Karlstad City — 2.21.2 · Butiksuppdrag och Karlstadpasset
+
+> **2.21.2 — plockrutan är en liten ping på alla telefoner, även liggande**
+> - Rutan med **"+25 KAFFEPOÄNG · +15 SOL"** blev en **hög lila ruta mitt i bild** (222–248 px, 11–12 % av skärmen) på liggande telefoner bredare än 850 px: iPhone 11 (896×414), iPhone 15/16 (852–874 px), Pro Max (926–956 px) och Pixel (915 px). Den lilla pingen på 26 px fanns bara för skärmar smalare än 850 px (stående telefoner och smala liggande), så en bredare liggande telefon fick den liggande placeringen `top:77px` tillsammans med `bottom:24%` från `compact-hud.css` och rutan sträcktes mellan dem. Samma sak hände i ett kort dator-fönster (högst 600 px högt; 1024×600 gav 379 px).
+> - Pingen (`last-round.css`, sist i filen) gäller nu **alla telefoner, stående och liggande, och korta fönster**: en rad på 26 px, högst upp i bild. I liggande läge ligger den mitt i bild uppe och växer med texten (högst 184–360 px beroende på skärmbredd) mellan HUD:en och radarn.
+> - En **lång text** (kombo, sällsynt, gågatsfika …) slutar nu med tre punkter. Förut klipptes den i båda ändar och poängen först i texten försvann.
+> - **7 nya tester (366 totalt):** `tests/pickup-toast.test.mjs` räknar ut från mediefrågorna vilka telefoner som får pingen (13 liggande och 7 stående storlekar) och felar på 2.21.1. Ny webbläsarkontroll `tools/pickup-toast/check.mjs`. Ingen spellogik ändrad.
 
 > **2.21.1 — finputs i Karlstadpasset**
 > - Passet skriver **"1 digitalt besök"** i singular (förut "1 digitala besök"); fler besök heter fortfarande "digitala besök".
@@ -349,6 +355,7 @@ Byggd ovanpå City Explore 2.9.0. Rörelsekärnan **1.3.0** är oförändrad (g�
 - `version.json` + `build-info.mjs` är enda källan för versionen. `node tools/set-version.mjs 2.10.1` uppdaterar alla `?v=`-nycklar; utan argument kontrollerar den att inga blandade nycklar finns (jfr cachefelet i 2.7.1). OSM-datan hämtas från spelets egen `data/` med versionsparameter i stället för `force-cache` från en annan katalog.
 - Händelserna från spelreglerna hanteras i en tabell (`EVENT_HANDLERS`, 51 typer) i stället för en if-kedja i `update()`.
 - `tools/smoke/` kör spelet i riktig Chromium med en PlayCanvas-attrapp: menyer, HUD, ljudgraf och händelser utan 3D.
+- `tools/pickup-toast/check.mjs` (2.21.2) startar det riktiga spelet vid 13 skärmstorlekar (liggande och stående telefoner, korta och höga dator-fönster), tänder plockrutan med en kort och en lång text, mäter den mot HUD, radar och sikte och tar en riktig termos. Se rubriken i filen för hur den körs. Den säger inget om hur det ser ut eller känns på en riktig telefon.
 - CI-förslag i `../ci-forslag/`: tester före deploy, och OSM-uppdateringen öppnar en PR efter testkörning i stället för att pusha till main.
 
 ### Validering och gränser
