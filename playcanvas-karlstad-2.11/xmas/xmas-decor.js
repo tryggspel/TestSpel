@@ -2,13 +2,13 @@
 // ComicMesh) och slås ihop till få ritanrop: granen, stånden, små granar och presenter i en mesh, ljusen i tre (som blinkar var för sig),
 // stjärnan i en. Tomtar, tomtefönster och snöfall är bildkort och en enda dynamisk mesh. Inga ljuskällor, ingen fysik och inga nya ytor
 // som kan flimra; snön på marken och taken är ett färgfilter (xmas-snow.mjs) som redan är aktivt när stadens byggnader skapas.
-import {ComicMesh} from '../city-architecture.js?v=2.21.1-xmas.7';
-import {TREE} from './xmas-layout.mjs?v=2.21.1-xmas.7';
-import {STALLS,STALL,FIRS,TOMTE_SPOTS,ARCH,facadeSpots,stringBulbs,FACADE} from './xmas-decor-data.mjs?v=2.21.1-xmas.7';
-import {WEATHER} from './xmas-config.mjs?v=2.21.1-xmas.7';
-import {createSnowfall} from './xmas-snowfall.js?v=2.21.1-xmas.7';
-import {drawWindowAtlas,WINDOW_CELL,WINDOW_STYLES} from './xmas-art.js?v=2.21.1-xmas.7';
-import {hash32} from './xmas-sprites.js?v=2.21.1-xmas.7';
+import {ComicMesh} from '../city-architecture.js?v=2.21.1-xmas.8';
+import {TREE} from './xmas-layout.mjs?v=2.21.1-xmas.8';
+import {STALLS,STALL,FIRS,TOMTE_SPOTS,ARCH,facadeSpots,stringBulbs,FACADE,SCENES} from './xmas-decor-data.mjs?v=2.21.1-xmas.8';
+import {WEATHER} from './xmas-config.mjs?v=2.21.1-xmas.8';
+import {createSnowfall} from './xmas-snowfall.js?v=2.21.1-xmas.8';
+import {drawWindowAtlas,WINDOW_CELL,WINDOW_STYLES} from './xmas-art.js?v=2.21.1-xmas.8';
+import {hash32} from './xmas-sprites.js?v=2.21.1-xmas.8';
 
 const TAU=Math.PI*2;
 const BULB_COLORS=Object.freeze({A:['#ff4d4d','#ff8fb1','#ff7a3d'],B:['#fff2a8','#ffe27a','#ffd1a0'],C:['#7dffb0','#7fd2ff','#b9a8ff']});
@@ -77,6 +77,44 @@ function buildFir(m,L,f,idx){
   gem(m,x,(2.8+1.6)*k+.38,z,.2,'#ffd45a','#e0a920');
 }
 
+// ── Julscener: Sandgrund framför galleriet (Julvernissagen) och Mariebergsskogen vid bryggan (Julbåten) ──────────────────────────────────────────────────────────────────
+// Granar i en båge med ljusslingor mellan sig, presenter, snögubbar och lyktor. S = fasta färgade trianglar, L = blinkande ljus (samma tre grupper som Stora Torget).
+function buildScene(S,L,sc){
+  const C=sc.center,fx=sc.firs.map(f=>({x:C.x+f.dx,z:C.z+f.dz,h:f.h}));
+  fx.forEach((f,i)=>buildFir(S,L,f,i+20));
+  // slingor: tolv lampor per spann med en liten hängning
+  for(const [a,b] of sc.strings){
+    const A=fx[a],B=fx[b],y0=2.1+Math.min(A.h,B.h)*.38;
+    for(let i=0;i<=12;i++){const u=i/12,sag=.55*4*u*(1-u);L.add('ABC'[(i+a)%3],A.x+(B.x-A.x)*u,y0-sag,A.z+(B.z-A.z)*u,.3,i);}
+  }
+  // presenter
+  const cols=[['#d94a4a','#ffe9a6'],['#3f9462','#fff1ce'],['#4a86c9','#fff1ce'],['#8a5bb8','#ffe9a6'],['#ffcf3f','#d94a4a']];
+  sc.gifts.forEach((g,gi)=>{
+    const x=C.x+g.dx,z=C.z+g.dz;
+    [[0,0,1.25,0],[1.15,.35,.9,1],[-.6,1.1,.7,2]].forEach(([ox,oz,sz,k],j)=>{
+      const [c1,c2]=cols[(gi+k)%cols.length],y=j===2?1.25+.35:sz/2;
+      S.box(x+ox,y,z+oz,sz,sz,sz,c1);S.box(x+ox,y,z+oz,sz+.04,sz+.04,.14,c2);S.box(x+ox,y,z+oz,.14,sz+.04,sz+.04,c2);S.box(x+ox,y+sz/2+.1,z+oz,.34,.22,.34,c2);
+    });
+  });
+  // snögubbar: tre vita block, sjal, hatt, morot och kol
+  for(const m of sc.snowmen){
+    const x=C.x+m.dx,z=C.z+m.dz;
+    S.box(x,.62,z,1.5,1.24,1.5,'#f7fbff','#e4eef6');S.box(x,1.72,z,1.1,1.0,1.1,'#f7fbff','#e4eef6');S.box(x,2.62,z,.8,.8,.8,'#f7fbff','#e4eef6');
+    S.box(x,2.14,z,1.18,.2,1.18,'#d33a3a');S.box(x+.5,1.9,z+.1,.2,.7,.4,'#d33a3a');                                  // sjal
+    S.box(x,3.12,z,.95,.1,.95,'#222831');S.box(x,3.5,z,.6,.68,.6,'#222831');S.box(x,3.26,z,.64,.14,.64,'#d33a3a'); // hatt
+    S.box(x,2.6,z+.55,.14,.14,.5,'#ff8c2a');S.box(x-.2,2.78,z+.42,.1,.1,.08,'#222831');S.box(x+.2,2.78,z+.42,.1,.1,.08,'#222831'); // morot och ögon
+    for(const y of [1.5,1.8])S.box(x,y,z+.56,.1,.1,.08,'#222831');                                                  // knappar
+    S.box(x-.95,1.95,z,1.0,.08,.08,'#6a4630');S.box(x+.95,1.95,z,1.0,.08,.08,'#6a4630');                           // armar
+  }
+  // lyktor: en stolpe med en lysande lampa
+  sc.lanterns.forEach((l,i)=>{const x=C.x+l.dx,z=C.z+l.dz;S.box(x,1.3,z,.16,2.6,.16,'#3a2a22');S.box(x,2.75,z,.5,.08,.5,'#3a2a22');L.add('B',x,2.55,z,.34,i);L.add('A',x,2.55,z+.3,.14,i);});
+  // snöhögar
+  for(const [dx,dz,r] of [[-28,0,2.6],[22,-2,2.8],[0,-3,2.2],[-8,20,2]])cone(S,C.x+dx,.02,C.z+dz,r,r*.55,10,'#f7fbff','#e6eff6');
+  // stolpar till banderollen
+  const b=sc.banner,ax=Math.cos(b.yaw*Math.PI/180),az=-Math.sin(b.yaw*Math.PI/180);
+  for(const side of [-1,1])S.box(C.x+b.dx+ax*side*(b.w/2+.15),b.y/2+.2,C.z+b.dz+az*side*(b.w/2+.15),.28,b.y+.4,.28,'#6a4630','#553826');
+}
+
 // ── Portalen i norr ─────────────────────────────────────────────────────────────────────────────────────────────────
 function buildArch(m,L){
   const {x,z,half,post,h}=ARCH;
@@ -128,12 +166,14 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
   const staticMat=vertexMat('Jul fast'),lightMats={A:vertexMat('Jul ljus A'),B:vertexMat('Jul ljus B'),C:vertexMat('Jul ljus C')},starMat=vertexMat('Jul stjärna');
   const keep=ComicMesh.snow;ComicMesh.snow=null; // julens egna föremål har egna färger (och egen snö); filtret är till för stadens ytor
   const S=new ComicMesh(true),L=new Lights(FACADE.bulbCap+260),T=new ComicMesh(true),stats={bulbs:0,strings:0,windows:0,roofs:0};
+  const scenes=SCENES.map(sc=>({sc,S:new ComicMesh(true),L:new Lights(260),root:null,on:false})); // julscenerna: egna meshar som bara ritas när man är i närheten
   let facade={strings:[],windows:[],roofs:[]};
   try{
     buildTree(S,L);
     for(let i=0;i<FIRS.length;i++)buildFir(S,L,FIRS[i],i);
     for(let i=0;i<STALLS.length;i++)buildStall(S,L,STALLS[i],i);
     buildArch(S,L);
+    for(const o of scenes)buildScene(o.S,o.L,o.sc);
     // ljus på granen: tre ringar per etage, tre grupper som blinkar för sig
     TIERS.forEach((t,ti)=>{for(let k=0;k<12;k++){const a=k/12*TAU+ti*.5,fy=t.y+t.h*.42+((k%2)*.25),rr=t.r*(1-(fy-t.y)/t.h)+.12;L.add('ABC'[k%3],TREE.x+Math.cos(a)*rr,fy,TREE.z+Math.sin(a)*rr,.2,k+ti);}});
     try{facade=facadeSpots(host.colliders||[],{});}catch(e){console.error('[Jul] fasadval hoppades över',e);}
@@ -143,7 +183,17 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
   const place=(ent,name)=>{ent.name=name;decorRoot.addChild(ent);return ent;};
   place(S.finish(pc,app,'Julmiljö · granar, stånd och presenter',staticMat),'Julmiljö · fast');
   for(const g of ['A','B','C'])place(L.mesh[g].finish(pc,app,'Julljus '+g,lightMats[g]),'Julljus '+g);
-  stats.bulbs=L.n;stats.windows=facade.windows.length;stats.roofs=facade.roofs.length;
+  // Julscenerna: en egen entitet per plats, påslagen bara när spelaren är inom `visible` meter, med samma material och därmed samma blinkande ljus
+  for(const o of scenes){
+    const sc=o.sc,root=new pc.Entity(sc.name+' jul');root.enabled=false;decorRoot.addChild(root);o.root=root;
+    root.addChild(o.S.finish(pc,app,sc.name+' jul · granar, presenter och snögubbar',staticMat));
+    for(const g of ['A','B','C'])root.addChild(o.L.mesh[g].finish(pc,app,sc.name+' ljus '+g,lightMats[g]));
+    const b=sc.banner,e=sprites.spriteEntity(sc.name+' banderoll',sprites.spriteMaterial(labelTex([...b.lines],'#1f5a3f','#ffe7a0'),{alphaTest:.1}),b.w,b.h,{});root.addChild(e);
+    e.setPosition(sc.center.x+b.dx,b.y,sc.center.z+b.dz);e.setEulerAngles(0,b.yaw,0);
+    if(!b.yaw)e.translate(0,0,.2);
+  }
+  const scenesNear=p=>{for(const o of scenes){const near=Math.hypot(p.x-o.sc.center.x,p.z-o.sc.center.z)<o.sc.visible;if(near!==o.on){o.on=near;o.root.enabled=near;}}};
+  stats.bulbs=L.n+scenes.reduce((n,o)=>n+o.L.n,0);stats.windows=facade.windows.length;stats.roofs=facade.roofs.length;
   const starEntity=place(T.finish(pc,app,'Granens stjärna',starMat),'Granens stjärna');starEntity.setPosition(TREE.x,TREE_TOP,TREE.z);
   const starGlow=sprites.spriteEntity('Stjärnans sken',sprites.glowGold,4.2,4.2,{});decorRoot.addChild(starGlow);starGlow.setPosition(TREE.x,TREE_TOP-2.5,TREE.z);
   const banner=sprites.spriteEntity('Portalens banderoll',sprites.spriteMaterial(labelTex(['GOD JUL','STORA TORGET'],'#b0302f','#fff1ce'),{alphaTest:.1}),2*ARCH.half-.2,2.4,{});decorRoot.addChild(banner);banner.setPosition(ARCH.x,ARCH.h-2.7,ARCH.z+.28);
@@ -195,6 +245,7 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
     const inside=!!indoors?.(p);
     if(inside!==wasInside){wasInside=inside;decorRoot.enabled=!inside;}
     if(inside){snow.update(dt,false);return;}
+    scenesNear(p);
     const w=WEATHER[weather],twinkleEvery=auto===0?120:auto===1?400:1e9;
     if(w.decor>0&&now-twinkleAt>twinkleEvery){
       twinkleAt=now;
@@ -215,7 +266,7 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
     snow.update(dt,true);
   }
   setWeather(params?.weather||'full');
-  return {update,setWeather,setAuto,get auto(){return auto;},decorRoot,snow,facade,
-    snapshot:()=>({weather,auto,flakes:snow.shown,tomte:tShown,windows:wShown,bulbs:stats.bulbs,strings:stats.strings,facadeWindows:stats.windows,facadeRoofs:stats.roofs,stalls:STALLS.length,firs:FIRS.length,decor:WEATHER[weather].decor}),
+  return {update,setWeather,setAuto,get auto(){return auto;},decorRoot,snow,facade,scenes,
+    snapshot:()=>({weather,auto,flakes:snow.shown,tomte:tShown,windows:wShown,bulbs:stats.bulbs,strings:stats.strings,facadeWindows:stats.windows,facadeRoofs:stats.roofs,stalls:STALLS.length,firs:FIRS.length,scenes:scenes.map(o=>({name:o.sc.name,on:o.on,firs:o.sc.firs.length})),decor:WEATHER[weather].decor}),
     drawCalls:()=>3+1+1+3+2+signs.length+tShown+wShown+(snow.shown?1:0)};
 }

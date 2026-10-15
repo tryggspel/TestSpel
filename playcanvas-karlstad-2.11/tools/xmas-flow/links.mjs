@@ -36,13 +36,26 @@ let failed=0;const results=[],errs=[];
 const check=(name,ok,detail='')=>{results.push([ok?'OK  ':'FEL ',name,detail]);if(!ok)failed++;console.log((ok?'OK   ':'FEL  ')+name+(detail?' — '+detail:''));};
 
 // Öppnar spelet med en länk i en ny kontext. save = nyckel i SAVES. Returnerar hjälpare för sidan.
-async function open(search,saveName,{view=V}={}){
+async function open(search,saveName,opts={}){
+  const view=opts.view||V;
   const ctx=await browser.newContext({viewport:{width:+view[1],height:+view[2]},...(view[3]?{hasTouch:true,isMobile:true,deviceScaleFactor:1}:{})});
   const seed=SAVES[saveName];
   if(seed)await ctx.addInitScript(([k,s])=>{if(localStorage.getItem('__seeded'))return;localStorage.setItem('__seeded','1');localStorage.setItem(k,JSON.stringify(s));},[SAVE_KEY,seed]);
+  if(opts.date)await ctx.addInitScript(iso=>{const R=Date,off=Date.parse(iso)-R.now();class D extends R{constructor(...a){if(a.length)super(...a);else super(R.now()+off);}static now(){return R.now()+off;}}window.Date=D;},opts.date);
   const page=await ctx.newPage();
   page.on('pageerror',e=>errs.push('pageerror: '+e.message+' ('+search+')'));page.on('console',m=>{if(m.type()==='error'&&!/404|Failed to load resource/.test(m.text()))errs.push('console: '+m.text().slice(0,200)+' ('+search+')');});
   await page.route(/cdn\.jsdelivr\.net\/npm\/playcanvas/,r=>r.fulfill({contentType:'text/javascript',body:pcSource}));
+  // provhandtag (teleportera, position, avsluta uppdrag): ingen fil på disk ändras
+  await page.route(/\/app\.js/,r=>{
+    if(!r.request().url().startsWith(ORIGIN))return r.continue();
+    const s=fs.readFileSync(path.join(root,'app.js'),'utf8').replace("app.on('update',update);","window.__app=app;window.__blocked=blocked;window.__tp=(x,z,h,t)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=h;pitch=t;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);};window.__pos=()=>{const p=player.getPosition();return [p.x,p.z]};app.on('update',update);");
+    r.fulfill({contentType:'text/javascript',body:s});
+  });
+  await page.route(/\/last-round\.js/,r=>{
+    if(!r.request().url().startsWith(ORIGIN))return r.continue();
+    const s=fs.readFileSync(path.join(root,'last-round.js'),'utf8').replace("journey.xmas=xmas;","journey.xmas=xmas;window.__lr={finish:won=>finish(won),game:()=>game,panel:()=>panel};");
+    r.fulfill({contentType:'text/javascript',body:s});
+  });
   const wait=ms=>page.waitForTimeout(ms),ev=(fn,a)=>page.evaluate(fn,a);
   await page.goto(`${ORIGIN}/?debug${search?'&'+search:''}`);
   await page.waitForFunction(()=>{const l=document.getElementById('loading');return l&&l.classList.contains('hide')&&getComputedStyle(l).opacity==='0';},null,{timeout:180000});await wait(700);
@@ -55,6 +68,9 @@ async function open(search,saveName,{view=V}={}){
     card:()=>ev(()=>{const g=id=>document.getElementById(id);const b=g('xmasLinkGo').getBoundingClientRect(),c=g('round-xmas-link').getBoundingClientRect();
       return {open:!g('round-xmas-link').hidden,kicker:g('xmasLinkKicker').textContent,title:g('xmasLinkTitle').textContent,line:g('xmasLinkLine').textContent,note:g('xmasLinkNote').hidden?'':g('xmasLinkNote').textContent,btn:g('xmasLinkGo').textContent.replace(/\s+/g,' ').trim(),
         btnH:Math.round(b.height),inView:b.top>=0&&b.bottom<=innerHeight+1&&c.left>=0&&c.right<=innerWidth+1,search:location.search};}),
+    helpers:()=>ev(()=>{window.__walk=(tx,tz,step=1.3)=>new Promise(res=>{let n=0;const f=()=>{const [x,z]=window.__pos();const dx=tx-x,dz=tz-z,d=Math.hypot(dx,dz);if(d<.4||++n>700){res(d);return;}const k=Math.min(1,step/d);window.__tp(x+dx*k,z+dz*k,Math.atan2(-dx,-dz)*180/Math.PI,-5);requestAnimationFrame(f);};f();});}),
+    door:()=>ev(()=>{const e=document.getElementById('xmasDoor');if(!e||e.hidden||!e.isConnected)return null;const r=e.getBoundingClientRect(),vis=getComputedStyle(e).display!=='none';
+      return {vis,inCard:e.parentElement?.id||'',title:e.querySelector('.xd-title').textContent,head:e.querySelector('.xd-head').textContent,line:e.querySelector('.xd-line').textContent,next:e.querySelector('.xd-next').textContent,tail:e.querySelector('.xd-tail').textContent,menu:e.querySelector('button').textContent,cal:e.querySelector('a').getAttribute('href'),h:Math.round(r.height)};}),
     shot:async n=>{if(SHOTS){fs.mkdirSync(SHOTS,{recursive:true});await page.screenshot({path:path.join(SHOTS,n+'.png')});}}
   };
   return h;
@@ -204,6 +220,64 @@ async function open(search,saveName,{view=V}={}){
   const c=await g.card();
   check('L31 liggande telefon (844×390): kortet scrollar internt och knappen går att nå (klistrar fast längst ned)',c.open&&c.inView&&c.btnH>=48,JSON.stringify({inView:c.inView,h:c.btnH}));
   await g.shot('l03-liggande');
+  await g.ctx.close();
+}
+// ── 8. Rutan "Lucka N är avklarad" ─────────────────────────────────────────────────────────────────────────────────────────
+// Går som en spelare: till närmaste ej plockade julklapp tills målet är nått, sedan till tomten.
+async function playHunt(g,maxSec=420){
+  const t0=Date.now();
+  while(Date.now()-t0<maxSec*1000){
+    const st=await g.ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;if(!r)return {phase:'none'};const p=window.__pos();let best=null,bd=1e9;for(const k of r.packages){if(k.collected)continue;const d=Math.hypot(k.x-p[0],k.z-p[1]);if(d<bd){bd=d;best={x:k.x,z:k.z};}}return {phase:r.phase,best,tomte:r.tomte};});
+    if(st.phase==='deliver'||st.phase==='done')return st;
+    if(st.best)await g.ev(([x,z])=>window.__walk(x,z,1.4),[st.best.x,st.best.z]);else await g.wait(250);
+  }
+  return null;
+}
+{
+  const g=await open('uppdrag=intro&lucka=1','fresh',{date:'2026-12-01T10:00:00Z'});
+  await g.helpers();await g.click('xmasLinkGo');await g.wait(1500);
+  check('T1 lucka 1 via länken: det första uppdraget startar',(await g.xmas()).kind==='intro');
+  const st=await playHunt(g);
+  check('T2 julklapparna är hittade (leveransläget nåddes)',!!st&&st.phase==='deliver');
+  if(st){await g.ev(([x,z])=>window.__walk(x,z,1.8),[st.tomte.x,st.tomte.z]);await g.wait(2800);}
+  const card=await g.vis('round-xmas-result'),d=await g.door();
+  check('T3 resultatkortet har rutan "Lucka 1 är avklarad" med rätt rubrik och poäng',card&&!!d&&d.vis&&d.inCard==='round-xmas-result'&&d.title==='★ LUCKA 1 ÄR AVKLARAD!'&&/^Du fick \d+ julpoäng och 1 stjärna i kalendern\.$/.test(d.line),JSON.stringify(d));
+  check('T4 rutan säger att nästa lucka öppnas imorgon den 2/12 (datumet satt till 1 dec)',!!d&&d.next==='Nästa lucka öppnas imorgon den 2/12.'&&/Under tiden kan du spela resten av Julspelet/.test(d.tail),d&&d.next+' | '+d.tail);
+  check('T5 rutan har en knapp till Julmenyn och en länk till kalendern (stora tryckytor)',!!d&&/JULMENYN/.test(d.menu)&&d.cal==='./julkalender/',d&&d.menu+' '+d.cal);
+  await g.ev(()=>document.getElementById('xmasDoor')?.scrollIntoView({block:'center'}));await g.shot('l04-lucka-klar');
+  const bh=await g.ev(()=>[...document.querySelectorAll('#xmasDoor button,#xmasDoor a')].map(e=>Math.round(e.getBoundingClientRect().height)));
+  check('T6 knapparna i rutan är minst 44 px höga',bh.length===2&&bh.every(h=>h>=44),bh.join('/'));
+  await g.click('xmasDoorMenu');await g.wait(800);
+  check('T7 knappen öppnar Julmenyn (där resten av Julspelet finns) och rutan försvinner',await g.vis('round-xmas-continue')&&(await g.door())===null);
+  await g.ctx.close();
+}
+{
+  const g=await open('uppdrag=sandgrund&lucka=6','played',{date:'2026-12-06T10:00:00Z'});
+  await g.click('xmasLinkGo');
+  await g.until(()=>{const s=window.KarlstadRound.snapshot();return s.mission==='sandgrund'&&s.phase==='playing';},40);await g.wait(800);
+  await g.ev(()=>window.__lr.finish(true));await g.wait(900);
+  const d=await g.door(),lab=await g.txt('roundLeave');
+  check('T8 Sandgrund via lucka 6: grundspelets resultatkort har rutan "Lucka 6 är avklarad" med 200 julpoäng och nästa lucka imorgon den 7/12',!!d&&d.inCard==='round-result'&&d.title==='★ LUCKA 6 ÄR AVKLARAD!'&&/200 julpoäng och 3 stjärnor/.test(d.line)&&d.next==='Nästa lucka öppnas imorgon den 7/12.',JSON.stringify(d));
+  check('T9 Tillbaka-knappen på Sandgrund-kortet heter Julmenyn',/Julmenyn/.test(lab),lab);
+  await g.shot('l05-sandgrund-klar');
+  await g.click('xmasDoorMenu');await g.wait(900);
+  check('T10 rutans knapp öppnar Julmenyn (inte grundspelets stadsvandring)',await g.vis('round-xmas-continue')&&(await g.door())===null);
+  await g.ctx.close();
+}
+{
+  const g=await open('','played');
+  await g.click('xmasCozy');await g.wait(800);await g.click('xmasSandgrund');
+  await g.until(()=>{const s=window.KarlstadRound.snapshot();return s.mission==='sandgrund'&&s.phase==='playing';},40);await g.wait(800);
+  await g.ev(()=>window.__lr.finish(true));await g.wait(900);
+  check('T11 utan kalenderlänk (startat från Julmenyn) visas ingen luckruta',(await g.door())===null&&/JULSTÄMPEL|Redan stämplad/.test(await g.txt('roundResultTarget')));
+  await g.ctx.close();
+}
+{
+  const g=await open('uppdrag=sandgrund&lucka=6','played');
+  await g.click('xmasLinkGo');
+  await g.until(()=>{const s=window.KarlstadRound.snapshot();return s.mission==='sandgrund'&&s.phase==='playing';},40);await g.wait(800);
+  await g.ev(()=>window.__lr.finish(false));await g.wait(900);
+  check('T12 förlorat uppdrag ger ingen luckruta',(await g.door())===null);
   await g.ctx.close();
 }
 check('L32 inga fel i konsolen under hela körningen',errs.length===0,errs.join(' | '));

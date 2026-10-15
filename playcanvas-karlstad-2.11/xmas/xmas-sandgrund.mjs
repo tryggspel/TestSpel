@@ -6,7 +6,7 @@ export const SANDGRUND=Object.freeze({
   title:'JULVERNISSAGEN',
   place:'Sandgrund',
   menu:'SANDGRUND: JULVERNISSAGEN',
-  blurb:'Zombie-Lerin har öppnat en julvernissage på Sandgrund och besökarna står kvar utanför. Led tre besökare till grönt och stoppa honom med solstötar. Med zombier.',
+  blurb:'Zombie-Lerin har öppnat en julvernissage på Sandgrund och besökarna står kvar ute i snön. Hämta dem, stå emot tomtezombierna och stoppa honom med solstötar när hans färgsköld släpper. Tar några minuter.',
   points:Object.freeze({first:200,again:40})   // julpoäng: första gången stämpeln delas ut, och för varje klarad omgång därefter
 });
 // Vad som hänt när uppdraget är slut. r = {won,practice,score,rescued,seconds}.

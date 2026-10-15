@@ -250,3 +250,15 @@ body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
 .xr-tile.xr-ot span{display:block;font-size:11px;letter-spacing:.12em;color:#ffd7b0}
 .xr-tile.xr-ot[data-state="locked"]{border-color:#85aa8566}
 .xh-chip[data-kind="more"]{background:rgba(255,255,255,.22);color:#fff}
+
+/* ── Luckan är klar (xmas-door.mjs): rutan på resultatkorten när man kommit från Julkalendern ───────────────────────────────── */
+.xmas-door{margin:12px 0 4px;padding:12px 13px 13px;border:2px solid var(--xmas-gold);border-radius:10px;background:linear-gradient(180deg,#ffd36b26,#ffd36b10);text-align:left}
+.xmas-door .xd-title{display:block;font:1000 17px/1.15 system-ui,sans-serif;letter-spacing:.04em;color:var(--xmas-gold)}
+.xmas-door .xd-head{display:block;margin:3px 0 7px;font:800 12px/1.3 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#cfe3d5}
+.xmas-door p{margin:5px 0;font:700 14.5px/1.4 system-ui,sans-serif;color:var(--paper)}
+.xmas-door .xd-next{color:#fff;font-weight:900}
+.xmas-door .xd-tail{font-weight:600;color:#d8e8dc}
+.xmas-door button{width:100%;min-height:52px;margin-top:8px}
+.xmas-door a.xmas-link{display:block;box-sizing:border-box;width:100%;min-height:44px;margin-top:8px;padding:13px 12px;text-align:center;text-decoration:none;border:1px solid #f2d78a88;border-radius:3px;background:transparent;color:#ffe9a8;font:700 11px/18px system-ui}
+.xmas-door a.xmas-link:focus-visible{outline:2px solid #ffe9a8;outline-offset:2px}
+#round-result .xmas-door{margin-top:10px}

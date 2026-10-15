@@ -7,12 +7,12 @@
 //  - Introduktionen har ingen tidsgräns. Rundor har en mjuk tid: den ger bara tidsbonus, man kan alltid lämna in.
 //  - Sök och hitta (fri julvandring, introduktionen och rundorna): tomtarna tappar paket här och där ('regn'). Regnen läggs långt från varandra och från spelaren, aldrig direkt efter ett fynd
 //    (xmas-drops.mjs, FREE_RAIN); varje regn har egna ID och ett spår av fotavtryck, och försvinner efter en stund. Ett uppdrag med mål (introduktionen, rundorna) delar ut precis så många regn som behövs.
-import {CATCH,catchReach} from '../journey-rules.mjs?v=2.21.1-xmas.7';
-import {PACKAGE_POINTS,COMBO,comboMult,DELIVERY,timeBonus,FREE_RAIN,TRAILS,STAMPS} from './xmas-config.mjs?v=2.21.1-xmas.7';
-import {INTRO,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.7';
-import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.7';
-import {trailPrints} from './xmas-tracks.mjs?v=2.21.1-xmas.7';
-import {sampleCentre,inArea,bearingDeg,angleGap,between} from './xmas-drops.mjs?v=2.21.1-xmas.7';
+import {CATCH,catchReach} from '../journey-rules.mjs?v=2.21.1-xmas.8';
+import {PACKAGE_POINTS,COMBO,comboMult,DELIVERY,timeBonus,FREE_RAIN,TRAILS,STAMPS} from './xmas-config.mjs?v=2.21.1-xmas.8';
+import {INTRO,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.8';
+import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.8';
+import {trailPrints} from './xmas-tracks.mjs?v=2.21.1-xmas.8';
+import {sampleCentre,inArea,bearingDeg,angleGap,between} from './xmas-drops.mjs?v=2.21.1-xmas.8';
 
 function closestOnSegment(px,pz,ax,az,bx,bz){
   const dx=bx-ax,dz=bz-az,len2=dx*dx+dz*dz,t=len2>0?Math.max(0,Math.min(1,((px-ax)*dx+(pz-az)*dz)/len2)):0,x=ax+dx*t,z=az+dz*t;

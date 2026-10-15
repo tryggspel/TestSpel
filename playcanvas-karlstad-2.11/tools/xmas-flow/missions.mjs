@@ -79,6 +79,10 @@ const started=await until(()=>{const s=window.KarlstadRound.snapshot();return s.
 const b1=await ev(()=>({cls:[...document.body.classList],panel:window.__lr.panel(),hud:getComputedStyle(document.getElementById('roundHud')).display,visitors:window.KarlstadRound.snapshot().visitors?.length,pos:window.__pos(),mode:window.KarlstadDebug.journey().xmas.snapshot().mode}));
 check('B1 Julvernissagen startar: uppdraget sandgrund spelas, inga paneler öppna och grundspelets HUD syns',started&&b1.panel===null&&b1.hud!=='none'&&b1.visitors===3,JSON.stringify({panel:b1.panel,hud:b1.hud,visitors:b1.visitors}));
 check('B2 julens egen HUD och klasser är av (xmas-on) men xmas-mission är på, och julläget är "mission"',!b1.cls.includes('xmas-on')&&b1.cls.includes('xmas-mission')&&b1.mode==='mission',b1.cls.join(' '));
+await wait(700); // HUD:en skrivs om var 80:e ms
+const v1=await ev(()=>{const g=window.__lr.game(),site=g.site;return {dur:g.duration,hp:g.actors[0].hp,max:g.actors[0].maxHp,shielded:g.shielded,far:g.visitors.map(v=>Math.round(Math.hypot(v.x-site.x,v.z-site.z))),apart:Math.min(...[[0,1],[0,2],[1,2]].map(([i,j])=>Math.hypot(g.visitors[i].x-g.visitors[j].x,g.visitors[i].z-g.visitors[j].z))),hud:document.getElementById('roundPhase').textContent,scene:window.KarlstadDebug.journey().xmas.decor.snapshot().scenes};});
+check('B2b Julvernissagen är en längre strid: 270 s, Zombie-Lerin har 36 liv och färgsköld, och besökarna står 25–50 m från platsen och minst 20 m från varandra',v1.dur===270&&v1.hp===36&&v1.max===36&&v1.shielded&&v1.far.every(d=>d>=25&&d<=50)&&v1.apart>=20,JSON.stringify(v1));
+check('B2c HUD:en säger FÄRGSKÖLD (inte 12 liv) och julscenen på Sandgrund är påslagen',/FÄRGSKÖLD/.test(v1.hud)&&v1.scene[0].name==='Sandgrund'&&v1.scene[0].on===true&&v1.scene[0].firs>=6,v1.hud+' '+JSON.stringify(v1.scene));
 check('B3 spelaren står vid Sandgrund (uppdragets start)',Math.hypot(b1.pos[0]-(-13),b1.pos[1]-(-397))<140,b1.pos.map(Math.round).join(','));
 await wait(2500);await shot('m02-sandgrund');
 check('B4 uppdraget går i några sekunder utan fel och utan att glida ur sitt läge',(await ev(()=>window.KarlstadRound.snapshot().phase))==='playing'&&errs.length===0,errs.join(' | '));
@@ -110,6 +114,8 @@ await click('xmasBoat');
 const boarded=await until(()=>window.KarlstadRound.snapshot().mode==='boat',30);
 const c1=await ev(()=>({boat:window.KarlstadRound.snapshot().boat,layer:!document.getElementById('boatLayer').hidden,cls:[...document.body.classList],mode:window.KarlstadDebug.journey().xmas.snapshot().mode}));
 check('C1 båtbussen går: båtlagret syns, resan är en räddningstur (inte lugn) och julläget är "boat"',boarded&&c1.layer&&c1.boat&&c1.boat.calm===false&&c1.mode==='boat',JSON.stringify({layer:c1.layer,calm:c1.boat?.calm,mode:c1.mode}));
+const sky=await ev(()=>{const c=document.getElementById('boatCanvas'),x=c.getContext('2d'),d=x.getImageData(Math.round(c.width*.4),Math.round(c.height*.12),1,1).data;return {w:c.width,rgb:[d[0],d[1],d[2]]};});
+check('C1b båtresan är ett vinterlandskap: himlen är skymningsblå (inte grundspelets ljusa sommarhimmel) ',sky.rgb[2]>sky.rgb[0]&&sky.rgb[0]+sky.rgb[1]+sky.rgb[2]<420,JSON.stringify(sky));
 await shot('m04-batbuss');
 // rädda några passagerare under resan
 for(let i=0;i<40&&(await ev(()=>window.KarlstadRound.snapshot().mode))==='boat';i++){await ev(()=>{for(const id of ['boatPerson0','boatPerson1','boatPerson2','boatPerson3'])document.getElementById(id)?.click();});await wait(900);}
@@ -119,6 +125,8 @@ const c2=await ev(()=>{const x=window.KarlstadDebug.journey().xmas,h=x.hunt.snap
   extra:r?.extra,pkgs:r?r.packages.map(p=>({x:p.x,z:p.z,kind:p.kind})):[],tomte:r?.tomte,hudHidden:document.getElementById('xmasHud').hidden};});
 check('C2 när båten lagt till börjar jakten i Mariebergsskogen: tolv julklappar och tre bonuspaket, mål 12',arrived&&c2.kind==='marieberg'&&c2.phase==='collect'&&c2.total===12&&c2.bonusTotal===3&&c2.goal===12,JSON.stringify({kind:c2.kind,phase:c2.phase,total:c2.total,bonus:c2.bonusTotal}));
 check('C3 spelaren står vid bryggan i Mariebergsskogen och julens HUD och mål syns',Math.hypot(c2.pos[0]-MARIEBERG.x,c2.pos[1]-MARIEBERG.z)<25&&!c2.hudHidden&&/Mariebergsskogen/.test(c2.goalText)&&c2.panel===null&&c2.cls.includes('xmas-on')&&c2.mode==='cozy',JSON.stringify({pos:c2.pos.map(Math.round),goal:c2.goalText,mode:c2.mode}));
+const sc2=await ev(()=>window.KarlstadDebug.journey().xmas.decor.snapshot().scenes);
+check('C3b julscenen vid bryggan i Mariebergsskogen är påslagen när man kommit fram',sc2[1].name==='Mariebergsskogen'&&sc2[1].on===true,JSON.stringify(sc2));
 check('C4 båtresans poäng följer med jakten (extra) och är högst 300',Number.isFinite(c2.extra)&&c2.extra>=0&&c2.extra<=300,String(c2.extra));
 await shot('m05-mariebergsskogen');
 // samla de tolv vanliga paketen (förflyttning i stora steg genom spelets egen fångstlogik) och lämna dem hos tomten

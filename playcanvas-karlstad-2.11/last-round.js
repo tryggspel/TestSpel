@@ -1,46 +1,47 @@
-import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.21.1-xmas.7';
-import {createSouthSigns} from './city-south.js?v=2.21.1-xmas.7';
-import {createOrrholmenSigns} from './orrholmen.js?v=2.21.1-xmas.7';
-import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.21.1-xmas.7';
-import {createZombieAtlases} from './zombie-art.js?v=2.21.1-xmas.7';
-import {createXmasZombieAtlases} from './xmas/xmas-zombie-art.js?v=2.21.1-xmas.7'; // julgrenen: tomtezombier ersätter grundspelets zombiebilder
-import {FriendlyClerks} from './friendly-clerks.mjs?v=2.21.1-xmas.7';
-import {createFriendlyView} from './friendly-view.js?v=2.21.1-xmas.7';
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.21.1-xmas.7';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.21.1-xmas.7';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.21.1-xmas.7';
-import {CityJourney} from './journey-rules.mjs?v=2.21.1-xmas.7';
-import {createJourneyView} from './journey-view.js?v=2.21.1-xmas.7';
-import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.21.1-xmas.7';
-import {createBoatRide} from './boat-ride.js?v=2.21.1-xmas.7';
-import {createBusRide} from './bus-ride.js?v=2.21.1-xmas.7';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.21.1-xmas.7';
-import {createPostcard} from './challenge-postcard.js?v=2.21.1-xmas.7';
-import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.21.1-xmas.7';
-import {RUSH} from './city-rush.mjs?v=2.21.1-xmas.7';
-import {StampBook} from './city-stamps.mjs?v=2.21.1-xmas.7';
-import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.21.1-xmas.7';
-import {POWERUPS} from './powerups.mjs?v=2.21.1-xmas.7';
-import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.21.1-xmas.7';
-import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.21.1-xmas.7';
-import {fetchLiveBoard} from './bus-quiz.mjs?v=2.21.1-xmas.7';
-import {GhostRun} from './ghost-run.mjs?v=2.21.1-xmas.7';
-import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.21.1-xmas.7';
-import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.21.1-xmas.7';
-import {pedestrianAt} from './pedestrian.mjs?v=2.21.1-xmas.7';
-import {createPedestrianSigns} from './pedestrian-view.js?v=2.21.1-xmas.7';
-import {drawMapLabels} from './city-geography.mjs?v=2.21.1-xmas.7';
-import {createCityIdentity} from './city-identity.js?v=2.21.1-xmas.7';
-import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.21.1-xmas.7';
+import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.21.1-xmas.8';
+import {createSouthSigns} from './city-south.js?v=2.21.1-xmas.8';
+import {createOrrholmenSigns} from './orrholmen.js?v=2.21.1-xmas.8';
+import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.21.1-xmas.8';
+import {createZombieAtlases} from './zombie-art.js?v=2.21.1-xmas.8';
+import {createXmasZombieAtlases,drawXmasVisitorExtras} from './xmas/xmas-zombie-art.js?v=2.21.1-xmas.8'; // julgrenen: tomtezombier ersätter grundspelets zombiebilder
+import {XmasVernissage} from './xmas/xmas-vernissage.mjs?v=2.21.1-xmas.8'; // julgrenen: Julvernissagen (längre strid) ersätter CityMission för 'sandgrund'
+import {FriendlyClerks} from './friendly-clerks.mjs?v=2.21.1-xmas.8';
+import {createFriendlyView} from './friendly-view.js?v=2.21.1-xmas.8';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.21.1-xmas.8';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.21.1-xmas.8';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.21.1-xmas.8';
+import {CityJourney} from './journey-rules.mjs?v=2.21.1-xmas.8';
+import {createJourneyView} from './journey-view.js?v=2.21.1-xmas.8';
+import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.21.1-xmas.8';
+import {createBoatRide} from './boat-ride.js?v=2.21.1-xmas.8';
+import {createBusRide} from './bus-ride.js?v=2.21.1-xmas.8';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.21.1-xmas.8';
+import {createPostcard} from './challenge-postcard.js?v=2.21.1-xmas.8';
+import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.21.1-xmas.8';
+import {RUSH} from './city-rush.mjs?v=2.21.1-xmas.8';
+import {StampBook} from './city-stamps.mjs?v=2.21.1-xmas.8';
+import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.21.1-xmas.8';
+import {POWERUPS} from './powerups.mjs?v=2.21.1-xmas.8';
+import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.21.1-xmas.8';
+import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.21.1-xmas.8';
+import {fetchLiveBoard} from './bus-quiz.mjs?v=2.21.1-xmas.8';
+import {GhostRun} from './ghost-run.mjs?v=2.21.1-xmas.8';
+import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.21.1-xmas.8';
+import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.21.1-xmas.8';
+import {pedestrianAt} from './pedestrian.mjs?v=2.21.1-xmas.8';
+import {createPedestrianSigns} from './pedestrian-view.js?v=2.21.1-xmas.8';
+import {drawMapLabels} from './city-geography.mjs?v=2.21.1-xmas.8';
+import {createCityIdentity} from './city-identity.js?v=2.21.1-xmas.8';
+import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.21.1-xmas.8';
 
-import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.21.1-xmas.7';
-import {PlaceQuests} from './place-quests.mjs?v=2.21.1-xmas.7';
-import {placeAnchors} from './places-space.mjs?v=2.21.1-xmas.7';
-import {createPlacesView} from './places-view.js?v=2.21.1-xmas.7';
-import {createPlacesUi} from './places-ui.js?v=2.21.1-xmas.7';
-import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.21.1-xmas.7';
-import {installXmas,prepareXmasJourney} from './xmas/xmas-boot.js?v=2.21.1-xmas.7'; // julgrenen: Julklappsjakten (allt jul bor under xmas/)
-import {XMAS_PLACES} from './xmas/xmas-places.mjs?v=2.21.1-xmas.7';
+import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.21.1-xmas.8';
+import {PlaceQuests} from './place-quests.mjs?v=2.21.1-xmas.8';
+import {placeAnchors} from './places-space.mjs?v=2.21.1-xmas.8';
+import {createPlacesView} from './places-view.js?v=2.21.1-xmas.8';
+import {createPlacesUi} from './places-ui.js?v=2.21.1-xmas.8';
+import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.21.1-xmas.8';
+import {installXmas,prepareXmasJourney} from './xmas/xmas-boot.js?v=2.21.1-xmas.8'; // julgrenen: Julklappsjakten (allt jul bor under xmas/)
+import {XMAS_PLACES} from './xmas/xmas-places.mjs?v=2.21.1-xmas.8';
 
 export function createLastRound(pc, host) {
   // 2.10: elementuppslag cachas, och HUD-text skrivs bara om när värdet faktiskt ändras.
@@ -65,7 +66,7 @@ export function createLastRound(pc, host) {
   const rounds = {'sista-rundan':new LastRound(olearyLayout,host.blocked),fikapanik:new CityMission('fikapanik',navigation,host.mall,seed),'radda-fikat':new CityMission('radda-fikat',navigation,host.mall,seed)};
   const galleryBox=host.colliders.find(b=>/Sandgrund|Lars Lerin/i.test(b.name));
   const gallerySite=galleryBox?{x:(galleryBox.minx+galleryBox.maxx)/2,z:galleryBox.maxz+9}:{x:-13,z:-397};
-  rounds.sandgrund=new CityMission('sandgrund',navigation,host.mall,seed,gallerySite);
+  rounds.sandgrund=new XmasVernissage('sandgrund',navigation,host.mall,seed,gallerySite);
   const portals={
     'sista-rundan':{...navigation.point(olearyLayout.guard),name:'O’Learys'},
     fikapanik:{...navigation.point({x:8,z:6}),name:'Fikapanik'},
@@ -209,6 +210,7 @@ export function createLastRound(pc, host) {
         c.fillStyle = '#18372e'; c.font = '900 47px sans-serif'; c.fillText('1', 213, 185);
       }
       if(kind==='clerk'){box(80,197,105,100,'#f4e5b9',8);box(106,182,47,37,'#f4e5b9',5);box(99,213,73,25,'#285d59',3);c.fillStyle='#d5ffdc';c.font='900 15px sans-serif';c.textAlign='center';c.fillText('HJÄLP?',136,232);c.strokeStyle='#213c39';c.lineWidth=4;c.beginPath();c.moveTo(97,109);c.lineTo(114,104);c.moveTo(143,103);c.lineTo(161,112);c.stroke();}
+      if(kind==='visitor')drawXmasVisitorExtras(c,shirt); // julgrenen: tomteluva på besökarna på Julvernissagen
     }, kind==='clerk'?512:256, kind==='clerk'?768:384);
     fanTextures.set(key,result);return result;
   }
@@ -366,6 +368,7 @@ export function createLastRound(pc, host) {
     onCrash:(result,to,from)=>{recordBusMoment(result,to,from);journey.position={x:to.x,z:to.z};journey.heading=0;journey.health=Math.max(25,journey.health-20);journey.contactCooldown=5;journey.save();host.music?.city?.();toast('AVSTIGNING. OPLANERAD.','Tillbaka vid hållplatsen. −20 liv. Bättre styrning nästa tur!',3);if(busChallenge)openMoment('bus-intro');}
   });
   const boatRide=createBoatRide(host,{
+    winter:()=>!!xmas, // julgrenen: båtresan ritas som ett vinterlandskap med jul (xmas/xmas-boat-art.js)
     onSpot:()=>{note(1046.5,'triangle',.15,.07);setTimeout(()=>note(1318.5,'triangle',.18,.06),70);},
     onTick:dt=>{journey.rush.clock(dt);if(['caught','finished'].includes(journey.rush.state)){boatRide.stop();if(journey.rush.state==='caught')host.teleport(HARBOUR.x,HARBOUR.z,0,-2);}},
     // julgrenen: Julbåten (xmas/xmas-marieberg.mjs) fortsätter med en paketjakt i Mariebergsskogen; avbryts resan går man tillbaka till Julmenyn
@@ -463,7 +466,7 @@ export function createLastRound(pc, host) {
     $('roundClockLabel').textContent = practice ? 'ÖVNING' : 'SEKUNDER';
     $('roundScoreLabel').textContent='POÄNG';$('refillBtn').hidden=practice;
     $('useBtn').textContent='UPPDRAG';
-    toast(practice ? 'ÖVNINGSRUNDA' : missionInfo().name.toUpperCase(), isPush()?'Gå runt fansen. Grön pil = rätt knuffriktning.':selectedMission==='fikapanik'?'Vänd fritt. Håll SOLSTÖT för salvor. Tre vågor.':selectedMission==='sandgrund'?'Gå nära besökarna. Led dem till grönt. Stoppa Zombie-Lerin!':'Samla 3 termosar. Följ markörerna till Mitt i City.', 3);
+    toast(practice ? 'ÖVNINGSRUNDA' : xmas&&selectedMission==='sandgrund'?'JULVERNISSAGEN':missionInfo().name.toUpperCase(), isPush()?'Gå runt fansen. Grön pil = rätt knuffriktning.':selectedMission==='fikapanik'?'Vänd fritt. Håll SOLSTÖT för salvor. Tre vågor.':selectedMission==='sandgrund'?(xmas?'Hämta de tre besökarna och led dem till grönt. Färgskölden släpper först när alla är i säkerhet!':'Gå nära besökarna. Led dem till grönt. Stoppa Zombie-Lerin!'):'Samla 3 termosar. Följ markörerna till Mitt i City.', xmas&&selectedMission==='sandgrund'?5:3);
     $('roundHealthRow').hidden=isPush(); $('roundProgressLabel').textContent=isPush()?'HEMMA':selectedMission==='fikapanik'?'RENSADE':selectedMission==='sandgrund'?'RÄDDADE':'TERMOSAR';
     sound('start'); lockPointer();
   }
@@ -945,7 +948,7 @@ export function createLastRound(pc, host) {
     if (won && !game.practice && game.score > best) {best = game.score; try {localStorage.setItem(recordKey, String(best));} catch {}}
     if(won&&!game.practice){completed[selectedMission]=true;try{localStorage.setItem(completedKey,JSON.stringify(completed));}catch{}}
     $('roundResultEyebrow').textContent = missionInfo().place.toUpperCase()+' / '+(won?'UPPDRAG KLART':'ETT FÖRSÖK TILL');
-    $('roundResultTitle').textContent = won ? missionInfo().win : game.health===0?'FIKAPAUS. FÖR DIG.':'TIDEN TOG SLUT.';
+    $('roundResultTitle').textContent = won ? (xmas&&selectedMission==='sandgrund'?'GOD JUL PÅ SANDGRUND!':missionInfo().win) : game.health===0?'FIKAPAUS. FÖR DIG.':'TIDEN TOG SLUT.';
     $('roundResultScore').textContent = game.score.toLocaleString('sv-SE');
     $('roundResultDetail').textContent = `${isPush()?game.captured+'/4 fans hemma':selectedMission==='sandgrund'?game.rescued+'/3 besökare räddade':game.captured+' zombies rensade'} · ${game.accuracy}% träffsäkerhet · bästa kedja ${game.bestChain}×${reward?' · +'+reward+' kaffepoäng till stadsvandringen':''}`;
     const medal = game.bestChain >= 3 ? 'SOLPROFFSET · 3× KEDJA' : game.accuracy === 100 ? 'SOLKLAR PRECISION · 100%' : game.elapsed < 45 ? 'BLIXTSNABB · UNDER 45 SEK' : 'DAGENS SOLHJÄLTE';
@@ -1169,8 +1172,11 @@ export function createLastRound(pc, host) {
     'ambush-clear':(event,now)=>{sound('capture');$('journeyPickupToast').textContent='BAKHÅLL KLARAT · +30 KAFFEPOÄNG';$('journeyPickupToast').classList.add('visible');pickupToastUntil=now+1800;journey.save();},
     'refill':(event,now)=>{sound('energy');toast('KAFFEKRAFT! +40 SOL','−25 kaffepoäng. Nu blir det andra bullar.',1.5);},
     'recover':(event,now)=>{host.teleport(journey.layout.spawn.x,journey.layout.spawn.z,0,-2);journey.position={...journey.layout.spawn};journey.heading=0;journey.save();toast('EN LITEN FIKAPAUS.','Tillbaka på Torget. Upp till 25 kaffepoäng tappade; dina fynd finns kvar.',3);},
-    'visitor-follow':(event,now)=>{sound('energy');toast('”JAG FÖLJER DIG!”','Led besökaren till den gröna samlingsplatsen.',2);},
+    'visitor-follow':(event,now)=>{sound('energy');toast(xmas?'”GOD JUL! JAG FÖLJER DIG!”':'”JAG FÖLJER DIG!”','Led besökaren till den gröna samlingsplatsen.',2);},
     'visitor-safe':(event,now)=>{sound('capture');toast(event.count+' / 3 BESÖKARE RÄDDADE',event.count===3?'Nu återstår Zombie-Lerin!':'Tillbaka efter nästa besökare.',2);},
+    'vernissage-phase':(event,now)=>{sound('boss');toast(event.title,event.text,2.8);},
+    'vernissage-wave':(event,now)=>{sound('boss');toast(event.title,event.text,2);},
+    'vernissage-shield':(event,now)=>{sound('bump');toast(event.title,event.text,2);},
     'visitor-danger':(event,now)=>{toast('BESÖKARE I FARA!','Solstöt bort Zombie-Lerin från besökarna.',1.5);},
     'street-event':(event,now)=>{sound('start');toast(event.title,event.kind==='power'?'Tre elboxar. Följ pilarna och tryck SLÅ PÅ STRÖMMEN.':event.kind==='news'?'Hämta tidningarna, leverera till två adresser. Extra! Extra!':event.kind==='bowling'?'Ställ dig bakom kundvagnen. Sikta mot zombies och tryck SPARKA VAGNEN.':event.kind==='hunt'?'Stoppa tjuvarna innan de hinner smita!':event.kind==='parcel'?'Hämta väskan. Leverera till nästa cyanmarkering.':'Nå solglimten innan den försvinner!',2.2);},
     'power-switch':(event,now)=>{toast('ELBOX '+event.stage+'/3 KLAR','Följ pilarna till nästa. Ljuset lockar sällskap.',1.7);},
@@ -1332,7 +1338,7 @@ export function createLastRound(pc, host) {
       $('superBtn').setAttribute('aria-label', isJourney()&&journey.rush.challenge?.noSuper?'Super är av i dagens utmaning':game.energy >= RULES.chargeCost ? 'Superstöt, kostar 40 solenergi' : 'Superstöt behöver 40 solenergi');
       $('roundEnergy').style.width = game.energy + '%'; $('roundEnergyText').textContent = Math.round(game.energy) + '%';
       $('refillBtn').disabled=game.phase!=='playing'||game.energy>60||journey.balance<25;$('refillBtn').textContent='☀ +40 SOL · 25 P'+(!isJourney()?' ('+journey.balance+')':'');
-      $('roundPhase').textContent = isJourney()?(game.energy<3?'NÖDSOL · HITTA TERMOSAR ELLER LADDA MED POÄNG':'TERMOS = +25 POÄNG / +15 SOL · SOLSTÖT −3'):isPush()?(game.captured<3?'KNUFFA 3 FANS TILL HEMGÅNG':'SKICKA HEM KAPTEN ÖVERTID'):selectedMission==='sandgrund'?`BESÖKARE ${game.rescued}/3 · ZOMBIE-LERIN ${Math.max(0,game.actors[0].hp)}/12`:selectedMission==='fikapanik'?`VÅG ${game.wave}/3 · ${game.actors.filter(a=>a.active).length} ZOMBIES KVAR`:game.collected<3?'HÄMTA 3 TERMOSAR PÅ TORGET':'LEVERERA TILL MITT I CITY';
+      $('roundPhase').textContent = isJourney()?(game.energy<3?'NÖDSOL · HITTA TERMOSAR ELLER LADDA MED POÄNG':'TERMOS = +25 POÄNG / +15 SOL · SOLSTÖT −3'):isPush()?(game.captured<3?'KNUFFA 3 FANS TILL HEMGÅNG':'SKICKA HEM KAPTEN ÖVERTID'):selectedMission==='sandgrund'?`BESÖKARE ${game.rescued}/3 · ZOMBIE-LERIN ${game.shielded?'FÄRGSKÖLD':Math.max(0,game.actors[0].hp)+'/'+game.actors[0].maxHp}`:selectedMission==='fikapanik'?`VÅG ${game.wave}/3 · ${game.actors.filter(a=>a.active).length} ZOMBIES KVAR`:game.collected<3?'HÄMTA 3 TERMOSAR PÅ TORGET':'LEVERERA TILL MITT I CITY';
       if(timed)$('roundPhase').textContent=journey.rush.exitReady?'FLY NU · GRÖN TRYGGZON PÅ RADARN':'MÅL: '+RUSH.target+' XP → GRÖN TRYGGZON';
       const dist = Math.hypot(p.x - olearyLayout.guard.x, p.z - olearyLayout.guard.z);
       if (game.phase === 'ready') {

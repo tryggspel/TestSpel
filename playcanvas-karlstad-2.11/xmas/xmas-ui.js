@@ -1,15 +1,15 @@
 // Julklappsjakten: gränssnittet. Startvyn, fortsättningsmenyn och resultatkortet är vanliga paneler i index.html; HUD:en och pausmenyns
 // tillägg byggs här med textContent (aldrig HTML-strängar med data). Små mål: knappar är minst 52 px höga och spelvärlden syns ovanför.
 // JulRushen använder samma HUD: tempo och klockan i raden överst (stapeln är tiden till nästa paket), liv som hjärtan, poäng, kombo och gåvorna som små brickor.
-import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.7';
-import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.7';
-import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.7';
-import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.7';
-import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.7';
-import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.7';
-import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.7';
-import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.7';
-import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.7';
+import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.8';
+import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.8';
+import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.8';
+import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.8';
+import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.8';
+import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.8';
+import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.8';
+import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.8';
+import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.8';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 export const mmss=s=>{const n=Math.max(0,Math.round(s));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};
@@ -108,11 +108,27 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
   }
   function showHud(on){hud.hidden=!on;if(!on){goal.classList.remove('on');pill.classList.remove('on');combo.hidden=true;}}
 
+  // ── Luckan är klar (xmas-door.mjs): rutan på resultatkortet när man kommit från Julkalendern ───────────────────────────────────
+  const doorEl=el('div','xmas-door');doorEl.id='xmasDoor';doorEl.hidden=true;doorEl.setAttribute('role','status');
+  const doorTitle=el('b','xd-title'),doorHead=el('span','xd-head'),doorLine=el('p','xd-line'),doorNext=el('p','xd-next'),doorTail=el('p','xd-tail');
+  const doorMenu=el('button','round-secondary','JULMENYN →');doorMenu.type='button';doorMenu.id='xmasDoorMenu';
+  const doorCal=el('a','xmas-link','TILL JULKALENDERN →');doorCal.id='xmasDoorCal';doorCal.href='./julkalender/';
+  doorEl.append(doorTitle,doorHead,doorLine,doorNext,doorTail,doorMenu,doorCal);
+  doorMenu.addEventListener('click',()=>fx.doorMenu()); // noden sitter inte i sidan förrän ett resultat visas, så den kopplas här och inte med on()
+  // info = doorBox() eller null (rutan tas bort). parent/before = var på kortet rutan ska ligga (före knapparna).
+  function placeDoor(info,parent=null,before=null){
+    if(!info||!parent){doorEl.hidden=true;if(doorEl.parentNode)doorEl.remove();return;}
+    doorTitle.textContent='★ '+info.title;doorHead.textContent=info.heading;doorLine.textContent=info.line;doorNext.textContent=info.next;doorTail.textContent=info.tail;
+    if(before&&before.parentNode===parent)parent.insertBefore(doorEl,before);else parent.append(doorEl);
+    doorEl.hidden=false;
+  }
+
   // ── Resultatkort ───────────────────────────────────────────────────────────────────────────────────────────────
   const result=$('round-xmas-result');
   let resultMode='ok',lastRushN=0;
   // JulRushens resultat: en av tolv rusher (stjärnor, upplåsning, nästa rush) eller Maraton (tempo och poäng som förut).
   function showRushResult(res){
+    placeDoor(res.door||null,result,$('xmasResultContinue'));
     const k=res.rush,stampCv=$('xmasResultStamp'),best=res.best,def=k?rushDef(k.n):null;lastRushN=k?k.n:0;
     resultMode=k?(k.cleared?(k.next?'rush-next':'rush-done'):'rush-again'):'rush';
     const sh=$('xmasResultShare');sh.hidden=!(k&&k.cleared);
@@ -142,6 +158,7 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
   }
   function showResult(res){
     if(res.kind==='rush')return showRushResult(res);
+    placeDoor(res.door||null,result,$('xmasResultContinue'));
     const stampCv=$('xmasResultStamp');
     $('xmasResultShare').hidden=true;
     // Tomtezombies har nivåer: en klarad nivå leder till nästa (NÄSTA NIVÅ), en förlorad kan göras om, och båda har JULMENYN som andra val. Julrundorna går vidare till fortsättningsmenyn som förut.
@@ -335,6 +352,6 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
   on('xmasSandgrund',()=>fx.sandgrund());on('xmasBoat',()=>fx.boat());on('xmasContinueIntro',()=>fx.intro());on('xmasRound',()=>fx.round());on('xmasShops',()=>fx.shops());on('xmasFree',()=>fx.free());on('xmasContinueMenu',()=>fx.openMenu());on('xmasContinueBack',()=>fx.goBase());
   on('xmasResultContinue',()=>resultMode==='rush'?fx.marathon():resultMode==='rush-next'?fx.rushNext():resultMode==='rush-again'?fx.rushAgain():resultMode==='rush-done'?fx.openRush():resultMode==='fail'?fx.zombiesAgain():resultMode==='zombies-next'?fx.zombiesNext():resultMode==='zombies-done'?fx.openMenu():fx.openContinue());
   on('xmasResultFree',()=>resultMode==='rush'||resultMode==='fail'||resultMode.startsWith('zombies')?fx.openMenu():resultMode.startsWith('rush-')?fx.openRush():fx.free());
-  return {hud,showGoal,showPill,setProgress,setCombo,setMode,setZombieLevel,setVitals,setRush,hitHearts,tick,showHud,showResult,renderStart,renderContinue,renderWeather,renderRush,renderBoard,renderChallenge,renderLink,selectedRush,
+  return {hud,showGoal,showPill,setProgress,setCombo,setMode,setZombieLevel,setVitals,setRush,hitHearts,tick,showHud,showResult,renderStart,renderContinue,renderWeather,renderRush,renderBoard,renderChallenge,renderLink,placeDoor,selectedRush,
     get goalText(){return goal.textContent;},get progressText(){return count.textContent;}};
 }

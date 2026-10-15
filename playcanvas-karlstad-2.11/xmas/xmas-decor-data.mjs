@@ -3,7 +3,7 @@
 //
 // Stånden och granarna står på en ring runt granen utanför introduktionens spiral (spiralen börjar på 27 m och går inåt), så ingenting
 // hindrar den som följer paketen. Stånden är fasta föremål (kollisionsrutor som läggs in före rutnätet byggs), granarna är bara utsmyckning.
-import {TREE,INTRO,TORGET_PROPS,distanceToPath} from './xmas-layout.mjs?v=2.21.1-xmas.7';
+import {TREE,INTRO,TORGET_PROPS,distanceToPath} from './xmas-layout.mjs?v=2.21.1-xmas.8';
 
 export const RING={r:33.5,bearings:Object.freeze([20,65,110,155,205,250,295,340])};
 export const STALL=Object.freeze({w:3.2,d:1.9,h:2.55});
@@ -136,3 +136,29 @@ export function stringBulbs(s,spacing=FACADE.stringSpacing){
   }
   return out;
 }
+
+// ── Sandgrund: julscen framför galleriet (Julvernissagen, 2.21.1-xmas.8) ─────────────────────────────────────────────
+// Platsen är uppdragets (city-missions: nav.point av {x:−13,z:−397} = x −12, z −392). Allt ligger i förhållande till den, söder om byggnaden (spelaren kommer söderifrån, z ökar mot spelaren).
+// Bara visuellt: inga kollisioner (inget hindrar besökare, zombier eller spelaren). Ritas bara när spelaren är inom `visible` meter (en egen entitet i decor).
+export const SANDGRUND_SCENE=Object.freeze({
+  name:'Sandgrund',center:Object.freeze({x:-12,z:-392}),visible:150,
+  // granar i en båge framför byggnaden (dx, dz från centrum, höjd i meter)
+  firs:Object.freeze([[-34,4,5.2],[-25,9,4.4],[-15,12,5.6],[-4,13,4.2],[7,12,5.6],[17,9,4.4],[26,4,5.2],[-31,-8,4.6],[24,-9,4.6]].map(([dx,dz,h])=>Object.freeze({dx,dz,h}))),
+  // ljusslingor mellan granarna (index i firs)
+  strings:Object.freeze([[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]]),
+  gifts:Object.freeze([[-9,8],[3,15],[14,6],[-22,3]].map(([dx,dz])=>Object.freeze({dx,dz}))),
+  snowmen:Object.freeze([[-18,15,0],[12,16,0]].map(([dx,dz,yaw])=>Object.freeze({dx,dz,yaw}))),
+  lanterns:Object.freeze([[-12,6],[0,6],[-6,17]].map(([dx,dz])=>Object.freeze({dx,dz}))),
+  banner:Object.freeze({dx:-4,dz:19,w:9,h:1.7,y:4.6,yaw:0,lines:Object.freeze(['JULVERNISSAGE','SANDGRUND'])})
+});
+// Mariebergsskogen: julscen vid bryggan där Julbåten lägger till (xmas-marieberg.mjs: bryggan x −778, z 1321, tomten sex meter västerut, parken åt väster, vattnet åt öster). Samma byggstenar som Sandgrund.
+export const MARIEBERG_SCENE=Object.freeze({
+  name:'Mariebergsskogen',center:Object.freeze({x:-778,z:1321}),visible:150,
+  firs:Object.freeze([[-9,-9,5.0],[-10,8,4.4],[-16,-2,5.6],[-17,12,4.6],[-23,4,5.2],[-7,-16,4.4],[-8,17,5.0],[-14,-12,4.8]].map(([dx,dz,h])=>Object.freeze({dx,dz,h}))),
+  strings:Object.freeze([[0,2],[2,1],[1,3],[3,6],[0,5]]),
+  gifts:Object.freeze([[-8,2],[-11,-4],[-5,9],[-14,6]].map(([dx,dz])=>Object.freeze({dx,dz}))),
+  snowmen:Object.freeze([[-4,-9,90],[-12,15,90]].map(([dx,dz,yaw])=>Object.freeze({dx,dz,yaw}))),
+  lanterns:Object.freeze([[-3,-5],[-3,5],[-12,0]].map(([dx,dz])=>Object.freeze({dx,dz}))),
+  banner:Object.freeze({dx:-2,dz:0,w:7.5,h:1.6,y:4.4,yaw:90,lines:Object.freeze(['GOD JUL','MARIEBERGSSKOGEN'])})
+});
+export const SCENES=Object.freeze([SANDGRUND_SCENE,MARIEBERG_SCENE]);

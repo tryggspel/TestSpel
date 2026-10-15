@@ -6,10 +6,12 @@ Adress: `https://karlstad-julklappsjakten.vercel.app/julkalender/` (Julspelets V
 
 ## Så hänger den ihop med spelet
 
-**Kalendern är en fristående sida** (nya filer i `julkalender/`, `tests/julkalender-*.test.mjs` och `tools/julkalender/`) som gör två saker. Den lägger ingenting i spelet. De ändringar som finns i Julspelet för kalendern, de två uppdragen och länken i startvyn, beskrivs i `JULVERSION.md` avsnitt 12. **Karlstad City (grundspelet på `main`) är inte ändrat.**
+**Kalendern är en fristående sida** (nya filer i `julkalender/`, `tests/julkalender-*.test.mjs` och `tools/julkalender/`) som gör tre saker. Den lägger ingenting i spelet. De ändringar som finns i Julspelet för kalendern, de två uppdragen och länken i startvyn, beskrivs i `JULVERSION.md` avsnitt 12. **Karlstad City (grundspelet på `main`) är inte ändrat.**
 
 1. **Går rakt till uppdraget.** Knappen i varje lucka är en djuplänk, `../?uppdrag=<nyckel>&lucka=<n>` (till exempel `../?uppdrag=sandgrund&lucka=6`; se *Djuplänkar* nedan). Julspelet visar då ett kort med uppdraget och en stor knapp *STARTA UPPDRAGET*; inget startar av sig självt (ljud och styrning kräver en tryckning). Luckan säger också vad man trycker på i spelet om länken inte räcker, till exempel *JULRUSHEN → Rush 5*.
 2. **Läser av resultatet.** Kalendern ligger på samma adress som spelet och delar därför `localStorage`. Den **läser** Julspelets egen sparning, `karlstad-xmas:save:1` (`xmas/xmas-save.mjs`): julstämplar, JulRushens och Tomtezombies nivåer, rekord, summor och smeknamn. Den bockar av luckan när man kommer tillbaka (flikbyte, bakåtknapp eller att en annan flik sparar). Den **skriver aldrig** till spelets nycklar (`karlstad-xmas:*` och `xmas:*`); det testas.
+
+3. **Spelet säger till när luckan är klar.** Kommer man från en lucka och klarar just det uppdraget visar Julspelet en ruta på resultatkortet (`xmas/xmas-door.mjs`): *LUCKA 1 ÄR AVKLARAD! Du fick 580 julpoäng och 1 stjärna i kalendern. Nästa lucka öppnas imorgon den 2/12. Under tiden kan du spela resten av Julspelet här:* med knappar till Julmenyn och till kalendern. Spelet frågar kalenderns egna regler (`rules.mjs: evaluate`) om luckan är klar, så rutan och kalendern är alltid överens. Den visas inte när uppdraget startats från Julmenyn i stället för från kalendern, och inte efter ett förlorat försök. Se `JULVERSION.md` avsnitt 12.
 
 Kalenderns egna framsteg ligger i `julspelet:2026:v1`. Allt sparas bara på spelarens enhet. Inga konton, ingen server, inga uppgifter skickas.
 

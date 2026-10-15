@@ -12,7 +12,7 @@
 // Gränser (tröskelvärden för rekord) är satta från spelets egna regler men inte speltestade på riktiga spelare. Justera här.
 export const GAME_PATH='../';
 // Grundspelets adress bor på ett enda ställe i julbygget (tests/xmas-build.test.mjs kräver det): xmas/xmas-config.mjs. Modulen är ren (inga beroenden).
-import {BASE_GAME_URL} from '../xmas/xmas-config.mjs?v=2.21.1-xmas.7';
+import {BASE_GAME_URL} from '../xmas/xmas-config.mjs?v=2.21.1-xmas.8';
 export const KARLSTAD_CITY=BASE_GAME_URL;
 export const TYPES=Object.freeze({
   jakt:{label:'Julklappsjakt',icon:'gift'},
@@ -65,9 +65,9 @@ export const DOORS=Object.freeze([
 
   {n:6,typ:'plats',ikon:'flag',titel:'Sandgrund: Julvernissagen',plats:'Sandgrund',stjarnor:3,
     ledtrad:'”Rör inte konsten.” Konsten rör sig själv.',
-    story:'Zombie-Lerin har öppnat en julvernissage på Sandgrund och besökarna står kvar utanför. En tecknad spelfantasi, men räddningen är på riktigt: led besökarna till grönt och stoppa honom med solstötar.',
+    story:'Zombie-Lerin har öppnat en julvernissage på Sandgrund och besökarna står kvar ute i snön. En tecknad spelfantasi, men räddningen är på riktigt: hämta besökarna och stoppa honom med solstötar.',
     mal:'Klara uppdraget Sandgrund: Julvernissagen och få julstämpeln SANDGRUND · JULVERNISSAGEN.',
-    steg:['Tryck JULKLAPPSJAKTEN och sedan SANDGRUND: JULVERNISSAGEN. Menyn med uppdragen finns när du klarat det första uppdraget (lucka 1).','Gå nära tre besökare utanför Sandgrund. De följer dig till den gröna samlingsplatsen.','Stoppa Zombie-Lerin med solstötar. När uppdraget är klart får du stämpeln och luckan bockas av.'],
+    steg:['Tryck JULKLAPPSJAKTEN och sedan SANDGRUND: JULVERNISSAGEN. Menyn med uppdragen finns när du klarat det första uppdraget (lucka 1).','Hämta tre besökare som står långt bort i snön: gå nära dem så följer de dig till den gröna samlingsplatsen. Tomtezombier kommer från julmarknaden, så skjut med solstötar.','Zombie-Lerin har en färgsköld tills alla besökare är i säkerhet. Sedan stoppar du honom med solstötar medan fler tomtezombier kommer. Det tar några minuter. När uppdraget är klart får du stämpeln och luckan bockas av.'],
     spel:JAKT('JULKLAPPSJAKTEN → SANDGRUND: JULVERNISSAGEN','sandgrund'),check:{kind:'stamp',id:'sandgrund'}},
 
   {n:7,typ:'butik',titel:'Pressbyrån: Tomtarnas fikaorder',plats:'Kungsgatan 14',stjarnor:2,demo:true,
@@ -86,7 +86,7 @@ export const DOORS=Object.freeze([
 
   {n:9,typ:'plats',ikon:'boat',titel:'Båtbussen till Mariebergsskogen',plats:'Inre hamn → Mariebergsskogen',stjarnor:3,
     ledtrad:'Passagerarna hoppar överbord. Kaptenen hade visst sjöben.',
-    story:'Zombie-båtbussen lägger ut från Inre hamn med tolv passagerare och en kapten som hade visst sjöben. På andra sidan väntar julklapparna i Mariebergsskogen, och tomten väntar vid bryggan.',
+    story:'Zombie-båtbussen lägger ut från Inre hamn med tolv passagerare och en kapten som hade visst sjöben. Resan går i vinterskymning med norrsken och isflak, och passagerarna har tomteluvor. På andra sidan väntar julklapparna i Mariebergsskogen, och tomten väntar vid bryggan.',
     mal:'Åk båtbussen från Inre hamn, hämta tolv julklappar i Mariebergsskogen och lämna dem hos tomten. Få julstämpeln MARIEBERGSSKOGEN · JULBÅTEN.',
     steg:['Tryck JULKLAPPSJAKTEN och sedan BÅTBUSSEN TILL MARIEBERGSSKOGEN. Menyn med uppdragen finns när du klarat det första uppdraget (lucka 1).','Tryck på passagerarna under överfarten: väst på däck, ring i vattnet. Varje räddad passagerare ger poäng i jakten.','Kliv iland i Mariebergsskogen, samla tolv julklappar och lämna dem hos tomten vid bryggan.'],
     spel:JAKT('JULKLAPPSJAKTEN → BÅTBUSSEN TILL MARIEBERGSSKOGEN','batbuss'),check:{kind:'stamp',id:'marieberg'}},

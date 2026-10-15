@@ -1,7 +1,7 @@
 // Julklappsjakten: Tomtezombies. Samma tecknade zombier som i grundspelet (zombie-art.js) med tomteluva, namnskylt och en egen sak i handen,
 // bakade till samma sorts bildruta (4 poser i en bild) så att zombielägets pooler, rörelser och gränser fungerar oförändrade.
 // Varianterna följer grundspelets fyra zombietyper: walker = Paket-Pelle, runner = Stress-Nisse, tank = Gröt-Gunnar, golden = Guld-Nisse.
-import {drawZombiePose} from '../zombie-art.js?v=2.21.1-xmas.7';
+import {drawZombiePose} from '../zombie-art.js?v=2.21.1-xmas.8';
 
 export const TOMTEZOMBIE_NAMES=Object.freeze({walker:'Paket-Pelle',runner:'Stress-Nisse',tank:'Gröt-Gunnar',golden:'Guld-Nisse'});
 export const TOMTEZOMBIE_NOTES=Object.freeze({walker:'Vanlig tomtezombie som bär ett paket',runner:'Snabb och stressad',tank:'Tung, långsam och seg',golden:'Sällsynt: fånga för bonus'});
@@ -9,7 +9,8 @@ const STYLE=Object.freeze({
   walker:{hat:'#d33a3a',trim:'#ffffff',tag:'PAKET?'},
   runner:{hat:'#e8863a',trim:'#fff1ce',tag:'SEN!'},
   tank:{hat:'#4a6fa8',trim:'#f4efe3',tag:'GRÖT'},
-  golden:{hat:'#f6cf4f',trim:'#fff6c8',tag:'MIN!'}
+  golden:{hat:'#f6cf4f',trim:'#fff6c8',tag:'MIN!'},
+  artist:{hat:'#b3243a',trim:'#ffffff',tag:null,scarf:true}   // Zombie-Lerin (Julvernissagen): tomteluva och sjal, men grundspelets text KONST och pensel behålls
 });
 const INK='#1b3539';
 export function drawTomteZombiePose(c,kind,frame=0){
@@ -19,8 +20,12 @@ export function drawTomteZombiePose(c,kind,frame=0){
   c.save();c.lineCap='round';c.lineJoin='round';
   const shape=(fill,path,w=5)=>{c.beginPath();path();c.fillStyle=fill;c.fill();c.strokeStyle=INK;c.lineWidth=w;c.stroke();};
   // namnskylt på magen (täcker grundspelets text)
-  shape('#fff1ce',()=>c.roundRect(78,224,112,34,9),4);
-  c.fillStyle=INK;c.textAlign='center';c.font='900 23px sans-serif';c.fillText(st.tag,134,249,96);
+  if(st.tag){shape('#fff1ce',()=>c.roundRect(78,224,112,34,9),4);
+  c.fillStyle=INK;c.textAlign='center';c.font='900 23px sans-serif';c.fillText(st.tag,134,249,96);}
+  if(st.scarf){ // randig sjal runt halsen och snö på axlarna
+    shape('#2f7a4f',()=>c.roundRect(80,164,98,22,10),4);for(const x of [96,118,140,162])shape('#f7fbff',()=>c.rect(x,166,9,18),2);shape('#2f7a4f',()=>c.roundRect(150,176,24,52,8),4);shape('#f7fbff',()=>c.rect(150,196,24,8),2);
+    c.fillStyle='#ffffff';for(const [x,y,r] of [[70,172,7],[104,164,5],[186,170,8],[62,196,5]]){c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();}
+  }
   // sak i handen
   if(kind==='walker'){
     const gx=204-swing*5,gy=198;
@@ -45,6 +50,17 @@ export function drawTomteZombiePose(c,kind,frame=0){
   shape(st.trim,()=>c.ellipse(212,98,14,14,0,0,Math.PI*2),4);
   if(kind==='golden'){c.fillStyle='#fff6c8';for(const [x,y,r] of [[96,52,6],[226,64,7],[150,20,5]]){c.beginPath();c.moveTo(x,y-r*2);c.lineTo(x+r*.5,y-r*.5);c.lineTo(x+r*2,y);c.lineTo(x+r*.5,y+r*.5);c.lineTo(x,y+r*2);c.lineTo(x-r*.5,y+r*.5);c.lineTo(x-r*2,y);c.lineTo(x-r*.5,y-r*.5);c.closePath();c.fill();}}
   c.restore();
+  c.restore();
+}
+// Besökarna på Julvernissagen (kortet 'visitor' i last-round.js fanTex): tomteluva i en färg som hör till besökarens tröja, med vit kant och tott.
+const VISITOR_HATS=Object.freeze({'#e9b978':'#d33a3a','#75bbb5':'#2f7a4f','#a990c9':'#4a6fa8'});
+export function drawXmasVisitorExtras(c,shirt=''){
+  const hat=VISITOR_HATS[shirt]||'#d33a3a';
+  c.save();c.lineCap='round';c.lineJoin='round';
+  const shape=(fill,path,w=5)=>{c.beginPath();path();c.fillStyle=fill;c.fill();c.strokeStyle=INK;c.lineWidth=w;c.stroke();};
+  c.translate(128,149);c.rotate(-.1);c.translate(-128,-149);
+  shape(hat,()=>{c.moveTo(84,100);c.quadraticCurveTo(88,46,134,32);c.quadraticCurveTo(190,24,214,72);c.quadraticCurveTo(222,92,208,104);c.quadraticCurveTo(190,80,172,86);c.lineTo(172,102);c.closePath();},5);
+  shape('#ffffff',()=>c.roundRect(80,86,98,22,10),4);shape('#ffffff',()=>c.ellipse(212,98,14,14,0,0,Math.PI*2),4);
   c.restore();
 }
 // Samma upplägg som createZombieAtlases: en bild per typ med fyra poser, bakad en gång när den först behövs.
