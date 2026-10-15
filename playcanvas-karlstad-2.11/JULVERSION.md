@@ -437,3 +437,14 @@ Stäng av den igen genom att sätta `enabled:false`. Se `JULKNAPPEN.md` på den 
 - Förberedda butiker (Kjell & Company, Åhléns, Duvan, Värmlands Museum, Sandgrund) har data men ingen interiör eller något godkänt innehåll.
 - Julmiljön finns främst runt Stora Torget och utmed fasaderna däromkring; övriga delar av staden har snö men inte egna julföremål.
 - På skrivbord syns grundspelets båtbusshållplats (en låg platta med skylten BÅTBUSS) i högerkanten av första bilden. Det är grundspelets eget föremål och är inte ändrat.
+
+## 11. Julkalendern (landningssida)
+
+`julkalender/` är en julkalender med 24 luckor som landningssida för Julklappsjakten. Adress: `/julkalender/` på julprojektets adress (Vercel-projektet har den här mappen som rotkatalog). Allt om den, inklusive de 24 luckorna och vad som läses av, står i `julkalender/README.md`.
+
+- **Inga av grundspelets eller julbyggets filer är ändrade.** Nytt: `julkalender/` (sidan), `tests/julkalender-*.test.mjs` (51 tester, ingår i `node --test tests/*.mjs`) och `tools/julkalender/browser-check.mjs` (webbläsarkontroll, 61 kontroller i headless Chromium).
+- Kalendern **läser** julspelets sparning `karlstad-xmas:save:1` (samma adress, samma `localStorage`) och bockar av luckor mot stämplar, JulRushens och Tomtezombies nivåer, rekord och summor. Den skriver aldrig till spelets nycklar. Den importerar bara `xmas/xmas-config.mjs` (grundspelets adress, `BASE_GAME_URL`), så att adressen fortfarande bor på ett ställe.
+- Julspelet har inga länkar rakt in i ett läge, så luckorna öppnar startvyn (`../`) och säger vad man trycker på. Luckorna 6 (Sandgrund med Zombie-Lerin) och 9 (båtbussen till Mariebergsskogen) finns bara i grundspelet och länkar dit; de markeras av spelaren tills motsvarigheter finns i julspelet.
+- Cache-nyckeln `?v=` är julbyggets (`tools/set-version.mjs` sätter den även i kalendern).
+- **`/` är oförändrad** och julspelet har ingen länk till kalendern (vänutmaningarna `/?utmaning=…` pekar på `/`). Att göra kalendern till första sidan, eller att lägga en länk till den i startvyn, är en separat ändring som kräver ett uttryckligt ja.
+- Inte provat på en fysisk telefon. Tröskelvärdena i luckorna (till exempel 4 500 poäng i Rush 4) är satta från spelets regler men inte speltestade av människor.
