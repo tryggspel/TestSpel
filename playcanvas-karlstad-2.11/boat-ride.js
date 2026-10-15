@@ -1,6 +1,6 @@
-import {BoatRescue} from './boat-rescue.mjs?v=2.21.1-xmas.8';
-import {HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.21.1-xmas.8';
-import {winterBackdrop,winterStrips,snowfall,iceFloes,boatLights,santaHat,drawSleigh,drawIcebreaker,WINTER_QUIPS,WINTER_LABEL,WINTER_SPOT} from './xmas/xmas-boat-art.js?v=2.21.1-xmas.8'; // julgrenen: vinterlandskap
+import {BoatRescue} from './boat-rescue.mjs?v=2.21.1-xmas.9';
+import {HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.21.1-xmas.9';
+import {winterBackdrop,winterStrips,snowfall,iceFloes,boatLights,santaHat,drawSleigh,drawIcebreaker,WINTER_QUIPS,WINTER_LABEL,WINTER_SPOT} from './xmas/xmas-boat-art.js?v=2.21.1-xmas.9'; // julgrenen: vinterlandskap
 
 const INK='#1c4249',CREAM='#fff0cb',YELLOW='#ffbe0a';
 // Illustrated first-person aft deck. Static environment is baked once per resize.

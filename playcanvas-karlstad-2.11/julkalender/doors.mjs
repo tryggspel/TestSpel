@@ -12,7 +12,7 @@
 // Gränser (tröskelvärden för rekord) är satta från spelets egna regler men inte speltestade på riktiga spelare. Justera här.
 export const GAME_PATH='../';
 // Grundspelets adress bor på ett enda ställe i julbygget (tests/xmas-build.test.mjs kräver det): xmas/xmas-config.mjs. Modulen är ren (inga beroenden).
-import {BASE_GAME_URL} from '../xmas/xmas-config.mjs?v=2.21.1-xmas.8';
+import {BASE_GAME_URL} from '../xmas/xmas-config.mjs?v=2.21.1-xmas.9';
 export const KARLSTAD_CITY=BASE_GAME_URL;
 export const TYPES=Object.freeze({
   jakt:{label:'Julklappsjakt',icon:'gift'},

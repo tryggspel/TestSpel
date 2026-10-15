@@ -1,15 +1,15 @@
 // Julklappsjakten: gränssnittet. Startvyn, fortsättningsmenyn och resultatkortet är vanliga paneler i index.html; HUD:en och pausmenyns
 // tillägg byggs här med textContent (aldrig HTML-strängar med data). Små mål: knappar är minst 52 px höga och spelvärlden syns ovanför.
 // JulRushen använder samma HUD: tempo och klockan i raden överst (stapeln är tiden till nästa paket), liv som hjärtan, poäng, kombo och gåvorna som små brickor.
-import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.8';
-import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.8';
-import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.8';
-import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.8';
-import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.8';
-import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.8';
-import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.8';
-import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.8';
-import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.8';
+import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.9';
+import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.9';
+import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.9';
+import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.9';
+import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.9';
+import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.9';
+import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.9';
+import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.9';
+import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.9';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 export const mmss=s=>{const n=Math.max(0,Math.round(s));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};
@@ -156,9 +156,23 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
       :'GÅVOR '+res.gifts+(best?' · REKORD '+best.points.toLocaleString('sv-SE')+' P · TEMPO '+(best.level||'–'):'')+(res.stamp?'':res.level<RUSH.stampLevel?' · Julstämpeln delas ut vid tempo '+RUSH.stampLevel+'.':'');
     $('xmasResultStatus').textContent='JULSTÄMPLAR '+save.stampCount()+' / '+save.stampTotal()+' · '+save.title()+(k?' · RUSHSTJÄRNOR '+totalStars(save.rush)+' / '+RUSH_COUNT*3:'');
   }
+  // Butiksuppdrag (Cervera, Pressbyrån i en jakt): julens eget resultatkort i stället för grundspelets lilla kort. Spelet är pausat och FORTSÄTT tar upp det där man var.
+  function showPlaceResult(res){
+    resultMode='place';$('xmasResultShare').hidden=true;
+    $('xmasResultContinue').firstChild.textContent='FORTSÄTT JULVANDRINGEN ';$('xmasResultFree').textContent='JULMENYN';
+    $('xmasResultKicker').textContent=res.stamp?'NY JULSTÄMPEL!':'KLART!';$('xmasResultTitle').textContent=res.title;$('xmasResultLine').textContent=res.line||'';
+    const st=STAMPS.find(x=>x.id===res.stampId),cv=$('xmasResultStamp');cv.hidden=!(res.stamp&&st);
+    if(res.stamp&&st){cv.width=cv.height=220;drawXmasStamp(cv.getContext('2d'),220,{label:st.label,sub:st.sub});}
+    $('xmasResultPoints').textContent=res.points.toLocaleString('sv-SE')+' JULPOÄNG';
+    const grid=$('xmasResultGrid');grid.replaceChildren();
+    for(const [k,v] of [['JULPOÄNG',res.points.toLocaleString('sv-SE')],...(res.seconds?[['TID',mmss(res.seconds)]]:[]),...(Number.isFinite(res.mistakes)?[['FEL',String(res.mistakes)]]:[])]){const c=el('div','xr-cell');c.append(el('b',null,v),el('span',null,k));grid.append(c);}
+    $('xmasResultParts').textContent=res.stamp?'':'Du har redan stämpeln. Upprepade uppdrag ger bara en liten belöning.';
+    $('xmasResultStatus').textContent='JULSTÄMPLAR '+save.stampCount()+' / '+save.stampTotal()+' · '+save.title();
+  }
   function showResult(res){
     if(res.kind==='rush')return showRushResult(res);
     placeDoor(res.door||null,result,$('xmasResultContinue'));
+    if(res.kind==='place')return showPlaceResult(res);
     const stampCv=$('xmasResultStamp');
     $('xmasResultShare').hidden=true;
     // Tomtezombies har nivåer: en klarad nivå leder till nästa (NÄSTA NIVÅ), en förlorad kan göras om, och båda har JULMENYN som andra val. Julrundorna går vidare till fortsättningsmenyn som förut.
@@ -350,8 +364,8 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
   const nameInput=$('xmasBoardName');
   if(nameInput){nameInput.addEventListener('input',()=>refreshLink());nameInput.addEventListener('change',()=>{save.setName(nameInput.value);nameInput.value=save.name;refreshLink();});nameInput.addEventListener('blur',()=>{save.setName(nameInput.value);nameInput.value=save.name;refreshLink();});}
   on('xmasSandgrund',()=>fx.sandgrund());on('xmasBoat',()=>fx.boat());on('xmasContinueIntro',()=>fx.intro());on('xmasRound',()=>fx.round());on('xmasShops',()=>fx.shops());on('xmasFree',()=>fx.free());on('xmasContinueMenu',()=>fx.openMenu());on('xmasContinueBack',()=>fx.goBase());
-  on('xmasResultContinue',()=>resultMode==='rush'?fx.marathon():resultMode==='rush-next'?fx.rushNext():resultMode==='rush-again'?fx.rushAgain():resultMode==='rush-done'?fx.openRush():resultMode==='fail'?fx.zombiesAgain():resultMode==='zombies-next'?fx.zombiesNext():resultMode==='zombies-done'?fx.openMenu():fx.openContinue());
-  on('xmasResultFree',()=>resultMode==='rush'||resultMode==='fail'||resultMode.startsWith('zombies')?fx.openMenu():resultMode.startsWith('rush-')?fx.openRush():fx.free());
+  on('xmasResultContinue',()=>resultMode==='rush'?fx.marathon():resultMode==='rush-next'?fx.rushNext():resultMode==='rush-again'?fx.rushAgain():resultMode==='rush-done'?fx.openRush():resultMode==='fail'?fx.zombiesAgain():resultMode==='zombies-next'?fx.zombiesNext():resultMode==='zombies-done'?fx.openMenu():resultMode==='place'?fx.placeResume():fx.openContinue());
+  on('xmasResultFree',()=>resultMode==='rush'||resultMode==='fail'||resultMode==='place'||resultMode.startsWith('zombies')?fx.openMenu():resultMode.startsWith('rush-')?fx.openRush():fx.free());
   return {hud,showGoal,showPill,setProgress,setCombo,setMode,setZombieLevel,setVitals,setRush,hitHearts,tick,showHud,showResult,renderStart,renderContinue,renderWeather,renderRush,renderBoard,renderChallenge,renderLink,placeDoor,selectedRush,
     get goalText(){return goal.textContent;},get progressText(){return count.textContent;}};
 }

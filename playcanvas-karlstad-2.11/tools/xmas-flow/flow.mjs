@@ -200,7 +200,10 @@ await wait(500);await shot('18-pressbyran-leverans');
 const pointsBefore=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.points);
 const t3=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.errand.tomte);await walk(t3.x,t3.z,1.8);await wait(1200);
 const done3=await ev(()=>{const x=window.KarlstadDebug.journey().xmas,r=x.hunt.run;return {stamp:!!x.save.state.stamps.pressbyran,serial:r.serial,errand:r.errand,points:r.points,phase:r.phase,result:!document.getElementById('round-xmas-result').hidden};});
-check('E3 leverans ger stämpeln Tomtarnas fikaorder och +100 poäng; jakten fortsätter i samma körning utan eget resultatkort',done3.stamp&&done3.errand===null&&done3.serial===serialBefore&&done3.phase==='free'&&done3.points>=pointsBefore+100&&!done3.result,JSON.stringify({...done3,serialBefore,pointsBefore}));
+const card3=await ev(()=>({title:document.getElementById('xmasResultTitle').textContent,cont:document.getElementById('xmasResultContinue').textContent,state:window.KarlstadRound.snapshot().phase}));
+check('E3 leverans ger stämpeln Tomtarnas fikaorder och +100 poäng; jakten är kvar i samma körning (2.21.1-xmas.9: med julens bekräftelsekort FIKAT ÄR LEVERERAT! som pausar och FORTSÄTT tar upp jakten)',done3.stamp&&done3.errand===null&&done3.serial===serialBefore&&done3.phase==='free'&&done3.points>=pointsBefore+100&&done3.result&&card3.title==='FIKAT ÄR LEVERERAT!'&&/FORTSÄTT JULVANDRINGEN/.test(card3.cont),JSON.stringify({...done3,card3,serialBefore,pointsBefore}));
+await click('xmasResultContinue');await wait(700);
+check('E3b FORTSÄTT på bekräftelsekortet stänger det och jakten går vidare i samma körning',await ev(sb=>document.getElementById('round-xmas-result').hidden&&window.KarlstadRound.snapshot().phase==='playing'&&window.KarlstadDebug.journey().xmas.hunt.run.serial===sb,serialBefore));
 await ev(()=>window.KarlstadDebug.journey().xmas.startFree());await wait(1000);
 const c=await ev(()=>window.KarlstadDebug.journey().places.arrivalFor('cervera'));await tp(c.x,c.z,c.yaw,-4,1500);
 check('E4b det snöar inte inomhus i Mitt i City (snöfallet är av, ingen snö i hallen)',await ev(()=>window.KarlstadDebug.journey().xmas.decor.snapshot().flakes===0));
@@ -236,9 +239,10 @@ await ev(()=>{const r=document.getElementById('placeResult');if(r&&!r.hidden)r.q
 const e5=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {serial:r.serial,id:r.id,phase:r.phase,errand:r.errand?r.errand.id:null};});
 check('E5 Pressbyrån-ordern går att göra mitt i Torgets julklappsjakt: jakten är kvar (samma körning, fortfarande insamling) och leveransen är ett ärende vid sidan om',!!ord5&&ord5.length>0&&e5.serial===r5.serial&&e5.id===r5.id&&e5.phase==='collect'&&e5.errand==='delivery-pressbyran',JSON.stringify({före:r5,efter:e5,order:ord5?.length,tillgänglig:avail5}));
 const t5=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return r.errand?r.errand.tomte:null;});
-if(t5){await walk(t5.x,t5.z,1.8);await wait(1000);}
+if(t5){await walk(t5.x,t5.z,1.8);await wait(2200);}
 const f5=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {serial:r.serial,phase:r.phase,errand:r.errand,points:r.points};});
-check('E5b ärendet i rundan ger +100 poäng och jakten fortsätter i samma körning (inget resultatkort)',!!t5&&f5.errand===null&&f5.serial===r5.serial&&f5.phase==='collect'&&f5.points>=r5.points+100&&await ev(()=>document.getElementById('round-xmas-result').hidden),JSON.stringify({efter:f5,före:r5.points}));
+check('E5b ärendet i rundan ger +100 poäng och jakten är kvar i samma körning (2.21.1-xmas.9: med bekräftelsekortet FIKAT ÄR LEVERERAT!, som FORTSÄTT stänger)',!!t5&&f5.errand===null&&f5.serial===r5.serial&&f5.phase==='collect'&&f5.points>=r5.points+100&&await ev(()=>!document.getElementById('round-xmas-result').hidden&&document.getElementById('xmasResultTitle').textContent==='FIKAT ÄR LEVERERAT!'),JSON.stringify({efter:f5,före:r5.points}));
+await click('xmasResultContinue');await wait(600);
 
 // ── F: Tomtezombies ──────────────────────────────────────────────────────────────────────────────────────────────
 await ev(()=>window.KarlstadDebug.journey().xmas.startZombies());await wait(2600);

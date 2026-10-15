@@ -82,7 +82,12 @@ test('spelet använder rutan på alla ställen där ett uppdrag kan sluta: resul
   assert.match(boot,/e\.result=\{\.\.\.e\.result,door:doorFor\(e\.result\)\}/,'hunt, nivå och båt: resultatkortet');
   assert.match(boot,/r\.door=doorFor\(\{\.\.\.r,kind:'rush',rush:k\|\|null\}\)/,'JulRushen');
   assert.match(boot,/ui\.placeDoor\(doorFor\(\{id:SANDGRUND\.id/,'Sandgrund (grundspelets resultatkort)');
-  assert.match(boot,/doorToast\(\{id:e\.placeId/,'butiksstämpeln (Cervera)');assert.match(boot,/doorToast\(\{id:e\.stampId/,'ärendet (Pressbyrån)');
+  assert.match(boot,/showPlaceDone\(\{placeId:e\.placeId/,'butiksstämpeln (Cervera) ger julens eget resultatkort');assert.match(boot,/showPlaceDone\(\{placeId:e\.stampId/,'ärendet (Pressbyrån mitt i en jakt)');
+  assert.match(boot,/res\.door=doorFor\(res\)/,'även butikskortet får luckrutan');assert.match(boot,/dismissPlaceResult\?\.\(\);\}catch\{\}journey\.pause\?\.\(\);ui\.showResult\(res\)/,'kortet pausar spelet');
+  assert.match(boot,/function placeResume\(\)/);assert.match(boot,/doorMenu:doorMenuGo,placeResume/);
+  const html=read('index.html');assert.match(html,/<section id="round-result" class="round-card compact xmas-card"/,'Sandgrunds resultatkort är julens kort');assert.match(html,/id="roundRetry" class="round-secondary xmas-primary"/);
+  assert.match(css,/#placeResult\{display:none!important\}/,'grundspelets lilla platskort döljs');assert.match(css,/\.xmas-card \.result-score\{color:var\(--xmas-gold\)/);assert.match(css,/\.xmas-door::before\{/,'girland överst på luckrutan');
+  assert.match(ui,/function showPlaceResult\(res\)/);assert.match(ui,/resultMode==='place'\?fx\.placeResume\(\)/);
   assert.match(boot,/doorLink=null;ui\.placeDoor\(null\);hunt\.cancel\('meny'\)/,'menyn nollar luckan');
   assert.match(boot,/doorLink=d\.startable&&d\.door\?\{door:d\.door,gives:d\.gives\}:null/,'bara när man tryckt STARTA på ett startbart kort');
   assert.match(boot,/doorMenu:doorMenuGo/);

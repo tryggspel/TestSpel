@@ -5,7 +5,7 @@
 // Hälsa och solenergi fylls på när en besökare är räddad och när en fas byts, så att striden blir längre men inte orättvis.
 // Allt annat (rörelse, träffar, besökarnas följande, räddning, seger och förlust) är grundspelets. Klassen ersätter bara CityMission för 'sandgrund' (last-round.js); övriga uppdrag är oförändrade.
 // Ingen DOM och ingen PlayCanvas: går att köra i node.
-import {CityMission} from '../city-missions.mjs?v=2.21.1-xmas.8';
+import {CityMission} from '../city-missions.mjs?v=2.21.1-xmas.9';
 
 export const VERN=Object.freeze({
   duration:270,                    // sekunder (grundspelets uppdrag har 180)

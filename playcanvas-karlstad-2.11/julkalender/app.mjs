@@ -1,9 +1,9 @@
 // Julkalenderns sida: bygger luckorna, öppnar dem och bockar av dem mot det spelaren gjort i Julklappsjakten (Julspelet).
 // Spelet ändras inte. Allt som rör regler och avläsning ligger i rules.mjs, texterna i doors.mjs.
-import {SEASON,STORAGE_KEY,RANKS,daysBetween,weekdayOf,shortDate,adventSundays,resolveToday,phaseOf,testModeFrom,doorAccess,readGame,Julkalender} from './rules.mjs?v=2.21.1-xmas.8';
-import {DOORS,TYPES,KARLSTAD_CITY,gameLink} from './doors.mjs?v=2.21.1-xmas.8';
-import {mountScene,treeSvg} from './scene.mjs?v=2.21.1-xmas.8';
-import {startSnow} from './snow.mjs?v=2.21.1-xmas.8';
+import {SEASON,STORAGE_KEY,RANKS,daysBetween,weekdayOf,shortDate,adventSundays,resolveToday,phaseOf,testModeFrom,doorAccess,readGame,Julkalender} from './rules.mjs?v=2.21.1-xmas.9';
+import {DOORS,TYPES,KARLSTAD_CITY,gameLink} from './doors.mjs?v=2.21.1-xmas.9';
+import {mountScene,treeSvg} from './scene.mjs?v=2.21.1-xmas.9';
+import {startSnow} from './snow.mjs?v=2.21.1-xmas.9';
 
 // Versionen är spelets (en cache-nyckel för hela bygget, se tools/set-version.mjs): den står i adressen till den här modulen.
 const VERSION=(()=>{try{return new URL(import.meta.url).searchParams.get('v')||'';}catch{return '';}})();

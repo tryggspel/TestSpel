@@ -7,11 +7,11 @@
 // Sök och hitta (fri julvandring, introduktionen och rundorna) har ingen pil, stråle eller ring mot paketen: tomtarnas spår i snön, fotavtryck som ritas i en enda mesh, leder till de tappade paketen, och paketen syns först på nära håll.
 // När målet är nått (eller ett ärende pågår) pekar pilen och den gröna strålen på tomten, men inget julband rullas ut.
 // Ingen fysik, inga ljus: allt är platta bildkort och genomskinliga cylindrar.
-import {drawBeam,drawRibbon,drawGiftIcons,drawGhostHelper,drawFootprints,GIFT_ICON_COLS,GIFT_ICON_ROWS,GIFT_ICON_CELL} from './xmas-art.js?v=2.21.1-xmas.8';
-import {GIFT_KINDS,GIFTS} from './xmas-rush.mjs?v=2.21.1-xmas.8';
-import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.8';
-import {TRAILS,FREE_RAIN} from './xmas-config.mjs?v=2.21.1-xmas.8';
-import {printCorners} from './xmas-tracks.mjs?v=2.21.1-xmas.8';
+import {drawBeam,drawRibbon,drawGiftIcons,drawGhostHelper,drawFootprints,GIFT_ICON_COLS,GIFT_ICON_ROWS,GIFT_ICON_CELL} from './xmas-art.js?v=2.21.1-xmas.9';
+import {GIFT_KINDS,GIFTS} from './xmas-rush.mjs?v=2.21.1-xmas.9';
+import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.9';
+import {TRAILS,FREE_RAIN} from './xmas-config.mjs?v=2.21.1-xmas.9';
+import {printCorners} from './xmas-tracks.mjs?v=2.21.1-xmas.9';
 export function createXmasView(pc,host,draw,sprites,hunt,rush=null){
   const {labelTex,texture}=draw,root=draw.root;
   const POOL=26,SHOW=54,SHOW_RUSH=96,BEAMS=4,BADGES=6,BURSTS=6,RIBBON=GUIDE.ribbon.max,RIBBON_PHASES=4;

@@ -259,6 +259,10 @@ async function playHunt(g,maxSec=420){
   const d=await g.door(),lab=await g.txt('roundLeave');
   check('T8 Sandgrund via lucka 6: grundspelets resultatkort har rutan "Lucka 6 är avklarad" med 200 julpoäng och nästa lucka imorgon den 7/12',!!d&&d.inCard==='round-result'&&d.title==='★ LUCKA 6 ÄR AVKLARAD!'&&/200 julpoäng och 3 stjärnor/.test(d.line)&&d.next==='Nästa lucka öppnas imorgon den 7/12.',JSON.stringify(d));
   check('T9 Tillbaka-knappen på Sandgrund-kortet heter Julmenyn',/Julmenyn/.test(lab),lab);
+  const col=await g.ev(()=>{const css=(e,p)=>getComputedStyle(e)[p],card=document.getElementById('round-result'),door=document.getElementById('xmasDoor');
+    return {card:card.classList.contains('xmas-card'),top:css(card,'borderTopColor'),score:css(document.getElementById('roundResultScore'),'color'),retry:css(document.getElementById('roundRetry'),'backgroundColor'),stripe:getComputedStyle(card,'::before').backgroundImage.includes('rgb(217, 71, 63)'),
+      doorBorder:css(door,'borderTopColor'),doorBg:css(door,'backgroundImage').includes('gradient'),doorBtn:css(door.querySelector('button'),'backgroundColor')};});
+  check('T9b Sandgrunds resultatkort är i julens färger: röd kant och girland, guldpoäng, röd knapp, och luckrutan har guldkant, grön botten och röd knapp',col.card&&col.top==='rgb(217, 71, 63)'&&col.score==='rgb(255, 211, 107)'&&col.retry==='rgb(217, 71, 63)'&&col.stripe&&col.doorBorder==='rgb(255, 211, 107)'&&col.doorBg&&col.doorBtn==='rgb(217, 71, 63)',JSON.stringify(col));
   await g.shot('l05-sandgrund-klar');
   await g.click('xmasDoorMenu');await g.wait(900);
   check('T10 rutans knapp öppnar Julmenyn (inte grundspelets stadsvandring)',await g.vis('round-xmas-continue')&&(await g.door())===null);
@@ -278,6 +282,30 @@ async function playHunt(g,maxSec=420){
   await g.until(()=>{const s=window.KarlstadRound.snapshot();return s.mission==='sandgrund'&&s.phase==='playing';},40);await g.wait(800);
   await g.ev(()=>window.__lr.finish(false));await g.wait(900);
   check('T12 förlorat uppdrag ger ingen luckruta',(await g.door())===null);
+  await g.ctx.close();
+}
+// ── 9. Butiksuppdraget Cervera (lucka 3): julens eget resultatkort och luckrutan ───────────────────────────────────────────────────────────────
+{
+  const g=await open('uppdrag=cervera&lucka=3','played',{date:'2026-12-03T10:00:00Z'});
+  await g.helpers();await g.click('xmasLinkGo');await g.wait(1200);
+  await g.ev(()=>window.KarlstadDebug.journey().xmas.startFree());await g.wait(1000); // stänger Karlstadpasset
+  const c=await g.ev(()=>window.KarlstadDebug.journey().places.arrivalFor('cervera'));
+  await g.ev(([x,z,yaw])=>window.__tp(x,z,yaw,-4),[c.x,c.z,c.yaw]);await g.wait(1500);
+  await g.ev(()=>window.KarlstadDebug.use());await g.wait(700);
+  const items=await g.ev(()=>window.KarlstadDebug.journey().places.run?.items.map(i=>({x:i.x,z:i.z})));
+  for(const it of items||[]){await g.ev(([x,z])=>window.__tp(x,z,0,-8),[it.x,it.z]);await g.wait(700);}
+  await g.ev(([x,z,yaw])=>window.__tp(x,z,yaw,-4),[c.x,c.z,c.yaw]);await g.wait(600);await g.ev(()=>window.KarlstadDebug.use());
+  const shown=await g.until(()=>!document.getElementById('round-xmas-result').hidden,20);
+  const r=await g.ev(()=>({title:document.getElementById('xmasResultTitle').textContent,kicker:document.getElementById('xmasResultKicker').textContent,stamp:!document.getElementById('xmasResultStamp').hidden,
+    line:document.getElementById('xmasResultLine').textContent,pts:document.getElementById('xmasResultPoints').textContent,base:getComputedStyle(document.getElementById('placeResult')).display,
+    top:getComputedStyle(document.getElementById('round-xmas-result')).borderTopColor,cont:document.getElementById('xmasResultContinue').textContent.replace(/\s+/g,' ').trim(),phase:window.KarlstadRound.snapshot().phase}));
+  check('T13 efter Cervera visas julens resultatkort: FIKABORDET ÄR DUKAT!, ny julstämpel och julpoäng, och grundspelets lilla platskort syns inte',shown&&r.title==='FIKABORDET ÄR DUKAT!'&&r.kicker==='NY JULSTÄMPEL!'&&r.stamp&&/JULPOÄNG/.test(r.pts)&&r.base==='none'&&r.top==='rgb(217, 71, 63)',JSON.stringify(r));
+  const d=await g.door();
+  check('T14 kortet har rutan "Lucka 3 är avklarad" med nästa lucka imorgon den 4/12 och en knapp till Julmenyn',!!d&&d.title==='★ LUCKA 3 ÄR AVKLARAD!'&&d.next==='Nästa lucka öppnas imorgon den 4/12.'&&/Julspelet/.test(d.tail)&&/JULMENYN/.test(d.menu)&&d.cal==='./julkalender/',JSON.stringify(d));
+  check('T15 spelet är pausat medan kortet visas och knappen heter FORTSÄTT JULVANDRINGEN',r.phase==='paused'&&/FORTSÄTT JULVANDRINGEN/.test(r.cont),r.phase+' '+r.cont);
+  await g.ev(()=>document.getElementById('xmasDoor')?.scrollIntoView({block:'center'}));await g.shot('l06-cervera-klar');
+  await g.click('xmasResultContinue');await g.wait(900);
+  check('T16 FORTSÄTT stänger kortet och julvandringen fortsätter där man var (spelet går igen, rutan borta)',!(await g.vis('round-xmas-result'))&&(await g.ev(()=>window.KarlstadRound.snapshot().phase))==='playing'&&(await g.door())===null);
   await g.ctx.close();
 }
 check('L32 inga fel i konsolen under hela körningen',errs.length===0,errs.join(' | '));

@@ -3,7 +3,7 @@
 // Resan är grundspelets båtbuss (boat-ride.js, boat-rescue.mjs): 36 sekunder, upp till tolv passagerare att rädda. När båten lägger till vid Mariebergsskogens brygga börjar en paketjakt:
 // tolv julklappar och tre bonuspaket i parken, och en tomte vid bryggan som tar emot dem. Jakten är grundspelets paketmotor (XmasHunt) med en fast bana; ingen nav-karta behövs, för
 // Mariebergsskogen ligger utanför stadens gångbara karta. Paketen läggs därför ut mot spelets egna kollisioner (blocked) när jakten startar.
-import {MARIEBERG,HARBOUR} from '../city-south-space.mjs?v=2.21.1-xmas.8';
+import {MARIEBERG,HARBOUR} from '../city-south-space.mjs?v=2.21.1-xmas.9';
 
 export const BOAT=Object.freeze({
   id:'marieberg',                    // jaktens id (rekordet) och julstämpelns id

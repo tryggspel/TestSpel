@@ -1,15 +1,15 @@
-import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.21.1-xmas.8';
-import {addResidensetWall,addResidensetRoof,RESIDENSET_COLOURS} from './residenset-facade.mjs?v=2.21.1-xmas.8';
-import {addOperaFront,OPERA_COLOURS} from './opera-facade.mjs?v=2.21.1-xmas.8';
-import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit,visualTwinFaceYaw,visualTwinFront} from './visual-twin.mjs?v=2.21.1-xmas.8';
-import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.21.1-xmas.8';
-import {addCityWowPass} from './city-wow-pass.mjs?v=2.21.1-xmas.8';
-import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture,referenceFaceYaw} from './innerstad-reference.mjs?v=2.21.1-xmas.8';
-import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.21.1-xmas.8';
+import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.21.1-xmas.9';
+import {addResidensetWall,addResidensetRoof,RESIDENSET_COLOURS} from './residenset-facade.mjs?v=2.21.1-xmas.9';
+import {addOperaFront,OPERA_COLOURS} from './opera-facade.mjs?v=2.21.1-xmas.9';
+import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit,visualTwinFaceYaw,visualTwinFront} from './visual-twin.mjs?v=2.21.1-xmas.9';
+import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.21.1-xmas.9';
+import {addCityWowPass} from './city-wow-pass.mjs?v=2.21.1-xmas.9';
+import {INNERSTAD_PROFILES,INNERSTAD_REFERENCE_IDS,addInnerstadFacade,addInnerstadStreetFurniture,referenceFaceYaw} from './innerstad-reference.mjs?v=2.21.1-xmas.9';
+import {CITY_STREETS,IDENTITY_IDS,STOREFRONTS,STREET_SIGNS,storefrontAnchor} from './city-geography.mjs?v=2.21.1-xmas.9';
 
-import {SOUTH_IDS,SOUTH_HANDBUILT_IDS} from './city-south-space.mjs?v=2.21.1-xmas.8';
-import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.21.1-xmas.8';
-import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.21.1-xmas.8';
+import {SOUTH_IDS,SOUTH_HANDBUILT_IDS} from './city-south-space.mjs?v=2.21.1-xmas.9';
+import {PEDESTRIAN_STREETS,PEDESTRIAN_SQUARE} from './pedestrian.mjs?v=2.21.1-xmas.9';
+import {MALL_BUILDING_IDS} from './mall-space.mjs?v=2.21.1-xmas.9';
 
 // Static, vertex-coloured geometry: one draw call per landmark, one for streets,
 // one for rooflines and storefront frames. No lights, shadows or per-frame work.

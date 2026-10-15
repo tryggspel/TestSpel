@@ -6,13 +6,13 @@
 // Länken startar aldrig något av sig själv: Julspelet visar ett kort med uppdraget och en knapp STARTA (ljud och styrning kräver en tryckning, och ingen ska hamna mitt i ett uppdrag av en miss).
 // Samma regler som menyerna gäller: det som är låst där är låst här, och kortet säger vad som saknas och erbjuder det som går att göra i stället.
 // Ren modul (ingen DOM, ingen PlayCanvas). Nyckeltabellen delas med kalendern bara som en lista med strängar; tests/julkalender-doors.test.mjs kontrollerar att varje lucka pekar på en nyckel som finns här.
-import {rushDef,isUnlocked,nextRush,goalText,RUSH_COUNT} from './xmas-rushes.mjs?v=2.21.1-xmas.8';
-import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.8';
-import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.8';
-import {roundById,INTRO_SEARCH} from './xmas-rounds.mjs?v=2.21.1-xmas.8';
-import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.8';
-import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.8';
-import {XMAS_CERVERA,XMAS_PRESSBYRAN} from './xmas-places.mjs?v=2.21.1-xmas.8';
+import {rushDef,isUnlocked,nextRush,goalText,RUSH_COUNT} from './xmas-rushes.mjs?v=2.21.1-xmas.9';
+import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.9';
+import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.9';
+import {roundById,INTRO_SEARCH} from './xmas-rounds.mjs?v=2.21.1-xmas.9';
+import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.9';
+import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.9';
+import {XMAS_CERVERA,XMAS_PRESSBYRAN} from './xmas-places.mjs?v=2.21.1-xmas.9';
 
 export const LINK_PARAM='uppdrag',DOOR_PARAM='lucka';
 export const DOORS_MAX=24;

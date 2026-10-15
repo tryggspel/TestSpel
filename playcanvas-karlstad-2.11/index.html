@@ -30,11 +30,11 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:11px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.21.1-xmas.8">
-<link rel="stylesheet" href="./compact-hud.css?v=2.21.1-xmas.8">
-<link rel="stylesheet" href="./explore-fun.css?v=2.21.1-xmas.8">
-<link rel="stylesheet" href="./places.css?v=2.21.1-xmas.8">
-<link rel="stylesheet" href="./xmas/xmas.css?v=2.21.1-xmas.8">
+<link rel="stylesheet" href="./last-round.css?v=2.21.1-xmas.9">
+<link rel="stylesheet" href="./compact-hud.css?v=2.21.1-xmas.9">
+<link rel="stylesheet" href="./explore-fun.css?v=2.21.1-xmas.9">
+<link rel="stylesheet" href="./places.css?v=2.21.1-xmas.9">
+<link rel="stylesheet" href="./xmas/xmas.css?v=2.21.1-xmas.9">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -344,13 +344,13 @@
     <figure><img id="postcard-street" alt="En gata i Karlstad i serietecknad stil" loading="lazy" decoding="async" hidden><figcaption id="card-status-street"></figcaption></figure>
     <button id="albumClose" class="round-primary">TILLBAKA →</button>
   </section>
-  <section id="round-result" class="round-card compact" hidden>
+  <section id="round-result" class="round-card compact xmas-card" hidden>
     <div id="roundResultEyebrow" class="episode-label"></div>
     <h2 id="roundResultTitle"></h2>
     <div id="roundResultScore" class="result-score">0</div><div class="result-score-label">POÄNG</div>
     <p id="roundResultDetail"></p><p id="roundResultRecord" class="record"></p><p id="roundResultTarget" class="round-fine"></p>
     <button id="roundNext" class="round-primary" hidden>NÄSTA UPPDRAG →</button>
-    <button id="roundRetry" class="round-secondary">EN GÅNG TILL <span>↻</span></button>
+    <button id="roundRetry" class="round-secondary xmas-primary">EN GÅNG TILL <span>↻</span></button>
     <canvas id="missionResultPostcard" class="challenge-postcard" role="img" aria-label="Uppdragets challenge-vykort"></canvas>
     <button id="roundShare" class="round-secondary">UTMANA EN VÄN</button>
     <button id="roundSaveCard" class="round-secondary">SPARA VYKORT SOM BILD</button>
@@ -374,6 +374,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.21.1-xmas.8"></script>
+<script type="module" src="./app.js?v=2.21.1-xmas.9"></script>
 </body>
 </html>

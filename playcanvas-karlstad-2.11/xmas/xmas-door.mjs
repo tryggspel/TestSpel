@@ -2,8 +2,8 @@
 // "Lucka 1 är avklarad. Du fick 540 julpoäng. Nästa lucka öppnas imorgon den 2/12. Under tiden kan du spela resten av Julspelet här."
 // Spelet frågar kalenderns egna regler (julkalender/rules.mjs: evaluate) om luckan är klar i sparningen, så att rutan aldrig påstår något kalendern inte håller med om.
 // Ren modul (ingen DOM). Importerar bara kalenderns rena moduler.
-import {DOORS} from '../julkalender/doors.mjs?v=2.21.1-xmas.8';
-import {GAME_SAVE_KEY,stockholmDay,doorDay,daysBetween,readGame,evaluate} from '../julkalender/rules.mjs?v=2.21.1-xmas.8';
+import {DOORS} from '../julkalender/doors.mjs?v=2.21.1-xmas.9';
+import {GAME_SAVE_KEY,stockholmDay,doorDay,daysBetween,readGame,evaluate} from '../julkalender/rules.mjs?v=2.21.1-xmas.9';
 
 export const DOOR_MAX=24;
 const dm=day=>Number(day.slice(8,10))+'/'+Number(day.slice(5,7));   // 2026-12-02 → 2/12

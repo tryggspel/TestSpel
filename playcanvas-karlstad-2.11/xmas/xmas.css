@@ -251,14 +251,30 @@ body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
 .xr-tile.xr-ot[data-state="locked"]{border-color:#85aa8566}
 .xh-chip[data-kind="more"]{background:rgba(255,255,255,.22);color:#fff}
 
+/* ── Resultatrutor i julens färger (2.21.1-xmas.8) ───────────────────────────────────────────────────────────────────────────
+   Grundspelets resultatkort för Sandgrund (#round-result) är nu ett .xmas-card (röd, guld och grön kant, röda knappar). Poängen står i guld, och grundspelets lilla platskort för
+   butiksuppdrag (#placeResult) döljs: Cervera och Pressbyrån visar julens eget resultatkort (showPlaceDone i xmas-boot.js). */
+#placeResult{display:none!important}
+.xmas-card .result-score{color:var(--xmas-gold);text-shadow:0 3px 0 var(--xmas-red-dark)}
+.xmas-card .result-score-label{color:#cfe3d5}
+.xmas-card p.record{color:var(--xmas-gold)}
+#round-result.xmas-card{max-height:calc(100dvh - 36px);overflow-y:auto;touch-action:pan-y}
+#round-result.xmas-card .episode-label{text-align:left}
+#round-result.xmas-card #roundResultTitle{color:var(--xmas-snow)}
+#round-result.xmas-card #roundResultTarget{color:var(--xmas-gold);font-weight:800}
+
 /* ── Luckan är klar (xmas-door.mjs): rutan på resultatkorten när man kommit från Julkalendern ───────────────────────────────── */
-.xmas-door{margin:12px 0 4px;padding:12px 13px 13px;border:2px solid var(--xmas-gold);border-radius:10px;background:linear-gradient(180deg,#ffd36b26,#ffd36b10);text-align:left}
-.xmas-door .xd-title{display:block;font:1000 17px/1.15 system-ui,sans-serif;letter-spacing:.04em;color:var(--xmas-gold)}
-.xmas-door .xd-head{display:block;margin:3px 0 7px;font:800 12px/1.3 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#cfe3d5}
-.xmas-door p{margin:5px 0;font:700 14.5px/1.4 system-ui,sans-serif;color:var(--paper)}
+.xmas-door{position:relative;margin:16px 0 6px;padding:15px 14px 14px;border:2px solid var(--xmas-gold);border-radius:10px;text-align:left;
+  background:radial-gradient(circle,#ffffff22 0 1.5px,transparent 2.5px) 0 0/24px 24px,radial-gradient(circle,#ffffff14 0 1px,transparent 2px) 12px 12px/24px 24px,linear-gradient(180deg,#1f6a47,#114030);
+  box-shadow:inset 0 0 0 3px #0c2c2080,0 0 0 3px #d9473f66}
+.xmas-door::before{content:'';position:absolute;left:12px;right:12px;top:-9px;height:7px;border-radius:4px;background:repeating-linear-gradient(90deg,var(--xmas-red) 0 14px,var(--xmas-gold) 14px 22px,var(--xmas-green) 22px 36px,var(--xmas-gold) 36px 44px)}
+.xmas-door .xd-title{display:block;font:1000 18px/1.15 system-ui,sans-serif;letter-spacing:.04em;color:var(--xmas-gold);text-shadow:0 2px 0 #7a1f1b}
+.xmas-door .xd-head{display:block;margin:3px 0 8px;font:800 12px/1.3 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#ffe9a8}
+.xmas-door p{margin:5px 0;font:700 14.5px/1.4 system-ui,sans-serif;color:var(--xmas-snow)}
 .xmas-door .xd-next{color:#fff;font-weight:900}
-.xmas-door .xd-tail{font-weight:600;color:#d8e8dc}
-.xmas-door button{width:100%;min-height:52px;margin-top:8px}
-.xmas-door a.xmas-link{display:block;box-sizing:border-box;width:100%;min-height:44px;margin-top:8px;padding:13px 12px;text-align:center;text-decoration:none;border:1px solid #f2d78a88;border-radius:3px;background:transparent;color:#ffe9a8;font:700 11px/18px system-ui}
+.xmas-door .xd-tail{font-weight:600;color:#dcefe2}
+.xmas-door button{width:100%;min-height:52px;margin-top:8px;border:0;border-radius:3px;background:var(--xmas-red);color:#fff;font:900 12px system-ui;letter-spacing:.08em;box-shadow:0 4px 0 var(--xmas-red-dark)}
+.xmas-door button:active{transform:translateY(2px);box-shadow:0 2px 0 var(--xmas-red-dark)}
+.xmas-door a.xmas-link{display:block;box-sizing:border-box;width:100%;min-height:44px;margin-top:10px;padding:13px 12px;text-align:center;text-decoration:none;border:1px solid #f2d78acc;border-radius:3px;background:#0c2c2066;color:#ffe9a8;font:700 11px/18px system-ui}
 .xmas-door a.xmas-link:focus-visible{outline:2px solid #ffe9a8;outline-offset:2px}
 #round-result .xmas-door{margin-top:10px}
