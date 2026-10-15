@@ -1,0 +1,34 @@
+# Kör Julkalenderns tester. Kalendern läser Karlstad City men ändrar det inte, och testerna kontrollerar att det den lovar
+# (uppdrag, märken, platser, länkar, sparnycklar) fortfarande finns i spelet. Därför körs de också när spelet ändras.
+# Webbläsarkontrollen (julkalender/tools/browser-check.mjs) kräver Chromium och körs för hand.
+name: Julkalender tests
+
+on:
+  pull_request:
+    paths:
+      - 'julkalender/**'
+      - 'playcanvas-karlstad-2.11/**'
+      - '.github/workflows/julkalender-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'julkalender/**'
+      - '.github/workflows/julkalender-tests.yml'
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Regler, luckor mot spelet och sidans filer
+        run: node --test julkalender/tests/*.test.mjs

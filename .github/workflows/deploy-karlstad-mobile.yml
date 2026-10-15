@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'julkalender/**'
       - 'karlstad-city-mobile/**'
       - 'playcanvas-karlstad/**'
       - 'playcanvas-karlstad-next/**'
@@ -14,6 +15,7 @@ on:
       - 'eduke32-diagnostic/**'
       - '.github/workflows/deploy-karlstad-mobile.yml'
       - '.github/workflows/karlstad-2.11-tests.yml'
+      - '.github/workflows/julkalender-tests.yml'
   workflow_dispatch:
 
 permissions:
@@ -30,8 +32,13 @@ jobs:
   test:
     uses: ./.github/workflows/karlstad-2.11-tests.yml
 
+  # Julkalendern har egna tester. Faller de publiceras spelet ändå (de ska aldrig stoppa Karlstad City) men utan kalendern.
+  julkalender-test:
+    uses: ./.github/workflows/julkalender-tests.yml
+
   deploy:
-    needs: test
+    needs: [test, julkalender-test]
+    if: ${{ !cancelled() && needs.test.result == 'success' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -42,6 +49,8 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v6
       - name: Build Pages site
+        env:
+          JULKALENDER_OK: ${{ needs.julkalender-test.result == 'success' }}
         run: |
           rm -rf _site
           mkdir -p _site/karlstad-city-mobile
@@ -71,6 +80,11 @@ jobs:
           if [ -d eduke32-diagnostic ]; then
             mkdir -p _site/eduke32-diagnostic
             cp -R eduke32-diagnostic/. _site/eduke32-diagnostic/
+          fi
+          if [ "$JULKALENDER_OK" = "true" ] && [ -d julkalender ]; then
+            mkdir -p _site/julkalender
+            cp -R julkalender/. _site/julkalender/
+            rm -rf _site/julkalender/tests _site/julkalender/tools
           fi
           touch _site/.nojekyll
       - name: Upload Karlstad City
