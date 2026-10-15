@@ -85,6 +85,19 @@ i `?debug` och i `/api/build-info`.
 Vercel → *Add New… → Project* → importera `tryggspel/TestSpel`; projektnamn `karlstad-julklappsjakten`; *Root Directory* `playcanvas-karlstad-2.11`; *Framework Preset* Other, inget build-kommando eller output-katalog;
 *Production Branch* `release/jul-2026` (i det nuvarande projektet är den med all sannolikhet `main`; se "Det som återstår för dig" ovan); *Deployment Protection → Vercel Authentication* som i grundspelets projekt; *Automatically expose System Environment Variables* på; *Ignored Build Step* enligt tabellen ovan.
 
+### Separat version med Julkalendern: projektet `karlstad-julkalender` (2.21.1-xmas.7)
+
+Julspelet med kalendern och uppdragen i 2.21.1-xmas.7 ligger **som en separat version** i ett eget Vercel-projekt, så att det gamla julspelet på `karlstad-julklappsjakten.vercel.app` (2.21.1-xmas.6, `dpl_6S6JKaht5z2TWkMwButiEkn5FVmW`) inte skrivs över. Projektet skapades 2026-10-15 efter ett uttryckligt ja från dig (ett första försök att lägga bygget som ny produktion av det gamla projektet nekades i behörighetsprompten och gjordes inte om).
+
+| | |
+|---|---|
+| Projekt | `karlstad-julkalender` (`prj_Zxg6JTEfn6GJ4fbiEPKjOF9OnCvT`), samma konto och repo (`tryggspel/TestSpel`), rotkatalog `playcanvas-karlstad-2.11`, inget ramverk, Vercel Authentication `all_except_custom_domains` som i de andra projekten, system-miljövariabler exponeras |
+| Adress | https://karlstad-julkalender.vercel.app/julkalender/ (kalendern) och https://karlstad-julkalender.vercel.app/ (spelet) |
+| Produktionsdeploy | `dpl_6v2rfsGXsBfEZGkCtpzf8eXmiD3S`, `create_deployment` med `gitSource` (gren `claude/julkalender-julspelet`, commit `f968f07`) och `target: production`; READY efter ca 10 s |
+| *Ignored Build Step* | `case "$VERCEL_GIT_COMMIT_REF" in claude/julkalender-julspelet) exit 1;; *) exit 0;; esac`: bara den grenen byggs (som förhandsvisning). Production Branch är projektets standard (`main`), så **en push publicerar inget**: nästa version läggs som en ny produktionsdeploy (`create_deployment` med `gitSource` och `target: production`) efter ett uttryckligt ja. |
+| Det gamla projektet | Oförändrat: produktionen är fortfarande `dpl_6S6J…` (xmas.6). Förhandsvisningen av samma gren där (`dpl_5WxHEKQXYbKN2zW2xjAYfhvX7y2d`) ligger bakom inloggning och påverkar inget. |
+| Öppen adress? | Inte kontrollerat: byggmiljöns nätverk når inte `*.vercel.app`. Öppna adressen i ett privat fönster; är den bakom inloggning, ändra *Settings → Deployment Protection* i projektet. |
+
 ## 5. Vad som ändrats i grundspelets filer (för framtida sammanslagningar från `main`)
 
 All julkod ligger under `xmas/` (33 filer), `tests/xmas-*.test.mjs` (17 filer) och `tools/xmas-flow/` (11 skript: webbläsarkontroller och svårighetsprovet `difficulty.mjs`; `missions.mjs` och `links.mjs` kom i 2.21.1-xmas.7). Grundspelets egna filer är rörda så här (utöver cache-nyckeln `?v=` som byts överallt):
