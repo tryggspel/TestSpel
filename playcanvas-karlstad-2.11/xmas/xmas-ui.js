@@ -1,13 +1,15 @@
 // Julklappsjakten: gränssnittet. Startvyn, fortsättningsmenyn och resultatkortet är vanliga paneler i index.html; HUD:en och pausmenyns
 // tillägg byggs här med textContent (aldrig HTML-strängar med data). Små mål: knappar är minst 52 px höga och spelvärlden syns ovanför.
 // JulRushen använder samma HUD: tempo och klockan i raden överst (stapeln är tiden till nästa paket), liv som hjärtan, poäng, kombo och gåvorna som små brickor.
-import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.6';
-import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.6';
-import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.6';
-import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.6';
-import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.6';
-import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.6';
-import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.6';
+import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.7';
+import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.7';
+import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.7';
+import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.7';
+import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.7';
+import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.7';
+import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.7';
+import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.7';
+import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.7';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 export const mmss=s=>{const n=Math.max(0,Math.round(s));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};
@@ -157,18 +159,20 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
       $('xmasResultStatus').textContent='JULSTÄMPLAR '+save.stampCount()+' / '+save.stampTotal()+' · '+save.title();
       return;
     }
+    const boat=res.kind==='marieberg';
     $('xmasResultKicker').textContent=zombies?(res.stamp?'NY JULSTÄMPEL!':res.levelRecord?'NYTT REKORD!':'NIVÅ '+zl+' KLAR!'):res.stamp?'NY JULSTÄMPEL!':res.late?'KLART · SENT MEN GOTT':'KLART!';
-    $('xmasResultTitle').textContent=res.kind==='intro'?'TOMTEN ÄR RÄDDAD!':res.kind==='delivery'?'FIKAT ÄR LEVERERAT!':zombies?'TOMTEJAKTEN · NIVÅ '+zl+' KLARAD!':'JULRUNDAN ÄR KLAR!';
-    $('xmasResultLine').textContent=res.kind==='intro'
+    $('xmasResultTitle').textContent=res.kind==='intro'?'TOMTEN ÄR RÄDDAD!':res.kind==='delivery'?'FIKAT ÄR LEVERERAT!':boat?'JULKLAPPARNA ÄR FRAMME!':zombies?'TOMTEJAKTEN · NIVÅ '+zl+' KLARAD!':'JULRUNDAN ÄR KLAR!';
+    $('xmasResultLine').textContent=boat?'Du räddade '+(res.boat?.saved||0)+' av 12 passagerare på båtbussen, hämtade '+res.collected+' julklappar i Mariebergsskogen och lämnade dem hos tomten vid bryggan.'+(res.stamp?' Tomten skickar dig vidare med en julstämpel.':'')
+      :res.kind==='intro'
       ?(res.drops?'Du följde tomtarnas spår i snön, hittade julklapparna och räddade julen. Tomten skickar dig vidare med en julstämpel.':'Tomten får tillbaka sina paket och skickar dig vidare med en julstämpel.'):res.kind==='delivery'?'Tomten fick sin julfika, precis som beställt. Tack för hjälpen!':zombies?(res.stamp?'Tomten fick sina paket trots tomtezombierna. Stämpeln är din!':'Du samlade '+res.collected+' paket trots tomtezombierna och lämnade dem hos tomten.')+(res.next?' Nästa nivå: '+res.next+' · '+res.nextPlace+', med '+res.nextGoal+' paket och snabbare tomtezombier.':' Du har klarat den sista nivån!'):res.drops?'Du hittade '+res.collected+' julklappar genom att följa tomtarnas spår och lämnade dem hos tomten. De tappar säkert fler i morgon.':'Tomtarna tackar för hjälpen och tappar säkert fler paket i morgon.';
     const stamp=STAMPS.find(s=>s.id===res.stampId);
     stampCv.hidden=!stamp;
     if(stamp){stampCv.width=stampCv.height=220;drawXmasStamp(stampCv.getContext('2d'),220,{label:stamp.label,sub:stamp.sub});}
     $('xmasResultPoints').textContent=res.points.toLocaleString('sv-SE')+' JULPOÄNG';
     const grid=$('xmasResultGrid');grid.replaceChildren();
-    const cells=res.kind==='delivery'?[['TID',mmss(res.seconds)],['JULPOÄNG',res.points.toLocaleString('sv-SE')]]:[[res.drops?'JULKLAPPAR':'PAKET',res.drops?String(res.collected):res.collected+'/'+res.regularTotal],['BONUS',res.bonusCollected+'/'+res.bonusTotal],['BÄSTA KOMBO',String(res.bestChain)],['TID',mmss(res.seconds)]];
+    const cells=res.kind==='delivery'?[['TID',mmss(res.seconds)],['JULPOÄNG',res.points.toLocaleString('sv-SE')]]:boat?[['PASSAGERARE',(res.boat?.saved||0)+'/12'],['JULKLAPPAR',res.collected+'/'+res.regularTotal],['BONUS',res.bonusCollected+'/'+res.bonusTotal],['TID',mmss(res.seconds)]]:[[res.drops?'JULKLAPPAR':'PAKET',res.drops?String(res.collected):res.collected+'/'+res.regularTotal],['BONUS',res.bonusCollected+'/'+res.bonusTotal],['BÄSTA KOMBO',String(res.bestChain)],['TID',mmss(res.seconds)]];
     for(const [k,v] of cells){const c=el('div','xr-cell');c.append(el('b',null,v),el('span',null,k));grid.append(c);}
-    $('xmasResultParts').textContent=(res.kind==='delivery'?'Leverans '+res.parts.delivery:'Paket '+res.parts.packages+' + leverans '+res.parts.delivery)+(res.parts.time?' + snabbhet '+res.parts.time:'')+(res.record?' · NYTT REKORD':'');
+    $('xmasResultParts').textContent=(res.kind==='delivery'?'Leverans '+res.parts.delivery:'Paket '+res.parts.packages+' + leverans '+res.parts.delivery)+(res.parts.time?' + snabbhet '+res.parts.time:'')+(res.parts.extra?' + '+String(res.parts.extraLabel||'').toLowerCase()+' '+res.parts.extra:'')+(res.record?' · NYTT REKORD':'');
     $('xmasResultStatus').textContent='JULSTÄMPLAR '+save.stampCount()+' / '+save.stampTotal()+' · '+save.title();
   }
 
@@ -198,6 +202,9 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
     const nr=nextRound(save);$('xmasRoundNote').textContent='Nästa: '+nr.title+'. '+nr.blurb;
     $('xmasContinueStatus').textContent='JULSTÄMPLAR '+save.stampCount()+' / '+save.stampTotal()+' · '+save.title()+' · '+s.totals.packages+' PAKET';
     rushNote($('xmasRushGoNote'));
+    const sn=$('xmasSandgrundNote'),bn=$('xmasBoatNote');
+    if(sn)sn.textContent=sandgrundNote(save.hasStamp(SANDGRUND.id));
+    if(bn)bn.textContent=boatNote(save.hasStamp(BOAT.id));
     const list=$('xmasStampList');list.replaceChildren();
     for(const st of STAMPS){const li=el('li',save.hasStamp(st.id)?'stamped':'',(save.hasStamp(st.id)?'✓ ':'○ ')+st.label);list.append(li);}
   }
@@ -292,6 +299,15 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
     $('xmasChallengeSave').hidden=!d;
   }
 
+  // Djuplänk (xmas-deeplink.mjs): kortet med uppdraget. d = describeLink(). All text kommer ur spelets egna data och skrivs med textContent.
+  function renderLink(d){
+    $('xmasLinkKicker').textContent=d.kicker;
+    $('xmasLinkTitle').textContent=d.title;
+    $('xmasLinkLine').textContent=d.line;
+    const note=$('xmasLinkNote');note.textContent=d.note;note.hidden=!d.note;
+    $('xmasLinkGo').firstChild.textContent=d.button+' ';
+  }
+
   // ── Pausmenyns tillägg: vädereffekter och vägen tillbaka ───────────────────────────────────────────────────────
   const pauseBox=el('div','xmas-pause');
   const weatherBtn=el('button','round-secondary');weatherBtn.type='button';weatherBtn.id='xmasWeatherBtn';
@@ -310,14 +326,15 @@ export function createXmasUi({save,mount=document.getElementById('roundOverlay')
   on('xmasCozy',()=>fx.cozy());on('xmasZombies',()=>fx.zombies());on('xmasRushStart',()=>fx.openRush());on('xmasRushGo',()=>fx.openRush());on('xmasBack',()=>fx.goBase());
   on('xmasRushPlay',()=>fx.rushPlay(selected));on('xmasRushMarathon',()=>fx.marathon());on('xmasRushBoard',()=>fx.openBoard(selected));on('xmasRushBack',()=>fx.openMenu());
   on('xmasBoardBack',()=>fx.boardBack());on('xmasBoardShare',()=>shareLink());on('xmasBoardCopy',async()=>boardStatus((await copyLink())?'Länken är kopierad. Klistra in den i ett meddelande till din vän.':'Markera länken ovan och kopiera den för hand.'));
+  on('xmasLinkGo',()=>fx.linkGo());on('xmasLinkSkip',()=>fx.linkSkip());
   on('xmasChallengeGo',()=>fx.challengeGo());on('xmasChallengeSave',()=>fx.challengeSave());on('xmasChallengeSkip',()=>fx.challengeSkip());
   on('xmasResultShare',()=>fx.openBoard(lastRushN,true));
   if(boardSelect)boardSelect.addEventListener('change',()=>renderBoard(boardSelect.value));
   const nameInput=$('xmasBoardName');
   if(nameInput){nameInput.addEventListener('input',()=>refreshLink());nameInput.addEventListener('change',()=>{save.setName(nameInput.value);nameInput.value=save.name;refreshLink();});nameInput.addEventListener('blur',()=>{save.setName(nameInput.value);nameInput.value=save.name;refreshLink();});}
-  on('xmasContinueIntro',()=>fx.intro());on('xmasRound',()=>fx.round());on('xmasShops',()=>fx.shops());on('xmasFree',()=>fx.free());on('xmasContinueMenu',()=>fx.openMenu());on('xmasContinueBack',()=>fx.goBase());
+  on('xmasSandgrund',()=>fx.sandgrund());on('xmasBoat',()=>fx.boat());on('xmasContinueIntro',()=>fx.intro());on('xmasRound',()=>fx.round());on('xmasShops',()=>fx.shops());on('xmasFree',()=>fx.free());on('xmasContinueMenu',()=>fx.openMenu());on('xmasContinueBack',()=>fx.goBase());
   on('xmasResultContinue',()=>resultMode==='rush'?fx.marathon():resultMode==='rush-next'?fx.rushNext():resultMode==='rush-again'?fx.rushAgain():resultMode==='rush-done'?fx.openRush():resultMode==='fail'?fx.zombiesAgain():resultMode==='zombies-next'?fx.zombiesNext():resultMode==='zombies-done'?fx.openMenu():fx.openContinue());
   on('xmasResultFree',()=>resultMode==='rush'||resultMode==='fail'||resultMode.startsWith('zombies')?fx.openMenu():resultMode.startsWith('rush-')?fx.openRush():fx.free());
-  return {hud,showGoal,showPill,setProgress,setCombo,setMode,setZombieLevel,setVitals,setRush,hitHearts,tick,showHud,showResult,renderStart,renderContinue,renderWeather,renderRush,renderBoard,renderChallenge,selectedRush,
+  return {hud,showGoal,showPill,setProgress,setCombo,setMode,setZombieLevel,setVitals,setRush,hitHearts,tick,showHud,showResult,renderStart,renderContinue,renderWeather,renderRush,renderBoard,renderChallenge,renderLink,selectedRush,
     get goalText(){return goal.textContent;},get progressText(){return count.textContent;}};
 }

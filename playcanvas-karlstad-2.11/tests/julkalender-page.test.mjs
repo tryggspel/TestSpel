@@ -83,8 +83,8 @@ test('layout: rutnätet går jämnt upp i 4, 6 och 8 kolumner, rörelse kan stä
   assert.match(css,/repeat\(4,minmax\(0,1fr\)\)/);assert.match(css,/repeat\(6,minmax\(0,1fr\)\)/);assert.match(css,/repeat\(8,minmax\(0,1fr\)\)/);
   assert.match(css,/prefers-reduced-motion:reduce/);assert.match(css,/:focus-visible/);
 });
-test('README beskriver alla luckor, sparnyckeln och att spelet inte ändras',()=>{
+test('README beskriver alla luckor, sparnyckeln och att Karlstad City inte ändras',()=>{
   const readme=read('README.md');
   for(const d of DOORS)assert.ok(readme.includes(d.titel),`README saknar lucka ${d.n}: ${d.titel}`);
-  assert.ok(readme.includes('karlstad-xmas:save:1'));assert.match(readme,/spelkod är inte ändrad/);
+  assert.ok(readme.includes('karlstad-xmas:save:1'));assert.match(readme,/Karlstad City \(grundspelet på `main`\) är inte ändrat/);assert.match(readme,/JULKALENDERN/);
 });

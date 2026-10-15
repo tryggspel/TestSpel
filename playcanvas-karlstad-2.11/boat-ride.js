@@ -1,9 +1,9 @@
-import {BoatRescue} from './boat-rescue.mjs?v=2.21.1-xmas.6';
-import {HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.21.1-xmas.6';
+import {BoatRescue} from './boat-rescue.mjs?v=2.21.1-xmas.7';
+import {HARBOUR,MARIEBERG} from './city-south-space.mjs?v=2.21.1-xmas.7';
 
 const INK='#1c4249',CREAM='#fff0cb',YELLOW='#ffbe0a';
 // Illustrated first-person aft deck. Static environment is baked once per resize.
-export function createBoatRide(host,{onTick,onArrive,onSpot}){
+export function createBoatRide(host,{onTick,onArrive,onSpot,onAbort}){
   const $=id=>document.getElementById(id),canvas=$('boatCanvas'),c=canvas.getContext('2d'),back=document.createElement('canvas');
   let game=null,paused=false,returning=false,from=null,to=null,drawTime=0,lastLayout='',far=null,near=null,popups=[];
   const hash=n=>{let h=2166136261;for(const ch of String(n)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return (h>>>0)/4294967296;};
@@ -93,7 +93,7 @@ export function createBoatRide(host,{onTick,onArrive,onSpot}){
     if(!hit)return;const res=game.spot(hit.key);if(res){popups.push({at:game.elapsed,x:hit.x,y:hit.y,text:(hit.kind==='gull'?'MÅS!':hit.kind==='boat'?'SEGELBÅT!':'FISK!')+' +'+res.points});onSpot?.(res,hit);draw();}
   });
   $('boatPause').addEventListener('click',()=>setPaused(true));$('boatResume').addEventListener('click',()=>setPaused(false));
-  $('boatAbort').addEventListener('click',()=>{if(!game)return;const p=from;stop();host.teleport(p.x,p.z,0,-2);});
+  $('boatAbort').addEventListener('click',()=>{if(!game)return;const p=from;stop();host.teleport(p.x,p.z,0,-2);onAbort?.(p);});
   window.addEventListener('keydown',e=>{if(!game)return;if(e.code==='Escape'){e.preventDefault();setPaused(!paused);}const i=['Digit1','Digit2','Digit3','Digit4'].indexOf(e.code);if(i>=0&&!paused){e.preventDefault();game.throwTo(i);}});
   return {start,stop,update,pause:()=>setPaused(true),active:()=>!!game,snapshot:()=>game?{...game.snapshot(),paused,destination:to.name}:null};
 }

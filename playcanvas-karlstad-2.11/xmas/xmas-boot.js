@@ -1,23 +1,27 @@
 // Julklappsjakten: kopplar ihop motorn, vyn, gränssnittet och grundspelets system. Anropas en gång från last-round.js (bara i julbygget).
 // Allt här är fail-soft: om något i julkoden skulle kasta stängs jultilläggen av och grundspelet lever vidare (som platskoden i 2.21).
-import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.6';
-import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.6';
-import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.6';
-import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.6';
-import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.6';
-import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.6';
-import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.6';
-import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.6';
-import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.6';
-import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.6';
-import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.6';
-import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.6';
-import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.6';
-import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.6';
-import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.6';
-import {nextRound,roundById,buildRound,buildSearch,INTRO_SEARCH} from './xmas-rounds.mjs?v=2.21.1-xmas.6';
-import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.6';
-import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.6';
+import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.7';
+import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.7';
+import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.7';
+import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.7';
+import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.7';
+import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.7';
+import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.7';
+import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.7';
+import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.7';
+import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.7';
+import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.7';
+import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.7';
+import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.7';
+import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.7';
+import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.7';
+import {nextRound,roundById,buildRound,buildSearch,INTRO_SEARCH} from './xmas-rounds.mjs?v=2.21.1-xmas.7';
+import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.7';
+import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.7';
+import {HARBOUR,atMarieberg} from '../city-south-space.mjs?v=2.21.1-xmas.7';
+import {SANDGRUND,sandgrundOutcome,sandgrundLine} from './xmas-sandgrund.mjs?v=2.21.1-xmas.7';
+import {BOAT,buildMarieberg,boatBonus} from './xmas-marieberg.mjs?v=2.21.1-xmas.7';
+import {parseLink,describeLink,LINK_PARAM,DOOR_PARAM} from './xmas-deeplink.mjs?v=2.21.1-xmas.7';
 
 // Julbygget har inga termosar, hemligheter eller skatter: paketen ersätter dem. Anropas direkt efter att resan skapats, innan någon vy ritas.
 export function prepareXmasJourney(journey){
@@ -26,7 +30,7 @@ export function prepareXmasJourney(journey){
 }
 
 export function installXmas(ctx){
-  const {pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,isPlaying,placeActive,indoors,openPass,dismissPlaceResult,params,storage}=ctx;
+  const {pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,isPlaying,placeActive,indoors,openPass,dismissPlaceResult,params,storage,startMission,boardBoat,boatActive,explore}=ctx;
   registerXmasProps();
   const save=new XmasSave(storage);
   let fault=false;
@@ -52,7 +56,8 @@ export function installXmas(ctx){
   let decor=null; // julmiljön: gran, stånd, ljus, tomtar och snöfall. Fail-soft: går något fel i den fortsätter spelet utan.
   try{decor=createXmasDecor(pc,host,{root,texture,labelTex,indoors,params:{weather:save.weather}},sprites);}catch(e){console.error('[Julmiljön hoppades över]',e);}
   const baseUrl=baseGameUrl(location.search,location.hostname);
-  let stamp=baseStamp,mode='menu'; // menu | cozy | zombies | rush
+  let stamp=baseStamp,mode='menu'; // menu | cozy | zombies | rush | mission (Julvernissagen) | boat (Julbåten, tills båten lagt till)
+  let boatInfo=null; // båtresans resultat (räddade, poäng) som följer med jakten i Mariebergsskogen
   let rainToastAt=-1e9; // när den senaste hela fanfaren om tappade julklappar visades
   let shopTipShown=false; // tipset om butiksutmaningarna visas en gång per spelstart
   // Tomtezombies-nivåer (xmas-zombie-levels.mjs): zLevel = nivån som spelas, lastZombie = senaste klarade nivåns resultat (för NÄSTA NIVÅ). Tomtezombierna blir snabbare genom att farten sätts när
@@ -91,6 +96,13 @@ export function installXmas(ctx){
     if(tok){incoming=decodeChallenge(tok);badLink=!incoming;}else badLink=new URLSearchParams(location.search).has('utmaning');
     if(badLink||incoming){const u=new URL(location.href);u.searchParams.delete('utmaning');history.replaceState(null,'',u.pathname+u.search+u.hash);} // adressen städas så att en omladdning inte visar utmaningen igen
   }catch{}
+  // Djuplänk (xmas-deeplink.mjs): ?uppdrag=sandgrund&lucka=6 visar ett kort med uppdraget när menyn öppnas första gången. En utmaningslänk går före (den kommer från en vän och har ingen lucka).
+  // link = länken som väntar på menyn, pendingLink = kortet som visas just nu.
+  let link=null,pendingLink=null,linkBad=false;
+  try{
+    const l=parseLink(location.search);
+    if(l){if(!incoming&&!badLink)link=l;const u=new URL(location.href);u.searchParams.delete(LINK_PARAM);u.searchParams.delete(DOOR_PARAM);history.replaceState(null,'',u.pathname+u.search+u.hash);}
+  }catch{}
   const guideUi=createGuideUi({});
 
   function goBase(){
@@ -103,7 +115,7 @@ export function installXmas(ctx){
     const zombies=kind==='zombies',rushing=kind==='rush';
     leaveRush();if(!rushing)restoreTurbo();zombieTune.off();if(!zombies)zLevel=null;
     mode=zombies?'zombies':rushing?'rush':'cozy';caughtAt=0;
-    document.body.classList.add('xmas-on');document.body.classList.toggle('xmas-cozy',!zombies);document.body.classList.toggle('xmas-zombies',zombies);document.body.classList.toggle('xmas-rush',rushing);
+    document.body.classList.remove('xmas-mission');document.body.classList.add('xmas-on');document.body.classList.toggle('xmas-cozy',!zombies);document.body.classList.toggle('xmas-zombies',zombies);document.body.classList.toggle('xmas-rush',rushing);
     startCity(zombies?'free':'clean');
     if(zombies){ // grundspelets zombieregler (patruller, ambushar, Guld-Nisse, max sex aktiva) men utan kontrakt, kaos, strömavbrott och sol: paketen är målet
       const r=journey.rush;r.nextContract=1e9;r.nextChaos=1e9;r.nextBlackout=1e9;r.ecology.nextSun=1e9;r.nextPatrol=Math.max(r.nextPatrol,9);
@@ -114,7 +126,8 @@ export function installXmas(ctx){
     host.teleport(x,z,yaw,-4);journey.position={x,z};journey.lastStep=null;journey.heading=yaw;journey.routeMode='hunt';
     ui.showHud(true);
   }
-  const freeSpawn=()=>{const p=host.player.getPosition();return {x:p.x,z:p.z,yaw:journey.heading||0};};
+  // Fri julvandring börjar där man står, utom i Mariebergsskogen (utanför stadens gångbara karta): därifrån börjar den vid granen.
+  const freeSpawn=()=>{const p=host.player.getPosition();return atMarieberg(p)?INTRO.spawn:{x:p.x,z:p.z,yaw:journey.heading||0};};
   // JulRushen: städa bort paketbandet, farten och tempot så att inget ligger kvar i nästa läge (grundspelets termosband och tempo är annars delade med journey).
   function leaveRush(){try{julrush.cleanup();julrush.drain();julrush.state='idle';}catch(e){console.error(e);}}
   // Turbon som rushen slog på går tillbaka till det spelaren själv hade valt (när man lämnar rushen, inte mellan två rusher i rad).
@@ -207,6 +220,77 @@ export function installXmas(ctx){
       ui.setProgress(hunt.run);view.clear();
     });
   }
+  // ── Julvernissagen (Sandgrund) och Julbåten (Mariebergsskogen): grundspelets uppdrag i julens meny (2.21.1-xmas.7) ──────────────────────────────────
+  // Allt som körs mellan två lägen: städa det förra läget utan att öppna en panel (openMenu gör det med panel).
+  function quietLeave(){
+    try{dismissPlaceResult?.();}catch{}
+    clearTimeout(resultTimer);resultOpen=false;
+    if(julrush.active)julrush.quit();
+    hunt.cancel('uppdrag');leaveRush();restoreTurbo();zombieTune.off();try{host.music?.tempo?.(1);}catch{}
+    view.clear();ui.showHud(false);guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;caughtAt=0;boatInfo=null;journey.actors?.forEach(a=>{a.active=false;});
+  }
+  // Sandgrund: grundspelets uppdrag "Vernissage från graven" (besökare att leda till grönt, Zombie-Lerin att stoppa). Grundspelets uppdrags-HUD gäller (därför tas xmas-on bort); vid seger delas julstämpeln ut.
+  function startSandgrund(){
+    guard(()=>{
+      quietLeave();mode='mission';
+      document.body.classList.remove('xmas-on','xmas-cozy','xmas-zombies','xmas-rush');document.body.classList.add('xmas-mission');
+      startMission(SANDGRUND.id);
+    });
+  }
+  // Grundspelet anropar detta när uppdraget är slut (last-round.js: finish). Bara en vunnen omgång på riktigt räknas; övning och förlust ger inget.
+  function missionDone(r){
+    return guard(()=>{
+      if(mode!=='mission'||!r||r.id!==SANDGRUND.id)return false;
+      const o=sandgrundOutcome(r,{hadStamp:save.hasStamp(SANDGRUND.id)});
+      if(!o.count)return true;
+      if(o.stamp)save.stamp(SANDGRUND.id);
+      save.record(SANDGRUND.id,{points:r.score,seconds:r.seconds,packages:r.rescued,bonus:0});
+      save.addTotals({points:o.points});
+      const line=sandgrundLine(o,{label:STAMPS.find(s=>s.id===SANDGRUND.id)?.label||''}),t=document.getElementById('roundResultTarget');
+      if(t&&line)t.textContent=line;
+      if(o.stamp)try{sound('win');}catch{}
+      return true;
+    },false);
+  }
+  // "Tillbaka" på uppdragets resultatkort: tillbaka till Julmenyn (i stället för grundspelets stadsvandring).
+  function afterMission(){
+    if(mode!=='mission')return false;
+    return guard(()=>{explore();openMenu();openContinue();return true;},false);
+  }
+  // Julbåten: grundspelets båtbuss från Inre hamn (36 s, räddningstur med passagerare). Vid ankomsten börjar paketjakten i Mariebergsskogen.
+  function startBoat(){
+    guard(()=>{
+      quietLeave();mode='boat';
+      document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush','xmas-mission');document.body.classList.add('xmas-on');
+      startCity('free');
+      const r=journey.rush;r.nextContract=1e9;r.nextChaos=1e9;r.nextBlackout=1e9;r.ecology.nextSun=1e9;r.nextPatrol=1e9; // inga tomtezombier: resan och jakten är fredliga, bara båtens passagerare ska räddas
+      host.teleport(HARBOUR.x,HARBOUR.z,180,-2);journey.position={x:HARBOUR.x,z:HARBOUR.z};journey.lastStep=null;journey.heading=180;journey.routeMode='hunt';
+      try{host.music?.mood?.('eerie');}catch{}
+      boardBoat();
+      if(!boatActive()){toast('BÅTBUSSEN','Båten gick inte att kliva på. Försök igen från Julmenyn.',3.4);openMenu();openContinue();}
+    });
+  }
+  // Grundspelet anropar detta när båten lagt till. true = hanterat här (ingen grundspelsbelöning); jakten i parken börjar.
+  function boatArrive(result){
+    if(mode!=='boat'||!result||result.calm)return false;
+    guard(()=>startMarieberg(boatBonus(result)));
+    return true;
+  }
+  function boatAbort(){
+    if(mode!=='boat')return false;
+    guard(()=>{openMenu();openContinue();});
+    return true;
+  }
+  function startMarieberg(info){
+    const def=buildMarieberg({blocked:(x,z)=>host.blocked(x,z)});
+    if(!def.ok){toast('MARIEBERGSSKOGEN','Parken gick inte att nå från bryggan. Försök igen från Julmenyn.',3.6);openMenu();openContinue();return;}
+    enter('marieberg',def.spawn);boatInfo=info;
+    hunt.startRun({kind:'marieberg',id:BOAT.id,title:BOAT.title,goal:def.goal,packages:def.packages,tomte:def.tomte,spawn:def.spawn,tree:null,windowSec:BOAT.windowSec,soft:0,stampId:BOAT.id,ordered:false,
+      extra:info.points,extraLabel:'BÅTRESAN'});
+    toast('FRAMME I MARIEBERGSSKOGEN',(info.saved?'Du räddade '+info.saved+' av 12 passagerare. ':'')+'Hämta '+def.goal+' julklappar i parken och lämna dem hos tomten vid bryggan.',4.6);
+    ui.showGoal('Hämta '+def.goal+' julklappar i Mariebergsskogen!',7500);
+    ui.setProgress(hunt.run);view.clear();
+  }
   // ── Butiksuppdrag: stämplar och leverans till tomten ────────────────────────────────────────────────────────────────
   // Butiksutmaningarna går att göra mitt i Julklappsjakten och fri julvandring (det finns ingen pil som tävlar om platsen). JulRushen går före butikerna.
   const runBusy=()=>mode==='rush'&&julrush.active;
@@ -265,20 +349,47 @@ export function installXmas(ctx){
       try{dismissPlaceResult?.();}catch{}clearTimeout(resultTimer);
       if(julrush.active){julrush.quit();} // att ge upp i pausmenyn sparar körningen som en förlust (om den hade några paket)
       leaveRush();restoreTurbo();zombieTune.off();try{host.music?.tempo?.(1);}catch{}
-      hunt.cancel('meny');view.clear();ui.showHud(false);guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;journey.pause?.();mode='menu';caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush');
+      hunt.cancel('meny');view.clear();ui.showHud(false);guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;journey.pause?.();mode='menu';boatInfo=null;caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush','xmas-mission');
       if(incoming){ui.renderChallenge(incoming);setPanel('xmas-challenge');return;}
+      if(link){const l=link;link=null;if(showLink(l))return;}
       ui.renderStart(buildDetail(stamp));setPanel('xmas-intro');
       if(badLink){badLink=false;toast('UTMANINGEN','Länken gick inte att läsa. Be din vän skicka den igen.',3.4);}
+      if(linkBad){linkBad=false;toast('LÄNKEN','Uppdraget i länken finns inte. Det här är startvyn.',3.6);} // efter setPanel, som annars tar bort meddelandet
     });
   }
+  // Djuplänken: ett kort med uppdraget och en knapp (aldrig en start av sig själv), eller panelen direkt för rushmenyn, topplistan och Julmenyn. false = länken gick inte att använda, startvyn visas.
+  function showLink(l){
+    const d=l.known?describeLink(l.key,{save,door:l.door}):null;
+    if(!d){linkBad=true;return false;}
+    if(d.direct)return linkRun(d.go);
+    pendingLink=d;ui.renderLink(d);setPanel('xmas-link');return true;
+  }
+  function linkRun(go){
+    switch(go?.fn){
+      case 'intro':startIntro();return true;
+      case 'round':startRound(go.arg);return true;
+      case 'shops':openShops();return true;
+      case 'sandgrund':startSandgrund();return true;
+      case 'boat':startBoat();return true;
+      case 'rush':startRush(go.arg);return true;
+      case 'marathon':startRush(0);return true;
+      case 'zombies':startZombies(go.arg);return true;
+      case 'rushmenu':openRush();return true;
+      case 'board':openBoard(0);return true;
+      case 'continue':openContinue();return true;
+      default:return false; // 'menu' (Julmenyn före första uppdraget): startvyn visas som vanligt
+    }
+  }
+  function linkGo(){guard(()=>{const d=pendingLink;pendingLink=null;if(!d){openMenu();return;}linkRun(d.startable?d.go:d.instead);});}
+  function linkSkip(){guard(()=>{pendingLink=null;openMenu();});}
   function openContinue(){guard(()=>{ui.renderContinue();setPanel('xmas-continue');});}
   function setWeather(level){save.setWeather(level);try{decor?.setWeather(level);}catch(e){console.error(e);}}
 
   const ui=createXmasUi({save,fx:{
     cozy:()=>{if(save.introDone)openContinue();else startIntro();},
-    intro:()=>startIntro(),round:()=>startRound(),shops:()=>openShops(),free:()=>startFree(),zombies:()=>startZombies(),zombiesNext,zombiesAgain,
+    intro:()=>startIntro(),round:()=>startRound(),shops:()=>openShops(),free:()=>startFree(),zombies:()=>startZombies(),zombiesNext,zombiesAgain,sandgrund:()=>startSandgrund(),boat:()=>startBoat(),
     openRush:()=>openRush(),rushPlay:n=>startRush(n),marathon:()=>startRush(0),rushNext,rushAgain,openBoard,boardBack:()=>{if(boardFrom==='result')setPanel('xmas-result');else openRush(ui.selectedRush());},challengeGo,challengeSave,challengeSkip,
-    openMenu,openContinue,goBase,setWeather
+    openMenu,openContinue,goBase,setWeather,linkGo,linkSkip
   }});
 
   // ── Händelser från motorn → ljud, effekter och gränssnitt ──────────────────────────────────────────────────────
@@ -347,6 +458,7 @@ export function installXmas(ctx){
         const n=e.result.level||zLevel?.n||1,prog=save.recordZombies(n,{points:e.result.points,seconds:e.result.seconds,packages:e.result.collected}),nx=n<ZOMBIE_MAX?zombieLevel(n+1):null;
         e.result={...e.result,level:n,next:nx?nx.n:0,nextPlace:nx?nx.place:'',nextGoal:nx?nx.goal:0,levelFirst:prog.first,levelRecord:prog.record};lastZombie=e.result;
       }
+      if(e.result.kind==='marieberg')e.result={...e.result,boat:boatInfo||{saved:0,points:0}};
       sound('win');[523.25,659.25,783.99,1046.5,1318.5].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.34,.09),i*100));
       ui.setProgress(hunt.run);view.burst(hunt.run.tomte.x,hunt.run.tomte.z,{big:true,y:1.4});ui.showGoal('Tack! Du räddade julen.',4000,now);
       clearTimeout(resultTimer);
@@ -430,6 +542,7 @@ export function installXmas(ctx){
   const api={
     hunt,save,view,ui,sprites,handlers,decor,
     get active(){return mode==='rush'?julrush.active:hunt.active;},get cozy(){return mode==='cozy';},get zombieMode(){return mode==='zombies';},get zombieLevel(){return zLevel;},get rushMode(){return mode==='rush'&&julrush.active;},julrush,
+    startSandgrund,missionDone,afterMission,startBoat,boatArrive,boatAbort,get missionMode(){return mode==='mission';},get boatMode(){return mode==='boat';},
     update,hudText,startRound,startZombies,startRush,openRush,openBoard,challengeGo,rushNext,rushAgain,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
     // Medan ett butiksuppdrag pågår står jaktens tid still (inga nya tappade julklappar, inget som försvinner).
     step:(dt,p,sweep,speed)=>guard(()=>mode==='rush'?julrush.step(dt,p,sweep,speed):hunt.step(placeActive?.()?0:dt,p,sweep,speed)),

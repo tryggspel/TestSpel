@@ -7,12 +7,12 @@
 //  - Introduktionen har ingen tidsgräns. Rundor har en mjuk tid: den ger bara tidsbonus, man kan alltid lämna in.
 //  - Sök och hitta (fri julvandring, introduktionen och rundorna): tomtarna tappar paket här och där ('regn'). Regnen läggs långt från varandra och från spelaren, aldrig direkt efter ett fynd
 //    (xmas-drops.mjs, FREE_RAIN); varje regn har egna ID och ett spår av fotavtryck, och försvinner efter en stund. Ett uppdrag med mål (introduktionen, rundorna) delar ut precis så många regn som behövs.
-import {CATCH,catchReach} from '../journey-rules.mjs?v=2.21.1-xmas.6';
-import {PACKAGE_POINTS,COMBO,comboMult,DELIVERY,timeBonus,FREE_RAIN,TRAILS,STAMPS} from './xmas-config.mjs?v=2.21.1-xmas.6';
-import {INTRO,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.6';
-import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.6';
-import {trailPrints} from './xmas-tracks.mjs?v=2.21.1-xmas.6';
-import {sampleCentre,inArea,bearingDeg,angleGap,between} from './xmas-drops.mjs?v=2.21.1-xmas.6';
+import {CATCH,catchReach} from '../journey-rules.mjs?v=2.21.1-xmas.7';
+import {PACKAGE_POINTS,COMBO,comboMult,DELIVERY,timeBonus,FREE_RAIN,TRAILS,STAMPS} from './xmas-config.mjs?v=2.21.1-xmas.7';
+import {INTRO,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.7';
+import {GUIDE} from './xmas-guide.mjs?v=2.21.1-xmas.7';
+import {trailPrints} from './xmas-tracks.mjs?v=2.21.1-xmas.7';
+import {sampleCentre,inArea,bearingDeg,angleGap,between} from './xmas-drops.mjs?v=2.21.1-xmas.7';
 
 function closestOnSegment(px,pz,ax,az,bx,bz){
   const dx=bx-ax,dz=bz-az,len2=dx*dx+dz*dz,t=len2>0?Math.max(0,Math.min(1,((px-ax)*dx+(pz-az)*dz)/len2)):0,x=ax+dx*t,z=az+dz*t;
@@ -42,7 +42,9 @@ export class XmasHunt{
       collected:0,bonusCollected:0,regularTotal:regular,bonusTotal:bonus,points:0,chain:0,bestChain:0,lastPickAt:-1e9,t:0,tomte:def.tomte||null,spawn:def.spawn||null,tree:def.tree||null,
       windowSec:def.windowSec||COMBO.window,soft:def.soft||0,ordered:!!def.ordered,late:false,stampId:def.stampId||null,level:def.level||0,lastPickT:0,nextRainAt:Infinity,rains:[],rainSerial:0,result:null,
       // sök och hitta: drops = true, cfg = inställningarna (FREE_RAIN med ev. ändringar för uppdraget), area = var högarna får läggas, recent = mitten på de senaste högarna, errand = ett ärende vid sidan om (butiksuppdrag)
-      drops:!!def.drops,cfg:null,area:null,areaState:{},recent:[],errand:null,lastRainAt:-1e9};
+      drops:!!def.drops,cfg:null,area:null,areaState:{},recent:[],errand:null,lastRainAt:-1e9,
+      // extra: poäng som följer med leveransen (Julbåtens räddade passagerare), extraLabel: vad de var för; syns på resultatkortet
+      extra:Math.max(0,Math.floor(Number(def.extra)||0)),extraLabel:def.extraLabel||''};
     if(def.drops){const c=this.run.cfg={...FREE_RAIN,...(def.drops.cfg||{})};this.run.area=def.drops.area||null;this.run.nextRainAt=c.first;if(this.run.area&&this.run.area.kind==='route')this.run.areaState={prog:0};}
     this.lastStep=null;this.guideId='';
     this.emit({type:'xmas-start',kind:def.kind,id:def.id,title:this.run.title,goal:this.run.goal,total:regular,bonusTotal:bonus});
@@ -106,11 +108,11 @@ export class XmasHunt{
   deliver(){
     const r=this.run;if(!r||r.phase!=='deliver')return null;
     r.phase='done';
-    const seconds=Math.round(r.t),tb=r.drops||r.late?0:(r.soft?timeBonus(r.t,{fast:r.soft*.45,slow:r.soft}):timeBonus(r.t)),total=r.points+DELIVERY.points+tb;
+    const seconds=Math.round(r.t),tb=r.drops||r.late?0:(r.soft?timeBonus(r.t,{fast:r.soft*.45,slow:r.soft}):timeBonus(r.t)),total=r.points+DELIVERY.points+tb+r.extra;
     const stamp=r.stampId?this.save?.stamp(r.stampId)??false:false;
     const recordId=r.id;const record=this.save?this.save.record(recordId,{points:total,seconds,packages:r.collected,bonus:r.bonusCollected}):false;
     this.save?.addTotals({packages:r.collected,bonus:r.bonusCollected,points:total});
-    r.result={kind:r.kind,id:r.id,title:r.title,points:total,parts:{packages:r.points,delivery:DELIVERY.points,time:tb},seconds,collected:r.collected,goal:r.goal,regularTotal:r.regularTotal,
+    r.result={kind:r.kind,id:r.id,title:r.title,points:total,parts:{packages:r.points,delivery:DELIVERY.points,time:tb,...(r.extra?{extra:r.extra,extraLabel:r.extraLabel}:{})},seconds,collected:r.collected,goal:r.goal,regularTotal:r.regularTotal,
       bonusCollected:r.bonusCollected,bonusTotal:r.bonusTotal,bestChain:r.bestChain,stamp,stampId:r.stampId,record,late:r.late,level:r.level,drops:r.drops};
     this.emit({type:'xmas-deliver',result:r.result});
     return r.result;

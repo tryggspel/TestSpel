@@ -110,7 +110,7 @@ h2{margin:0;font:700 1.5rem/1.2 var(--serif)}
 .door{appearance:none;-webkit-appearance:none;border:0;padding:0;margin:0;background:none;color:inherit;font:inherit;cursor:pointer;display:block;width:100%;position:relative;aspect-ratio:4/5;perspective:760px;-webkit-tap-highlight-color:transparent;text-align:center}
 .inside{position:absolute;inset:0;border-radius:12px;background:linear-gradient(180deg,#fff6dc,#f1dcaa);box-shadow:inset 0 0 0 2px var(--paper-line),inset 0 8px 16px rgb(120 80 10/.22);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 5px;color:var(--ink);overflow:hidden}
 .inside .ic{width:30px;height:30px;color:var(--red-d);stroke-width:1.7}
-.t-rush .inside .ic,.t-karlstad .inside .ic{color:var(--blue)}
+.t-rush .inside .ic,.t-plats .inside .ic{color:var(--blue)}
 .t-butik .inside .ic,.t-jakt .inside .ic{color:var(--green)}
 .t-zombie .inside .ic,.t-final .inside .ic{color:var(--red)}
 .inside .stars{font-size:.7rem;letter-spacing:.08em;color:var(--gold-d)}
@@ -182,7 +182,6 @@ h2{margin:0;font:700 1.5rem/1.2 var(--serif)}
 .cta .btn{flex:1 1 200px}
 .demo-note{margin:14px 0 0;padding:10px 12px;border-radius:12px;background:#fff0c2;color:#6a4700;font-size:.88rem}
 .fine{margin:12px 0 0;font-size:.82rem;color:var(--ink-2)}
-.notice{margin:14px 0 0;padding:10px 12px;border-radius:12px;background:#e9efff;color:#213f82;font-size:.88rem}
 .fine button{background:none;border:0;padding:0;font:inherit;color:var(--blue);text-decoration:underline;cursor:pointer}
 .teaser{margin:18px 0 4px;padding:18px;border-radius:16px;background:linear-gradient(180deg,#eaf1ff,#d7e4ff);color:#1d3562;text-align:center}
 .teaser .big{font:700 1.4rem/1.2 var(--serif);margin:0}

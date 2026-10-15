@@ -1,46 +1,46 @@
-import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.21.1-xmas.6';
-import {createSouthSigns} from './city-south.js?v=2.21.1-xmas.6';
-import {createOrrholmenSigns} from './orrholmen.js?v=2.21.1-xmas.6';
-import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.21.1-xmas.6';
-import {createZombieAtlases} from './zombie-art.js?v=2.21.1-xmas.6';
-import {createXmasZombieAtlases} from './xmas/xmas-zombie-art.js?v=2.21.1-xmas.6'; // julgrenen: tomtezombier ersätter grundspelets zombiebilder
-import {FriendlyClerks} from './friendly-clerks.mjs?v=2.21.1-xmas.6';
-import {createFriendlyView} from './friendly-view.js?v=2.21.1-xmas.6';
-import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.21.1-xmas.6';
-import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.21.1-xmas.6';
-import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.21.1-xmas.6';
-import {CityJourney} from './journey-rules.mjs?v=2.21.1-xmas.6';
-import {createJourneyView} from './journey-view.js?v=2.21.1-xmas.6';
-import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.21.1-xmas.6';
-import {createBoatRide} from './boat-ride.js?v=2.21.1-xmas.6';
-import {createBusRide} from './bus-ride.js?v=2.21.1-xmas.6';
-import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.21.1-xmas.6';
-import {createPostcard} from './challenge-postcard.js?v=2.21.1-xmas.6';
-import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.21.1-xmas.6';
-import {RUSH} from './city-rush.mjs?v=2.21.1-xmas.6';
-import {StampBook} from './city-stamps.mjs?v=2.21.1-xmas.6';
-import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.21.1-xmas.6';
-import {POWERUPS} from './powerups.mjs?v=2.21.1-xmas.6';
-import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.21.1-xmas.6';
-import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.21.1-xmas.6';
-import {fetchLiveBoard} from './bus-quiz.mjs?v=2.21.1-xmas.6';
-import {GhostRun} from './ghost-run.mjs?v=2.21.1-xmas.6';
-import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.21.1-xmas.6';
-import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.21.1-xmas.6';
-import {pedestrianAt} from './pedestrian.mjs?v=2.21.1-xmas.6';
-import {createPedestrianSigns} from './pedestrian-view.js?v=2.21.1-xmas.6';
-import {drawMapLabels} from './city-geography.mjs?v=2.21.1-xmas.6';
-import {createCityIdentity} from './city-identity.js?v=2.21.1-xmas.6';
-import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.21.1-xmas.6';
+import {GAME_VERSION,DEBUG} from './build-info.mjs?v=2.21.1-xmas.7';
+import {createSouthSigns} from './city-south.js?v=2.21.1-xmas.7';
+import {createOrrholmenSigns} from './orrholmen.js?v=2.21.1-xmas.7';
+import {SOUTH_PLACES,HARBOUR,MARIEBERG,atMarieberg} from './city-south-space.mjs?v=2.21.1-xmas.7';
+import {createZombieAtlases} from './zombie-art.js?v=2.21.1-xmas.7';
+import {createXmasZombieAtlases} from './xmas/xmas-zombie-art.js?v=2.21.1-xmas.7'; // julgrenen: tomtezombier ersätter grundspelets zombiebilder
+import {FriendlyClerks} from './friendly-clerks.mjs?v=2.21.1-xmas.7';
+import {createFriendlyView} from './friendly-view.js?v=2.21.1-xmas.7';
+import {LastRound, RULES, layoutFor, normalizeSeed} from './last-round-rules.mjs?v=2.21.1-xmas.7';
+import {chooseAimTarget, pushGuide} from './last-round-controls.mjs?v=2.21.1-xmas.7';
+import {CityNavigation, CityMission, MISSIONS} from './city-missions.mjs?v=2.21.1-xmas.7';
+import {CityJourney} from './journey-rules.mjs?v=2.21.1-xmas.7';
+import {createJourneyView} from './journey-view.js?v=2.21.1-xmas.7';
+import {createScenicRide,KIL,KARLSTAD_C,atKil,trainWait} from './scenic-transit.js?v=2.21.1-xmas.7';
+import {createBoatRide} from './boat-ride.js?v=2.21.1-xmas.7';
+import {createBusRide} from './bus-ride.js?v=2.21.1-xmas.7';
+import {dailyFor,stockholmDay,dailyRecord,challengeRequest} from './daily-challenge.mjs?v=2.21.1-xmas.7';
+import {createPostcard} from './challenge-postcard.js?v=2.21.1-xmas.7';
+import {CityGuidance,arrowPlacements,ROUTE_COLORS} from './city-guidance.mjs?v=2.21.1-xmas.7';
+import {RUSH} from './city-rush.mjs?v=2.21.1-xmas.7';
+import {StampBook} from './city-stamps.mjs?v=2.21.1-xmas.7';
+import {turboAllowed,TURBO,chainFreq,RARITY,hash32} from './explore-fun.mjs?v=2.21.1-xmas.7';
+import {POWERUPS} from './powerups.mjs?v=2.21.1-xmas.7';
+import {tempoName,TEMPO,arrowInfo} from './tempo-run.mjs?v=2.21.1-xmas.7';
+import {busRideSeconds,LEGACY_HINTS,areaOf,MUSIC_OFFICE,JUKEBOX} from './explore-places.mjs?v=2.21.1-xmas.7';
+import {fetchLiveBoard} from './bus-quiz.mjs?v=2.21.1-xmas.7';
+import {GhostRun} from './ghost-run.mjs?v=2.21.1-xmas.7';
+import {CursedHunt,halloweenActive} from './halloween.mjs?v=2.21.1-xmas.7';
+import {RydeFleet,RYDE,RYDE_ZONES} from './ryde.mjs?v=2.21.1-xmas.7';
+import {pedestrianAt} from './pedestrian.mjs?v=2.21.1-xmas.7';
+import {createPedestrianSigns} from './pedestrian-view.js?v=2.21.1-xmas.7';
+import {drawMapLabels} from './city-geography.mjs?v=2.21.1-xmas.7';
+import {createCityIdentity} from './city-identity.js?v=2.21.1-xmas.7';
+import {drawCityStreets,drawCityGround,landmarkDestination,STOREFRONTS,storefrontAnchor,streetAt,PLACE_ROUTES} from './city-geography.mjs?v=2.21.1-xmas.7';
 
-import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.21.1-xmas.6';
-import {PlaceQuests} from './place-quests.mjs?v=2.21.1-xmas.6';
-import {placeAnchors} from './places-space.mjs?v=2.21.1-xmas.6';
-import {createPlacesView} from './places-view.js?v=2.21.1-xmas.6';
-import {createPlacesUi} from './places-ui.js?v=2.21.1-xmas.6';
-import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.21.1-xmas.6';
-import {installXmas,prepareXmasJourney} from './xmas/xmas-boot.js?v=2.21.1-xmas.6'; // julgrenen: Julklappsjakten (allt jul bor under xmas/)
-import {XMAS_PLACES} from './xmas/xmas-places.mjs?v=2.21.1-xmas.6';
+import {mallInside,MALL_CACHE,MALL_ENTRANCES} from './mall-space.mjs?v=2.21.1-xmas.7';
+import {PlaceQuests} from './place-quests.mjs?v=2.21.1-xmas.7';
+import {placeAnchors} from './places-space.mjs?v=2.21.1-xmas.7';
+import {createPlacesView} from './places-view.js?v=2.21.1-xmas.7';
+import {createPlacesUi} from './places-ui.js?v=2.21.1-xmas.7';
+import {createMallGuidance,drawMallPlan} from './mall-guidance.mjs?v=2.21.1-xmas.7';
+import {installXmas,prepareXmasJourney} from './xmas/xmas-boot.js?v=2.21.1-xmas.7'; // julgrenen: Julklappsjakten (allt jul bor under xmas/)
+import {XMAS_PLACES} from './xmas/xmas-places.mjs?v=2.21.1-xmas.7';
 
 export function createLastRound(pc, host) {
   // 2.10: elementuppslag cachas, och HUD-text skrivs bara om när värdet faktiskt ändras.
@@ -368,8 +368,11 @@ export function createLastRound(pc, host) {
   const boatRide=createBoatRide(host,{
     onSpot:()=>{note(1046.5,'triangle',.15,.07);setTimeout(()=>note(1318.5,'triangle',.18,.06),70);},
     onTick:dt=>{journey.rush.clock(dt);if(['caught','finished'].includes(journey.rush.state)){boatRide.stop();if(journey.rush.state==='caught')host.teleport(HARBOUR.x,HARBOUR.z,0,-2);}},
+    // julgrenen: Julbåten (xmas/xmas-marieberg.mjs) fortsätter med en paketjakt i Mariebergsskogen; avbryts resan går man tillbaka till Julmenyn
+    onAbort:()=>{try{xmas?.boatAbort?.();}catch(e){console.error('[Jul] båtavbrott',e);}},
     onArrive:(result,to,from)=>{
       journey.position={x:to.x,z:to.z};journey.actors.forEach(a=>a.active=false);journey.pendingAmbush=null;journey.contactCooldown=5;
+      try{if(xmas?.boatArrive?.(result,to)){journey.save();return;}}catch(e){console.error('[Jul] båtankomst',e);}
       if(!result.calm){journey.reward(result.points);let best=result.points;try{best=Math.max(best,Number(storage?.getItem('karlstad:boat:best:1'))||0);storage?.setItem('karlstad:boat:best:1',String(best));}catch{}
         rememberMoment({kind:'boat',seed,score:result.points,health:Math.round(result.saved/12*100),saved:result.saved,won:result.saved>=8,seconds:36,title:'KAPTENEN HADE VISST SJÖBEN.',place:'Inre hamn → Mariebergsskogen'});
         toast('FRAMME · '+result.saved+' RÄDDADE','+'+result.points+' XP · rekord '+best+'. Ditt vykort finns i PAUS.',4);
@@ -428,7 +431,7 @@ export function createLastRound(pc, host) {
   function setPanel(name) {
     panel = name; document.body.classList.toggle('round-panel-open', !!name);
     $('roundPanel').hidden = !name;
-    for (const id of ['intro', 'pause', 'result', 'map','city-intro','city-result','album','daily-intro','moment','bus-intro','trail-result','tempo-result','boat-intro','bus-pick','musicpartner','xmas-intro','xmas-continue','xmas-result','xmas-rush','xmas-board','xmas-challenge']) $('round-' + id).hidden = name !== id;
+    for (const id of ['intro', 'pause', 'result', 'map','city-intro','city-result','album','daily-intro','moment','bus-intro','trail-result','tempo-result','boat-intro','bus-pick','musicpartner','xmas-intro','xmas-continue','xmas-result','xmas-rush','xmas-board','xmas-challenge','xmas-link']) $('round-' + id).hidden = name !== id;
     if(name==='city-intro'||name==='daily-intro')refreshDaily();
     if(name==='city-intro')renderFunStatus();
     if(name==='city-intro')$('cityControlCopy').textContent=host.oneHand?.()?'EN HAND: spaken går och svänger. Sikta mot zombien så skjuter du automatiskt. Byt till två händer i PAUS.':'WASD: gå · mus: sikta · klick: solstöt · E: uppdrag / buss · M: karta · T: turbo i City Explore. Samma snabba gång som tidigare.';
@@ -956,12 +959,14 @@ export function createLastRound(pc, host) {
     setPanel('result');$('missionResultPostcard').hidden=$('roundSaveCard').hidden=game.practice;
     if(!game.practice){const record={kind:'mission',mission:selectedMission,seed,score:game.score,won,health:game.health??100,kills:game.captured,seconds:game.elapsed,title:missionInfo().name,place:missionInfo().place};rememberMoment(record);missionPostcard.show(record);}
     sound(won ? 'win' : 'boss');
+    // julgrenen: Sandgrund-uppdraget (Julvernissagen) ger en julstämpel och julpoäng (xmas/xmas-sandgrund.mjs)
+    try{xmas?.missionDone?.({id:selectedMission,won,practice:!!game.practice,score:game.score,rescued:game.rescued||0,captured:game.captured||0,seconds:Math.round(game.elapsed||0)});}catch(e){console.error('[Jul] uppdragsresultat',e);}
   }
   function share(){if(!game.practice)missionPostcard.share($('roundShare'));}
   $('roundStart').addEventListener('click', () => start()); $('roundRetry').addEventListener('click', () => start());
   $('roundNext').addEventListener('click',()=>{selectMission(MISSIONS[(MISSIONS.findIndex(m=>m.id===selectedMission)+1)%MISSIONS.length].id);setPanel('intro');});
   $('roundPractice').addEventListener('click', () => start(true));
-  $('roundExplore').addEventListener('click',()=>explore()); $('roundLeave').addEventListener('click',()=>explore());
+  $('roundExplore').addEventListener('click',()=>explore()); $('roundLeave').addEventListener('click',()=>{if(xmas?.afterMission?.())return;explore();});
   $('roundNavigate').addEventListener('click',()=>{journey.destination=selectedMission;journey.routeMode='mission';journey.save();explore();});
   $('cityClean').addEventListener('click',()=>startCity('clean'));$('cityTrail').addEventListener('click',()=>startCity('trail'));
   $('cityStart').addEventListener('click',()=>startCity('timed',request.kind==='hunt'?{seed:request.seed,kit:request.kit,challenge:request.kit?{kind:'friend',seed:request.seed,title:'KOMPISJAKTEN',seconds:180}:null}:{}));$('cityRetry').addEventListener('click',()=>startCity('timed',retryCityOptions));
@@ -1086,7 +1091,9 @@ export function createLastRound(pc, host) {
     actors: game.actors.map(a => ({id: a.id, x: a.x, z: a.z, active: a.active, hp:a.hp, kind:a.kind})), goal: {...layout.goal}, objective:isPush()?layout.goal:game.objective(host.player.getPosition())})});
   // Julgrenen: Julklappsjakten kopplas in här. Alla hjälpfunktioner som julkoden behöver ges som argument, den rör inga andra moduler.
   xmas=installXmas({pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,params,storage,
-    isPlaying:()=>game.phase==='playing'&&!panel,placeActive:()=>!!journey.places?.run,indoors:p=>mallInside(p),openPass:()=>openPass(),dismissPlaceResult:()=>placesUi.dismissResult(),setTurbo:on=>{const was=turbo;if(typeof on==='boolean'&&on!==turbo){turbo=on;renderTurbo();}return was;}});
+    isPlaying:()=>game.phase==='playing'&&!panel,placeActive:()=>!!journey.places?.run,indoors:p=>mallInside(p),openPass:()=>openPass(),dismissPlaceResult:()=>placesUi.dismissResult(),setTurbo:on=>{const was=turbo;if(typeof on==='boolean'&&on!==turbo){turbo=on;renderTurbo();}return was;},
+    // 2.21.1-xmas.7: grundspelets uppdrag och båtbuss startas från Julmenyn (xmas-boot.js: startSandgrund, startBoat)
+    startMission:id=>{selectMission(id);start(false);},boardBoat:()=>boardBoat(),boatActive:()=>boatRide.active(),explore:()=>explore()});
   journey.xmas=xmas;
   explore(true);
   if(xmas){xmas.openMenu();}

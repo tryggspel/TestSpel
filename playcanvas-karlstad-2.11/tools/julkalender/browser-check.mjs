@@ -95,15 +95,15 @@ const PLAYED={[SAVE]:save({
   check('10 dec: dagens kort visar lucka 10',/Rush 3 GLÖGGFART/.test(await text(page,'#today')),await text(page,'#today'));
   await page.click('.door[data-n="6"]');
   await page.waitForSelector('#sheet[open]');
-  check('lucka 6 öppnas med rätt titel, mål och 3 steg',/Sandgrund: Vernissage från graven/.test(await text(page,'#sheet-title'))&&await count(page,'#sheet .todo li')===3&&/Mål/.test(await text(page,'#sheet .goal')));
-  check('lucka 6 säger att uppdraget ligger i Karlstad City och markeras av spelaren',/Karlstad City/.test(await text(page,'#sheet .notice'))&&/Markeras av dig/.test(await text(page,'#sheet .status')),await text(page,'#sheet .status'));
+  check('lucka 6 öppnas med rätt titel, mål och 3 steg',/Sandgrund: Julvernissagen/.test(await text(page,'#sheet-title'))&&await count(page,'#sheet .todo li')===3&&/Mål/.test(await text(page,'#sheet .goal')));
+  check('lucka 6 är ett uppdrag i Julspelet: säger vad man trycker på och bockas av av stämpeln (inget "markera själv" som enda väg)',/SANDGRUND: JULVERNISSAGEN/.test(await text(page,'#sheet .use'))&&/Inte klar ännu/.test(await text(page,'#sheet .status'))&&await count(page,'#sheet .notice')===0&&await count(page,'#sheet .cta [data-act="manual"]')===0,await text(page,'#sheet .use')+' | '+await text(page,'#sheet .status'));
   const href=await page.$eval('#sheet .cta a',a=>a.getAttribute('href'));
-  check('knappen länkar till Sandgrund-uppdraget i Karlstad City (adressen ur xmas-config)',href===BASE_GAME_URL+'?challenge=sandgrund',href);
+  check('knappen länkar rakt till Sandgrund-uppdraget i Julspelet (djuplänk med luckans nummer)',href==='../?uppdrag=sandgrund&lucka=6',href);
   check('2:a advent visas på lucka 6',/2:a advent/.test(await text(page,'#sheet')));
   await page.keyboard.press('Escape');
   await page.click('.door[data-n="4"]');await page.waitForSelector('#sheet[open]');
   const href4=await page.$eval('#sheet .cta a',a=>a.getAttribute('href'));
-  check('lucka 4 länkar till Julspelets startvy och säger vad man trycker på',href4==='../'&&/JULRUSHEN → Rush 1/.test(await text(page,'#sheet .use')),href4+' '+await text(page,'#sheet .use'));
+  check('lucka 4 länkar rakt till Rush 1 och säger vad man trycker på om länken inte räcker',href4==='../?uppdrag=rush1&lucka=4'&&/JULRUSHEN → Rush 1/.test(await text(page,'#sheet .use')),href4+' '+await text(page,'#sheet .use'));
   const res=await page.request.get(new URL(href4,BASE+'x').href);
   check('länken till Julspelet går att öppna (startvyn finns)',res.ok()&&/Julklappsjakten/.test(await res.text()),String(res.status()));
   check('lucka 4 är öppnad i rutnätet efter besöket',(await classes(page,4)).includes('is-open'));
@@ -127,12 +127,13 @@ const PLAYED={[SAVE]:save({
   check('lucka 5 visar "0 av 3 avslutade rundor"',/0 av 3 avslutade rundor/.test(await text(page,'#sheet .status')),await text(page,'#sheet .status'));
   // Spelaren avslutar tre rundor i spelet (annan flik, samma webbläsare).
   const other=await ctx.newPage();await other.goto(BASE+'icon.svg');
-  await other.evaluate(k=>{const f=JSON.parse(localStorage.getItem(k));f.totals.runs=5;f.totals.packages=130;localStorage.setItem(k,JSON.stringify(f));},SAVE);
+  await other.evaluate(k=>{const f=JSON.parse(localStorage.getItem(k));f.totals.runs=5;f.totals.packages=130;f.stamps.sandgrund=1700000000010;f.stamps.marieberg=1700000000011;localStorage.setItem(k,JSON.stringify(f));},SAVE);
   await page.waitForFunction(()=>window.Julkalender.snapshot().done.includes(5),null,{timeout:4000}).catch(()=>{});
   const s2=await snap(page);
   check('flikbyte/storage-händelse: lucka 5 bockas av när tre nya rundor avslutats',s2.done.includes(5),s2.done.join());
+  check('flikbyte: stämplarna Sandgrund och Julbåten bockar av luckorna 6 och 9',s2.done.includes(6)&&s2.done.includes(9),s2.done.join());
   check('luckan som är öppen uppdateras till "Klar"',/Klar/.test(await text(page,'#sheet .status')),await text(page,'#sheet .status'));
-  check('meddelande om klar lucka visas',/Lucka 5 klar/.test(await text(page,'#toast')),await text(page,'#toast'));
+  check('meddelande om klara luckor visas (lucka 5 och de två nya stämplarna, 6 och 9)',/3 luckor klara/.test(await text(page,'#toast')),await text(page,'#toast'));
   await shot(page,'3-klar-lucka');
   const real=await page.evaluate(()=>Object.fromEntries(Object.keys(localStorage).filter(k=>k.startsWith('karlstad')||k.startsWith('xmas:')).sort().map(k=>[k,localStorage.getItem(k)])));
   check('Julspelets sparning rörs inte av kalendern (inga nya spelnycklar, bara ändringen från "spelaren")',Object.keys(real).join()===SAVE&&JSON.parse(real[SAVE]).stamps.intro===1700000000000&&JSON.parse(real[SAVE]).totals.runs===5,JSON.stringify(real).slice(0,200));
@@ -140,13 +141,13 @@ const PLAYED={[SAVE]:save({
   await ctx.close();
 }
 
-// 4. Själv-markering (luckorna 6 och 9 ligger i Karlstad City och kan inte läsas av), sparas över omladdning och går att ångra.
+// 4. Reservväg: "Markera själv" om avläsningen av någon anledning inte hittar resultatet. Sparas över omladdning och går att ångra.
 {
   const {ctx,page}=await open({time:'2026-12-24T09:00:00Z'});
-  check('24 dec: alla luckor öppna och finalens kort visas',await count(page,'.is-locked')===0&&/sju av nio julstämplar/.test(await text(page,'#today')),await text(page,'#today'));
+  check('24 dec: alla luckor öppna och finalens kort visas',await count(page,'.is-locked')===0&&/åtta av elva julstämplar/.test(await text(page,'#today')),await text(page,'#today'));
   await page.click('.door[data-n="6"]');await page.waitForSelector('#sheet[open]');
-  check('lucka 6 kan bara markeras av spelaren',/Markeras av dig/.test(await text(page,'#sheet .status'))&&await count(page,'#sheet [data-act="manual"]')>=1);
-  await page.click('#sheet .cta [data-act="manual"]');
+  check('lucka 6 kan markeras för hand som reservväg ("Klarade du den men ser ingen bock?")',/Inte klar ännu/.test(await text(page,'#sheet .status'))&&await count(page,'#sheet .fine [data-act="manual"]')===1);
+  await page.click('#sheet .fine [data-act="manual"]');
   check('själv-markering ger bock och stjärnor (3)',(await classes(page,6)).includes('is-done')&&(await snap(page)).stars===3);
   await page.reload({waitUntil:'networkidle'});
   check('själv-markering finns kvar efter omladdning',(await snap(page)).done.join()==='6');
@@ -160,7 +161,7 @@ const PLAYED={[SAVE]:save({
 {
   const {ctx,page}=await open({time:'2026-10-15T10:00:00Z',query:'?test'});
   check('förhandsvisning: alla 24 luckor kan öppnas och bannern visas',await count(page,'.is-locked')===0&&!(await page.$eval('#banner',e=>e.hidden)));
-  await page.click('.door[data-n="6"]');await page.waitForSelector('#sheet[open]');await page.click('#sheet .cta [data-act="manual"]');
+  await page.click('.door[data-n="6"]');await page.waitForSelector('#sheet[open]');await page.click('#sheet .fine [data-act="manual"]');
   const keys=await page.evaluate(()=>Object.keys(localStorage).filter(k=>k.startsWith('julspelet:')).sort());
   check('förhandsvisning sparar under egen nyckel',keys.includes('julspelet:2026:v1:preview')&&!keys.includes('julspelet:2026:v1'),keys.join());
   await page.keyboard.press('Escape');
@@ -204,7 +205,7 @@ for(const [w,h] of [[320,640],[390,844],[844,390]]){
   await page.click('.door[data-n="9"]');await page.waitForSelector('#sheet[open]');
   const fits=await page.$eval('#sheet .paper',e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1;});
   check(`${w}×${h}: luckans kort ryms i bredd`,fits);
-  check(`${w}×${h}: lucka 9 visar Karlstad City-notisen och knappen`,await count(page,'#sheet .notice')===1&&await count(page,'#sheet .cta a')===1);
+  check(`${w}×${h}: lucka 9 visar vad man trycker på i Julmenyn och en knapp till spelet`,/BÅTBUSSEN TILL MARIEBERGSSKOGEN/.test(await text(page,'#sheet .use'))&&await count(page,'#sheet .notice')===0&&await count(page,'#sheet .cta a')===1&&await page.$eval('#sheet .cta a',a=>a.getAttribute('href'))==='../?uppdrag=batbuss&lucka=9');
   if(w===390)await shot(page,'8-mobil-lucka9');
   check(`${w}×${h}: inga fel i konsolen`,errs.length===0,errs.join(' | '));
   await ctx.close();

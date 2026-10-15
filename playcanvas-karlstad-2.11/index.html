@@ -30,11 +30,11 @@
 @media(pointer:fine){#joy,#look,#buttons{display:none}}
 @media(max-width:700px){.brand span{display:none}.brand{max-width:58vw}#status{top:max(54px,calc(env(safe-area-inset-top) + 54px))}#mission{top:max(92px,calc(env(safe-area-inset-top) + 92px));font-size:11px}}
 </style>
-<link rel="stylesheet" href="./last-round.css?v=2.21.1-xmas.6">
-<link rel="stylesheet" href="./compact-hud.css?v=2.21.1-xmas.6">
-<link rel="stylesheet" href="./explore-fun.css?v=2.21.1-xmas.6">
-<link rel="stylesheet" href="./places.css?v=2.21.1-xmas.6">
-<link rel="stylesheet" href="./xmas/xmas.css?v=2.21.1-xmas.6">
+<link rel="stylesheet" href="./last-round.css?v=2.21.1-xmas.7">
+<link rel="stylesheet" href="./compact-hud.css?v=2.21.1-xmas.7">
+<link rel="stylesheet" href="./explore-fun.css?v=2.21.1-xmas.7">
+<link rel="stylesheet" href="./places.css?v=2.21.1-xmas.7">
+<link rel="stylesheet" href="./xmas/xmas.css?v=2.21.1-xmas.7">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -136,6 +136,7 @@
     <button id="xmasZombies" class="round-secondary xmas-zombie" type="button">TOMTEZOMBIES <span>→</span></button>
     <p id="xmasZombieNote" class="round-fine">Ett separat julläge med zombier och kuslig julmusik. Julklappsjakten är helt utan zombier.</p>
     <p id="xmasStatus" class="round-fine fun-news"></p>
+    <a id="xmasCalendar" class="xmas-link" href="./julkalender/">JULKALENDERN · 24 LUCKOR →</a>
     <button id="xmasBack" class="round-tertiary" type="button">← Tillbaka till Karlstad-spelet</button>
     <p id="xmasBuild" class="round-fine xmas-build"></p>
   </section>
@@ -151,8 +152,13 @@
     <p id="xmasShopsNote" class="round-fine">Hjälp tomtarna i Cervera och Pressbyrån. De ligger också på vägen när du går runt och letar spår.</p>
     <button id="xmasFree" class="round-secondary" type="button">FRI JULVANDRING <span>→</span></button>
     <p id="xmasFreeNote" class="round-fine">Ingen gräns och inget mål: gå runt i staden, leta efter tomtarnas spår i snön och hitta julklapparna.</p>
+    <button id="xmasSandgrund" class="round-secondary xmas-zombie" type="button">SANDGRUND: JULVERNISSAGEN <span>→</span></button>
+    <p id="xmasSandgrundNote" class="round-fine"></p>
+    <button id="xmasBoat" class="round-secondary xmas-zombie" type="button">BÅTBUSSEN TILL MARIEBERGSSKOGEN <span>→</span></button>
+    <p id="xmasBoatNote" class="round-fine"></p>
     <ul id="xmasStampList" class="xmas-stamps"></ul>
     <button id="xmasContinueIntro" class="round-tertiary" type="button">Spela första uppdraget igen</button>
+    <a id="xmasCalendar2" class="xmas-link" href="./julkalender/">JULKALENDERN · 24 LUCKOR →</a>
     <button id="xmasContinueMenu" class="round-tertiary" type="button">Startmenyn</button>
     <button id="xmasContinueBack" class="round-tertiary" type="button">← Tillbaka till Karlstad-spelet</button>
   </section>
@@ -205,6 +211,14 @@
     <button id="xmasChallengeGo" class="round-primary xmas-primary" type="button">TA UTMANINGEN <span>→</span></button>
     <button id="xmasChallengeSave" class="round-secondary" type="button">BARA SPARA VÄNNEN</button>
     <button id="xmasChallengeSkip" class="round-tertiary" type="button">Inte nu</button>
+  </section>
+  <section id="round-xmas-link" class="round-card compact xmas-card" hidden>
+    <div class="episode-label"><span id="xmasLinkKicker">JULSPELET</span><span>UPPDRAG</span></div>
+    <h2 id="xmasLinkTitle">UPPDRAG</h2>
+    <p id="xmasLinkLine" class="round-lead"></p>
+    <p id="xmasLinkNote" class="round-fine"></p>
+    <button id="xmasLinkGo" class="round-primary xmas-primary" type="button">STARTA UPPDRAGET <span>→</span></button>
+    <button id="xmasLinkSkip" class="round-tertiary" type="button">Till startvyn</button>
   </section>
   <section id="round-city-intro" class="round-card city-card" hidden>
     <div class="episode-label"><span>KARLSTAD / STADSJAKTEN</span><span class="game-version">2.11.22</span></div>
@@ -360,6 +374,6 @@
     <button id="roundMapClose" class="round-primary">TILLBAKA →</button>
   </section>
 </div>
-<script type="module" src="./app.js?v=2.21.1-xmas.6"></script>
+<script type="module" src="./app.js?v=2.21.1-xmas.7"></script>
 </body>
 </html>

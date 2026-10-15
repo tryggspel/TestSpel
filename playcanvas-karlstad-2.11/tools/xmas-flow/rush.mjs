@@ -183,7 +183,7 @@ const rc=await ev(()=>({panel:!document.getElementById('round-xmas-result').hidd
   points:document.getElementById('xmasResultPoints').textContent,cells:[...document.querySelectorAll('#xmasResultGrid .xr-cell')].map(c=>c.textContent),b1:document.getElementById('xmasResultContinue').textContent.trim(),b2:document.getElementById('xmasResultFree').textContent.trim(),
   parts:document.getElementById('xmasResultParts').textContent,status:document.getElementById('xmasResultStatus').textContent,over:window.KarlstadDebug.journey().xmas.julrush.result}));
 check('R3c efter tredje livet visas slutkortet med tempo, paket, poäng och knapparna EN RUSH TILL och JULMENYN',rc.panel&&rc.title==='JULRUSHEN ÄR SLUT!'&&/tempo \d+ \(.+\) och plockade \d+ paket/.test(rc.line)&&rc.cells.length===4&&/EN RUSH TILL/.test(rc.b1)&&rc.b2==='JULMENYN'&&rc.over&&rc.points.replace(/\s|\u00a0/g,'')===String(rc.over.points)+'JULPOÄNG',JSON.stringify({kicker:rc.kicker,line:rc.line,points:rc.points,cells:rc.cells,b1:rc.b1,b2:rc.b2}));
-check('R3d slutkortet visar rekord och gåvor, och stämpelräknaren går till 9',/GÅVOR \d+/.test(rc.parts)&&/\/ 9/.test(rc.status),rc.parts+' | '+rc.status);
+check('R3d slutkortet visar rekord och gåvor, och stämpelräknaren går till 11',/GÅVOR \d+/.test(rc.parts)&&/\/ 11/.test(rc.status),rc.parts+' | '+rc.status);
 await shot('r04-slutkort');
 // Den riktiga lagringen läses ur webbläsarkontexten (window.localStorage är julbyggets prefixskydd): inga nycklar utan prefix får ha skrivits.
 const real=((await ctx.storageState()).origins.find(o=>o.origin.includes('localhost:'+PORT))?.localStorage)||[],keys=real.map(e=>e.name);
@@ -245,7 +245,7 @@ await shot('r08-jakten-efter');
 // ── R8: fortsättningsmenyn och en tredje start ──────────────────────────────────────────────────────────────────────────────────────
 await ev(()=>window.KarlstadDebug.journey().xmas.openContinue());await wait(500);
 const cm=await ev(()=>({vis:!document.getElementById('round-xmas-continue').hidden,h:Math.round(document.getElementById('xmasRushGo').getBoundingClientRect().height),note:document.getElementById('xmasRushGoNote').textContent,stamps:[...document.querySelectorAll('#xmasStampList li')].map(l=>l.textContent)}));
-check('R8 fortsättningsmenyn har JULRUSHEN med en rad om framstegen och stämpelrutan JULRUSHEN är ikryssad (nio stämplar)',cm.vis&&cm.h>=48&&/rusher|Rush/.test(cm.note)&&cm.stamps.length===9&&cm.stamps.some(t=>/^✓ JULRUSHEN/.test(t)),JSON.stringify({h:cm.h,note:cm.note,n:cm.stamps.length}));
+check('R8 fortsättningsmenyn har JULRUSHEN med en rad om framstegen och stämpelrutan JULRUSHEN är ikryssad (elva stämplar)',cm.vis&&cm.h>=48&&/rusher|Rush/.test(cm.note)&&cm.stamps.length===11&&cm.stamps.some(t=>/^✓ JULRUSHEN/.test(t)),JSON.stringify({h:cm.h,note:cm.note,n:cm.stamps.length}));
 await shot('r09-fortsatt');
 await startMarathon('xmasRushGo');await wait(2600);
 check('R8b knappen i fortsättningsmenyn leder till rushmenyn och MARATON startar JulRushen',await ev(()=>window.KarlstadDebug.journey().xmas.snapshot().mode==='rush'&&window.KarlstadDebug.journey().xmas.julrush.state==='running'));

@@ -64,7 +64,10 @@ export const STAMPS=Object.freeze([
   Object.freeze({id:'pressbyran',label:'TOMTARNAS FIKAORDER',sub:'Pressbyrån'}),
   Object.freeze({id:'zombies',label:'TOMTEZOMBIES',sub:'Överlev en tomtejakt'}),
   Object.freeze({id:'julrush',label:'JULRUSHEN',sub:'Klara Rush 5'}),
-  Object.freeze({id:'julrush-12',label:'TOMTEGALET',sub:'Klara alla tolv rusher'})
+  Object.freeze({id:'julrush-12',label:'TOMTEGALET',sub:'Klara alla tolv rusher'}),
+  // 2.21.1-xmas.7: två uppdrag från grundspelet har fått en julvariant (xmas-sandgrund.mjs, xmas-marieberg.mjs)
+  Object.freeze({id:'sandgrund',label:'SANDGRUND · JULVERNISSAGEN',sub:'Stoppa Zombie-Lerin'}),
+  Object.freeze({id:'marieberg',label:'MARIEBERGSSKOGEN · JULBÅTEN',sub:'Båten med julklappar'})
 ]);
 export const TITLES=Object.freeze([[0,'NYFIKEN'],[250,'PAKETJÄGARE'],[900,'TOMTEHJÄLPARE'],[2400,'JULENS VÄN'],[6000,'ÖVERTOMTE']]);
 export const titleFor=points=>TITLES.reduce((t,[min,name])=>points>=min?name:t,TITLES[0][1]);

@@ -15,6 +15,9 @@
 .xmas-card .xmas-primary:active{transform:translateY(2px);box-shadow:0 2px 0 var(--xmas-red-dark)}
 .xmas-card .xmas-zombie{border-color:#b58ad688;color:#e7d6ff;min-height:52px}
 .xmas-card .xmas-zombie[disabled]{opacity:.5}
+/* 2.21.1-xmas.7: länken till Julkalendern (en vanlig länk som ser ut som en lugn knapp) */
+.xmas-card a.xmas-link{display:block;box-sizing:border-box;width:100%;min-height:44px;margin-top:14px;padding:13px 12px;text-align:center;text-decoration:none;border:1px solid #f2d78a88;border-radius:3px;background:transparent;color:#ffe9a8;font:700 11px/18px system-ui}
+.xmas-card a.xmas-link:hover{background:#ffffff0c}.xmas-card a.xmas-link:focus-visible{outline:2px solid #ffe9a8;outline-offset:2px}
 .xmas-card .xmas-rush{border-color:#8fe3a888;color:#dcffe6;min-height:52px}
 .xmas-build{font:600 10px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#7f9a88;letter-spacing:.02em;word-break:break-all}
 #round-xmas-intro{max-height:calc(100dvh - 36px);overflow-y:auto;touch-action:pan-y}
@@ -36,9 +39,10 @@
 @keyframes xmasStampIn{0%{opacity:0;transform:rotate(-5deg) scale(1.9)}100%{opacity:1;transform:rotate(-5deg) scale(1)}}
 
 /* ── JulRushens nivåer, topplistan och utmaningen ──────────────────────────────────────────────────────────────────── */
-#round-xmas-rush,#round-xmas-board,#round-xmas-challenge{max-height:calc(100dvh - 36px);overflow-y:auto;touch-action:pan-y}
+#round-xmas-rush,#round-xmas-board,#round-xmas-challenge,#round-xmas-link{max-height:calc(100dvh - 36px);overflow-y:auto;touch-action:pan-y}
 #round-xmas-rush h2,#round-xmas-board h2{font-size:clamp(30px,9vw,42px)}
-#round-xmas-rush .round-lead,#round-xmas-challenge .round-lead{font-size:15px;line-height:1.4}
+#round-xmas-rush .round-lead,#round-xmas-challenge .round-lead,#round-xmas-link .round-lead{font-size:15px;line-height:1.4}
+#round-xmas-link h2{font-size:clamp(28px,8.4vw,40px);overflow-wrap:anywhere}
 .xmas-rushes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0 8px}
 .xr-tile{position:relative;display:grid;justify-items:center;align-content:center;gap:2px;min-height:60px;padding:6px 4px 5px;border-radius:8px;border:2px solid #85aa8566;background:#0c241f;color:var(--paper);font-family:system-ui,sans-serif;cursor:pointer}
 .xr-tile b{font:1000 22px/1 system-ui;color:var(--xmas-gold)}
@@ -122,7 +126,9 @@
 /* Grundspelets spelval och samlingar som inte hör till julen göms i pausmenyn och på kartan */
 body.xmas-on #pauseHuntHelp,body.xmas-on #cityNewRun,body.xmas-on #roundRestart,body.xmas-on #openAlbum,body.xmas-on #openMoment,body.xmas-on #stampBook,
 body.xmas-on #route-event,body.xmas-on #route-sun,body.xmas-on #route-sista-rundan,body.xmas-on #route-fikapanik,body.xmas-on #route-radda-fikat,body.xmas-on #route-sandgrund,
-body.xmas-on #mapStoryHint,body.xmas-on .map-story-buttons{display:none!important}
+body.xmas-on #mapStoryHint,body.xmas-on .map-story-buttons,
+/* 2.21.1-xmas.7: i Julvernissagen (Sandgrund) gäller grundspelets uppdrags-HUD, men inte vägen tillbaka till grundspelets startvy eller de val som hör till stadsvandringen */
+body.xmas-mission #cityNewRun,body.xmas-mission #openAlbum,body.xmas-mission #openMoment,body.xmas-mission #stampBook,body.xmas-mission #roundShare,body.xmas-mission #roundSaveCard,body.xmas-mission #missionResultPostcard,body.xmas-mission #roundNext{display:none!important}
 
 /* Liv och solenergi i Tomtezombies */
 .xh-vitals{grid-column:1/-1;display:grid;grid-template-columns:auto 1fr auto 1fr;gap:6px;align-items:center;font:800 10px/1 system-ui;letter-spacing:.12em;color:#9fc0a8}
@@ -232,7 +238,7 @@ body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
  .xmas-stamp{width:96px;height:96px}
  /* Liggande telefon: ingressen i rushmenyn utgår (så att målet och spelaknappen får plats) och huvudknappen följer med i kanten när kortet ändå är högre än skärmen */
  #round-xmas-rush .round-lead{display:none}
- #xmasResultContinue,#xmasRushPlay,#xmasChallengeGo{position:sticky;bottom:6px;z-index:3;box-shadow:0 4px 0 var(--xmas-red-dark),0 0 0 7px var(--ink),0 -12px 14px 6px var(--ink)}
+ #xmasResultContinue,#xmasRushPlay,#xmasChallengeGo,#xmasLinkGo{position:sticky;bottom:6px;z-index:3;box-shadow:0 4px 0 var(--xmas-red-dark),0 0 0 7px var(--ink),0 -12px 14px 6px var(--ink)}
 }
 @media(pointer:coarse) and (max-width:520px) and (min-height:501px){
  #xmasGoal{top:max(206px,calc(env(safe-area-inset-top) + 200px));font-size:16px}

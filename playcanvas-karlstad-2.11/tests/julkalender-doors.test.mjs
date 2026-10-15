@@ -12,9 +12,11 @@ import {zombieLevel,ZOMBIE_MAX,zombiePatrolEvery,zombieSpeed} from '../xmas/xmas
 import {ROUNDS,INTRO_SEARCH} from '../xmas/xmas-rounds.mjs';
 import {XMAS_CERVERA,XMAS_PRESSBYRAN} from '../xmas/xmas-places.mjs';
 import {XmasSave} from '../xmas/xmas-save.mjs';
+import {parseLink,describeLink} from '../xmas/xmas-deeplink.mjs';
 import {TEMPO} from '../tempo-run.mjs';
 import {MISSIONS} from '../city-missions.mjs';
-import {challengeRequest} from '../daily-challenge.mjs';
+import {SANDGRUND} from '../xmas/xmas-sandgrund.mjs';
+import {BOAT} from '../xmas/xmas-marieberg.mjs';
 
 const GAME_DIR=new URL('../',import.meta.url);
 const read=f=>fs.readFileSync(new URL(f,GAME_DIR),'utf8');
@@ -87,7 +89,7 @@ test('alla villkor är kända och har värden som spelet kan nå',()=>{
     if(c.kind==='zombies')assert.ok(c.n>=1&&c.n<=ZOMBIE_MAX,`lucka ${d.n}: nivå ${c.n}`);
     if(c.kind==='count'){assert.ok(METRICS.includes(c.metric),`lucka ${d.n}: mått ${c.metric}`);assert.ok(c.n>=1&&c.n<=5000);}
   }
-  assert.equal(DOORS.filter(d=>d.check.kind==='manual').length,2,'bara de två luckorna i Karlstad City markeras av spelaren');
+  assert.equal(DOORS.filter(d=>d.check.kind==='manual').length,0,'varje lucka läses av i spelets sparning (markera själv är bara en reservväg)');
 });
 test('stämpelluckor säger rätt stämpel och rätt mål (julrundor, butiker, Rush 5)',()=>{
   for(const d of DOORS)if(d.check.kind==='stamp'){
@@ -137,21 +139,55 @@ test('butiksluckor är demonstrationer precis som i spelet, och kalendern påst�
   }
   assert.ok(DOORS.filter(d=>d.demo).every(d=>d.typ==='butik'));
 });
-test('luckorna i Karlstad City länkar till grundspelet med länkar som det förstår, och markeras av spelaren',()=>{
-  assert.equal(KARLSTAD_CITY,BASE_GAME_URL);
-  const valid=new Set([...MISSIONS.map(m=>m.id),'boat']);
-  const ext=DOORS.filter(d=>d.extern);
-  assert.deepEqual(ext.map(d=>d.n),[6,9]);
-  for(const d of ext){
-    assert.equal(d.typ,'karlstad');assert.equal(d.check.kind,'manual');assert.ok(d.spel.url.startsWith(KARLSTAD_CITY));
-    const q=new URL(d.spel.url).search,p=new URLSearchParams(q),req=challengeRequest(q);
-    assert.ok(!req.error&&valid.has(p.get('challenge')),`lucka ${d.n}: ${q}`);assert.ok(!p.has('rules')&&!p.has('target'),'inga kompisutmaningar');
-    assert.equal(gameLink(d),d.spel.url);
-  }
-  assert.equal(new URL(door(6).spel.url).searchParams.get('challenge'),'sandgrund');assert.equal(new URL(door(9).spel.url).searchParams.get('challenge'),'boat');
-  assert.match(door(6).titel,/Sandgrund/);assert.match(door(9).titel,/Mariebergsskogen/);
-  for(const d of DOORS.filter(d=>!d.extern))assert.equal(gameLink(d),GAME_PATH,`lucka ${d.n} länkar till Julspelet`);
+test('luckorna 6 och 9 är Julspelets egna uppdrag (Sandgrund och båtbussen) och bockas av av deras julstämplar',()=>{
+  assert.equal(KARLSTAD_CITY,BASE_GAME_URL,'grundspelets adress kommer bara ur xmas-config (används i sidfoten)');
+  const six=door(6),nine=door(9);
+  assert.equal(six.typ,'plats');assert.equal(nine.typ,'plats');
+  assert.ok(TYPES[six.typ]);
+  assert.deepEqual(six.check,{kind:'stamp',id:SANDGRUND.id});assert.deepEqual(nine.check,{kind:'stamp',id:BOAT.id});
+  assert.ok(MISSIONS.some(m=>m.id===SANDGRUND.id),'Sandgrund-uppdraget finns i grundspelet som julvarianten bygger på');
+  assert.ok(STAMPS.some(x=>x.id===SANDGRUND.id)&&STAMPS.some(x=>x.id===BOAT.id),'båda uppdragen har en julstämpel');
+  // Luckorna säger precis vad man trycker på: knapparnas texter är de som spelet visar.
+  assert.ok(text(six).includes(SANDGRUND.menu),'lucka 6 nämner knappen '+SANDGRUND.menu);assert.ok(text(nine).includes(BOAT.menu),'lucka 9 nämner knappen '+BOAT.menu);
+  const html=read('index.html');
+  assert.ok(html.includes(SANDGRUND.menu)&&html.includes(BOAT.menu),'knapparna finns i Julspelets Julmeny');
+  assert.match(six.titel,/Sandgrund/);assert.match(nine.titel,/Mariebergsskogen/);
+  assert.match(text(six),/tre besökare/);assert.match(text(nine),/tolv julklappar/);assert.equal(BOAT.goal,12);
+  for(const d of DOORS){assert.equal(d.extern,undefined,`lucka ${d.n}: inga luckor ligger utanför Julspelet`);assert.equal(d.spel.url,undefined);assert.ok(gameLink(d).startsWith(GAME_PATH+'?uppdrag='),`lucka ${d.n} länkar till Julspelet`);}
   assert.equal(GAME_PATH,'../','kalendern ligger i julkalender/ och spelet i mappen ovanför');
+});
+test('djuplänkarna: varje lucka länkar rakt till rätt uppdrag, och Julspelet förstår länken och startar det luckan kräver',()=>{
+  const played=()=>{const s=new XmasSave(new Store());s.stamp('intro');return s;};
+  const seen=new Set();
+  for(const d of DOORS){
+    const href=gameLink(d),u=new URL(href,'https://x.example/julkalender/');
+    assert.equal(u.pathname,'/',`lucka ${d.n}: länken går till spelets rot`);
+    assert.equal(href,`${GAME_PATH}?uppdrag=${d.spel.djup}&lucka=${d.n}`,`lucka ${d.n}`);
+    const link=parseLink(u.search);assert.ok(link&&link.known,`lucka ${d.n}: Julspelet känner inte igen nyckeln ${d.spel.djup}`);assert.equal(link.door,d.n);
+    const card=describeLink(link.key,{save:played(),door:link.door});assert.ok(card,`lucka ${d.n}`);
+    seen.add(link.key);
+    const c=d.check;
+    // Länken ska starta det som luckan kräver:
+    if(c.kind==='stamp')assert.equal(card.gives.stamp,c.id,`lucka ${d.n}: länken ger stämpeln ${c.id}`);
+    else if(c.kind==='zombies')assert.equal(card.gives.zombies,c.n,`lucka ${d.n}: Tomtezombies nivå ${c.n}`);
+    else if(c.kind==='rush'||c.kind==='rushPoints')assert.equal(card.gives.rush,c.n,`lucka ${d.n}: Rush ${c.n}`);
+    else if(c.kind==='marathon')assert.equal(card.gives.marathon,true,`lucka ${d.n}: Maraton`);
+    else assert.ok(card.direct,`lucka ${d.n}: räknare, namn och stämpelsumma saknar eget uppdrag: länken öppnar en meny (${card.go.fn})`);
+    // Knappen säger vad den gör:
+    assert.ok(/^(Starta i Julklappsjakten|Öppna )/.test(d.spel.knapp),`lucka ${d.n}: knapptext "${d.spel.knapp}"`);
+    assert.equal(card.direct,/^Öppna /.test(d.spel.knapp),`lucka ${d.n}: "Öppna …" bara när länken öppnar en meny`);
+  }
+  for(const k of ['sandgrund','batbuss','pressbyran','cervera','torget','kungsgatan','drottninggatan','intro','maraton','topplista'])assert.ok(seen.has(k),`ingen lucka länkar till ${k}`);
+});
+test('finalen kräver åtta av elva julstämplar och nås utan Tomtegalet',()=>{
+  assert.equal(STAMPS.length,11);
+  const d=door(24);assert.deepEqual(d.check,{kind:'stamps',n:8,unit:'julstämplar'});
+  // Lucka 12 (Tomtezombies nivå 1) ger stämpeln 'zombies' (rules.mjs: klarad nivå 1 = stämpeln).
+  const gives=x=>x.check.kind==='stamp'?[x.check.id]:x.check.kind==='zombies'&&x.check.n===1?['zombies']:[];
+  const givers=new Set(DOORS.flatMap(gives));
+  assert.ok(givers.size>=d.check.n+1,`stämplar som luckorna ger: ${givers.size}`);assert.ok(!givers.has('julrush-12'),'Tomtegalet (alla tolv rusher) krävs inte');
+  for(const n of [1,2,3,6,7,8,9,11,12,13])assert.ok(gives(door(n)).length===1,`lucka ${n} ger en stämpel`);
+  assert.ok(text(d).includes('8')||/åtta/.test(text(d)));assert.ok(d.steg.join(' ').includes('1, 2, 3, 6, 7, 8, 9, 11, 12 och 13'));assert.ok(d.steg.join(' ').includes('n / 11'));
 });
 test('knapparna och rubrikerna luckorna hänvisar till finns i Julspelet',()=>{
   const julHtml=read('index.html')+'\n'+read('xmas/xmas-ui.js')+'\n'+read('xmas/xmas-boot.js');

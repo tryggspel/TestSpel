@@ -1,9 +1,9 @@
 // Julkalenderns sida: bygger luckorna, öppnar dem och bockar av dem mot det spelaren gjort i Julklappsjakten (Julspelet).
 // Spelet ändras inte. Allt som rör regler och avläsning ligger i rules.mjs, texterna i doors.mjs.
-import {SEASON,STORAGE_KEY,RANKS,daysBetween,weekdayOf,shortDate,adventSundays,resolveToday,phaseOf,testModeFrom,doorAccess,readGame,Julkalender} from './rules.mjs?v=2.21.1-xmas.6';
-import {DOORS,TYPES,KARLSTAD_CITY,gameLink} from './doors.mjs?v=2.21.1-xmas.6';
-import {mountScene,treeSvg} from './scene.mjs?v=2.21.1-xmas.6';
-import {startSnow} from './snow.mjs?v=2.21.1-xmas.6';
+import {SEASON,STORAGE_KEY,RANKS,daysBetween,weekdayOf,shortDate,adventSundays,resolveToday,phaseOf,testModeFrom,doorAccess,readGame,Julkalender} from './rules.mjs?v=2.21.1-xmas.7';
+import {DOORS,TYPES,KARLSTAD_CITY,gameLink} from './doors.mjs?v=2.21.1-xmas.7';
+import {mountScene,treeSvg} from './scene.mjs?v=2.21.1-xmas.7';
+import {startSnow} from './snow.mjs?v=2.21.1-xmas.7';
 
 // Versionen är spelets (en cache-nyckel för hela bygget, se tools/set-version.mjs): den står i adressen till den här modulen.
 const VERSION=(()=>{try{return new URL(import.meta.url).searchParams.get('v')||'';}catch{return '';}})();
@@ -156,7 +156,7 @@ function sheetHtml(n){
     const manual=cal.how(n)==='manual';
     status=`<div class="status ok"><strong>${icon('check')} Klar</strong>${manual?'Markerad av dig.':'Kalendern hittade resultatet i ditt spel.'} Du fick ${d.stjarnor} ${d.stjarnor===1?'stjärna':'stjärnor'}.</div>`;
   }else if(d.check.kind==='manual'){
-    status=`<div class="status"><strong>Markeras av dig</strong>${d.extern?'Det här uppdraget finns i grundspelet Karlstad City och sparas inte i Julklappsjakten.':'Det här uppdraget sparas inte i spelet.'} Gör uppdraget och tryck sedan på knappen.</div>`;
+    status=`<div class="status"><strong>Markeras av dig</strong>Det här uppdraget sparas inte i spelet. Gör uppdraget och tryck sedan på knappen.</div>`;
   }else{
     status=`<div class="status"><strong>Inte klar ännu</strong>${progressView(d)}</div>`;
   }
@@ -167,10 +167,9 @@ function sheetHtml(n){
     <p class="story">${esc(d.story)}</p>
     <div class="goal"><b>Mål</b>${esc(d.mal)}</div>
     <h4>Så gör du</h4><ol class="todo">${d.steg.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>
-    ${d.spel.valj?`<p class="use">I spelet: tryck <b>${esc(d.spel.valj)}</b>.</p>`:''}
+    ${d.spel.valj?`<p class="use">Knappen går rakt till uppdraget i spelet. Hittar du inte dit: tryck <b>${esc(d.spel.valj)}</b>.</p>`:''}
     ${status}
     <div class="cta">${primary}${extra}</div>
-    ${d.extern?`<p class="notice"><b>Karlstad City.</b> Uppdraget ligger i grundspelet på en annan adress, och kalendern kan inte läsa av det därifrån. Det byggs inte in i Julklappsjakten än.</p>`:''}
     ${d.demo?`<p class="demo-note"><b>Demo.</b> Butiksplatsen är en demonstration i spelet. Inget samarbete eller erbjudande är bekräftat.</p>`:''}
     ${fine}${nav}</div>`;
 }
