@@ -1,0 +1,19 @@
+{
+ "id":"./",
+ "name":"Karlstad City Next",
+ "short_name":"Karlstad Next",
+ "description":"Nästa generations mobilversion av Zombie Apocalypse Karlstad med WebGPU/WebGL2 och stöd för fotorealistiska 3D-miljöer.",
+ "lang":"sv",
+ "start_url":"./?mode=zombie",
+ "scope":"./",
+ "display":"standalone",
+ "orientation":"landscape",
+ "background_color":"#101b20",
+ "theme_color":"#101b20",
+ "categories":["games","entertainment"],
+ "icons":[
+  {"src":"../karlstad-city/assets/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+  {"src":"../karlstad-city/assets/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+ ],
+ "shortcuts":[{"name":"Överlev Karlstad","url":"./?mode=zombie"},{"name":"Stadsäventyret","url":"./?mode=city"}]
+}
