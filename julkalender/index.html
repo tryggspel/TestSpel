@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Karlstads Julkalender – 24 luckor i Karlstad City</title>
+<meta name="description" content="Zombierna har gömt julklapparna i Karlstad. Öppna en lucka varje dag i december: ett uppdrag eller en utmaning i Karlstad City, från Sandgrund och Mariebergsskogen till butiksuppdrag och julrusch.">
+<meta name="theme-color" content="#071329">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Karlstads Julkalender">
+<meta property="og:description" content="24 luckor, 24 uppdrag i Karlstad City. Rädda julen innan julafton.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="calendar.css?v=1.0.0">
+</head>
+<body>
+<div class="scene" id="scene" aria-hidden="true"></div>
+<canvas class="snow" id="snow" aria-hidden="true"></canvas>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 2.5h6v3H9z"/><rect x="7" y="5.5" width="10" height="16" rx="3"/><path d="M7 12h10"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M6 21V3.5"/><path d="M6 5h12l-2.5 4.2L18 13.4H6"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.5 2 5 13.5h6L10 22l9-12h-6z"/></symbol>
+    <symbol id="i-bus" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="14" rx="3"/><path d="M4 11h16M7.5 17.5V20M16.5 17.5V20"/><circle cx="8" cy="14.2" r=".9"/><circle cx="16" cy="14.2" r=".9"/></symbol>
+    <symbol id="i-boat" viewBox="0 0 24 24"><path d="M3 15h18l-2.6 5H5.6z"/><path d="M12 3v12M12 4.5 18 12h-6"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 13H6z"/><path d="M9 8V6.2a3 3 0 0 1 6 0V8"/></symbol>
+    <symbol id="i-tree" viewBox="0 0 24 24"><path d="M12 2 6.5 10H9.5L5 16.5h5L7 20.5h10l-3-4h5L14.5 10h3z"/><path d="M12 20.5V23"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2 6.4 20.2l1.1-6.3L2.9 9.5l6.3-.9z"/></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><rect x="4" y="9.5" width="16" height="11.5" rx="1.2"/><path d="M12 9.5V21M4 14h16"/><path d="M12 9.5c-3.2 0-5-1.3-4-3.2 1.2-2 4 0 4 3.2zm0 0c3.2 0 5-1.3 4-3.2-1.2-2-4 0-4 3.2z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+  </defs>
+</svg>
+
+<a class="skip" href="#luckor">Hoppa till luckorna</a>
+
+<div class="page">
+  <header class="hero" id="top">
+    <div class="hero-head">
+      <p class="eyebrow"><svg class="ic" aria-hidden="true"><use href="#i-gift"/></svg> Julspelet 2026<span class="wide"> · Karlstad City</span></p>
+      <h1>Karlstads <span>Julkalender</span></h1>
+    </div>
+    <figure class="tree" id="tree"></figure>
+    <div class="hero-body">
+      <p class="lede">Zombierna har gömt Karlstads julklappar. Öppna en lucka varje dag i december: ett riktigt uppdrag eller en utmaning i Karlstad City. Klara dem och tänd granen på Stora Torget före julafton.</p>
+      <div class="progress" id="progress" aria-live="polite"></div>
+      <div class="today" id="today"></div>
+    </div>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <main>
+    <section class="calendar" id="luckor" aria-labelledby="h-luckor">
+      <div class="section-head">
+        <h2 id="h-luckor">24 luckor</h2>
+        <ul class="legend" aria-label="Förklaring">
+          <li><i class="key key-locked"></i>Låst</li><li><i class="key key-open"></i>Öppen</li><li><i class="key key-done"></i>Klar</li>
+        </ul>
+      </div>
+      <ol class="grid" id="grid"></ol>
+    </section>
+
+    <section class="how" aria-labelledby="h-how">
+      <h2 id="h-how">Så funkar det</h2>
+      <ol class="steps">
+        <li><b>Öppna dagens lucka</b><span>Varje lucka öppnas på sitt datum och står sedan öppen. Missar du en dag kan du ta den senare.</span></li>
+        <li><b>Spela i Karlstad City</b><span>Knappen i luckan tar dig direkt till rätt uppdrag eller läge. Allt spelas i det vanliga spelet.</span></li>
+        <li><b>Kom tillbaka hit</b><span>Kalendern läser av resultatet på din enhet och bockar av luckan själv. Efter varje klar lucka tänds en lampa på granen.</span></li>
+      </ol>
+    </section>
+
+    <section class="ranks" aria-labelledby="h-ranks">
+      <h2 id="h-ranks">Stjärnor och titlar</h2>
+      <p class="muted">Lätta luckor ger en stjärna, svåra tre. Alla 24 ger <b id="total-stars">46</b> stjärnor.</p>
+      <ol class="rank-list" id="rank-list"></ol>
+    </section>
+
+    <section class="shops" aria-labelledby="h-shops">
+      <h2 id="h-shops">Om butiksuppdragen</h2>
+      <p>Butiksuppdragen är frivilliga små uppdrag hos platser i Karlstad. Pressbyrån och Cervera är <b>demonstrationer</b>: inget samarbete eller erbjudande är bekräftat, och inga rabatter är påhittade. En lucka märks bara som butiksuppdrag, aldrig som reklam.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="tools">
+      <button type="button" class="chip" id="btn-share">Dela kalendern</button>
+      <button type="button" class="chip" id="btn-test">Förhandsvisa alla luckor</button>
+      <button type="button" class="chip" id="btn-reset">Börja om</button>
+    </div>
+    <p>Kalendern sparar bara på din egen enhet. Inga konton och inga uppgifter skickas någonstans. Den läser av vad du gjort i Karlstad City men ändrar aldrig något i spelet.</p>
+    <p class="credit" id="credit">Bakgrunden är en illustration av Karlstad: Östra bron, Domkyrkan, Rådhuset, Sandgrund och Stora Torget.</p>
+    <p><a href="../playcanvas-karlstad-2.11/">Öppna Karlstad City</a> · Julkalendern <span id="ver"></span></p>
+  </footer>
+</div>
+
+<dialog class="sheet" id="sheet" aria-labelledby="sheet-title"></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<noscript><p class="noscript">Julkalendern behöver JavaScript. <a href="../playcanvas-karlstad-2.11/">Öppna Karlstad City direkt</a>.</p></noscript>
+<script type="module" src="app.mjs?v=1.0.0"></script>
+</body>
+</html>
