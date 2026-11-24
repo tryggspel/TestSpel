@@ -24,6 +24,7 @@ import {BOAT,buildMarieberg,boatBonus} from './xmas-marieberg.mjs?v=2.21.1-xmas.
 import {parseLink,describeLink,LINK_PARAM,DOOR_PARAM} from './xmas-deeplink.mjs?v=2.21.1-xmas.11';
 import {doorBox,resultMatches} from './xmas-door.mjs?v=2.21.1-xmas.11';
 import {XmasMeta} from './xmas-meta.mjs?v=2.21.1-xmas.11';
+import {PRIZE} from './xmas-meta-config.mjs?v=2.21.1-xmas.11';
 import {hiddenPackages,nearestHidden,warmth,hiddenSpot} from './xmas-hidden.mjs?v=2.21.1-xmas.11';
 import {DOORS} from '../julkalender/doors.mjs?v=2.21.1-xmas.11';
 import {GAME_SAVE_KEY,STORAGE_KEY as CALENDAR_KEY,readGame,evaluate,hasAutoCheck,metricsOf} from '../julkalender/rules.mjs?v=2.21.1-xmas.11';
@@ -139,7 +140,7 @@ export function installXmas(ctx){
     const run=metaRun(res);if(!run)return res;
     const R=M(()=>meta.onRun(run));if(!R)return res;
     const cal=run.cleared?syncDoors():null;
-    res.meta={R,cal,status:M(()=>meta.status()),goal:M(()=>meta.nextGoal())};
+    res.meta={R,cal,status:M(()=>meta.status()),goal:M(()=>meta.nextGoal(undefined,{tickets:PRIZE.enabled}))};
     return res;
   }
   // Det som händer mitt i en vandring (uppdrag klart, ny grad, lott, prydnad): en rad i taget efter fyndets egen puff. skip = sådant som redan sagts.
@@ -149,7 +150,7 @@ export function installXmas(ctx){
     for(const m of R.missions)lines.push({text:'UPPDRAG KLART · +'+m.xp+' XP'});
     if(R.gift)lines.push({text:'DAGENS JULKLAPP ÖPPNAD!',big:true});
     if(!skip.includes('orn'))for(const o of R.ornaments)lines.push({text:(o.isNew?'NY PRYDNAD · ':'DUBBLETT · ')+o.name.toUpperCase()});
-    if(!skip.includes('ticket'))for(const t of R.tickets)lines.push({text:'NY LOTT · '+t.code});
+    if(PRIZE.enabled&&!skip.includes('ticket'))for(const t of R.tickets)lines.push({text:'NY LOTT · '+t.code});
     lines.slice(0,4).forEach((l,i)=>setTimeout(()=>guard(()=>{
       if(mode!=='cozy'||!hunt.active)return;
       if(l.big){try{sound('win');}catch{}}
@@ -163,7 +164,7 @@ export function installXmas(ctx){
       if(n.text){items.push({kind:n.kind||'',text:n.text});continue;}
       const R=n.R;
       if(R.calendar&&R.calendar.length){
-        for(const c of R.calendar){const bits=[...c.ornaments.map(o=>(o.isNew?'ny prydnad ':'dubblett ')+o.name),...(c.tickets.length?[c.tickets.length+' '+(c.tickets.length===1?'lott':'lotter')]:[]),...(c.xp?['+'+c.xp+' XP']:[])];items.push({kind:'door',text:'LUCKA '+c.n+' ÄR KLAR · '+(bits.join(' · ')||'tack!')});}
+        for(const c of R.calendar){const bits=[...c.ornaments.map(o=>(o.isNew?'ny prydnad ':'dubblett ')+o.name),...(PRIZE.enabled&&c.tickets.length?[c.tickets.length+' '+(c.tickets.length===1?'lott':'lotter')]:[]),...(c.xp?['+'+c.xp+' XP']:[])];items.push({kind:'door',text:'LUCKA '+c.n+' ÄR KLAR · '+(bits.join(' · ')||'tack!')});}
       }else{
         const bits=ui.meta?ui.meta.describe(R).map(x=>x.text):[];if(bits.length)items.push({kind:'welcome',text:(n.label?n.label+' · ':'')+bits.join(' · ')});
       }
@@ -339,7 +340,7 @@ export function installXmas(ctx){
       const line=sandgrundLine(o,{label:STAMPS.find(s=>s.id===SANDGRUND.id)?.label||''}),t=document.getElementById('roundResultTarget');
       if(t&&line)t.textContent=line;
       ui.placeDoor(doorFor({id:SANDGRUND.id,stampId:SANDGRUND.id,points:o.points}),document.getElementById('round-result'),document.getElementById('roundNext')); // rutan "Lucka N är avklarad" om man kom från kalendern
-      M(()=>{const R=meta.onRun({kind:'sandgrund',id:SANDGRUND.id,cleared:true,first:!!o.stamp}),cal=syncDoors();ui.meta?.placeReward({R,cal,status:meta.status(),goal:meta.nextGoal()},document.getElementById('round-result'),document.getElementById('roundNext'));});
+      M(()=>{const R=meta.onRun({kind:'sandgrund',id:SANDGRUND.id,cleared:true,first:!!o.stamp}),cal=syncDoors();ui.meta?.placeReward({R,cal,status:meta.status(),goal:meta.nextGoal(undefined,{tickets:PRIZE.enabled})},document.getElementById('round-result'),document.getElementById('roundNext'));});
       if(o.stamp)try{sound('win');}catch{}
       return true;
     },false);
@@ -535,7 +536,7 @@ export function installXmas(ctx){
       sound('win');[523.25,659.25,783.99,1046.5,1318.5,1568].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.3,.09),i*80));
       view.burst(e.x,e.z,{big:true,y:1.2});
       const sp=hiddenSpot(e.spot),o=R&&R.ornaments[0];
-      fanfare('GÖMD JULKLAPP!',(sp?sp.name+'. ':'')+(R?'+'+R.xp+' XP'+(o?' · '+(o.isNew?'ny prydnad: ':'dubblett: ')+o.name:'')+(R.tickets.length?' · en lott':'')+' · '+R.hidden.count+' av '+R.hidden.total:''),3.4,'win');
+      fanfare('GÖMD JULKLAPP!',(sp?sp.name+'. ':'')+(R?'+'+R.xp+' XP'+(o?' · '+(o.isNew?'ny prydnad: ':'dubblett: ')+o.name:'')+(PRIZE.enabled&&R.tickets.length?' · en lott':'')+' · '+R.hidden.count+' av '+R.hidden.total:''),3.4,'win');
       if(R)announce(R,{skip:['orn','ticket']});
     },
     // Tomtarna tappar julklappar med god tid emellan (xmas-drops.mjs): hela fanfaren bara om den förra är mer än 25 s gammal, annars en kort rad.

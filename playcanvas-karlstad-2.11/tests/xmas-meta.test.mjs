@@ -468,3 +468,11 @@ test('första uppdraget räknas inte mot dagens uppdrag (slutkortet blir inte ö
   assert.ok(m.state.days[D(1)].packages===16&&m.state.days[D(1)].runs===1,'nästa jakt räknas');
   const again=m.onRun(intro(),at(D(1),14));assert.equal(m.state.days[D(1)].runs,2,'att spela första uppdraget igen är en vanlig jakt');void R2;void again;
 });
+
+test('nästa mål nämner inga lotter när priset är avstängt (tickets:false)',()=>{
+  const m=meta();m.onRun(intro(),at(D(1)));
+  m.state.meter=55;assert.equal(m.nextGoal(at(D(1))).kind,'ticket');
+  const g=m.nextGoal(at(D(1)),{tickets:false});assert.ok(!/lott/i.test(g.text),g.text);
+  m.state.meter=TICKETS.meter-1;m.state.days[D(1)].meter=TICKETS.dailyCap;assert.ok(!/lott/i.test(m.nextGoal(at(D(1)),{tickets:false}).text));
+  m.state.xp=LEVELS[11].xp+5;m.state.lv=12;m.state.days[D(1)].done={};assert.ok(!/lott/i.test(m.nextGoal(at(D(1)),{tickets:false}).text));
+});

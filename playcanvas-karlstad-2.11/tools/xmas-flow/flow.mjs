@@ -84,7 +84,7 @@ check('B1 introduktionen är en jakt: mål 14 julklappar och inga färdiga paket
 check('B3 målet visas som "Hjälp tomten! Hitta 14 julklappar."',goalTxt==='Hjälp tomten! Hitta 14 julklappar.',goalTxt);
 const gotFirst=await until(()=>window.KarlstadDebug.journey().xmas.hunt.run.rains.length>=1,40);
 const f1=await ev(()=>{const x=window.KarlstadDebug.journey().xmas,r=x.hunt.run,v=x.view.snapshot(),g=x.snapshot().guide;
-  return {t:+r.t.toFixed(1),rains:r.rains.length,packages:r.packages.filter(k=>!k.collected).length,prints:r.rains.reduce((n,a)=>n+a.trail.length,0),printQuads:v.printQuads,ribbon:v.ribbon,goalRing:v.goal,arrow:g.on};});
+  return {t:+r.t.toFixed(1),rains:r.rains.length,packages:r.packages.filter(k=>!k.collected&&!k.hidden).length,prints:r.rains.reduce((n,a)=>n+a.trail.length,0),printQuads:v.printQuads,ribbon:v.ribbon,goalRing:v.goal,arrow:g.on};});
 check('B2 första tappade julklapparna kommer inom sju sekunder speltid: minst fem paket och ett spår av avtryck i snön',gotFirst&&f1.t<=7&&f1.packages>=5&&f1.prints>=6,JSON.stringify(f1));
 check('B2b spåren syns i snön men ingen pil, strålband eller ring pekar på paketen medan man letar',f1.printQuads>=3&&!f1.arrow&&f1.ribbon===0&&!f1.goalRing,JSON.stringify({printQuads:f1.printQuads,arrow:f1.arrow,ribbon:f1.ribbon,ring:f1.goalRing}));
 const goalTxt2=await ev(()=>document.getElementById('xmasGoal').textContent);
@@ -151,12 +151,12 @@ check('K3 fasadljusen ligger på husen längs torget',fa.w.length>0&&fa.r.length
 // ── L: fri julvandring: paketen tar inte slut, och högarna kommer med god spridning i tid och plats ─────────────────────────────────────
 await ev(()=>window.KarlstadDebug.journey().xmas.startFree());await wait(800);
 const gotRain=await until(()=>window.KarlstadDebug.journey().xmas.hunt.run.rains.length>=1,90);
-const rn1=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {t:+r.t.toFixed(1),rains:r.rains.length,packages:r.packages.filter(k=>!k.collected).length,prints:r.rains.reduce((n,x)=>n+x.trail.length,0)};});
+const rn1=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {t:+r.t.toFixed(1),rains:r.rains.length,packages:r.packages.filter(k=>!k.collected&&!k.hidden).length,prints:r.rains.reduce((n,x)=>n+x.trail.length,0)};});
 // (Paketen läggs på fria platser: i trånga gator blir det färre än de sex till nio som begärs, men aldrig färre än fyra vanliga och ett bonus.)
 check('L1 fri julvandring: första tappade paketen kommer inom sju sekunder speltid, minst fem (fyra vanliga och ett bonus), med ett spår av avtryck till dem',gotRain&&rn1.t<=7&&rn1.packages>=5&&rn1.prints>=6,JSON.stringify(rn1));
 await shot('free-1-regn');
 // Plocka allt som finns (teleport till varje paket), fyra varv: när allt är plockat kommer nästa hög efter 8–14 sekunder (inte direkt, men heller inte efter en minut eller mer). Var ny hög noteras.
-const runT=()=>ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.t),uncollected=()=>ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.packages.filter(k=>!k.collected).map(k=>({x:k.x,z:k.z})));
+const runT=()=>ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.t),uncollected=()=>ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.packages.filter(k=>!k.collected&&!k.hidden).map(k=>({x:k.x,z:k.z}))); // xmas.11: de gömda julklapparna (hidden) ligger kvar hela tiden och hör inte till tappade paket
 const seen=new Map(),noteRains=async()=>{for(const a of await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.rains.map(a=>({s:a.serial,x:a.x,z:a.z,at:a.at,n:a.count}))))if(!seen.has(a.s))seen.set(a.s,a);};
 await noteRains();
 let worst=0,best=1e9,collected=0;
@@ -165,7 +165,7 @@ for(let round=0;round<4;round++){
   let left=await uncollected();for(let again=0;again<3&&left.length;again++){for(const k of left){await tp(k.x,k.z,0,-4,320);}left=await uncollected();}
   const t0=await runT();
   // Speltiden går långsammare än klockan när bildrutorna är få (mjukvaruritad webbläsare på ett stort fönster): vänta länge i klocktid, men mät i speltid.
-  const got=await until(()=>window.KarlstadDebug.journey().xmas.hunt.run.packages.some(k=>!k.collected),300);
+  const got=await until(()=>window.KarlstadDebug.journey().xmas.hunt.run.packages.some(k=>!k.collected&&!k.hidden),300);
   const gap=got?(await runT())-t0:999;worst=Math.max(worst,gap);best=Math.min(best,gap);
   await noteRains();
 }

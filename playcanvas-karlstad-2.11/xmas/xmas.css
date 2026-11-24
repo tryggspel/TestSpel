@@ -315,6 +315,7 @@ body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
 .xs-chip span{display:block;margin-top:2px;font:800 9px/1.2 system-ui,sans-serif;letter-spacing:.1em;color:#9fc0a8;text-transform:uppercase}
 .xs-chip.risk{outline:1px solid var(--xmas-red)}.xs-chip.risk b{color:#ff9d96}
 .round-card p.xs-goal{margin:8px 0 0;font:900 11px/1.4 system-ui,sans-serif;letter-spacing:.08em;color:var(--xmas-gold)}
+.round-card p.xs-clue{margin:6px 0 0;font:700 11px/1.45 system-ui,sans-serif;color:#ffe9a8}
 .round-card p.xs-advent{margin:6px 0 0;padding:7px 9px;border-radius:5px;background:#d9473f26;font:800 11px/1.4 system-ui,sans-serif;color:#ffd0cc}
 .xs-buttons{display:grid;gap:6px;margin-top:10px}
 .xmas-card .xs-btn{min-height:48px;font-size:12px;letter-spacing:.06em;text-align:left;justify-content:flex-start}

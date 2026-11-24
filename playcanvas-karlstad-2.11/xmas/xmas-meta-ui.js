@@ -17,6 +17,8 @@ function iconCanvas(o,size=30,{dim=false}={}){
 }
 
 export function createMetaUi({meta,save,fx,$,mount=document.getElementById('roundOverlay')}){
+  // PRIZE.enabled:false är huvudbrytaren för priset: då nämns inga lotter, ingen dragning och ingen anmälan någonstans i spelet (lotterna sparas ändå, så att de syns om priset slås på senare).
+  const prizeOn=!!PRIZE.enabled;
   // ── Remsan på start- och julmenyn ────────────────────────────────────────────────────────────────────────────
   const strips=[$('xmasStripStart'),$('xmasStripContinue')].filter(Boolean);
   const newsBoxes=[$('xmasNewsStart'),$('xmasNewsContinue')].filter(Boolean);
@@ -39,17 +41,22 @@ export function createMetaUi({meta,save,fx,$,mount=document.getElementById('roun
         list.append(li);
       }
       if(s.gift.opened)list.append(el('li','xs-gift','★ Dagens julklapp är öppnad'));
-      else if(s.missions.length)list.append(el('li','xs-gift dim','Klara alla tre för dagens julklapp: en prydnad och en lott'));
+      else if(s.missions.length)list.append(el('li','xs-gift dim','Klara alla tre för dagens julklapp: en prydnad'+(prizeOn?' och en lott':'')));
       t.append(list);
       const chips=el('div','xs-chips');
-      chips.append(chip(plural(s.streak.cur,'dag i rad','dagar i rad'),s.streak.cur,s.streak.atRisk?'risk':''),chip('lotter',s.tickets),chip('prydnader',s.ornaments.owned+'/'+s.ornaments.total));
+      chips.append(chip(plural(s.streak.cur,'dag i rad','dagar i rad'),s.streak.cur,s.streak.atRisk?'risk':''));
+      if(prizeOn)chips.append(chip('lotter',s.tickets));
+      chips.append(chip('prydnader',s.ornaments.owned+'/'+s.ornaments.total));
+      if(!prizeOn)chips.append(chip(s.hidden.enabled?'gömda julklappar':'grad',s.hidden.enabled?s.hidden.found+'/'+s.hidden.total:s.level.n));
       t.append(chips);
-      const g=meta.nextGoal();t.append(el('p','xs-goal','NÄSTA MÅL · '+g.text));
-      if(s.advent&&!s.advent.claimed)t.append(el('p','xs-advent',s.advent.label+': klara en jakt idag och få '+s.advent.tickets+' lotter'));
+      const g=meta.nextGoal(undefined,{tickets:prizeOn});t.append(el('p','xs-goal','NÄSTA MÅL · '+g.text));
+      // Dagens ledtråd till en gömd julklapp (den nyaste som är framme och ännu inte hittad): en anledning att komma tillbaka varje dag.
+      if(s.hidden.enabled){const open=s.hidden.hints.filter(h=>h.visible&&!h.found);if(open.length)t.append(el('p','xs-clue','GÖMD JULKLAPP · "'+open[open.length-1].clue+'"'));}
+      if(prizeOn&&s.advent&&!s.advent.claimed)t.append(el('p','xs-advent',s.advent.label+': klara en jakt idag och få '+s.advent.tickets+' lotter'));
       const row=el('div','xs-buttons');
       const b1=el('button','round-secondary xs-btn','JULGRANEN '+s.ornaments.owned+'/'+s.ornaments.total+(s.ornaments.fresh?' · '+s.ornaments.fresh+' NYA':''));b1.type='button';b1.addEventListener('click',()=>fx.openTree());
       row.append(b1);
-      if(PRIZE.enabled){const b2=el('button','round-secondary xs-btn','VINN EN '+PRIZE.name.replace(/^En /i,'').toUpperCase()+' · '+s.tickets+' '+plural(s.tickets,'LOTT','LOTTER'));b2.type='button';b2.addEventListener('click',()=>fx.openDraw());row.append(b2);}
+      if(prizeOn){const b2=el('button','round-secondary xs-btn','VINN '+PRIZE.name.toUpperCase()+' · '+s.tickets+' '+plural(s.tickets,'LOTT','LOTTER'));b2.type='button';b2.addEventListener('click',()=>fx.openDraw());row.append(b2);}
       if(s.hidden.enabled){const b3=el('button','round-secondary xs-btn','GÖMDA JULKLAPPAR '+s.hidden.found+'/'+s.hidden.total);b3.type='button';b3.addEventListener('click',()=>fx.openSecrets());row.append(b3);}
       t.append(row);
     }
@@ -66,9 +73,9 @@ export function createMetaUi({meta,save,fx,$,mount=document.getElementById('roun
   function describe(R){
     const out=[];
     if(!R)return out;
-    for(const l of R.levelUps)out.push({kind:'level',text:'GRAD '+l.n+' · '+l.name+(l.tickets?' · '+l.tickets+' '+plural(l.tickets,'lott','lotter'):'')});
+    for(const l of R.levelUps)out.push({kind:'level',text:'GRAD '+l.n+' · '+l.name+(prizeOn&&l.tickets?' · '+l.tickets+' '+plural(l.tickets,'lott','lotter'):'')});
     for(const o of R.ornaments)out.push({kind:'orn',text:(o.isNew?'NY PRYDNAD: ':'DUBBLETT: ')+o.name+' ('+RARITY_LABEL[o.rarity].toLowerCase()+')',orn:o});
-    for(const t of R.tickets)out.push({kind:'ticket',text:'NY LOTT: '+t.code});
+    if(prizeOn)for(const t of R.tickets)out.push({kind:'ticket',text:'NY LOTT: '+t.code});
     return out;
   }
 
@@ -80,27 +87,35 @@ export function createMetaUi({meta,save,fx,$,mount=document.getElementById('roun
     const {R,cal,status:s,goal}=info,L=s.level;
     const xp=R.xp+(cal?cal.xp:0);
     reward.replaceChildren();
+    // En förlorad nivå ger ingenting: då visas bara nästa mål, inte en tom rad med +0 XP.
+    if(!R.notable&&xp===0&&!(cal&&cal.notable)){
+      if(goal)reward.append(el('p','xrw-goal','NÄSTA MÅL · '+goal.text));
+      reward.hidden=!goal;
+      if(!goal)return;
+      if(before&&before.parentNode===parent)parent.insertBefore(reward,before);else parent.append(reward);
+      return;
+    }
     const top=el('div','xrw-top');
     top.append(el('b','xrw-xp',(xp>0?'+'+fmt(xp):'+0')+' XP'),el('span','xrw-grade','GRAD '+L.n+' · '+L.name));
     reward.append(top,bar(L.frac,'xrw-bar'),el('p','xrw-sub',L.next?fmt(L.toNext)+' XP till grad '+L.next.n+' · '+L.next.name:'Högsta graden!'));
     const chips=el('div','xrw-chips');
     const add=(R2,label)=>{
       for(const o of R2.ornaments){const c=el('div','xrw-chip orn'+(o.isNew?' new':'')+' r-'+o.rarity);c.append(iconCanvas(o,30));const t=el('span','xrw-t');t.append(el('b',null,o.name),el('em',null,(o.isNew?'NY · ':'DUBBLETT · ')+RARITY_LABEL[o.rarity]+(o.label?' · '+o.label:'')));c.append(t);chips.append(c);}
-      for(const t of R2.tickets){const c=el('div','xrw-chip ticket');const tt=el('span','xrw-t');tt.append(el('b',null,t.code),el('em',null,'LOTT · '+({welcome:'FÖRSTA UPPDRAGET',meter:'60 JULKLAPPAR',gift:'DAGENS JULKLAPP',grade:'NY GRAD',streak:'SERIE',calendar:'JULKALENDERN',advent:'ADVENT',hidden:'GÖMDA JULKLAPPAR',code:'HEMLIGT PAKET'}[t.src]||'')));c.append(el('span','xo-ticket','🎟'),tt);chips.append(c);}
+      if(prizeOn)for(const t of R2.tickets){const c=el('div','xrw-chip ticket');const tt=el('span','xrw-t');tt.append(el('b',null,t.code),el('em',null,'LOTT · '+({welcome:'FÖRSTA UPPDRAGET',meter:'60 JULKLAPPAR',gift:'DAGENS JULKLAPP',grade:'NY GRAD',streak:'SERIE',calendar:'JULKALENDERN',advent:'ADVENT',hidden:'GÖMDA JULKLAPPAR',code:'HEMLIGT PAKET'}[t.src]||'')));c.append(el('span','xo-ticket','🎟'),tt);chips.append(c);}
     };
     add(R);if(cal)add(cal);
     if(chips.childElementCount)reward.append(chips);
     const rows=el('ul','xrw-list');
-    for(const l of R.levelUps)rows.append(el('li','level','GRAD '+l.n+' · '+l.name+'!'+(l.tickets?' Du får '+l.tickets+' '+plural(l.tickets,'lott','lotter')+'.':'')+(l.orn?' Du får en prydnad.':'')));
+    for(const l of R.levelUps)rows.append(el('li','level','GRAD '+l.n+' · '+l.name+'!'+(prizeOn&&l.tickets?' Du får '+l.tickets+' '+plural(l.tickets,'lott','lotter')+'.':'')+(l.orn?' Du får en prydnad.':'')));
     for(const m of R.missions)rows.append(el('li','mission','UPPDRAG KLART · '+m.text+' · +'+m.xp+' XP'));
-    if(R.gift)rows.append(el('li','gift','DAGENS JULKLAPP: alla tre uppdrag klara. Du får en prydnad och en lott.'));
+    if(R.gift)rows.append(el('li','gift','DAGENS JULKLAPP: alla tre uppdrag klara. Du får en prydnad'+(prizeOn?' och en lott.':'.')));
     if(R.streak){
       const st=R.streak,txt=st.status==='reset'?'SERIEN BÖRJADE OM · 1 DAG':st.status==='start'?'SERIE · 1 DAG. Spela i morgon igen så växer den.':'SERIE · '+st.cur+' '+plural(st.cur,'DAG','DAGAR')+' I RAD'+(st.status==='froze'?' (en frysdag räddade serien)':'')+(st.freezeEarned?' · du fick en frysdag':'');
       rows.append(el('li','streak',txt));
     }
-    if(R.advent)rows.append(el('li','advent',R.advent.label+' · '+R.advent.tickets+' lotter'));
+    if(prizeOn&&R.advent)rows.append(el('li','advent',R.advent.label+' · '+R.advent.tickets+' lotter'));
     if(cal)for(const c of cal.calendar)rows.append(el('li','door','LUCKA '+c.n+' I JULKALENDERN GAV DIG EN BELÖNING'));
-    if(R.meter&&R.meter.added>0){
+    if(prizeOn&&R.meter&&R.meter.added>0){
       const m=R.meter;rows.append(el('li','meter',m.capped?'DAGENS LOTTER FRÅN MÄTAREN ÄR SLUT · mätaren väntar full till i morgon':'LOTT-MÄTARE · '+m.have+'/'+m.target+' julklappar'));
     }
     if(rows.childElementCount)reward.append(rows);
@@ -129,7 +144,7 @@ export function createMetaUi({meta,save,fx,$,mount=document.getElementById('roun
   // ── Lotter ───────────────────────────────────────────────────────────────────────────────────────────────────
   function renderDraw(){
     const s=meta.status(),codes=meta.ticketCodes(),sent=new Set(meta.state.draw.sent);
-    $('xmasDrawTitle').textContent=PRIZE.name.toUpperCase();
+    $('xmasDrawTitle').textContent=PRIZE.name.toUpperCase()+'.';
     $('xmasDrawLine').textContent=(PRIZE.sponsor?'Presenteras av '+PRIZE.sponsor+'. ':'')+'Varje lott är en chans. '+drawDateText(PRIZE);
     $('xmasDrawCount').textContent=String(codes.length);
     $('xmasDrawCountLabel').textContent=plural(codes.length,'LOTT','LOTTER');

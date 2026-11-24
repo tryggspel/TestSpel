@@ -163,6 +163,12 @@ await scenario('2 · julmenyn, julgranen, lotter och gömda julklappar (spelare 
   await g.click('xmasSecretsFree');await g.wait(1500);
   const free=await g.ev(()=>{const x=window.KarlstadDebug.journey().xmas,r=x.hunt.run;return {mode:x.snapshot().mode,kind:r.kind,hidden:r.packages.filter(p=>p.hidden).length,total:r.regularTotal,bonusTotal:r.bonusTotal,ids:r.packages.filter(p=>p.hidden).map(p=>p.id)};});
   check('2k fri julvandring lägger ut de tjugo gömda julklapparna utan att röra paketräknarna',free.mode==='cozy'&&free.kind==='free'&&free.hidden===20&&free.total===0&&free.bonusTotal===0,JSON.stringify({m:free.mode,k:free.kind,h:free.hidden,t:free.total}));
+  // nära en gömd julklapp (30 m): ljusstrålen syns och raden säger glödhet
+  {const s0=HIDDEN_SPOTS[0];await g.tp(s0.x+30,s0.z,1700);
+   const near=await g.ev(()=>{const x=window.KarlstadDebug.journey().xmas,v=x.view.snapshot();return {beams:v.beams,shown:v.shown,pill:document.getElementById('xmasPill').textContent,on:document.getElementById('xmasPill').classList.contains('on')};});
+   check('2k2 30 m från en gömd julklapp syns en ljusstråle och raden säger varmt eller glödhet',near.beams>=1&&/VARMT|GLÖDHET/.test(near.pill),JSON.stringify(near));
+   await g.shot('2f-nara-gomd');
+   await g.tp(s0.x+300,s0.z+300,400);}
   // alla tjugo platser går att plocka (höjd, väggar och räckvidd): teleportera till varje och se att julklappen tas
   const got=[];
   for(const s of HIDDEN_SPOTS){
@@ -260,6 +266,61 @@ await scenario('6 · vinn en julgran: formuläret, kontroll, inskickning och fel
   const stored=await g.ev(()=>JSON.stringify(localStorage));
   check('6i namn och kontakt sparas inte på enheten',!/Kim Karlsson|kim@exempel/.test(stored));
   check('6j inga fel i sidan',g.errs.length===0,g.errs.slice(0,2).join(' | '));
+  await g.ctx.close();
+});
+
+// ── Scenario 7: liten stående telefon ───────────────────────────────────────────────────────────────────────────────────────
+await scenario('7 · liten stående telefon (375×667): stora knappen syns direkt, även med en nyhetsrad, och inget rinner ut',async()=>{
+  const ctx=await browser.newContext({viewport:{width:375,height:667},hasTouch:true,isMobile:true,deviceScaleFactor:1});
+  await ctx.addInitScript(seed=>{if(!localStorage.getItem('__seeded')){localStorage.setItem('__seeded','1');for(const [k,v] of Object.entries(seed))localStorage.setItem(k,JSON.stringify(v));}},SEED_DONE);
+  const page=await ctx.newPage();await page.route(/cdn\.jsdelivr\.net\/npm\/playcanvas/,r=>r.fulfill({contentType:'text/javascript',body:pcSource}));
+  await page.goto(ORIGIN+'/?debug');await page.waitForFunction(()=>{const l=document.getElementById('loading');return l&&l.classList.contains('hide')&&getComputedStyle(l).opacity==='0';},null,{timeout:180000});await page.waitForTimeout(900);
+  const R=await page.evaluate(()=>{const b=document.getElementById('xmasCozy').getBoundingClientRect(),n=document.getElementById('xmasNewsStart'),c=document.getElementById('round-xmas-intro');return {ctaTop:Math.round(b.top),ctaBottom:Math.round(b.bottom),vh:innerHeight,news:!n.hidden,noX:c.scrollWidth<=c.clientWidth+1};});
+  if(SHOTS){fs.mkdirSync(SHOTS,{recursive:true});await page.screenshot({path:path.join(SHOTS,'7a-liten-telefon.png')});}
+  check('7a 375×667 med en nyhetsrad: stora knappen JULKLAPPSJAKTEN syns utan att rulla och inget rinner ut',R.news&&R.ctaBottom<=R.vh&&R.noX,JSON.stringify(R));
+  await ctx.close();
+});
+
+// ── Scenario 8: priset avstängt ────────────────────────────────────────────────────────────────────────────────────────────
+await scenario('8 · PRIZE.enabled:false: inget om lotter, dragning eller anmälan någonstans (lotterna sparas ändå)',async()=>{
+  const g=await open({seed:SEED_DONE,config:src=>src.replace('enabled:true,ready:false,','enabled:false,ready:false,')});
+  const TXT=/\blott|\blotter|dragning|VINN EN|anmälan/i;
+  const start=await g.ev(()=>document.getElementById('round-xmas-intro').innerText);
+  check('8a startvyn och remsan nämner inga lotter, ingen dragning och ingen prisknapp',!TXT.test(start)&&await g.ev(()=>document.querySelectorAll('#xmasStripStart .xs-btn').length===2),start.replace(/\s+/g,' ').slice(0,160));
+  await g.click('xmasCozy');await g.wait(700);
+  check('8b julmenyn nämner inga lotter',!TXT.test(await g.ev(()=>document.getElementById('round-xmas-continue').innerText)));
+  await g.click('xmasRound');await g.wait(1500);
+  await g.ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;r.collected=18;r.bonusCollected=2;r.points=520;r.bestChain=9;r.t=100;r.phase='deliver';});
+  const t=await g.ev(()=>{const t=window.KarlstadDebug.journey().xmas.hunt.run.tomte;return {x:t.x,z:t.z};});
+  await g.tp(t.x,t.z,300);await g.until(()=>!document.getElementById('round-xmas-result').hidden,12);await g.wait(400);
+  const card=await g.ev(()=>document.getElementById('round-xmas-result').innerText);
+  check('8c slutkortet nämner inga lotter (men visar XP och prydnader)',!TXT.test(card)&&/XP/.test(card)&&/GRAD/.test(card),card.replace(/\s+/g,' ').slice(0,200));
+  const m=await g.meta();
+  check('8d lotterna räknas ändå (så att de finns om priset slås på senare)',m.tickets.length>=1,String(m.tickets.length));
+  check('8e inga fel i sidan',g.errs.length===0,g.errs.slice(0,2).join(' | '));
+  await g.ctx.close();
+});
+
+// ── Scenario 9: Tomtezombies (förlorad nivå, klarad nivå) och JulRushen ───────────────────────────────────────────────────
+await scenario('9 · Tomtezombies och JulRushen: förlorad nivå visar bara nästa mål, klarad nivå och rush ger belöning',async()=>{
+  const g=await open({seed:SEED_DONE});
+  await g.ev(()=>window.KarlstadDebug.journey().xmas.startZombies());await g.wait(2500);
+  await g.ev(()=>window.KarlstadDebug.journey().xmas.caught());
+  check('9a en förlorad nivå: slutkortet visas',await g.until(()=>!document.getElementById('round-xmas-result').hidden,12));await g.wait(300);
+  const lost=await g.ev(()=>({title:document.getElementById('xmasResultTitle').textContent,xp:document.querySelector('#xmasReward .xrw-xp')?.textContent||'',goal:document.querySelector('#xmasReward .xrw-goal')?.textContent||'',shown:!document.getElementById('xmasReward').hidden}));
+  check('9b förlorad nivå: ingen "+0 XP"-rad, bara nästa mål, och läget räknas som provat',/TAGEN/.test(lost.title)&&lost.xp===''&&/NÄSTA MÅL/.test(lost.goal)&&(await g.meta()).tried.zombies===true,JSON.stringify(lost));
+  await g.ev(()=>window.KarlstadDebug.journey().xmas.openMenu());await g.wait(500);
+  // en klarad nivå
+  await g.ev(()=>window.KarlstadDebug.journey().xmas.startZombies());await g.wait(2500);
+  await g.ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;r.collected=r.goal;r.bonusCollected=1;r.points=700;r.bestChain=4;r.t=120;r.phase='deliver';});
+  const tz=await g.ev(()=>{const t=window.KarlstadDebug.journey().xmas.hunt.run.tomte;return {x:t.x,z:t.z};});
+  await g.tp(tz.x,tz.z,300);
+  check('9c en klarad nivå: slutkortet visas',await g.until(()=>!document.getElementById('round-xmas-result').hidden,15));await g.wait(400);
+  const won=await g.ev(()=>({xp:document.querySelector('#xmasReward .xrw-xp')?.textContent||'',chips:document.querySelectorAll('#xmasReward .xrw-chip').length,btn:document.getElementById('xmasResultContinue').textContent.replace(/\s+/g,' ').trim()}));
+  check('9d en klarad nivå ger XP och en prydnad, och knappen är NÄSTA NIVÅ',/^\+\d+ XP$/.test(won.xp)&&won.chips>=1&&/NÄSTA NIVÅ/.test(won.btn),JSON.stringify(won));
+  const m=await g.meta();check('9e en klarad zombienivå räknas som körning och ger serie',m.tried.zombies&&m.streak.cur===1,JSON.stringify({s:m.streak.cur}));
+  await g.shot('9a-zombies-klar');
+  check('9f inga fel i sidan',g.errs.length===0,g.errs.slice(0,2).join(' | '));
   await g.ctx.close();
 });
 

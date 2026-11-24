@@ -125,8 +125,12 @@ Efter första uppdraget går FORTSÄTT till Julmenyn. Därefter är den stora kn
 
 ## 6. Priset: "Vinn en julgran"
 
+**Datum:** dragning måndag 21 december kl 18.00 och anmälan som stänger samma dag kl 12.00 är *mitt förslag* (så att granen hinner levereras före jul), inte ett beslut: ändra `drawDate`, `drawTime` och `entryCloses` i `PRIZE`.
+
 **Regler (utkast i `xmas/xmas-draw-text.mjs`):** gratis, ingen köpplikt; anmälan med namn och e-post eller telefon, bekräftelse att man är myndig eller har en målsmans tillåtelse, och samtycke; vinnaren dras slumpmässigt bland alla inskickade lottkoder;
 vinnaren kontrolleras före utlämning. **Jag är inte jurist:** kontrollera om utlottningen kräver tillstånd eller anmälan, åldersgränsen, hur länge uppgifter får sparas och den rättsliga grunden innan anmälan öppnas.
+
+**Huvudbrytare:** `PRIZE.enabled:false` döljer allt om priset (lotter, dragning, anmälan, prisknappen); lotterna räknas ändå så att de syns om du slår på det senare. Standardläget är `enabled:true` med `ready:false` (anmälan stängd): sätt `enabled:false` om du lanserar innan granen och villkoren är bekräftade, så att spelet inte lovar något som inte finns.
 
 **Server (ditt beslut, byggt):** `api/xmas-draw.mjs` tar emot anmälan och sparar **en fil per kontakt** i ett **privat Vercel Blob-lager** (ingen publik adress; kontaktens kontrollsumma är filnamnet). Samma kontakt som skickar in fler lotter slås ihop (ETag mot
 samtidiga skrivningar). Bara namn, kontakt, lottkoder, tidpunkter och grad/dagar/serie sparas; inga IP-adresser, inga cookies. Spärr mot upprepning, storleksgräns, kontroll av alla fält. Servern flaggar orimliga mängder lotter (`flags`) men avvisar dem inte.
@@ -205,7 +209,7 @@ om lagen ska spela stafett eller summera sina kvalpoäng?
 - `node tools/xmas-meta/sim.mjs`: takten för tre sorters spelare (nedan).
 
 **Inte provat:** en riktig telefon (iPhone 11/Safari), en människas upplevelse (läsbarhet, tempo, om första uppdraget hittas), anmälan mot den **riktiga** lagringen (lagret finns inte än; servern är provad mot en låtsaslagring med samma gränssnitt),
-vilken `@vercel/blob`-version som Vercel faktiskt installerar (versionen är låst till 2.9.0 med en låsfil), att `vercel.json` med `includeFiles` bundlar rätt filer (provas på förhandsadressen före produktion), många datum i Julkalendern i webbläsaren (provat: 4 dec).
+en POST mot funktionen på Vercel (förhandsadressen är bakom inloggning och verktyget kan bara göra GET; en GET mot `/api/xmas-draw` svarade däremot `405 POST only` från funktionen själv, vilket visar att filerna bundlades och att `@vercel/blob` installerades: 31 paket, ingen felrad i bygget), många datum i Julkalendern i webbläsaren (provat: 4 dec).
 
 **Takten, modellerad** (`tools/xmas-meta/sim.mjs`, 400 spelare per sort, median och 10–90 %; ingen har spelat så här):
 

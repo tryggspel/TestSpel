@@ -191,15 +191,16 @@ export class XmasMeta{
     };
   }
   // En rad om det närmaste målet: det som är närmast att nås först (en lott, en grad, ett uppdrag).
-  nextGoal(when=this.clock()){
+  // tickets:false = priset är avstängt (PRIZE.enabled): lotter nämns inte.
+  nextGoal(when=this.clock(),{tickets=true}={}){
     const s=this.status(when);
-    if(!s.meter.capped&&s.meter.left<=25)return {kind:'ticket',text:s.meter.left+(s.meter.left===1?' julklapp':' julklappar')+' till nästa lott'};
+    if(tickets&&!s.meter.capped&&s.meter.left<=25)return {kind:'ticket',text:s.meter.left+(s.meter.left===1?' julklapp':' julklappar')+' till nästa lott'};
     if(s.level.next&&s.level.toNext<=60)return {kind:'grade',text:s.level.toNext+' XP till grad '+s.level.next.n+' · '+s.level.next.name};
     const open=s.missions.find(m=>!m.done);
     if(open)return {kind:'mission',text:'Dagens uppdrag: '+open.text.toLowerCase()};
-    if(s.meter.capped)return {kind:'tomorrow',text:'Dagens lotter från mätaren är slut. Nya uppdrag i morgon.'};
+    if(tickets&&s.meter.capped)return {kind:'tomorrow',text:'Dagens lotter från mätaren är slut. Nya uppdrag i morgon.'};
     if(s.level.next)return {kind:'grade',text:s.level.toNext+' XP till grad '+s.level.next.n+' · '+s.level.next.name};
-    return {kind:'ticket',text:s.meter.left+' julklappar till nästa lott'};
+    return tickets?{kind:'ticket',text:s.meter.left+' julklappar till nästa lott'}:{kind:'tomorrow',text:'Du har nått högsta graden. Spela vidare och fyll granen!'};
   }
 
   // ── Belöningar ───────────────────────────────────────────────────────────────────────────────────────────────

@@ -235,7 +235,11 @@ export function createXmasUi({save,meta=null,mount=document.getElementById('roun
     // Före första uppdraget finns bara Julklappsjakten (bonuslägena JulRushen och Tomtezombies öppnas efter den). Knapparna finns kvar i sidan, bara dolda.
     if(mui)for(const id of ['xmasRushStart','xmasRushStartNote','xmasZombies','xmasZombieNote'])if($(id))$(id).hidden=!done;
     const pn=$('xmasPrizeNote');
-    if(pn){pn.hidden=!(mui&&PRIZE.enabled&&!done);pn.textContent=mui&&PRIZE.enabled?'Samla prydnader till din julgran och lotter till dragningen om '+PRIZE.name.toLowerCase()+'. Efter första uppdraget öppnas JulRushen, Tomtezombies och fler sätt att spela.':'';}
+    if(pn){
+      let adv=null;try{adv=mui&&PRIZE.enabled?meta.status().advent:null;}catch{}
+      pn.hidden=!(mui&&PRIZE.enabled&&!done);
+      pn.textContent=mui&&PRIZE.enabled?'Samla prydnader till din julgran och lotter till dragningen om '+PRIZE.name.toLowerCase()+'. Efter första uppdraget öppnas JulRushen, Tomtezombies och fler sätt att spela.'+(adv&&!adv.claimed?' '+adv.label+': klara första uppdraget idag och få '+adv.tickets+' extra lotter.':''):'';
+    }
     if(mui)mui.renderStrip();
     $('xmasCozy').firstChild.textContent=done?'JULKLAPPSJAKTEN 🎁 ':'JULKLAPPSJAKTEN 🎁 ';
     $('xmasCozyNote').textContent=done?'Fortsätt julen: nya julklappsjakter, butiksutmaningar och fri julvandring.':'Gå runt på Stora Torget, följ tomtarnas spår i snön och hitta julklapparna. Inga zombier. Första uppdraget tar ungefär två minuter.';
