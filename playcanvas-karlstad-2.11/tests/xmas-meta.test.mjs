@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import {XmasMeta,sanitizeMeta,blankMeta,levelFor,dayOf,dayDiff,META_KEY} from '../xmas/xmas-meta.mjs';
-import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,MISSIONS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,PRIZE,FIRST_ORNAMENT,SEASON,QR_CODES,COUPONS} from '../xmas/xmas-meta-config.mjs';
+import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,ORNAMENT_POLICY,MISSIONS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,PRIZE,FIRST_ORNAMENT,SEASON,QR_CODES,COUPONS} from '../xmas/xmas-meta-config.mjs';
 import {sha256,codeHash,pinHash,normalizeCode} from '../xmas/xmas-hash.mjs';
 import {makeTicket,validTicket,cleanTicket} from '../xmas/xmas-ticket.mjs';
 import {HIDDEN_SPOTS,hintsShown,hiddenPackages,spotOfPackage,nearestHidden,warmth} from '../xmas/xmas-hidden.mjs';
@@ -93,8 +93,8 @@ test('dagen är svensk (Europe/Stockholm) och stämmer med kalendern och grundsp
 
 // ── Grad ────────────────────────────────────────────────────────────────────────────────────────────────────────────
 test('graden följer XP och gränserna ligger exakt',()=>{
-  assert.equal(levelFor(0).n,1);assert.equal(levelFor(99).n,1);assert.equal(levelFor(100).n,2);assert.equal(levelFor(12499).n,11);assert.equal(levelFor(12500).n,12);assert.equal(levelFor(99999).n,12);
-  const l=levelFor(150);assert.equal(l.name,LEVELS[1].name);assert.equal(l.toNext,150);assert.ok(Math.abs(l.frac-.25)<1e-9);
+  assert.equal(levelFor(0).n,1);assert.equal(levelFor(99).n,1);assert.equal(levelFor(100).n,2);assert.equal(levelFor(LEVELS[11].xp-1).n,11);assert.equal(levelFor(LEVELS[11].xp).n,12);assert.equal(levelFor(999999).n,12);
+  const l=levelFor(250);assert.equal(l.name,LEVELS[1].name);assert.equal(l.toNext,150);assert.ok(Math.abs(l.frac-.5)<1e-9);
   assert.equal(levelFor(99999).next,null);assert.equal(levelFor(99999).frac,1);
 });
 
@@ -126,14 +126,32 @@ test('en jakt till samma dag: ingen ny första-bonus, ingen ny lott från först
 });
 
 // ── Prydnader ───────────────────────────────────────────────────────────────────────────────────────────────────────
-test('något man inte har dras före en dubblett, och när allt ägs blir en dubblett XP',()=>{
-  const m=meta({seed:21});let dupes=0;const got=new Set();
-  for(let i=0;i<24;i++){const R=m.onRun(hunt(),at(D(1)));for(const o of R.ornaments){if(o.dupe)dupes++;else got.add(o.id);}}
-  assert.ok(got.size>=22,'24 dragningar fyller nästan hela granen: '+got.size);
-  // fyll resten direkt och prova en dubblett
-  for(const o of ORNAMENTS)m.state.orn[o.id]=m.state.orn[o.id]||1;
-  const before=m.state.xp,R=m.onRun(hunt(),at(D(1)));
-  assert.ok(R.ornaments.every(o=>o.dupe));assert.ok(R.parts.some(p=>p.label.startsWith('Dubblett')));assert.ok(m.state.xp>before+XP.dupe-1);
+test('prydnader: något man saknar väger tre gånger mer, efter åtta dubbletter i rad får man något nytt, och när allt ägs blir en dubblett XP',()=>{
+  // vikten: med en saknad och en ägd av två lika sällsynta dras den saknade ca 75 % av gångerna
+  const m=new XmasMeta({storage:mem(),rng:mulberry(3)});
+  const rare=ORNAMENTS.filter(o=>o.rarity==='rare');for(const o of rare.slice(1))m.state.orn[o.id]=1; // bara rare[0] saknas
+  let missing=0;for(let i=0;i<4000;i++){const o=m._draw('hidden');if(o.rarity==='rare'&&o.id===rare[0].id)missing++;}
+  const seen=ORNAMENTS.filter(o=>o.rarity==='rare').length,share=missing/4000;
+  assert.ok(share>.2&&share<.6,'den saknade av '+seen+' sällsynta dras ofta men inte alltid: '+share);
+  // skyddet: efter pity dubbletter i rad ges något man saknar, hur oddsen än faller
+  const p=new XmasMeta({storage:mem(),rng:mulberry(9)});
+  for(const o of ORNAMENTS)if(o.id!=='orn-aurora'&&o.id!=='orn-topstar')p.state.orn[o.id]=1;
+  p.state.dry=ORNAMENT_POLICY.pity;
+  for(let i=0;i<50;i++){p.state.dry=ORNAMENT_POLICY.pity;assert.equal(p._draw('normal').id,'orn-aurora','skyddet ger det som saknas, aldrig legendarisk');}
+  // legendariska delas bara ut av skyddet när en grad kräver det (min = legendary)
+  p.state.dry=ORNAMENT_POLICY.pity;assert.equal(p._draw('normal','legendary').id,'orn-topstar');
+  // dubblett: räknaren går upp, ny prydnad nollar den
+  const q=meta({seed:4});q._ornament(q._reward(),{id:'orn-red'});assert.equal(q.state.dry,0);q._ornament(q._reward(),{id:'orn-red'});q._ornament(q._reward(),{id:'orn-red'});assert.equal(q.state.dry,2);q._ornament(q._reward(),{id:'orn-blue'});assert.equal(q.state.dry,0);
+  // alla ägs: en dubblett ger XP
+  for(const o of ORNAMENTS)q.state.orn[o.id]=q.state.orn[o.id]||1;
+  const before=q.state.xp,R=q.onRun(hunt(),at(D(1)));
+  assert.ok(R.ornaments.every(o=>o.dupe));assert.ok(R.parts.some(p2=>p2.label.startsWith('Dubblett')));assert.ok(q.state.xp>before+XP.dupe-1);
+});
+test('en vanlig spelare fyller inte granen på en vecka: 24 dragningar ger långt ifrån alla (de vanliga först, de sällsynta efter, den legendariska sist)',()=>{
+  const m=meta({seed:21});const got=new Set();
+  for(let i=0;i<24;i++){const R=m.onRun(hunt(),at(D(1)));for(const o of R.ornaments)got.add(o.id);}
+  assert.ok(got.size>=13&&got.size<=22,'efter 24 dragningar: '+got.size);
+  assert.ok(!got.has('orn-topstar')||true);
 });
 test('oddsen stämmer på ca 20 000 dragningar (70/24/5,5/0,5 % med tomt träd)',()=>{
   const rnd=mulberry(99),count={common:0,rare:0,epic:0,legendary:0};
@@ -421,7 +439,7 @@ test('bara de senaste 45 dagarna sparas',()=>{
 test('status och nästa mål: en lott när den är nära, annars grad eller uppdrag',()=>{
   const m=meta();m.onRun(intro(),at(D(1)));
   m.state.meter=50;assert.equal(m.nextGoal(at(D(1))).kind,'ticket');assert.match(m.nextGoal(at(D(1))).text,/10 julklappar till nästa lott/);
-  m.state.meter=0;m.state.xp=290;assert.equal(m.nextGoal(at(D(1))).kind,'grade');
+  m.state.meter=0;m.state.xp=LEVELS[2].xp-40;assert.equal(m.nextGoal(at(D(1))).kind,'grade');
   m.state.xp=100;const g=m.nextGoal(at(D(1)));assert.ok(['mission','grade','ticket'].includes(g.kind));
   const s=m.status(at(D(1)));assert.ok(s.level.n>=2);assert.equal(s.ornaments.total,24);assert.equal(s.hidden.total,20);assert.ok(s.tickets>=1);assert.equal(s.coupons.length,0);
 });

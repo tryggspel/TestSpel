@@ -27,6 +27,7 @@ const server=http.createServer((req,res)=>{
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const ORIGIN=`http://127.0.0.1:${server.address().port}`;
 const {HIDDEN_SPOTS}=await import(pathToFileURL(path.join(root,'xmas/xmas-hidden.mjs')).href);
+const {codeHash,pinHash}=await import(pathToFileURL(path.join(root,'xmas/xmas-hash.mjs')).href);
 const SAVE_KEY='karlstad-xmas:save:1',META_KEY='karlstad-xmas:meta:1';
 
 const browser=await chromium.launch({executablePath:process.env.CHROME,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist','--no-sandbox']});
@@ -34,7 +35,7 @@ let failed=0;
 const check=(name,ok,detail='')=>{if(!ok)failed++;console.log((ok?'OK   ':'FEL  ')+name+(detail?' — '+detail:''));};
 
 // En ny webbläsare per scenario. seed = sparning att börja med; day = datum som klockan ska visa (ISO med tid), annars riktig tid.
-async function open({seed=null,day=null,search='?debug'}={}){
+async function open({seed=null,day=null,search='?debug',config=null,routes=null}={}){
   const ctx=await browser.newContext({viewport:{width:+V[1],height:+V[2]},...(V[3]?{hasTouch:true,isMobile:true,deviceScaleFactor:1}:{})});
   await ctx.addInitScript(([seed,day])=>{
     if(day){const off=Date.parse(day)-Date.now(),R=Date;class F extends R{constructor(...a){if(a.length===0)super(R.now()+off);else super(...a);}static now(){return R.now()+off;}}globalThis.Date=F;}
@@ -43,6 +44,9 @@ async function open({seed=null,day=null,search='?debug'}={}){
   const page=await ctx.newPage(),errs=[];
   page.on('pageerror',e=>errs.push('pageerror: '+e.message));page.on('console',m=>{if(m.type()==='error'&&!/404|Failed to load resource/.test(m.text()))errs.push('console: '+m.text().slice(0,200));});
   await page.route(/cdn\.jsdelivr\.net\/npm\/playcanvas/,r=>r.fulfill({contentType:'text/javascript',body:pcSource}));
+  // config: (källtext) => ny källtext för xmas-meta-config.mjs (för prov med riktiga koder, kuponger och öppen anmälan, utan att någon fil på disk ändras)
+  if(config)await page.route(/\/xmas\/xmas-meta-config\.mjs/,r=>{if(!r.request().url().startsWith(ORIGIN))return r.continue();r.fulfill({contentType:'text/javascript',body:config(fs.readFileSync(path.join(root,'xmas/xmas-meta-config.mjs'),'utf8'))});});
+  if(routes)await routes(page);
   await page.route(/\/app\.js/,r=>{
     if(!r.request().url().startsWith(ORIGIN))return r.continue();
     const s=fs.readFileSync(path.join(root,'app.js'),'utf8').replace("app.on('update',update);","window.__app=app;window.__blocked=blocked;window.__tp=(x,z,h,t)=>{resetInput();vy=0;onGround=true;player.setPosition(x,EYE,z);yaw=h;pitch=t;player.setEulerAngles(0,yaw,0);camera.setLocalEulerAngles(pitch,0,0);};window.__pos=()=>{const p=player.getPosition();return [p.x,p.z]};app.on('update',update);");
@@ -88,15 +92,29 @@ await scenario('1 · första start och första uppdraget',async()=>{
   });
   check('1e belöningsraden visar XP, grad 2, röd kula och första lotten',card.shown&&/^\+\d+ XP$/.test(card.xp)&&/GRAD 2/.test(card.grade)&&card.chips.some(c=>/Röd kula/.test(c)&&/NY/.test(c))&&card.chips.some(c=>/T-[2-9A-Z]{4}-[2-9A-Z]{4}/.test(c)&&/FÖRSTA UPPDRAGET/.test(c)),JSON.stringify(card).slice(0,420));
   check('1f raden säger att serien börjar och vad nästa mål är; ornamentet ritas (canvas)',card.list.some(l=>/SERIE/.test(l))&&!!card.goal&&card.icons>=1,JSON.stringify({list:card.list,goal:card.goal}));
-  check('1g stora knappen är EN JAKT TILL (nästa runda) och JULMENYN finns som egen knapp',/EN JAKT TILL · TORGET/.test(card.btn)&&card.menu,card.btn);
+  check('1g efter första uppdraget är stora knappen FORTSÄTT (till Julmenyn), JULMENYN-knappen behövs inte och slutkortet säger inte att uppdragen är klara',/^FORTSÄTT/.test(card.btn)&&!card.menu&&!card.list.some(l=>/UPPDRAG KLART/.test(l)),card.btn);
   check('1h inget rinner ut åt sidan i slutkortet',await g.fits('round-xmas-result'));
   await g.shot('1b-slutkort');
   const m=await g.meta();
-  check('1i framstegen sparas: XP, röd kula, en lott, serie 1 dag, första uppdraget klart',m&&m.xp>=100&&m.orn['orn-red']===1&&m.tickets.length===1&&m.streak.cur===1&&m.tried.intro&&m.welcomed,JSON.stringify({xp:m?.xp,orn:m?.orn,t:m?.tickets?.length,s:m?.streak?.cur}));
-  // en jakt till i ett tryck
+  check('1i framstegen sparas: XP, röd kula, en lott, serie 1 dag, första uppdraget klart, inga uppdrag räknade',m&&m.xp>=100&&m.orn['orn-red']>=1&&m.tickets.length===1&&m.streak.cur===1&&m.tried.intro&&m.welcomed&&Object.values(m.days).every(d=>d.packages===0&&!Object.keys(d.done).length),JSON.stringify({xp:m?.xp,orn:m?.orn,t:m?.tickets?.length,s:m?.streak?.cur}));
+  await g.click('xmasResultContinue');await g.wait(700);
+  const hub=await g.ev(()=>({panel:!document.getElementById('round-xmas-continue').hidden,grade:document.querySelector('#xmasStripContinue .xs-grade')?.textContent,missions:document.querySelectorAll('#xmasStripContinue .xs-missions li:not(.xs-title):not(.xs-gift)').length,done:document.querySelectorAll('#xmasStripContinue .xs-missions li.done').length,
+    title:document.querySelector('#xmasStripContinue .xs-missions .xs-title')?.textContent,round:document.getElementById('xmasRound').getBoundingClientRect().bottom<=innerHeight}));
+  check('1j Julmenyn visar graden, tre uppdrag på noll och nästa jakt utan att rulla',hub.panel&&/GRAD 2/.test(hub.grade)&&hub.missions===3&&hub.done===0&&/0\/3/.test(hub.title)&&hub.round,JSON.stringify(hub));
+  await g.shot('1c-julmeny');
+  // en vanlig jakt: nästa runda startar direkt från slutkortet
+  await g.click('xmasRound');await g.wait(1500);
+  await g.ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;r.collected=18;r.bonusCollected=2;r.points=520;r.bestChain=6;r.t=150;r.phase='deliver';});
+  const tomte2=await g.ev(()=>{const t=window.KarlstadDebug.journey().xmas.hunt.run.tomte;return {x:t.x,z:t.z};});
+  await g.tp(tomte2.x,tomte2.z,300);
+  check('1k slutkortet efter en vanlig jakt visas',await g.until(()=>!document.getElementById('round-xmas-result').hidden,12));
+  await g.wait(400);
+  const c2=await g.ev(()=>({btn:document.getElementById('xmasResultContinue').textContent.replace(/\s+/g,' ').trim(),menu:!document.getElementById('xmasResultMenu').hidden,list:[...document.querySelectorAll('#xmasReward .xrw-list li')].map(l=>l.textContent),xp:document.querySelector('#xmasReward .xrw-xp')?.textContent}));
+  check('1l efter en vanlig jakt är stora knappen EN JAKT TILL (nästa runda) och JULMENYN finns som egen knapp; uppdrag räknas nu',/EN JAKT TILL · KUNGSGATAN/.test(c2.btn)&&c2.menu&&c2.list.some(l=>/UPPDRAG KLART/.test(l)),JSON.stringify(c2));
+  await g.shot('1d-vanlig-jakt');
   await g.click('xmasResultContinue');await g.wait(1500);
-  check('1j EN JAKT TILL startar nästa runda (Torgets julklappsjakt) direkt',await g.ev(()=>{const s=window.KarlstadDebug.journey().xmas.snapshot();return s.mode==='cozy'&&s.hunt.id==='round-torget';}));
-  check('1k inga fel i sidan',g.errs.length===0,g.errs.slice(0,2).join(' | '));
+  check('1m EN JAKT TILL startar nästa runda (Kungsgatans julrunda) direkt',await g.ev(()=>{const s=window.KarlstadDebug.journey().xmas.snapshot();return s.mode==='cozy'&&s.hunt.id==='round-kungsgatan';}));
+  check('1n inga fel i sidan',g.errs.length===0,g.errs.slice(0,2).join(' | '));
   await g.ctx.close();
 });
 
@@ -162,13 +180,38 @@ await scenario('2 · julmenyn, julgranen, lotter och gömda julklappar (spelare 
   await g.ctx.close();
 });
 
-// ── Scenario 3: ett hemligt paket i länken (?paket=) som inte finns ───────────────────────────────────────────────────
-await scenario('3 · ?paket= med en okänd kod städas bort och ger ett besked',async()=>{
+// ── Scenario 3: hemligt paket (?paket=) och kuponger ────────────────────────────────────────────────────────────────────
+await scenario('3 · ?paket=: okänd kod, riktig kod med kupong (en gång per enhet), kupongen löses in med PIN',async()=>{
   const g=await open({seed:SEED_DONE,search:'?debug&paket=FELKOD123'});
   const r=await g.ev(()=>({url:location.search,rows:[...document.querySelectorAll('#xmasNewsStart .xn-row')].map(x=>[x.className,x.textContent])}));
-  check('3a adressen städas (ingen ?paket= kvar) och spelaren får veta att koden inte känns igen',!/paket=/.test(r.url)&&r.rows.some(x=>/codebad/.test(x[0])&&/känns inte igen/.test(x[1])),JSON.stringify(r));
+  check('3a okänd kod: adressen städas (ingen ?paket= kvar) och spelaren får veta att koden inte känns igen',!/paket=/.test(r.url)&&r.rows.some(x=>/codebad/.test(x[0])&&/känns inte igen/.test(x[1])),JSON.stringify(r));
   check('3b ingenting delades ut',(await g.meta()).tickets.length===1);
   await g.ctx.close();
+  const CODE='TESTKOD12345';
+  const cfg=src=>src
+    .replace('export const QR_CODES=Object.freeze([]);',`export const QR_CODES=Object.freeze([{h:'${codeHash(CODE)}',id:'test-1',label:'TESTAFFISCH',reward:{xp:50,orn:'epic',tickets:1,coupon:'kaffe'}}]);`)
+    .replace('export const COUPONS=Object.freeze([]);',`export const COUPONS=Object.freeze([{id:'kaffe',title:'EN KAFFE PÅ HUSET',partner:'Provkaféet',text:'Visa kupongen för personalen.',terms:'Gäller en gång.',validTo:'2026-12-24',pin:'${pinHash('kaffe','4711')}'}]);`);
+  const g2=await open({seed:SEED_DONE,search:'?debug&paket=testkod-1234%205',config:cfg});
+  const n=await g2.ev(()=>[...document.querySelectorAll('#xmasNewsStart .xn-row.code')].map(x=>x.textContent));
+  check('3c riktig kod (skriven med små bokstäver, streck och mellanrum): hemligt paket med XP, prydnad och lott',n.length===1&&/HEMLIGT PAKET! TESTAFFISCH/.test(n[0])&&/\+50 XP/.test(n[0])&&/NY PRYDNAD/.test(n[0])&&/NY LOTT/.test(n[0]),n.join(' | '));
+  const m=await g2.meta();
+  check('3d belöningen sparas: koden är använd, två lotter, en kupong ägs',m.qr['test-1']&&m.tickets.length===2&&m.coupons.length===1&&m.coupons[0].id==='kaffe'&&m.xp>=50,JSON.stringify({qr:m.qr,t:m.tickets.length,c:m.coupons.length}));
+  await g2.ev(()=>document.querySelectorAll('#xmasStripStart .xs-btn')[2].click());await g2.wait(400);
+  const box=await g2.ev(()=>({shown:!document.getElementById('xmasCoupons').hidden,title:document.querySelector('#xmasCoupons .xs-coupon b')?.textContent,pin:!!document.querySelector('#xmasCoupons .xs-pin'),cls:document.querySelector('#xmasCoupons .xs-coupon')?.className}));
+  check('3e kupongen syns under gömda julklappar med PIN-fält för personalen',box.shown&&box.title==='EN KAFFE PÅ HUSET'&&box.pin&&/valid/.test(box.cls),JSON.stringify(box));
+  await g2.shot('3a-kupong');
+  await g2.ev(()=>{document.querySelector('#xmasCoupons .xs-pin').value='1111';document.querySelector('#xmasCoupons .xs-coupon .round-secondary').click();});
+  check('3f fel PIN löser inte in kupongen',/Fel PIN/.test(await g2.ev(()=>document.querySelector('#xmasCoupons .round-fine:last-child').textContent))&&(await g2.meta()).coupons[0].used===0);
+  await g2.ev(()=>{document.querySelector('#xmasCoupons .xs-pin').value='4711';document.querySelector('#xmasCoupons .xs-coupon .round-secondary').click();});
+  const after=await g2.meta();
+  check('3g rätt PIN löser in kupongen och den visas som inlöst',after.coupons[0].used>0&&await g2.ev(()=>/used/.test(document.querySelector('#xmasCoupons .xs-coupon').className)),JSON.stringify(after.coupons));
+  // samma länk igen (omladdning): ingenting delas ut en andra gång
+  await g2.page.goto(ORIGIN+'/?debug&paket=TESTKOD12345');await g2.page.waitForFunction(()=>{const l=document.getElementById('loading');return l&&l.classList.contains('hide')&&getComputedStyle(l).opacity==='0';},null,{timeout:180000});await g2.wait(900);
+  const again=await g2.ev(()=>[...document.querySelectorAll('#xmasNewsStart .xn-row')].map(x=>x.className+': '+x.textContent));
+  const m2=await g2.meta();
+  check('3h samma kod en andra gång: "redan hämtat" och ingen ny belöning',again.some(x=>/codebad/.test(x)&&/redan hämtat/.test(x))&&m2.tickets.length===2&&m2.xp===after.xp,again.join(' | '));
+  check('3i inga fel i sidan',g2.errs.length===0,g2.errs.slice(0,2).join(' | '));
+  await g2.ctx.close();
 });
 
 // ── Scenario 4: en senare dag med klara luckor i Julkalendern ───────────────────────────────────────────────────────────
@@ -184,6 +227,39 @@ await scenario('4 · den 4 december: klara luckor ger belöning en gång',async(
   const rows2=await g.ev(()=>[...document.querySelectorAll('#xmasNewsStart .xn-row')].map(x=>x.textContent));
   const m2=await g.meta();
   check('4c efter omladdning ger samma luckor ingenting igen',!rows2.some(r=>/LUCKA/.test(r))&&m2.xp===m1.xp&&m2.tickets.length===m1.tickets.length,JSON.stringify({rows2,xp:[m1.xp,m2.xp]}));
+  await g.ctx.close();
+});
+
+// ── Scenario 6: anmälan till dragningen (öppen i det här provet, servern är en låtsasserver) ────────────────────────────────────
+await scenario('6 · vinn en julgran: formuläret, kontroll, inskickning och fel (låtsasserver, ingen riktig lagring)',async()=>{
+  const cfg=src=>src.replace("ready:false,","ready:true,").replace("controller:'',contact:'',","controller:'Provföreningen',contact:'info@exempel.se',").replace("sponsor:'',","sponsor:'Provträdgården',");
+  let answer={status:200,json:{ok:true,stored:1,total:1}},sent=[];
+  const g=await open({seed:SEED_DONE,config:cfg,routes:async page=>{await page.route(/\/api\/xmas-draw$/,async route=>{sent.push(JSON.parse(route.request().postData()||'null'));await route.fulfill({status:answer.status,contentType:'application/json',body:JSON.stringify(answer.json)});});}});
+  await g.ev(()=>document.querySelectorAll('#xmasStripStart .xs-btn')[1].click());await g.wait(400);
+  const f=await g.ev(()=>({form:!document.getElementById('xmasDrawForm').hidden,soon:!document.getElementById('xmasDrawSoon').hidden,line:document.getElementById('xmasDrawLine').textContent,send:document.getElementById('xmasDrawSend').textContent.replace(/\s+/g,' ').trim(),
+    rules:document.getElementById('xmasDrawRules').textContent,priv:document.getElementById('xmasDrawPrivacy').textContent}));
+  check('6a med öppen anmälan syns formuläret, sponsorn och villkoren (med ansvarig och kontakt ifyllda)',f.form&&!f.soon&&/Presenteras av Provträdgården/.test(f.line)&&/SKICKA IN 1 LOTT/.test(f.send)&&/Provföreningen/.test(f.rules)&&/info@exempel\.se/.test(f.priv)&&!/\[[A-ZÅÄÖ]+\]/.test(f.rules+f.priv),JSON.stringify(f).slice(0,300));
+  await g.shot('6a-anmalan');
+  check('6b inget rinner ut åt sidan i anmälan',await g.fits('round-xmas-draw'));
+  await g.click('xmasDrawSend');
+  check('6c tomt formulär: ett begripligt fel och inget skickas',/namn/i.test(await g.text('xmasDrawStatus'))&&sent.length===0,await g.text('xmasDrawStatus'));
+  await g.ev(()=>{document.getElementById('xmasDrawName').value='Kim Karlsson';document.getElementById('xmasDrawContact').value='kim@exempel.se';});
+  await g.click('xmasDrawSend');
+  check('6d utan bekräftelse av ålder och samtycke skickas inget',/myndig|målsman/i.test(await g.text('xmasDrawStatus'))&&sent.length===0,await g.text('xmasDrawStatus'));
+  await g.ev(()=>{document.getElementById('xmasDrawGuardian').checked=true;document.getElementById('xmasDrawConsent').checked=true;});
+  answer={status:503,json:{ok:false,error:'ej_redo'}};
+  await g.click('xmasDrawSend');await g.wait(500);
+  check('6e servern ej redo: ett besked, formuläret kan användas igen och lotten är inte markerad som inskickad',/inte öppen/.test(await g.text('xmasDrawStatus'))&&!(await g.ev(()=>document.getElementById('xmasDrawSend').disabled))&&(await g.meta()).draw.sent.length===0,await g.text('xmasDrawStatus'));
+  answer={status:200,json:{ok:true,stored:1,total:1}};
+  await g.click('xmasDrawSend');await g.wait(600);
+  const body=sent.at(-1);
+  check('6f godkänd inskickning: förfrågan har rätt innehåll och personuppgifterna går bara dit',!!body&&body.v===1&&body.name==='Kim Karlsson'&&body.contact==='kim@exempel.se'&&body.guardian===true&&body.consent===true&&Array.isArray(body.tickets)&&body.tickets.length===1&&/^T-/.test(body.tickets[0])&&body.facts&&body.facts.grade>=1,JSON.stringify(body));
+  const m=await g.meta();
+  check('6g lotten markeras som inskickad, knappen säger 0 lotter och spelet tackar',m.draw.sent.length===1&&/SKICKA IN 0 LOTTER/.test(await g.ev(()=>document.getElementById('xmasDrawSend').textContent.replace(/\s+/g,' ').trim()))&&/Tack/.test(await g.text('xmasDrawStatus')),JSON.stringify(m.draw));
+  check('6h den inskickade lotten visas som inskickad i listan',await g.ev(()=>/inskickad/.test(document.querySelector('#xmasDrawTickets li').textContent)));
+  const stored=await g.ev(()=>JSON.stringify(localStorage));
+  check('6i namn och kontakt sparas inte på enheten',!/Kim Karlsson|kim@exempel/.test(stored));
+  check('6j inga fel i sidan',g.errs.length===0,g.errs.slice(0,2).join(' | '));
   await g.ctx.close();
 });
 

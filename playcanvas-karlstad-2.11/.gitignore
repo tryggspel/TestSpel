@@ -1,0 +1,4 @@
+node_modules/
+# Utdata från tools/xmas-qr (innehåller koderna i klartext) och tools/xmas-draw (innehåller kontaktuppgifter): ska aldrig checkas in
+qr-out/
+draw-out/

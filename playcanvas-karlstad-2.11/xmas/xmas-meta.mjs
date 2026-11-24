@@ -3,10 +3,10 @@
 // Egen sparning (karlstad-xmas:meta:1), skild från julspelets (karlstad-xmas:save:1) som Julkalendern läser: den här modulen ändrar aldrig den och kalendern ändrar aldrig den här.
 // Alla belöningar delas ut av den här modulen och bara en gång: en lucka, en söndag, en gömd julklapp eller en kod kan inte ge samma sak två gånger, hur man än laddar om eller rör klockan.
 // Tiden är svensk kalenderdag (Europe/Stockholm). Spelet och kalendern räknar likadant (tests/xmas-meta.test.mjs jämför dem).
-import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,FIRST_ORNAMENT,MISSIONS,MISSION_TIERS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,QR_CODES,COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.10';
-import {makeTicket,validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.10';
-import {codeHash,pinHash,normalizeCode} from './xmas-hash.mjs?v=2.21.1-xmas.10';
-import {HIDDEN_SPOTS,hintsShown} from './xmas-hidden.mjs?v=2.21.1-xmas.10';
+import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,ORNAMENT_POLICY,FIRST_ORNAMENT,MISSIONS,MISSION_TIERS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,QR_CODES,COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.11';
+import {makeTicket,validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.11';
+import {codeHash,pinHash,normalizeCode} from './xmas-hash.mjs?v=2.21.1-xmas.11';
+import {HIDDEN_SPOTS,hintsShown} from './xmas-hidden.mjs?v=2.21.1-xmas.11';
 
 export const META_KEY='karlstad-xmas:meta:1';
 const ORN_BY_ID=new Map(ORNAMENTS.map(o=>[o.id,o]));
@@ -40,7 +40,7 @@ export function levelFor(xp,levels=LEVELS){
 
 // ── Sparning ─────────────────────────────────────────────────────────────────────────────────────────────────────
 const blankDay=()=>({runs:0,clears:0,packages:0,bonus:0,chain:0,fast:0,areas:[],hidden:0,zombies:0,rush:0,meter:0,first:false,gift:false,done:{},pick:[]});
-export const blankMeta=()=>({v:1,xp:0,lv:1,orn:{},seen:{},tickets:[],meter:0,days:{},streak:{cur:0,best:0,last:'',freezes:0,got:{}},cal:{doors:{},advent:{}},hidden:{},qr:{},coupons:[],draw:{sent:[],at:0},tried:{intro:false,zombies:false,rush:false},welcomed:false,first:''});
+export const blankMeta=()=>({v:1,xp:0,lv:1,dry:0,orn:{},seen:{},tickets:[],meter:0,days:{},streak:{cur:0,best:0,last:'',freezes:0,got:{}},cal:{doors:{},advent:{}},hidden:{},qr:{},coupons:[],draw:{sent:[],at:0},tried:{intro:false,zombies:false,rush:false},welcomed:false,first:''});
 
 function sanitizeDay(r){
   const d=blankDay();if(!isObj(r))return d;
@@ -54,7 +54,7 @@ function sanitizeDay(r){
 export function sanitizeMeta(raw){
   const out=blankMeta();
   if(!isObj(raw)||raw.v!==1)return out;
-  out.xp=num(raw.xp,999999);out.lv=Math.max(1,Math.min(LEVELS.length,num(raw.lv,LEVELS.length,1)));
+  out.dry=num(raw.dry,99);out.xp=num(raw.xp,999999);out.lv=Math.max(1,Math.min(LEVELS.length,num(raw.lv,LEVELS.length,1)));
   if(isObj(raw.orn))for(const [id,c] of Object.entries(raw.orn))if(ORN_BY_ID.has(id)&&num(c,99)>0)out.orn[id]=num(c,99);
   if(isObj(raw.seen))for(const id of Object.keys(raw.seen))if(out.orn[id]&&raw.seen[id]===true)out.seen[id]=true;
   if(Array.isArray(raw.tickets)){
@@ -96,8 +96,8 @@ export function sanitizeMeta(raw){
 export class XmasMeta{
   // storage: som localStorage. rng: slump i [0,1). now: ger ett Date. hidden: finns gömda julklappar i bygget (uppdraget "hitta en gömd julklapp" väljs bara då).
   // qr och coupons: se xmas-meta-config.mjs (tomma tills det finns riktiga koder och erbjudanden).
-  constructor({storage=null,rng=Math.random,now=()=>new Date(),hidden=true,qr=QR_CODES,coupons=COUPONS}={}){
-    this.storage=storage;this.rng=rng;this.clock=now;this.hiddenOn=!!hidden;this.qr=qr;this.couponDefs=coupons;
+  constructor({storage=null,rng=Math.random,now=()=>new Date(),hidden=true,qr=QR_CODES,coupons=COUPONS,policy=ORNAMENT_POLICY}={}){
+    this.storage=storage;this.rng=rng;this.policy=policy;this.clock=now;this.hiddenOn=!!hidden;this.qr=qr;this.couponDefs=coupons;
     this.state=blankMeta();
     try{this.state=sanitizeMeta(JSON.parse(storage?.getItem(META_KEY)||'null'));}catch{}
   }
@@ -208,25 +208,32 @@ export class XmasMeta{
     amount=Math.floor(amount);if(!(amount>0))return;
     this.state.xp=Math.min(999999,this.state.xp+amount);R.xp+=amount;R.parts.push({label,xp:amount});
   }
-  // Slumpar en prydnad: sällsyntheten ur oddsen (men inte under min), och något man inte har dras före en dubblett (först i samma sällsynthet, annars närmaste).
+  // Slumpar en prydnad: sällsyntheten ur oddsen (men inte under min). Inom sällsyntheten väger något man saknar policy.bias gånger mer än något man har. Efter policy.pity dubbletter i rad ges alltid något
+  // man saknar (först i samma sällsynthet, annars den närmaste), om det finns något.
   _draw(odds,min='common'){
-    const table=ORNAMENT_ODDS[odds]||ORNAMENT_ODDS.normal,lo=Math.max(0,RARITIES.indexOf(min));
+    const table=ORNAMENT_ODDS[odds]||ORNAMENT_ODDS.normal,lo=Math.max(0,RARITIES.indexOf(min)),{bias,pity}=this.policy;
     const w=RARITIES.map((r,i)=>i>=lo?(table[r]||0):0);let total=w.reduce((a,b)=>a+b,0);
     if(total<=0){w[lo]=1;total=1;}
     const x=this.rng()*total;let acc=0,pick=lo;
     for(let i=0;i<w.length;i++){if(w[i]<=0)continue;acc+=w[i];pick=i;if(x<acc)break;}
     const pool=i=>ORNAMENTS.filter(o=>o.rarity===RARITIES[i]),fresh=i=>pool(i).filter(o=>!this.state.orn[o.id]);
-    let list=fresh(pick);
-    for(let step=1;step<RARITIES.length&&!list.length;step++){
-      for(const j of [pick+step,pick-step]){if(j>=lo&&j<RARITIES.length){const l=fresh(j);if(l.length){list=l;break;}}}
+    if(this.state.dry>=pity){
+      // Den legendariska prydnaden (Tomtens stjärna) delas aldrig ut av det här skyddet: den kommer av en grad, en lucka, ett hemligt paket eller en riktig tur.
+      const top=lo===RARITIES.length-1?RARITIES.length-1:RARITIES.length-2;
+      let list=fresh(Math.min(pick,top));
+      for(let step=1;step<RARITIES.length&&!list.length;step++){
+        for(const j of [Math.min(pick,top)+step,Math.min(pick,top)-step]){if(j>=lo&&j<=top){const l=fresh(j);if(l.length){list=l;break;}}}
+      }
+      if(list.length)return list[Math.min(list.length-1,Math.floor(this.rng()*list.length))];
     }
-    if(!list.length)list=pool(pick);
-    return list[Math.min(list.length-1,Math.floor(this.rng()*list.length))];
+    const items=pool(pick),weights=items.map(o=>this.state.orn[o.id]?1:bias),sum=weights.reduce((a,b)=>a+b,0);
+    let r=this.rng()*sum;for(let i=0;i<items.length;i++){r-=weights[i];if(r<0)return items[i];}
+    return items[items.length-1];
   }
   _ornament(R,{odds='normal',min='common',id=null,label=''}={}){
     const o=id&&ORN_BY_ID.has(id)?ORN_BY_ID.get(id):this._draw(odds,min),st=this.state,had=st.orn[o.id]||0;
     st.orn[o.id]=Math.min(99,had+1);
-    if(!had)delete st.seen[o.id];
+    if(!had){delete st.seen[o.id];st.dry=0;}else st.dry=Math.min(99,st.dry+1);
     const rec={id:o.id,name:o.name,rarity:o.rarity,color:o.color,shape:o.shape,isNew:!had,dupe:!!had,label};
     R.ornaments.push(rec);R.notable=true;
     if(had)this._xp(R,XP.dupe,'Dubblett: '+o.name);

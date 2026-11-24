@@ -33,8 +33,8 @@ GitHub Pages-arbetsflödet `Deploy Karlstad City Mobile` publicerar bara `main`;
 Julversionens ändringar slås **inte** ihop med `main`. Förbättringar i grundspelet förs över till julgrenen med granskade Git-ändringar
 (`git switch release/jul-2026 && git merge main`, lös konflikter i de få filer som julgrenen rör (avsnitt 5), kör testerna).
 
-Versionsbeteckning: `X.Y.Z-xmas.N`, där `X.Y.Z` är basversionen på `main` och `N` räknar julbyggen (**`2.21.1-xmas.10`**). Det synliga namnet är
-**Julklappsjakten – 2.21-XMS**. `node tools/set-version.mjs 2.21.1-xmas.10` (nästa bygge) sätter en enda cache-nyckel i alla moduler, HTML och CSS
+Versionsbeteckning: `X.Y.Z-xmas.N`, där `X.Y.Z` är basversionen på `main` och `N` räknar julbyggen (**`2.21.1-xmas.11`**). Det synliga namnet är
+**Julklappsjakten – 2.21-XMS**. `node tools/set-version.mjs 2.21.1-xmas.11` (nästa bygge) sätter en enda cache-nyckel i alla moduler, HTML och CSS
 (testet `version.test.mjs` och CI kräver att den är densamma överallt). Samma beteckning visas i startvyn (längst ned), i `window.KarlstadRound.version`,
 i `?debug` och i `/api/build-info`.
 
@@ -44,7 +44,7 @@ i `?debug` och i `/api/build-info`.
 - Alla moduler, HTML och CSS bär samma `?v=`-nyckel, så en ny version kan aldrig blanda gamla och nya filer i webbläsarens cache.
 - Julmusiken syntetiseras i spelet: inga ljudfiler laddas ner (grundspelets mp3 hämtas först om jukeboxen används).
 - Spelmotorn (PlayCanvas 2.22.4) hämtas från jsDelivr med fast version, som i grundspelet.
-- Startvyn visar `Julklappsjakten – 2.21-XMS · bygge 2.21.1-xmas.10 · <miljö> <gren> <commit> · bas 2.21.1 (fadc36a)`. `/api/build-info` (Vercel-funktion)
+- Startvyn visar `Julklappsjakten – 2.21-XMS · bygge 2.21.1-xmas.11 · <miljö> <gren> <commit> · bas 2.21.1 (fadc36a)`. `/api/build-info` (Vercel-funktion)
   ger deployens commit, gren och miljö; lokalt visas "lokalt bygge".
 
 ## 4. Vercel-projektet för julversionen
@@ -100,7 +100,7 @@ Julspelet med kalendern och uppdragen i 2.21.1-xmas.7 ligger **som en separat ve
 
 ## 5. Vad som ändrats i grundspelets filer (för framtida sammanslagningar från `main`)
 
-All julkod ligger under `xmas/` (36 filer), `tests/xmas-*.test.mjs` (20 filer) och `tools/xmas-flow/` (11 skript: webbläsarkontroller och svårighetsprovet `difficulty.mjs`; `missions.mjs` och `links.mjs` kom i 2.21.1-xmas.7). Grundspelets egna filer är rörda så här (utöver cache-nyckeln `?v=` som byts överallt):
+All julkod ligger under `xmas/` (46 filer), `tests/xmas-*.test.mjs` (24 filer) och `tools/xmas-flow/` (13 skript: webbläsarkontroller och svårighetsprovet `difficulty.mjs`; `missions.mjs` och `links.mjs` kom i 2.21.1-xmas.7, `meta.mjs` i xmas.11), samt `tools/xmas-draw/`, `tools/xmas-qr/` och `tools/xmas-meta/` (xmas.11) och funktionen `api/xmas-draw.mjs`. Grundspelets egna filer är rörda så här (utöver cache-nyckeln `?v=` som byts överallt):
 
 | Fil | Ändring |
 |---|---|
@@ -109,6 +109,7 @@ All julkod ligger under `xmas/` (36 filer), `tests/xmas-*.test.mjs` (20 filer) o
 | `boat-ride.js` | 2.21.1-xmas.7: en valfri återanropsfunktion `onAbort` som anropas när man avbryter båtresan (en rad). **2.21.1-xmas.8:** en valfri `winter()` (standard: av = grundspelets sommarbild); när den är på ritas vinterlandskapet i `xmas/xmas-boat-art.js` (sju villkor i `resize`, `creatures`, `drawCreature`, `draw` och `person`; grundspelets ritkod är kvar i `else`-grenarna) |
 | `journey-rules.mjs` | `objective()`-hook, `stepExplore()` och zombie-`step()` anropar paketjakten, `finish()` ger Tomtezombies eget slut |
 | `index.html` | 2.21.1-xmas.9: grundspelets resultatkort `#round-result` (Sandgrund) är ett `.xmas-card` och dess knapp EN GÅNG TILL en `.xmas-primary` (julens färger). Titel, tre julpaneler, länk till `xmas/xmas.css`, pausmenyns rubrik, ingen preload av mp3; JulRushen: två knappar `JULRUSHEN` med förklaring (startvyn och fortsättningsmenyn), rushmenyn, topplistan, utmaningskortet och knappen UTMANA EN VÄN på slutkortet; en rad med id `xmasZombieNote` under Tomtezombies-knappen (nivån man kommit till); 2.21.1-xmas.7: knapparna `SANDGRUND: JULVERNISSAGEN` och `BÅTBUSSEN TILL MARIEBERGSSKOGEN` med varsin notrad i fortsättningsmenyn, och en länk `JULKALENDERN · 24 LUCKOR →` (`./julkalender/`) i både startvyn och fortsättningsmenyn; kortet för djuplänkar (`round-xmas-link`) |
+| `last-round.js`, `index.html` (2.21.1-xmas.11) | Panellistan i `setPanel` har tre namn till (`xmas-tree`, `xmas-draw`, `xmas-secrets`); `index.html` har tre tomma kort för dem, tre remsor (`#xmasStripStart`, `#xmasStripContinue`, `#xmasNewsStart/Continue`), en knapp `#xmasResultMenu` på slutkortet och en rad om priset på startvyn. Inga andra grundspelsfiler berörs av framstegen. |
 | `mall-space.mjs` | 2.21.1-xmas.4: butikströsklarna i Mitt i City (`MALL_DOORWAYS`, en funktion och två villkor i `mallPassage` och `mallWalkable`): se 6 (Butiksuppdrag). Felet finns också i grundspelet (`main`), som inte är ändrat |
 | `journey-view.js` | JulRushen: tre villkor (`journey.xmas?.rushMode`) som döljer grundspelets termoskort, cyanfyr och radarprickar medan JulRushen går (den ritar sina egna paket i `xmas/xmas-view.js`) |
 | `city-architecture.js` | `ComicMesh.tri` kan färgfiltrera triangeln efter normalen (snö) |
@@ -526,3 +527,24 @@ Grundspelets plockruta (`#journeyPickupToast`, "+25 KAFFEPOÄNG · +15 SOL" och 
 | Test | `tests/pickup-toast.test.mjs` (7), `tools/xmas-flow/toast.mjs` | Testen räknar ut från mediefrågorna vilka telefoner som får pingen (13 liggande och 7 stående storlekar). Webbläsarkontrollen mäter rutan i Tomtezombies, Julklappsjakten och JulRushen vid tio skärmstorlekar: **114 av 114 OK** (före rättningen felade 9 kontroller vid 896×414: 184×238 px, 11,8 % av skärmen; efter: 144×26 px). |
 
 **Verifierat på 2.21.1-xmas.10:** enhetstesterna 630 av 630 (`node --test tests/*.mjs`, 623 från xmas.9 plus 7 nya); `toast.mjs` 114/114 i Chromium med mjukvaruritad grafik. **Inte provat:** hur det ser ut på en riktig iPhone/Safari, och att en riktig tomtezombiehändelse tänder rutan (provet tänder den med spelets egna texter). De övriga webbläsarkontrollerna (`links.mjs`, `missions.mjs`, `flow.mjs`, `guide.mjs` …) är inte körda om på xmas.10: ändringen rör bara rutans CSS.
+
+### 2.21.1-xmas.11: framstegen (varför man spelar en omgång till), gömda julklappar, hemliga paket och anmälan till dragningen
+
+Bakgrund: användaren bad om "en logik till varför man spelar och inte slutar", ett rakt spel, ett pris (en julgran), fler gömda julklappar och QR-koder för kaffe eller rabatt, med lansering före första advent (29 nov). Beslut: bygget ligger på xmas.9-linjen (med Julkalendern),
+butiksuppdragen och uppdragen i staden finns kvar, kalendern behålls och får belöningar, anmälan till dragningen går via en server med molnlagring. **Designen, siffrorna och de öppna besluten står i `XMAS-SPELDESIGN.md`** (läs den först).
+
+| Del | Var | Vad |
+|---|---|---|
+| Logiken | `xmas/xmas-meta.mjs`, `xmas-meta-config.mjs` | XP och grad 1–12, 24 prydnader med odds och skydd mot oturssvit, tre dagliga uppdrag med dagens julklapp, serie med frysdagar, lotter (mätare 60 julklappar, tak 3 om dagen), belöningar för Julkalenderns luckor och adventssöndagar, gömda julklappar, hemliga paket och kuponger. Ren modul, egen sparnyckel `karlstad-xmas:meta:1`. Allt delas ut en gång. |
+| Inkoppling | `xmas/xmas-boot.js` (`giveMeta`, `syncDoors`, `announce`, `flushNews`, `takeCode`), `xmas-ui.js`, `xmas-meta-ui.js`, `xmas-tree-art.js`, `xmas.css`, `index.html` | Belöningsrad på slutkortet och EN JAKT TILL, remsa (grad, uppdrag, serie, lotter, prydnader) på start- och julmenyn, julgran, lotter, gömda julklappar, nyheter överst på menyn. Fri julvandring ger XP direkt. Alla anrop är fail-soft (`M()`): går något fel fortsätter jakten utan framstegen. |
+| Kalendern | `syncDoors()` i `xmas-boot.js` | Läser Julkalenderns villkor (`evaluate`) och baslinje **skrivskyddat**; luckan ger sin belöning en gång när dagen kommit och uppdraget är klart. Kalendern ändras inte. |
+| Gömda julklappar | `xmas/xmas-hidden.mjs`, `XmasHunt.addHidden`, `take()`, `inCatch()` | 20 platser ur grundspelets `TREASURES` som guldpaket i fri julvandring, utan att röra kombo, poäng, mål eller räknare. Alla 20 plockades i Chromium. |
+| Anmälan | `api/xmas-draw.mjs`, `xmas/xmas-draw-server.mjs`, `xmas-draw-client.mjs`, `xmas-draw-text.mjs`, `package.json` (`@vercel/blob` 2.9.0 + låsfil), `vercel.json` (`includeFiles`) | Privat Vercel Blob, en fil per kontakt, ETag. **Stängd** (`PRIZE.ready:false`) tills du fyllt i uppgifterna. Villkor och integritetstext är utkast. |
+| Verktyg | `tools/xmas-draw/` (`export.mjs`, `pick.mjs`), `tools/xmas-qr/` (`make.mjs`), `tools/xmas-meta/sim.mjs`, `tools/xmas-flow/meta.mjs` | Dragning som går att räkna om, QR-affischer och PIN-kontrollsummor, takten modellerad, webbläsarkontroll av hela kedjan. Utdatakatalogerna `draw-out/` och `qr-out/` är ignorerade av git (kontaktuppgifter och koder i klartext). |
+| Ändrat beteende | `xmas-ui.js`, `index.html` | JulRushen och Tomtezombies syns inte på startvyn före första uppdraget (knapparna finns kvar i sidan, dolda). Efter första uppdraget går FORTSÄTT till Julmenyn; efter en vanlig runda är stora knappen EN JAKT TILL. Julbåten och butiksuppdragen går tillbaka till menyn som förut. De äldre webbläsarkontrollerna `flow.mjs` (A3) och `rush.mjs` (R0) anpassades till att knapparna är dolda före första uppdraget. |
+
+**Det som inte är gjort (och som du behöver ta ställning till):** ett privat Blob-lager är inte skapat (jag skapar det när du bestämt vilket projekt som blir produktion); `PRIZE` är ofylld (ingen sponsor, ingen ansvarig, `ready:false`); villkoren är utkast som en jurist ska granska;
+inga QR-koder och inga kuponger finns (`QR_CODES` och `COUPONS` är tomma: spelet påstår inga samarbeten); produktionen är oförändrad (julklappsjakten = xmas.6, julkalender = xmas.9); seriespelet (kvallista, live-duell, lag) är ett förslag i `XMAS-SPELDESIGN.md` avsnitt 10 och kräver ett nytt godkännande.
+
+**Verifierat på 2.21.1-xmas.11:** enhetstesterna (`node --test tests/*.mjs`, siffran står i slutrapporten); `tools/xmas-flow/meta.mjs` i Chromium (hela kedjan, inklusive hemligt paket, kupong med PIN, klara luckor en senare dag och anmälan mot en låtsasserver); de äldre kontrollerna `flow.mjs`, `missions.mjs`, `links.mjs`, `rush.mjs`, `levels.mjs`, `guide.mjs` och `toast.mjs`
+(resultat i slutrapporten). **Inte provat:** en riktig telefon, en människas upplevelse, anmälan mot den riktiga lagringen, att `vercel.json` bundlar funktionens filer på Vercel, takten med riktiga spelare (modellen i `tools/xmas-meta/sim.mjs` är en räkneövning).

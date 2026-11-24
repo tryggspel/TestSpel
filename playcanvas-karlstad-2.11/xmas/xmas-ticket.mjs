@@ -1,6 +1,6 @@
 // Lottkoder till dragningen: T-XXXX-XXXX. Ren modul (används både av spelet och av servern, api/xmas-draw.mjs). Sju slumpade tecken och ett kontrolltecken, så att en felskriven kod fångas.
 // Kontrolltecknet är ingen hemlighet och ingen säkerhet: den som läser koden kan göra egna lotter. Skyddet mot fusk är att vinnaren kontrolleras före utlämning (XMAS-SPELDESIGN.md, avsnitt 6).
-import {TICKETS} from './xmas-meta-config.mjs?v=2.21.1-xmas.10';
+import {TICKETS} from './xmas-meta-config.mjs?v=2.21.1-xmas.11';
 
 const A=TICKETS.alphabet;
 const idx=ch=>A.indexOf(ch);

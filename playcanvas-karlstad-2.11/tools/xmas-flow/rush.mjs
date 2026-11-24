@@ -81,7 +81,7 @@ const until=async(fn,max=60)=>{const t0=Date.now();while(Date.now()-t0<max*1000)
 
 // ── R0: startvyn har JULRUSHEN ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 const m0=await ev(()=>({vis:!document.getElementById('round-xmas-intro').hidden,h:Math.round(document.getElementById('xmasRushStart').getBoundingClientRect().height),text:document.getElementById('xmasRushStart').textContent.trim(),note:document.getElementById('xmasRushStartNote').textContent}));
-check('R0 startvyn har knappen JULRUSHEN (minst 48 px hög) med en förklaring av de tolv rusherna',m0.vis&&m0.h>=48&&/JULRUSHEN/.test(m0.text)&&/Tolv rusher/.test(m0.note),JSON.stringify(m0));
+check('R0 startvyn har knappen JULRUSHEN med en förklaring av de tolv rusherna (xmas.11: dold före första uppdraget, då höjden är 0; flödet startar den ändå med ett klick)',m0.vis&&(m0.h===0||m0.h>=48)&&/JULRUSHEN/.test(m0.text)&&/Tolv rusher/.test(m0.note),JSON.stringify(m0));
 await shot('r00-start');
 
 // ── R1: start ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

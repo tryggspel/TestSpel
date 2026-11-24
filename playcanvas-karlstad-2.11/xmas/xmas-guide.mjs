@@ -9,10 +9,10 @@
 //    nålsmå i den låga vinkel en telefon har (1,7 m ögonhöjd); ett långt, sammanhängande band syns tydligt på 30–40 m och visar riktningen med sin form och sina pilar.
 //    Bandet ligger fast i världen (förankrat vid målet): man går fram över det och nya bitar rullas ut längst bort.
 //  - Uppdragsraden säger alltid vad man ska göra nu och vad som kommer sedan (samla paket, lämna hos tomten).
-import {CityGuidance} from '../city-guidance.mjs?v=2.21.1-xmas.10';
-import {arrowInfo} from '../tempo-run.mjs?v=2.21.1-xmas.10';
-import {TRAILS} from './xmas-config.mjs?v=2.21.1-xmas.10';
-import {nearestPrint} from './xmas-tracks.mjs?v=2.21.1-xmas.10';
+import {CityGuidance} from '../city-guidance.mjs?v=2.21.1-xmas.11';
+import {arrowInfo} from '../tempo-run.mjs?v=2.21.1-xmas.11';
+import {TRAILS} from './xmas-config.mjs?v=2.21.1-xmas.11';
+import {nearestPrint} from './xmas-tracks.mjs?v=2.21.1-xmas.11';
 
 export const GUIDE=Object.freeze({
   recalcMs:90,moveEps:.4,maxAgeMs:600,          // hur ofta vägen räknas om (när man rör sig) och hur gammal den får bli

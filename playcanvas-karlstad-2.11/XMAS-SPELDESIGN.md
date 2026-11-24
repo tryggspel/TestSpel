@@ -1,0 +1,227 @@
+# Julklappsjakten – speldesign inför lanseringen (2.21.1-xmas.11)
+
+Skrivet 2026-11-24 efter att användaren bett om "en logik till varför man spelar och inte slutar", ett rakt spel, ett pris (en julgran), fler gömda julklappar runt Karlstad och QR-koder som kan bytas mot kaffe eller rabatt.
+Det som står under **Byggt** finns i spelet och är provat (enhetstester och Chromium, se avsnitt 11). Det som står under **Förslag** är inte byggt. Siffrorna ligger i `xmas/xmas-meta-config.mjs`
+och är modellerade med `tools/xmas-meta/sim.mjs`. **Ingen människa har spelat något av detta**, inget är provat på en riktig telefon, och balansen (XP, odds, lotter) är räknad, inte spelad.
+
+Beslut från användaren som detta bygger på: bygget ligger på den nyaste linjen (xmas.9, med Julkalendern); **butiksuppdragen och uppdragen i staden finns kvar** (Cervera, Pressbyrån, Sandgrund, Julbåten);
+**Julkalendern behålls som den är** och får belöningar (ingen andra kalender); **anmälan till dragningen går via en server med molnlagring**.
+
+## 0. Svar på frågorna
+
+| Fråga | Svar |
+|---|---|
+| Varför spelar man och slutar inte? | Tre tidsskalor. **Nu:** efter varje jakt syns vad man fick (XP, en prydnad, ibland en lott) och vad som är nästa mål ("12 julklappar till nästa lott"), och en stor knapp EN JAKT TILL. **Idag:** tre dagliga uppdrag och dagens julklapp, en grad som stiger. **I morgon:** serie, en ny lucka i Julkalendern, en ny ledtråd till en gömd julklapp, advent, och en dragning som kommer närmare. |
+| Vad är progressen? | **Grad** 1–12 (XP), **julgran** med 24 prydnader, **dagliga uppdrag** och **serie**, **Julkalenderns luckor** (belöning per lucka), **20 gömda julklappar**, **hemliga paket** (QR) och **lotter** till dragningen om en julgran. Allt sparas på enheten. |
+| Startläge? | Första gången: bara **Julklappsjakten** (första uppdraget, ca två minuter, Stora Torget). JulRushen och Tomtezombies syns inte än. Efter det: Julmenyn med graden, dagens tre uppdrag, serie, lotter och alla lägen. |
+| Vilka spel från start? | Bara Julklappsjakten. Resten öppnas av **första uppdraget**, inte av en grad: Julkalenderns luckor kräver rush, zombies, butiker och platsuppdrag redan från dag 4, så ett grad-lås skulle spärra luckor. |
+| Tomtezombies? | Finns kvar som ett **bonusläge** (kuslig musik, nivåer som förut). Det syns först efter första uppdraget, ger XP, prydnader och räknas i serien. Dagens uppdrag kräver det bara av den som provat det (annars väljs inget zombie-uppdrag). |
+| Stadssamarbeten? | Butiksuppdragen och Sandgrund/Julbåten finns kvar (ditt beslut), men startvyn och slutkorten handlar om det raka spelet. Inga partner påstås: se `PARTNERPLATSER.md`. |
+| Vinna en julgran? | Ja: lotter som tjänas genom att spela, dragning mån 21 dec kl 18 (inställning). Anmälan går via server (avsnitt 6) och är **stängd tills du fyllt i sponsor, ansvarig och villkor**; lotterna räknas ändå från första dagen. |
+| Fler gömda paket? | 20 **gömda julklappar** på kontrollerade platser (avsnitt 3.6), alla provade i Chromium. |
+| QR-koder, kaffe, rabatt? | Mekanismen är byggd och provad (avsnitt 7). Den är tom tills du har platser (QR) och erbjudanden (kuponger): spelet påstår inga samarbeten. |
+| Lansera? | Första advent är söndag 29 nov. Allt är klart att provas före dess; publicering sker först efter ditt uttryckliga ja (avsnitt 9). |
+| Seriespel, 1 mot 1 live och lag? | Avsnitt 10 (förslag, inte byggt): solo först, kval, sedan live på storbildsskärm. |
+
+## 1. Principer
+
+- **Ett rakt spel.** Sök och hitta (spåren, tappade julklappar, leverans hos tomten) är oförändrat. Framstegen ligger runt det.
+- **Positivt, inte straffande.** Ingen förlorar något på att missa en dag (en frysdag räddar serien), inga köp, inga annonser, ingen stressande nedräkning.
+- **Barnvänligt.** Inga personuppgifter samlas in utom i den frivilliga anmälan till dragningen, och den kräver att man är myndig eller har en målsmans tillåtelse.
+- **Fungerar utan server.** Allt en spelare gör sparas på enheten (`karlstad-xmas:meta:1`, skild från julspelets `karlstad-xmas:save:1`). Servern behövs bara för anmälan.
+- **Allt är fail-soft.** Går något fel i framstegen fortsätter jakten utan dem (`M()` i `xmas-boot.js`). En belöning delas ut en gång och kan inte tas tillbaka av en uppdatering.
+
+## 2. Spelloopen och tre tidsskalor
+
+```
+jakt (2–3 min) → slutkortet: XP + prydnad + ev. lott + "nästa mål" → EN JAKT TILL (ett tryck)
+dag:  tre uppdrag (lätt/medel/svårt) → dagens julklapp (prydnad + lott) · första jakten ger +30 XP · advent: 2 lotter · dagens ledtråd
+säsong: serie · grader · julgranen fylls · Julkalenderns luckor · gömda julklappar · hemliga paket · lotter till dragningen
+```
+
+## 3. Progression (byggt)
+
+### 3.1 Grad (XP)
+
+XP: 2 per julklapp, 6 per bonuspaket, 40 för en klarad jakt, +30 för dagens första. Fri julvandring ger samma per julklapp direkt. Tomtezombies +30 per klarad nivå, JulRushen +25 per klarad rush och 5 per stjärna,
+Maraton 3 per tempo (räknas som klarad vid minst 20 paket), butiksuppdrag 40 första gången (10 därefter), Sandgrund 60 (15), gömd julklapp 60, dubblett 15, uppdrag 40/60/80. En jakt som misslyckas ger 1 XP per paket (högst 20).
+
+| Grad | Namn | XP | Belöning när den nås |
+|---|---|---|---|
+| 1 | SNÖFLINGA | 0 | |
+| 2 | MÖSSBÄRARE | 100 | en prydnad |
+| 3 | VANTSTICKARE | 400 | en sällsynt prydnad eller bättre |
+| 4 | LJUSTÄNDARE | 900 | en lott |
+| 5 | SPÅRSPANARE | 1 600 | en sällsynt prydnad eller bättre |
+| 6 | GLÖGGKOKARE | 2 600 | en lott |
+| 7 | SLÄDDRAGARE | 3 900 | en episk prydnad eller bättre |
+| 8 | RENVISKARE | 5 600 | en lott |
+| 9 | STJÄRNPUTSARE | 7 800 | en episk prydnad eller bättre |
+| 10 | NORDPOLSBUD | 10 500 | en lott |
+| 11 | PAKETMÄSTARE | 14 000 | en episk prydnad eller bättre |
+| 12 | SJÄLVASTE TOMTEN | 18 500 | två lotter och Tomtens stjärna |
+
+Gradnamnen är medvetet *inte* de som redan används: julpoängens titlar (Nyfiken, Paketjägare, Tomtehjälpare, Julens vän, Övertomte; luckan "Bli Tomtehjälpare" och dess text hänvisar till dem på startvyn) och
+kalenderns titlar (Julnisse … Karlstads tomte). **Det finns därför tre stegar** (julpoäng-titel, grad, kalenderns stjärnor). De är åtskilda i text, men en enda stege vore enklare: lösningen är en senare ändring av luckan 18 och startvyns statusrad.
+
+### 3.2 Julgranen (24 prydnader)
+
+12 vanliga, 7 sällsynta, 4 episka, 1 legendarisk (Tomtens stjärna), alla ritade med canvas (`xmas-tree-art.js`). En saknad prydnad visas som en siluett. Varje klarad jakt, zombie-nivå och rush ger **en dragning**:
+70 % vanlig, 24 % sällsynt, 5,5 % episk, 0,5 % legendarisk. Inom en sällsynthet väger något man saknar tre gånger mer än något man har, och efter åtta dubbletter i rad får man alltid något man saknar
+(aldrig stjärnan: den kommer av grad 12, lucka 24, ett hemligt paket eller en riktig tur). En dubblett ger 15 XP. Första uppdraget ger alltid en röd kula. Dagens julklapp, gömda julklappar och hemliga paket har bättre odds (`ORNAMENT_ODDS`).
+
+### 3.3 Dagens uppdrag och dagens julklapp
+
+Tre per dag (lätt, medel, svårt) valda av datumet så att alla får samma, och inte samma som dagen före. Valet sparas första gången det görs så att det inte ändras under dagen. Första uppdraget (genomgången) räknas inte mot dagens uppdrag.
+Klarar man alla tre öppnas **dagens julklapp**: en prydnadsdragning med bättre odds och en lott. Uppdrag som kräver ett läge (Tomtezombies, rush) väljs bara om man provat det; "hitta en gömd julklapp" väljs bara när de finns.
+
+| Nivå | Uppdrag | XP |
+|---|---|---|
+| Lätt | Klara en julklappsjakt · Hitta 15 julklappar | 40 |
+| Medel | Hitta 40 julklappar · Hitta 2 bonuspaket · Få kombo 5 · Klara 2 julklappsjakter | 60 |
+| Svårt | Klara en jakt på under 3 minuter · Få kombo 8 · Klara jakter på två olika platser · Hitta en gömd julklapp · Klara en nivå i Tomtezombies · Klara en rush | 80 |
+
+Tröskelvärdena (under 3 minuter, kombo 8) är satta från spelets regler men inte provade på riktiga spelare.
+
+### 3.4 Serie
+
+En dag räknas när man klarat minst en jakt (svensk tid). En saknad dag räddas av en **frysdag** (en ny för var sjunde dag i serien, högst två sparade); annars börjar serien om. Serien visas som "n dagar i rad".
+Belöningar: 3 dagar en prydnad, 7 dagar en lott och 100 XP, 14 dagar en lott, en sällsynt prydnad och 150 XP, 21 dagar två lotter, 24 dagar 200 XP (en gång var, även om serien börjar om).
+
+### 3.5 Julkalendern (behålls som den är, får belöningar)
+
+Kalenderns sida (`julkalender/`) och dess luckor (ett riktigt uppdrag per lucka, villkor mot julspelets sparning) är orörda. När luckan skulle räknas som klar enligt kalenderns egna regler (`evaluate` i `julkalender/rules.mjs`,
+öppen sin dag) hämtas belöningen **en gång**, när menyn öppnas eller efter ett resultat. Spelet *läser* kalenderns baslinje och skriver aldrig i kalenderns sparning; kalendern skriver aldrig i framstegen.
+Belöning per lucka (`CALENDAR`): XP på lucka 1, 5, 10, 14, 16, 18, 21 och 24; en prydnad på de flesta andra (sällsynta på de svårare, episka från lucka 13); lotter på 3, 6, 7, 9, 14, 17, 20 och 22 (en vardera), 23 (två) och 24 (tre, och Tomtens stjärna).
+**Adventssöndagarna** (29 nov, 6, 13 och 20 dec): två lotter om man klarar en jakt den dagen, en gång per söndag. Första advent infaller före kalendern och är lanseringsdagens krok.
+
+### 3.6 Gömda julklappar (20 platser)
+
+Guldpaket på platser ur grundspelets skattjakt (kontrollerade mot spelets karta, 250–880 m från Torget): Tingvallas tysta hörn, Mitt på Västra bron, Stationsklockan, Perrongen, Löfbergs kaffelager, Museiparkens bänk, Rosenpergolan,
+Kongressens scen, Dammen, Skeppet, Stadsträdgårdens bänk, Fontänen, Pirens sista planka, Hamnkranen, Gjutarens pokal, Glasbruket, Bryggudden, Magnolian och Herrhagen. De ligger bara i **fri julvandring**, syns med en ljusstråle inom 44 m och
+en rad säger "varmt" (120 m) och "glödhet" (45 m). Ledtråden är grundspelets korta gåta; tre är framme första dagen och en ny släpps varje dag. Varje fynd ger 60 XP och en sällsynt prydnad eller bättre, och var femte en lott.
+Höjden spelar ingen roll (bron, bryggan) men sikten gör det. Alla 20 plockades i Chromium (`tools/xmas-flow/meta.mjs`, kontroll 2l).
+
+### 3.7 Lotter
+
+En lott har koden `T-XXXX-XXXX` (sju slumpade tecken och ett kontrolltecken som fångar en felskriven bokstav). Källor: första uppdraget (1), **mätaren** (en lott per 60 julklappar, högst 3 om dagen), dagens julklapp (1 om dagen), serie, nya grader, Julkalenderns luckor,
+adventssöndagarna (2 vardera), var femte gömd julklapp och hemliga paket. Högst 200 lotter per enhet. Bara mätaren är obegränsad, och den har ett dagstak; alla andra källor är ändliga.
+
+## 4. Startläge och vad som är öppet
+
+| Läge | Öppnas | Anmärkning |
+|---|---|---|
+| Första uppdraget (Stora Torget) | Från start | Guidat, en genomgång: ger XP, röd kula, första lotten, serie |
+| Julklappsjakt (Torget, Kungsgatan, Drottninggatan), fri julvandring, gömda julklappar | Efter första uppdraget | Nästa runda väljs av spelet |
+| JulRushen och Maraton, Tomtezombies, butiksuppdrag, Sandgrund, Julbåten | Efter första uppdraget | Som förut. Inget låses av graden |
+| Julkalendern (länk), lotter, julgran | Från start (kalendern öppnar 1 dec) | |
+
+Startvyn är **den stora knappen först**, sedan remsan (grad, dagens uppdrag, serie, lotter, prydnader, tre knappar). Bakåtlänken till grundspelet är kvar som en liten länk.
+
+## 5. Efter varje jakt (slutkortet)
+
+Belöningsraden: **+XP** och gradens stapel, prydnader som små kort (med en ritad ikon och sällsynthet), lotter (koden syns), klarade uppdrag, dagens julklapp, serien, adventssöndag och luckor, lott-mätaren och **nästa mål**.
+Efter första uppdraget går FORTSÄTT till Julmenyn. Därefter är den stora knappen **EN JAKT TILL · \<plats\>** (nästa runda direkt) och JULMENYN en egen knapp. Julbåten och butiksuppdragen går tillbaka till menyn som förut.
+
+## 6. Priset: "Vinn en julgran"
+
+**Regler (utkast i `xmas/xmas-draw-text.mjs`):** gratis, ingen köpplikt; anmälan med namn och e-post eller telefon, bekräftelse att man är myndig eller har en målsmans tillåtelse, och samtycke; vinnaren dras slumpmässigt bland alla inskickade lottkoder;
+vinnaren kontrolleras före utlämning. **Jag är inte jurist:** kontrollera om utlottningen kräver tillstånd eller anmälan, åldersgränsen, hur länge uppgifter får sparas och den rättsliga grunden innan anmälan öppnas.
+
+**Server (ditt beslut, byggt):** `api/xmas-draw.mjs` tar emot anmälan och sparar **en fil per kontakt** i ett **privat Vercel Blob-lager** (ingen publik adress; kontaktens kontrollsumma är filnamnet). Samma kontakt som skickar in fler lotter slås ihop (ETag mot
+samtidiga skrivningar). Bara namn, kontakt, lottkoder, tidpunkter och grad/dagar/serie sparas; inga IP-adresser, inga cookies. Spärr mot upprepning, storleksgräns, kontroll av alla fält. Servern flaggar orimliga mängder lotter (`flags`) men avvisar dem inte.
+Anmälan är **stängd** (`PRIZE.ready:false`): spelet visar då bara lotterna och "anmälan öppnar snart", och servern svarar 503 och tar inte emot något.
+
+**Fusk:** lotterna ligger på spelarens enhet och går att fabricera av den som kan koden. Därför flaggas orimliga mängder och **vinnaren kontrolleras före utlämning** (grad, dagar, antal lotter, om hen faktiskt spelat). Ett pris av en julgrans värde motiverar inte mer.
+Ska det bli rättvist på riktigt behöver lotterna utfärdas av servern (kräver att varje jakt rapporteras dit: en större ändring).
+
+**Dragning:** `tools/xmas-draw/export.mjs` hämtar anmälningarna, `pick.mjs pool` bygger poolen och ger en kontrollsumma som du publicerar före dragningen, `pick.mjs draw --seed="…"` drar vinnare och reserver ur SHA-256 av
+seed, poolens kontrollsumma och en räknare, så att vem som helst kan räkna om det ur `offentligt-bevis.json` (lottkoder, inga kontaktuppgifter). En person kan bara vinna en gång. Efter dragningen: `export.mjs --delete --yes` (senast `PRIZE.keepUntil`).
+
+**Det du behöver göra för att öppna anmälan:**
+1. Fyll i `PRIZE` i `xmas/xmas-meta-config.mjs`: `sponsor` (om någon), `controller` (vem som är personuppgiftsansvarig), `contact`, datum/tid, `keepUntil`; sätt `ready:true`. Texten i `xmas-draw-text.mjs` fylls då automatiskt och ett test kräver att inga platshållare blir kvar.
+2. Läs och ändra villkoren och integritetstexten (utkast) och låt en jurist granska dem.
+3. Ett **privat Blob-lager** (Stockholm, `arn1`) kopplat till det Vercel-projekt som blir produktion, så att `BLOB_READ_WRITE_TOKEN` finns där. Det är inte skapat än (jag skapar det när du säger vilket projekt det gäller).
+4. Prova med en riktig testanmälan på förhandsadressen och radera den.
+
+## 7. Kuponger och QR-koder (byggt, tomt tills du har innehåll)
+
+**Hemligt paket (QR i verkligheten):** en affisch med en QR-kod öppnar spelet på `?paket=KOD`. Koden löses in första gången menyn öppnas och ger XP, en sällsynt prydnad eller bättre, ev. en lott och ev. en kupong, **en gång per enhet**.
+Koderna står bara som SHA-256-kontrollsummor i `QR_CODES` (aldrig i klartext i bygget). `node tools/xmas-qr/make.mjs koder --base=https://din-adress --labels="Affisch Torget,…"` skapar koderna (12 tecken, ca 60 bitar), `qr-config.txt` att klistra in,
+`koder.csv` (klartext, dela inte) och `affischer.html` att skriva ut (fyra QR per A4). QR-bilderna avkodades med en oberoende läsare (jsQR) i provet. En kod gäller först när den är inlagd i bygget och bygget är publicerat.
+
+**Kuponger (kaffe, rabatt):** ett erbjudande är data i `COUPONS`: `{id, title, partner, text, terms, validTo, pin}`. Spelaren får kupongen som belöning (en QR-kod, en lucka, en grad) och ser den under Gömda julklappar. **Inlösen utan server:** spelaren visar kupongen,
+personalen anger en **PIN** i spelarens telefon (`node tools/xmas-qr/make.mjs pin <id> <pin>` ger kontrollsumman), och kupongen blir inlöst och går inte att använda igen på enheten. Det duger för små belopp; man kan få en ny genom att rensa webbläsarens lagring.
+Inga kuponger visas förrän du anger riktiga erbjudanden: **spelet påstår inga samarbeten**.
+
+## 8. Mätning och intäkter
+
+- Mätning utan egen server: Vercel Web Analytics (kakfri) kan slås på i projektet (en inställning du gör); spelet skickar inga händelser än.
+- Intäktsidéer som inte kräver stadssamarbeten i spelet: en sponsor till priset ("Presenteras av …" visas i lottpanelen när `PRIZE.sponsor` är ifylld), sponsrade kuponger (butiken står för kaffet), betalda QR-affischer (ett hemligt paket med en sponsrad prydnad: `orn` kan vara ett bestämt id),
+  en sponsrad dag i kalendern. Inga köp i spelet, inga annonser.
+
+## 9. Lansering
+
+| Steg | Status |
+|---|---|
+| Framstegen, gömda julklappar, hemliga paket, kuponger, anmälan (stängd) | Byggt i xmas.11, provat (avsnitt 11) |
+| Förhandsvisning på Vercel (`karlstad-julklappsjakten`, bakom inloggning) | Följer grenen `claude/stoic-tesla-59znyc` |
+| **Beslut: vilken adress blir produktion?** | `karlstad-julklappsjakten.vercel.app` (idag xmas.6) eller `karlstad-julkalender.vercel.app` (idag xmas.9, med kalendern på `/julkalender/`) |
+| Provning på riktig telefon (iPhone 11, Safari) | **Inte gjort** |
+| Produktionsdeploy | **Först efter ditt uttryckliga ja** |
+| Anmälan till dragningen | Efter punkterna i avsnitt 6 |
+| QR-affischer | När du har platser och adressen är beslutad |
+
+Rollback: förra produktionsdeployen ligger kvar och kan sättas tillbaka (`request_rollback`); en lott eller prydnad en spelare fått tas aldrig bort av en uppdatering (egen sparnyckel med version).
+
+## 10. Seriespel, live-duell och lag (förslag, inte byggt)
+
+Ditt önskemål: folk spelar **ensamma först** och kvalar in till ett **seriespel som körs live på en skärm i staden** (Mitt i City, eller utomhus för helgens finaler, eller för att lotta ut fler julprodukter): två spelare
+**mot varandra i realtid**, en omgång på tid, "på jakt efter Karlstads största julklapp". Frågan om **lag** som samarbetar.
+
+**Tre nivåer, olika mycket arbete:**
+1. **Lagpoäng (enkelt, asynkront).** Ett lag har en lagkod och 2–5 medlemmar som spelar var för sig; lagets poäng är summan av medlemmarnas bästa kvalresultat. De samarbetar genom att alla bidrar. Kräver samma server som kvallistan.
+2. **Live-duell på storbildsskärm (rekommenderas).** Två spelare (eller två lag) spelar **samma bana** samtidigt, var och en på sin egen telefon, efter en gemensam nedräkning; storbildsskärmen visar bådas ställning live (bara poäng och framsteg skickas, inte hela världen).
+   Lag spelar stafett: varje medlem tar ett pass och lagets summa räknas. Det här är det som går att göra riktigt bra på en vecka eller två.
+3. **Samma värld i realtid** (man ser varandra och tävlar om samma paket) kräver en riktig realtidsserver och är flera veckors arbete. Inte före jul.
+
+**Det som måste finnas för att det ska bli rättvist:**
+- **En bana som är lika för alla.** I dag slumpas var paketen tappas (sök och hitta), så poängen går inte att jämföra. Kvalet och finalen behöver en fast bana ("Största julklappen"): samma slump för alla, eller JulRushens redan fasta banor.
+- **En central kvallista.** I dag finns bara lokal sparning och vännernas lista. Det betyder **molnlagring av smeknamn och poäng** (offentliga namn, inga kontaktuppgifter) och behöver **ett nytt godkännande** från dig (det du godkänt gäller bara anmälan till dragningen).
+- **Finalen avgör på plats.** En poäng som skickas från en telefon går alltid att förfalska. Kvalet väljer ut kandidater; finalisterna spelar om på utrustning ni håller i, med en domare. Då är fusk i kvalet värdelöst.
+
+**Ordning:** (1) solospelet lanseras före första advent (det som byggts nu), (2) kvallistan och en fast kvalbana öppnas några dagar senare med en färsk lista, så att ingen tappar något, (3) live-finalerna minst en vecka efter att kvalet startat.
+Tekniskt för live: en storbildssida (`/live/`) som visar ställningen, en liten server för poäng (en funktion plus en snabb lagring, till exempel Redis via Vercels Marketplace; Blob duger inte för täta skrivningar), en matchkod som spelarna skriver in, och en nedräkning som startar båda samtidigt.
+
+**Beslut jag behöver från dig innan jag bygger det:** (1) får molnlagring användas även för en kvallista med smeknamn? (2) vad är "Karlstads största julklapp": priset, eller en särskild bana (till exempel en jätteklapp vid mål)? (3) var och när hålls finalerna och vilken utrustning finns där (dator, skärm, telefoner, nät)? (4) lagstorlek (2–5?) och
+om lagen ska spela stafett eller summera sina kvalpoäng?
+
+## 11. Vad som är provat och vad som inte är det
+
+**Provat (kan upprepas):**
+- `node --test tests/*.mjs`: 700 av 700 tester, bland dem `xmas-meta` (belöningar en gång, serie, frysdagar, tak, advent, luckor, gömda, koder, kuponger, sparskydd), `xmas-draw` (formulär, server, lagring med ETag, spärr), `xmas-draw-pick` (poolen och att dragningen går att räkna om och är rättvis), `xmas-hidden` (paketmotorn).
+- `node tools/xmas-flow/meta.mjs` (Chromium, mjukvarurenderad grafik): första start → första uppdraget → slutkort → Julmeny → julgran, lotter, gömda julklappar → alla 20 platser plockas → hemligt paket och kupong med PIN → klara luckor en senare dag (klockan flyttad) → anmälan mot en låtsasserver → liggande telefon (896×414).
+- QR-bilderna avkodas av en oberoende läsare; SHA-256 mot Nodes egen för 200+ strängar.
+- `node tools/xmas-meta/sim.mjs`: takten för tre sorters spelare (nedan).
+
+**Inte provat:** en riktig telefon (iPhone 11/Safari), en människas upplevelse (läsbarhet, tempo, om första uppdraget hittas), anmälan mot den **riktiga** lagringen (lagret finns inte än; servern är provad mot en låtsaslagring med samma gränssnitt),
+vilken `@vercel/blob`-version som Vercel faktiskt installerar (versionen är låst till 2.9.0 med en låsfil), att `vercel.json` med `includeFiles` bundlar rätt filer (provas på förhandsadressen före produktion), många datum i Julkalendern i webbläsaren (provat: 4 dec).
+
+**Takten, modellerad** (`tools/xmas-meta/sim.mjs`, 400 spelare per sort, median och 10–90 %; ingen har spelat så här):
+
+| Spelare | Jakter | Grad vid 24 dec | Prydnader | Lotter |
+|---|---|---|---|---|
+| Tillfällig (en jakt ungefär var tredje dag) | 10 (7–13) | 5 (4–6) | 14 (10–17) | 9 (6–13) |
+| Vanlig (2–3 jakter, fem dagar av sju) | 50 (42–58) | 9 (9–10) | 24 (23–24), 64 % fyller granen | 50 (41–58) |
+| Ivrig (5–8 jakter och fri vandring varje dag) | 176 (164–187) | 12 (redan i vecka 3) | 24 (redan i vecka 2) | 136 (129–141) |
+
+Tolkning: en tillfällig spelare ser ungefär hälften av granen och några lotter; en vanlig spelare fyller granen efter två–tre veckor (vill du förlänga den: fler prydnader i `ORNAMENTS`, eller färre dragningar); den ivrigaste når toppen i vecka 2–3 och har då lotterna kvar att jaga.
+Lotterna skiljer sig 15 gånger mellan tillfällig och ivrig. Vill du jämna ut det: sänk `TICKETS.dailyCap` eller höj `TICKETS.meter`.
+
+## 12. Risker
+
+- **Anmälan och personuppgifter:** utkast till villkor och integritetstext måste granskas; ingen anmälan öppnar av sig själv.
+- **Fusk med lotter:** se avsnitt 6. Kontrollera vinnaren.
+- **Tre stegar** (julpoäng-titel, grad, kalenderns stjärnor): kan förvirra; se 3.1.
+- **Okänd takt:** XP, odds och lotter är modellerade; justera i konfigurationen efter de första dagarna.
+- **Kalendern och spelet delar adress:** belöningarna läser kalenderns baslinje. Rensar spelaren webbläsarens lagring försvinner både framstegen och kalenderns läge.

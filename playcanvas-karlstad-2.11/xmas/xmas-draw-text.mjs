@@ -1,8 +1,8 @@
 // Villkor och integritetstext för dragningen. UTKAST: det här är ett förslag på vanlig svenska som arrangören ska läsa, ändra och låta en jurist granska innan anmälan öppnas (PRIZE.ready i xmas-meta-config.mjs).
 // Jag är ingen jurist. Särskilt: kontrollera om utlottningen kräver tillstånd eller anmälan, hur gammal man ska vara, hur länge uppgifter får sparas och vilken rättslig grund som ska anges.
 // Texten fylls med uppgifterna i PRIZE (ansvarig, kontakt, pris, sponsor, datum). Saknas en uppgift lämnas en synlig platshållare kvar: tests/xmas-draw.test.mjs kräver att inga platshållare finns kvar när ready är sant.
-import {PRIZE,TICKETS} from './xmas-meta-config.mjs?v=2.21.1-xmas.10';
-import {drawDateText} from './xmas-draw-client.mjs?v=2.21.1-xmas.10';
+import {PRIZE,TICKETS} from './xmas-meta-config.mjs?v=2.21.1-xmas.11';
+import {drawDateText} from './xmas-draw-client.mjs?v=2.21.1-xmas.11';
 
 const val=(v,placeholder)=>String(v||'').trim()||'['+placeholder+']';
 const sv=iso=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(iso||'');return m?(+m[3])+'/'+(+m[2])+' '+m[1]:'['+'datum'+']';};

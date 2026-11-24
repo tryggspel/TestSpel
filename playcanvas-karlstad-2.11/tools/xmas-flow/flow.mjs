@@ -72,7 +72,7 @@ const menu=await ev(()=>({visible:!document.getElementById('round-xmas-intro').h
 const VERSION=JSON.parse(fs.readFileSync(path.join(root,'version.json'),'utf8')).version;
 check('A1 startvyn visas med Julklappsjakten, Tomtezombies och Tillbaka',menu.visible);
 check('A2 rätt version visas i startvyn och i spelet',menu.version===VERSION&&menu.build.includes(VERSION),menu.build);
-check('A3 knapparna är minst 48 px höga',menu.btns.every(h=>h>=48),menu.btns.join('/'));
+check('A3 knapparna är minst 48 px höga (Tomtezombies är dolt före första uppdraget: 0 px)',menu.btns.filter(h=>h>0).every(h=>h>=48)&&menu.btns[0]>=48,menu.btns.join('/'));
 check('A4 titeln är julversionens',/Julklappsjakten/.test(menu.title),menu.title);
 await shot('01-start');
 

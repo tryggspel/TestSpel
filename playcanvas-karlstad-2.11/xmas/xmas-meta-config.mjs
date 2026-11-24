@@ -12,16 +12,16 @@ export const SEASON=Object.freeze({start:'2026-11-27',calendarStart:'2026-12-01'
 export const LEVELS=Object.freeze([
   {n:1,name:'SNÖFLINGA',xp:0},
   {n:2,name:'MÖSSBÄRARE',xp:100,orn:'common'},
-  {n:3,name:'VANTSTICKARE',xp:300,orn:'rare'},
-  {n:4,name:'LJUSTÄNDARE',xp:600,tickets:1},
-  {n:5,name:'SPÅRSPANARE',xp:1000,orn:'rare'},
-  {n:6,name:'GLÖGGKOKARE',xp:1600,tickets:1},
-  {n:7,name:'SLÄDDRAGARE',xp:2400,orn:'epic'},
-  {n:8,name:'RENVISKARE',xp:3500,tickets:1},
-  {n:9,name:'STJÄRNPUTSARE',xp:5000,orn:'epic'},
-  {n:10,name:'NORDPOLSBUD',xp:7000,tickets:1},
-  {n:11,name:'PAKETMÄSTARE',xp:9500,orn:'epic'},
-  {n:12,name:'SJÄLVASTE TOMTEN',xp:12500,tickets:2,orn:'legendary'}
+  {n:3,name:'VANTSTICKARE',xp:400,orn:'rare'},
+  {n:4,name:'LJUSTÄNDARE',xp:900,tickets:1},
+  {n:5,name:'SPÅRSPANARE',xp:1600,orn:'rare'},
+  {n:6,name:'GLÖGGKOKARE',xp:2600,tickets:1},
+  {n:7,name:'SLÄDDRAGARE',xp:3900,orn:'epic'},
+  {n:8,name:'RENVISKARE',xp:5600,tickets:1},
+  {n:9,name:'STJÄRNPUTSARE',xp:7800,orn:'epic'},
+  {n:10,name:'NORDPOLSBUD',xp:10500,tickets:1},
+  {n:11,name:'PAKETMÄSTARE',xp:14000,orn:'epic'},
+  {n:12,name:'SJÄLVASTE TOMTEN',xp:18500,tickets:2,orn:'legendary'}
 ].map(l=>Object.freeze(l)));
 
 // ── XP ────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -47,13 +47,16 @@ export const ORNAMENTS=Object.freeze([
 ].map(([id,name,rarity,color,shape])=>Object.freeze({id,name,rarity,color,shape})));
 export const RARITIES=Object.freeze(['common','rare','epic','legendary']);
 export const RARITY_LABEL=Object.freeze({common:'VANLIG',rare:'SÄLLSYNT',epic:'EPISK',legendary:'LEGENDARISK'});
-// Oddsen per dragning (procent). Något man inte har dras före en dubblett. dailyGift: dagens julklapp (alla tre uppdrag klara). hidden: gömda julklappar. code: hemligt paket (QR).
+// Oddsen per dragning (procent). dailyGift: dagens julklapp (alla tre uppdrag klara). hidden: gömda julklappar. code: hemligt paket (QR).
 export const ORNAMENT_ODDS=Object.freeze({
   normal:Object.freeze({common:70,rare:24,epic:5.5,legendary:.5}),
   dailyGift:Object.freeze({common:35,rare:45,epic:18,legendary:2}),
   hidden:Object.freeze({common:0,rare:75,epic:23,legendary:2}),
   code:Object.freeze({common:0,rare:70,epic:28,legendary:2})
 });
+// Vilken prydnad inom en sällsynthet som dras: något man inte har väger bias gånger mer än något man har. Efter pity dubbletter i rad får man alltid något man saknar (om det finns), så att ingen
+// står och väntar på de sista för evigt. Utan det här fylls granen efter 24 dragningar och prydnaderna blir en engångsgrej; med det tar de sällsynta längre tid än de vanliga (tools/xmas-meta/sim.mjs).
+export const ORNAMENT_POLICY=Object.freeze({bias:3,pity:8});
 export const FIRST_ORNAMENT='orn-red'; // det första uppdraget ger alltid en röd kula
 
 // ── Dagliga uppdrag ───────────────────────────────────────────────────────────────────────────────────────────────

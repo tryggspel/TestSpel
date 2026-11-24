@@ -1,17 +1,17 @@
 // Julklappsjakten: gränssnittet. Startvyn, fortsättningsmenyn och resultatkortet är vanliga paneler i index.html; HUD:en och pausmenyns
 // tillägg byggs här med textContent (aldrig HTML-strängar med data). Små mål: knappar är minst 52 px höga och spelvärlden syns ovanför.
 // JulRushen använder samma HUD: tempo och klockan i raden överst (stapeln är tiden till nästa paket), liv som hjärtan, poäng, kombo och gåvorna som små brickor.
-import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.10';
-import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.10';
-import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.10';
-import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.10';
-import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.10';
-import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.10';
-import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.10';
-import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.10';
-import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.10';
-import {createMetaUi} from './xmas-meta-ui.js?v=2.21.1-xmas.10';
-import {PRIZE} from './xmas-meta-config.mjs?v=2.21.1-xmas.10';
+import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.11';
+import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.11';
+import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.11';
+import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.11';
+import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.11';
+import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.11';
+import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.11';
+import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.11';
+import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.11';
+import {createMetaUi} from './xmas-meta-ui.js?v=2.21.1-xmas.11';
+import {PRIZE} from './xmas-meta-config.mjs?v=2.21.1-xmas.11';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 export const mmss=s=>{const n=Math.max(0,Math.round(s));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};
@@ -218,7 +218,10 @@ export function createXmasUi({save,meta=null,mount=document.getElementById('roun
     showResultCore(res);
     const menuBtn=$('xmasResultMenu');if(menuBtn)menuBtn.hidden=true;
     try{if(mui)mui.placeReward(res.meta||null,result,$('xmasResultContinue'));}catch(e){console.error('[Belöning]',e);}
-    if(mui&&resultMode==='ok'&&['intro','round','marieberg'].includes(res.kind)){
+    // Första gången man klarar första uppdraget går FORTSÄTT till Julmenyn (där graden, dagens uppdrag och de nya lägena visas). Därefter, efter en runda, är den stora knappen nästa runda direkt.
+    // Julbåten (Mariebergsskogen) och butiksuppdragen går tillbaka till menyn som förut.
+    const welcome=!!(res.meta&&res.meta.R&&res.meta.R.welcome);
+    if(mui&&resultMode==='ok'&&['intro','round'].includes(res.kind)&&!welcome){
       resultMode='hunt-next';
       const nr=nextRound(save);
       $('xmasResultContinue').firstChild.textContent='EN JAKT TILL · '+shortTitle(nr.title)+' ';

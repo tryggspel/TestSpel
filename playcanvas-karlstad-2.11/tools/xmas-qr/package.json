@@ -1,0 +1,8 @@
+{
+  "name": "xmas-qr-verktyg",
+  "private": true,
+  "description": "Verktyg för utskrivbara QR-affischer till Julklappsjakten (hemliga paket). Körs lokalt, ingår inte i spelet.",
+  "dependencies": {
+    "qrcode-generator": "1.4.4"
+  }
+}
