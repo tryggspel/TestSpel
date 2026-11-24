@@ -147,3 +147,11 @@ test('klientens anrop tolkar svaren från servern och nätfel',async()=>{
   let sent=null;await submitEntry(async(u,o)=>{sent={u,o};return {ok:true,status:200,json:async()=>({ok:true})};},p,'/api/xmas-draw');
   assert.equal(sent.u,'/api/xmas-draw');assert.equal(sent.o.method,'POST');assert.equal(sent.o.credentials,'omit');assert.equal(JSON.parse(sent.o.body).v,1);
 });
+
+test('vercel.json: anmälningsfunktionen körs i Stockholm (samma region som det privata lagret) och får med modulerna i xmas/',async()=>{
+  const {readFileSync}=await import('node:fs');
+  const cfg=JSON.parse(readFileSync(new URL('../vercel.json',import.meta.url),'utf8')),fn=cfg.functions&&cfg.functions['api/xmas-draw.mjs'];
+  assert.ok(fn,'funktionen har egen konfiguration');
+  assert.deepEqual(fn.regions,['arn1'],'personuppgifterna ska inte hanteras i en annan region än lagret (Stockholm)');
+  assert.equal(fn.includeFiles,'xmas/*.mjs');
+});

@@ -1,7 +1,8 @@
 {
   "functions": {
     "api/xmas-draw.mjs": {
-      "includeFiles": "xmas/*.mjs"
+      "includeFiles": "xmas/*.mjs",
+      "regions": ["arn1"]
     }
   }
 }
