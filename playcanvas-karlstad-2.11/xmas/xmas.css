@@ -379,6 +379,10 @@ body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
 .xmas-hints .xs-mark{text-align:center;color:var(--xmas-gold)}
 .xmas-codebox{margin:14px 0 6px;padding:10px 12px;border-radius:8px;background:#0c241f;border:1px solid #85aa8566}
 .xmas-coupons{display:grid;gap:8px;margin:12px 0}
+/* Kupongraden överst i remsan (före första uppdraget är den enda raden i remsan) */
+.xs-couponrow{display:grid;gap:4px;margin:0 0 10px}
+.xmas-card .xs-couponbtn{border:1px dashed var(--xmas-gold);background:#ffd36b14;color:var(--xmas-gold);font-weight:900}
+.round-card p.xs-couponsub{margin:0 0 2px;font:700 11px/1.4 system-ui,sans-serif;letter-spacing:.04em;color:#cfe3d5;text-align:left}
 .xs-coupon{padding:10px 12px;border-radius:8px;border:1px dashed var(--xmas-gold);background:#ffd36b14;text-align:left}
 .xs-coupon b{display:block;font:900 14px/1.3 system-ui,sans-serif;color:var(--xmas-gold)}
 .xs-coupon span{display:block;font:700 11px/1.4 system-ui,sans-serif;color:#cfe3d5}

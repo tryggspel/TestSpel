@@ -3,6 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import fs from 'node:fs';
 import {XmasMeta,sanitizeMeta,blankMeta,levelFor,dayOf,dayDiff,META_KEY} from '../xmas/xmas-meta.mjs';
 import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,ORNAMENT_POLICY,MISSIONS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,PRIZE,FIRST_ORNAMENT,SEASON,QR_CODES,COUPONS} from '../xmas/xmas-meta-config.mjs';
 import {sha256,codeHash,pinHash,normalizeCode} from '../xmas/xmas-hash.mjs';
@@ -76,10 +77,31 @@ test('konfigurationen: uppdragen har unika id och kända sorter, adventssöndaga
   assert.deepEqual(ADVENT.map(a=>a.date),['2026-11-29','2026-12-06','2026-12-13','2026-12-20']);
   assert.ok(SEASON.start<SEASON.calendarStart&&SEASON.calendarStart<SEASON.end);
 });
-test('priset och koderna: inget påstås förrän det fyllts i (ingen sponsor, ingen anmälan, inga kuponger, inga QR-koder)',()=>{
-  assert.equal(PRIZE.ready,false);assert.equal(PRIZE.sponsor,'');assert.equal(PRIZE.controller,'');assert.equal(PRIZE.contact,'');
-  assert.equal(QR_CODES.length,0);assert.equal(COUPONS.length,0);
-  assert.ok(PRIZE.entryCloses>`${PRIZE.drawDate}T00:00`.slice(0,10)||true);
+test('priset: anmälan öppnas inte utan ansvarig och kontakt, och dragningen kommer efter att anmälan stängt',()=>{
+  if(PRIZE.ready){assert.ok(String(PRIZE.controller).trim()&&String(PRIZE.contact).trim(),'ready:true kräver ansvarig och kontakt i villkoren');assert.equal(PRIZE.mode,'api');}
+  assert.ok(Date.parse(PRIZE.entryCloses)<Date.parse(`${PRIZE.drawDate}T${PRIZE.drawTime}:00+01:00`),'anmälan stänger före dragningen');
+  assert.equal(PRIZE.entryCloses.slice(0,10),PRIZE.drawDate,'anmälan stänger dragningsdagen');
+});
+test('koderna och kupongerna: bara kontrollsummor i bygget, unika id, varje kupong som en kod delar ut finns, koderna i klartext checkas aldrig in',()=>{
+  const hs=new Set(),ids=new Set(),cids=new Set();
+  for(const c of COUPONS){
+    assert.match(c.id,/^[a-z0-9-]{1,40}$/);assert.ok(!cids.has(c.id),'kupongens id är unikt: '+c.id);cids.add(c.id);
+    assert.ok(String(c.title).trim()&&String(c.text).trim(),'kupongen har titel och text: '+c.id);
+    assert.match(c.validTo,/^\d{4}-\d{2}-\d{2}$/);assert.ok(Number.isFinite(Date.parse(c.validTo+'T12:00:00Z')),'riktigt datum: '+c.validTo);
+    assert.match(c.pin,/^[0-9a-f]{64}$/,'PIN står som kontrollsumma: '+c.id);
+  }
+  for(const q of QR_CODES){
+    assert.match(q.h,/^[0-9a-f]{64}$/,'koden står som kontrollsumma: '+q.id);assert.ok(!hs.has(q.h),'kontrollsumman är unik: '+q.id);hs.add(q.h);
+    assert.match(q.id,/^[a-z0-9-]{1,40}$/);assert.ok(!ids.has(q.id),'koden har eget id: '+q.id);ids.add(q.id);
+    assert.ok(String(q.label).trim()&&q.label.length<=40);
+    const r=q.reward||{};
+    assert.ok(Number.isInteger(r.xp)&&r.xp>=0&&r.xp<=500,'XP: '+q.id);
+    assert.ok(r.orn===undefined||RARITIES.includes(r.orn),'sällsynthet: '+q.id);
+    assert.ok(r.tickets===undefined||(Number.isInteger(r.tickets)&&r.tickets>=0&&r.tickets<=5),'lotter: '+q.id);
+    assert.ok(r.coupon===undefined||cids.has(r.coupon),'kupongen finns: '+q.id+' → '+r.coupon);
+  }
+  const ignore=fs.readFileSync(new URL('../.gitignore',import.meta.url),'utf8');
+  assert.match(ignore,/^qr-out\/$/m,'qr-out/ (koder.csv i klartext, PIN) är ignorerad av git');assert.match(ignore,/^draw-out\/$/m,'draw-out/ (kontaktuppgifter) är ignorerad av git');
 });
 
 // ── Datum ───────────────────────────────────────────────────────────────────────────────────────────────────────────

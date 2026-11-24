@@ -1,10 +1,10 @@
 // Julklappsjakten: gränssnittet för framstegen (xmas-meta.mjs). Remsan på start- och julmenyn (grad, dagens uppdrag, serie, lotter), belöningsraden på slutkortet, julgranen, lotterna och gömda julklappar.
 // Allt skrivs med textContent (aldrig HTML-strängar med data). Knapparna är minst 48 px höga. Panelerna finns som tomma kort i index.html och fylls här.
-import {RARITY_LABEL,PRIZE,TICKETS,TIER_LABEL,LEVELS} from './xmas-meta-config.mjs?v=2.21.1-xmas.11';
-import {drawOrnament,drawTree} from './xmas-tree-art.js?v=2.21.1-xmas.11';
-import {HIDDEN_SPOTS} from './xmas-hidden.mjs?v=2.21.1-xmas.11';
-import {drawDateText,entryAvailable,entryOpen,validateEntry,buildPayload,submitEntry,reasonText} from './xmas-draw-client.mjs?v=2.21.1-xmas.11';
-import {drawTexts} from './xmas-draw-text.mjs?v=2.21.1-xmas.11';
+import {RARITY_LABEL,PRIZE,TICKETS,TIER_LABEL,LEVELS} from './xmas-meta-config.mjs?v=2.21.1-xmas.12';
+import {drawOrnament,drawTree} from './xmas-tree-art.js?v=2.21.1-xmas.12';
+import {HIDDEN_SPOTS} from './xmas-hidden.mjs?v=2.21.1-xmas.12';
+import {drawDateText,entryAvailable,entryOpen,validateEntry,buildPayload,submitEntry,reasonText} from './xmas-draw-client.mjs?v=2.21.1-xmas.12';
+import {drawTexts} from './xmas-draw-text.mjs?v=2.21.1-xmas.12';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 const fmt=n=>Number(n).toLocaleString('sv-SE');
@@ -25,10 +25,24 @@ export function createMetaUi({meta,save,fx,$,mount=document.getElementById('roun
   let news=[];
   function bar(frac,cls='xs-bar'){const b=el('i',cls),u=el('u');u.style.width=Math.round(Math.max(0,Math.min(1,frac))*100)+'%';b.append(u);return b;}
   function chip(label,value,cls=''){const c=el('span','xs-chip'+(cls?' '+cls:''));c.append(el('b',null,String(value)),el('span',null,label));return c;}
+  // En kupong som går att använda syns som en egen rad överst, även före första uppdraget: den som kommer från en affisch ska hitta den direkt (och den som står vid kassan ska slippa leta).
+  const SV_MONTHS=['januari','februari','mars','april','maj','juni','juli','augusti','september','oktober','november','december'];
+  const svDate=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||''));return m?(+m[3])+' '+SV_MONTHS[+m[2]-1]:String(v||'');};
+  const validTo=c=>c.validTo?'giltig t.o.m. '+svDate(c.validTo):'';
+  function couponRow(list){
+    const box=el('div','xs-couponrow');
+    for(const c of list){
+      const b=el('button','round-secondary xs-btn xs-couponbtn','KUPONG · '+c.title+' · VISA');b.type='button';b.addEventListener('click',()=>fx.openSecrets());
+      box.append(b,el('p','xs-couponsub',[c.partner,validTo(c),'visa den för personalen'].filter(Boolean).join(' · ')));
+    }
+    return box;
+  }
   function renderStrip(){
-    const s=meta.status(),show=s.introDone;
+    const s=meta.status(),show=s.introDone,live=s.coupons.filter(c=>c.status==='valid');
     for(const t of strips){
-      t.hidden=!show;t.replaceChildren();if(!show)continue;
+      t.hidden=!show&&!live.length;t.replaceChildren();
+      if(live.length)t.append(couponRow(live));
+      if(!show)continue;
       const head=el('div','xs-head'),L=s.level;
       head.append(el('b','xs-grade','GRAD '+L.n),el('span','xs-name',L.name),el('span','xs-xp',fmt(s.xp)+' XP'));
       t.append(head,bar(L.frac),el('p','xs-next',L.next?fmt(L.toNext)+' XP till grad '+L.next.n+' · '+L.next.name:'Högsta graden: Självaste tomten'));
@@ -76,6 +90,7 @@ export function createMetaUi({meta,save,fx,$,mount=document.getElementById('roun
     for(const l of R.levelUps)out.push({kind:'level',text:'GRAD '+l.n+' · '+l.name+(prizeOn&&l.tickets?' · '+l.tickets+' '+plural(l.tickets,'lott','lotter'):'')});
     for(const o of R.ornaments)out.push({kind:'orn',text:(o.isNew?'NY PRYDNAD: ':'DUBBLETT: ')+o.name+' ('+RARITY_LABEL[o.rarity].toLowerCase()+')',orn:o});
     if(prizeOn)for(const t of R.tickets)out.push({kind:'ticket',text:'NY LOTT: '+t.code});
+    for(const c of R.coupons||[])out.push({kind:'coupon',text:'NY KUPONG: '+c.title});
     return out;
   }
 
@@ -190,7 +205,7 @@ export function createMetaUi({meta,save,fx,$,mount=document.getElementById('roun
     const cs=$('xmasCoupons');cs.replaceChildren();cs.hidden=!s.coupons.length;
     for(const c of s.coupons){
       const box=el('div','xs-coupon '+c.status);
-      box.append(el('b',null,c.title),el('span',null,[c.partner,c.validTo?'giltig t.o.m. '+c.validTo:''].filter(Boolean).join(' · ')),el('p','round-fine',c.text));
+      box.append(el('b',null,c.title),el('span',null,[c.partner,validTo(c)].filter(Boolean).join(' · ')),el('p','round-fine',c.text));
       if(c.terms)box.append(el('p','round-fine',c.terms));
       if(c.status==='valid'){
         const pin=el('input','xs-pin');pin.type='password';pin.inputMode='numeric';pin.autocomplete='off';pin.placeholder='PIN FRÅN PERSONALEN';pin.setAttribute('aria-label','PIN från personalen');pin.maxLength=8;

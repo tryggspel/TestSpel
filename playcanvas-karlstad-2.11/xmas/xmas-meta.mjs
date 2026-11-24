@@ -3,10 +3,10 @@
 // Egen sparning (karlstad-xmas:meta:1), skild från julspelets (karlstad-xmas:save:1) som Julkalendern läser: den här modulen ändrar aldrig den och kalendern ändrar aldrig den här.
 // Alla belöningar delas ut av den här modulen och bara en gång: en lucka, en söndag, en gömd julklapp eller en kod kan inte ge samma sak två gånger, hur man än laddar om eller rör klockan.
 // Tiden är svensk kalenderdag (Europe/Stockholm). Spelet och kalendern räknar likadant (tests/xmas-meta.test.mjs jämför dem).
-import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,ORNAMENT_POLICY,FIRST_ORNAMENT,MISSIONS,MISSION_TIERS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,QR_CODES,COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.11';
-import {makeTicket,validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.11';
-import {codeHash,pinHash,normalizeCode} from './xmas-hash.mjs?v=2.21.1-xmas.11';
-import {HIDDEN_SPOTS,hintsShown} from './xmas-hidden.mjs?v=2.21.1-xmas.11';
+import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,ORNAMENT_POLICY,FIRST_ORNAMENT,MISSIONS,MISSION_TIERS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,QR_CODES,COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.12';
+import {makeTicket,validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.12';
+import {codeHash,pinHash,normalizeCode} from './xmas-hash.mjs?v=2.21.1-xmas.12';
+import {HIDDEN_SPOTS,hintsShown} from './xmas-hidden.mjs?v=2.21.1-xmas.12';
 
 export const META_KEY='karlstad-xmas:meta:1';
 const ORN_BY_ID=new Map(ORNAMENTS.map(o=>[o.id,o]));

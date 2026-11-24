@@ -119,7 +119,24 @@ export const PRIZE=Object.freeze({enabled:true,ready:false,name:'En julgran',spo
   mode:'api',api:'/api/xmas-draw',controller:'',contact:'',keepUntil:'2027-01-31',rulesUrl:'',privacyUrl:''});
 
 // ── Hemliga paket (QR i verkligheten) och kuponger ──────────────────────────────────────────────────────────────────
-// QR_CODES: {h: sha256 av koden (xmas-hash.mjs: codeHash), id, label, reward:{xp,orn,tickets,coupon}} per kod. Tom tills du har platser. Koden själv står aldrig i bygget (tools/xmas-qr skapar dem).
-// COUPONS: {id, title, partner, text, terms, validTo ('YYYY-MM-DD'), pin: sha256 av PIN (xmas-hash.mjs: pinHash)} per erbjudande. Tom tills du har riktiga erbjudanden: spelet påstår inga samarbeten.
-export const QR_CODES=Object.freeze([]);
-export const COUPONS=Object.freeze([]);
+// QR_CODES: {h: sha256 av koden (xmas-hash.mjs: codeHash), id, label, reward:{xp,orn,tickets,coupon}} per kod. Koden själv står aldrig i bygget: tools/xmas-qr skapar dem, och koder.csv med koderna i klartext ligger i qr-out/ (ignorerad av git).
+// COUPONS: {id, title, partner, text, terms, validTo ('YYYY-MM-DD'), pin: sha256 av PIN (xmas-hash.mjs: pinHash)} per erbjudande. Spelet påstår inga samarbeten: partner är tomt tills en butik står bakom kupongen.
+// Provomgång 2026 (xmas.12): tolv affischkoder, alla med samma kupong: rabatt på julgran (en kupong per enhet, oavsett hur många affischer som skannas). Belopp och säljare är inte bestämda, så texten anger inget belopp och ingen butik.
+// Ändra texten här när de är beslutade: den slås upp vid visning, så den gäller också kuponger som redan delats ut. Koderna ger ingen lott (lotter kommer av spelet, inte av affischer).
+export const QR_CODES=Object.freeze([
+  {h:'3d1f1e2efe63caf336f9e79372ccc697509096ce07ca388b3d58d9a302477980',id:'affisch-1-ryf',label:"JULGRANSRABATT",reward:{xp:30,orn:'rare',coupon:'julgransrabatt'}},
+  {h:'f64bb0b74317ad1107137838e7015128cc72a36fae9f4cf543602144687df0be',id:'affisch-2-42v',label:"JULGRANSRABATT",reward:{xp:30,orn:'rare',coupon:'julgransrabatt'}},
+  {h:'ae9f9a0c123e5347030600ce81340e67e4cc6795980b577663dd662f8f1b9d08',id:'affisch-3-hah',label:"JULGRANSRABATT",reward:{xp:30,orn:'rare',coupon:'julgransrabatt'}},
+  {h:'f563fd1d7de65d7bf7445397fea87b077ce129343e7e31c44b06090c8dada64d',id:'affisch-4-fjp',label:"JULGRANSRABATT",reward:{xp:30,orn:'rare',coupon:'julgransrabatt'}},
+  {h:'0c6db7bcebab721bf14bc159eb04c900d0b5ce55fb27bef0ed5e42712a6418e5',id:'affisch-5-cda',label:"JULGRANSRABATT",reward:{xp:30,orn:'rare',coupon:'julgransrabatt'}},
+  {h:'a342d6141ff81fe9a334b33d88f973eba2e736f96d6188895218e2f24947cf23',id:'affisch-6-bcz',label:"JULGRANSRABATT",reward:{xp:30,orn:'rare',coupon:'julgransrabatt'}},
+  {h:'a8beca3dbefc63dfce8b03c9eea0d3e4a1b6dd6998dd3ec1bcdc36fc7d045b80',id:'affisch-7-pn9',label:"JULGRANSRABATT",reward:{xp:30,orn:'rare',coupon:'julgransrabatt'}},
+  {h:'a9115316bdae452734502bbcc80852c4f62286b6ebf1e467a2624436f0497f3c',id:'affisch-8-h67',label:"JULGRANSRABATT",reward:{xp:30,orn:'rare',coupon:'julgransrabatt'}},
+  {h:'17981e206fa26f8247df23a156abed9a0bde295861e1f193c25b8e517232368a',id:'affisch-9-mwb',label:"JULGRANSRABATT",reward:{xp:30,orn:'rare',coupon:'julgransrabatt'}},
+  {h:'cac5ec99c776128b9d439ae64cfa803f2144633b206fdfb919fe67bf5a828723',id:'affisch-10-fep',label:"JULGRANSRABATT",reward:{xp:30,orn:'rare',coupon:'julgransrabatt'}},
+  {h:'542e669fb431dfc157baa87c070d9dea4d4f08d1e145fc4b308ba314eff5c274',id:'affisch-11-7wj',label:"JULGRANSRABATT",reward:{xp:30,orn:'rare',coupon:'julgransrabatt'}},
+  {h:'9c8f25ae397d58fc09d47b0f795f84d175d9144ac62965b2d8740c0ceae006e2',id:'affisch-12-6c4',label:"JULGRANSRABATT",reward:{xp:30,orn:'rare',coupon:'julgransrabatt'}},
+]);
+export const COUPONS=Object.freeze([
+  {id:'julgransrabatt',title:'RABATT PÅ JULGRAN',partner:'',text:'Visa kupongen när du köper din julgran och be om julgransrabatten.',terms:'Gäller en gång. Personalen löser in kupongen med en PIN i din telefon.',validTo:'2026-12-24',pin:'4a73495c55c6d2004bc3d9559de24fe9cfb0453330321f1ff26eb90affa4c686'},
+]);

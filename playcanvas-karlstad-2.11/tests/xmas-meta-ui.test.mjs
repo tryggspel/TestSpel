@@ -30,6 +30,13 @@ test('panelerna finns i panellistan och i index.html, och formuläret är dolt s
   assert.ok(html.indexOf('id="xmasCozy"')<html.indexOf('id="xmasStripStart"'),'startvyn');
   assert.ok(html.indexOf('id="xmasRound"')<html.indexOf('id="xmasStripContinue"'),'julmenyn');
 });
+test('kupongen syns direkt: egen rad i remsan (även före första uppdraget), nämns i raden för hemligt paket och ligger överst i panelen',()=>{
+  assert.match(metaUi,/function couponRow\(/);
+  assert.match(metaUi,/live=s\.coupons\.filter\(c=>c\.status==='valid'\)/,'bara kuponger som går att använda');
+  assert.match(metaUi,/t\.hidden=!show&&!live\.length/,'remsan visas för en ny spelare som har en kupong');
+  assert.match(metaUi,/'NY KUPONG: '/,'describe() nämner kupongen');
+  assert.ok(html.indexOf('id="xmasCoupons"')<html.indexOf('id="xmasSecretsList"'),'kupongerna ligger före listan med gömda julklappar');
+});
 test('allt som visas skrivs med textContent: inga HTML-strängar med data i framstegens gränssnitt',()=>{
   for(const [name,src] of [['xmas-meta-ui.js',metaUi],['xmas-tree-art.js',read('xmas/xmas-tree-art.js')],['xmas-draw-client.mjs',read('xmas/xmas-draw-client.mjs')]]){
     assert.doesNotMatch(src,/\.innerHTML\s*=|insertAdjacentHTML|document\.write|outerHTML\s*=/,name+' skriver HTML');

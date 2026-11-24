@@ -1,33 +1,33 @@
 // Julklappsjakten: kopplar ihop motorn, vyn, gränssnittet och grundspelets system. Anropas en gång från last-round.js (bara i julbygget).
 // Allt här är fail-soft: om något i julkoden skulle kasta stängs jultilläggen av och grundspelet lever vidare (som platskoden i 2.21).
-import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.11';
-import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.11';
-import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.11';
-import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.11';
-import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.11';
-import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.11';
-import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.11';
-import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.11';
-import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.11';
-import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.11';
-import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.11';
-import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.11';
-import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.11';
-import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.11';
-import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.11';
-import {nextRound,roundById,buildRound,buildSearch,INTRO_SEARCH} from './xmas-rounds.mjs?v=2.21.1-xmas.11';
-import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.11';
-import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.11';
-import {HARBOUR,atMarieberg} from '../city-south-space.mjs?v=2.21.1-xmas.11';
-import {SANDGRUND,sandgrundOutcome,sandgrundLine} from './xmas-sandgrund.mjs?v=2.21.1-xmas.11';
-import {BOAT,buildMarieberg,boatBonus} from './xmas-marieberg.mjs?v=2.21.1-xmas.11';
-import {parseLink,describeLink,LINK_PARAM,DOOR_PARAM} from './xmas-deeplink.mjs?v=2.21.1-xmas.11';
-import {doorBox,resultMatches} from './xmas-door.mjs?v=2.21.1-xmas.11';
-import {XmasMeta} from './xmas-meta.mjs?v=2.21.1-xmas.11';
-import {PRIZE} from './xmas-meta-config.mjs?v=2.21.1-xmas.11';
-import {hiddenPackages,nearestHidden,warmth,hiddenSpot} from './xmas-hidden.mjs?v=2.21.1-xmas.11';
-import {DOORS} from '../julkalender/doors.mjs?v=2.21.1-xmas.11';
-import {GAME_SAVE_KEY,STORAGE_KEY as CALENDAR_KEY,readGame,evaluate,hasAutoCheck,metricsOf} from '../julkalender/rules.mjs?v=2.21.1-xmas.11';
+import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.12';
+import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.12';
+import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.12';
+import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.12';
+import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.12';
+import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.12';
+import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.12';
+import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.12';
+import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.12';
+import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.12';
+import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.12';
+import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.12';
+import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.12';
+import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.12';
+import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.12';
+import {nextRound,roundById,buildRound,buildSearch,INTRO_SEARCH} from './xmas-rounds.mjs?v=2.21.1-xmas.12';
+import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.12';
+import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.12';
+import {HARBOUR,atMarieberg} from '../city-south-space.mjs?v=2.21.1-xmas.12';
+import {SANDGRUND,sandgrundOutcome,sandgrundLine} from './xmas-sandgrund.mjs?v=2.21.1-xmas.12';
+import {BOAT,buildMarieberg,boatBonus} from './xmas-marieberg.mjs?v=2.21.1-xmas.12';
+import {parseLink,describeLink,LINK_PARAM,DOOR_PARAM} from './xmas-deeplink.mjs?v=2.21.1-xmas.12';
+import {doorBox,resultMatches} from './xmas-door.mjs?v=2.21.1-xmas.12';
+import {XmasMeta} from './xmas-meta.mjs?v=2.21.1-xmas.12';
+import {PRIZE} from './xmas-meta-config.mjs?v=2.21.1-xmas.12';
+import {hiddenPackages,nearestHidden,warmth,hiddenSpot} from './xmas-hidden.mjs?v=2.21.1-xmas.12';
+import {DOORS} from '../julkalender/doors.mjs?v=2.21.1-xmas.12';
+import {GAME_SAVE_KEY,STORAGE_KEY as CALENDAR_KEY,readGame,evaluate,hasAutoCheck,metricsOf} from '../julkalender/rules.mjs?v=2.21.1-xmas.12';
 
 // Julbygget har inga termosar, hemligheter eller skatter: paketen ersätter dem. Anropas direkt efter att resan skapats, innan någon vy ritas.
 export function prepareXmasJourney(journey){

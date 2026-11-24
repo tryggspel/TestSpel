@@ -194,15 +194,22 @@ await scenario('3 · ?paket=: okänd kod, riktig kod med kupong (en gång per en
   check('3b ingenting delades ut',(await g.meta()).tickets.length===1);
   await g.ctx.close();
   const CODE='TESTKOD12345';
-  const cfg=src=>src
-    .replace('export const QR_CODES=Object.freeze([]);',`export const QR_CODES=Object.freeze([{h:'${codeHash(CODE)}',id:'test-1',label:'TESTAFFISCH',reward:{xp:50,orn:'epic',tickets:1,coupon:'kaffe'}}]);`)
-    .replace('export const COUPONS=Object.freeze([]);',`export const COUPONS=Object.freeze([{id:'kaffe',title:'EN KAFFE PÅ HUSET',partner:'Provkaféet',text:'Visa kupongen för personalen.',terms:'Gäller en gång.',validTo:'2026-12-24',pin:'${pinHash('kaffe','4711')}'}]);`);
+  // Byter ut hela listan (QR_CODES och COUPONS är flerradiga i konfigurationen och slutar med "]);" i första kolumnen). Kastar om satsen inte hittas, så att provet aldrig körs mot fel konfiguration.
+  const swap=(src,name,value)=>{
+    const re=new RegExp('export const '+name+'=Object\\.freeze\\(\\[[\\s\\S]*?\\n?\\]\\);');
+    if(!re.test(src))throw new Error(name+' hittades inte i xmas-meta-config.mjs');
+    return src.replace(re,()=>value);
+  };
+  const cfg=src=>swap(swap(src,'QR_CODES',`export const QR_CODES=Object.freeze([{h:'${codeHash(CODE)}',id:'test-1',label:'TESTAFFISCH',reward:{xp:50,orn:'epic',tickets:1,coupon:'kaffe'}}]);`),
+    'COUPONS',`export const COUPONS=Object.freeze([{id:'kaffe',title:'EN KAFFE PÅ HUSET',partner:'Provkaféet',text:'Visa kupongen för personalen.',terms:'Gäller en gång.',validTo:'2026-12-24',pin:'${pinHash('kaffe','4711')}'}]);`);
   const g2=await open({seed:SEED_DONE,search:'?debug&paket=testkod-1234%205',config:cfg});
   const n=await g2.ev(()=>[...document.querySelectorAll('#xmasNewsStart .xn-row.code')].map(x=>x.textContent));
-  check('3c riktig kod (skriven med små bokstäver, streck och mellanrum): hemligt paket med XP, prydnad och lott',n.length===1&&/HEMLIGT PAKET! TESTAFFISCH/.test(n[0])&&/\+50 XP/.test(n[0])&&/NY PRYDNAD/.test(n[0])&&/NY LOTT/.test(n[0]),n.join(' | '));
+  check('3c riktig kod (skriven med små bokstäver, streck och mellanrum): hemligt paket med XP, prydnad, lott och kupong',n.length===1&&/HEMLIGT PAKET! TESTAFFISCH/.test(n[0])&&/\+50 XP/.test(n[0])&&/NY PRYDNAD/.test(n[0])&&/NY LOTT/.test(n[0])&&/NY KUPONG: EN KAFFE PÅ HUSET/.test(n[0]),n.join(' | '));
+  const crow=await g2.ev(()=>{const b=document.querySelector('#xmasStripStart .xs-couponbtn');return {txt:b?.textContent,sub:document.querySelector('#xmasStripStart .xs-couponsub')?.textContent,first:document.getElementById('xmasStripStart').firstElementChild?.className};});
+  check('3c2 kupongen har en egen rad överst i remsan, med giltighet',/KUPONG · EN KAFFE PÅ HUSET/.test(crow.txt||'')&&/Provkaféet · giltig t\.o\.m\. 24 december/.test(crow.sub||'')&&/xs-couponrow/.test(crow.first||''),JSON.stringify(crow));
   const m=await g2.meta();
   check('3d belöningen sparas: koden är använd, två lotter, en kupong ägs',m.qr['test-1']&&m.tickets.length===2&&m.coupons.length===1&&m.coupons[0].id==='kaffe'&&m.xp>=50,JSON.stringify({qr:m.qr,t:m.tickets.length,c:m.coupons.length}));
-  await g2.ev(()=>document.querySelectorAll('#xmasStripStart .xs-btn')[2].click());await g2.wait(400);
+  await g2.ev(()=>document.querySelector('#xmasStripStart .xs-couponbtn').click());await g2.wait(400);
   const box=await g2.ev(()=>({shown:!document.getElementById('xmasCoupons').hidden,title:document.querySelector('#xmasCoupons .xs-coupon b')?.textContent,pin:!!document.querySelector('#xmasCoupons .xs-pin'),cls:document.querySelector('#xmasCoupons .xs-coupon')?.className}));
   check('3e kupongen syns under gömda julklappar med PIN-fält för personalen',box.shown&&box.title==='EN KAFFE PÅ HUSET'&&box.pin&&/valid/.test(box.cls),JSON.stringify(box));
   await g2.shot('3a-kupong');
