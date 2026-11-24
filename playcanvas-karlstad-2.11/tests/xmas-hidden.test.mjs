@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {XmasHunt,seededRandom} from '../xmas/xmas-hunt.mjs';
 import {HIDDEN_SPOTS,hiddenPackages,spotOfPackage} from '../xmas/xmas-hidden.mjs';
 import {INTRO} from '../xmas/xmas-layout.mjs';
+import {missionView} from '../xmas/xmas-guide.mjs';
 
 const fresh=()=>{const h=new XmasHunt({rand:seededRandom(5)});h.startFree();h.drain();return h;};
 const near=s=>({x:s.x+.3,z:s.z+.2,y:1.68});
@@ -41,4 +42,13 @@ test('redan hittade platser läggs inte ut igen, och de vanliga tappade julklapp
   const reg=h.run.packages.find(p=>!p.hidden);assert.ok(reg,'ett regn lades ut');
   h.drain();h.step(.05,{x:reg.x,z:reg.z,y:1.68},null,0);const pick=h.drain().filter(e=>e.type==='xmas-pick');assert.equal(pick.length>=1,true);assert.ok(h.run.collected+h.run.bonusCollected>=1);
   assert.equal(h.run.packages.filter(p=>p.hidden&&!p.collected).length,13,'de gömda påverkades inte');
+});
+
+test('uppdragsraden säger "nya spår om" mellan två regn även när gömda julklappar ligger ute (de är inget man väntar på spår för)',()=>{
+  const h=fresh();
+  const before=missionView(h.run,{x:INTRO.spawn.x,z:INTRO.spawn.z});
+  h.addHidden(hiddenPackages({}));
+  const after=missionView(h.run,{x:INTRO.spawn.x,z:INTRO.spawn.z});
+  assert.match(JSON.stringify(before.rows||before),/NYA SPÅR OM/);
+  assert.match(JSON.stringify(after.rows||after),/NYA SPÅR OM/,'oförändrat med gömda julklappar');
 });

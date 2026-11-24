@@ -101,7 +101,7 @@ export class XmasGuide{
 // ska leta runt. Ett uppdrag med mål har en andra rad (lämna hos tomten), och nära en butik med en butiksutmaning kommer en tredje (shop: korta texten, t.ex. "UPPDRAG: PRESSBYRÅN", eller {text,near}: near = inom 25 m, då är raden ett aktuellt steg som syns även på låga skärmar).
 // Raderna är korta (högst 20 tecken): de får plats på en smal telefon utan att klippas.
 function searchRow(run,p){
-  const left=run.packages.reduce((n,k)=>n+(k.collected?0:1),0);
+  const left=run.packages.reduce((n,k)=>n+(k.collected||k.hidden?0:1),0); // gömda julklappar (xmas-hidden.mjs) ligger kvar hela tiden och är inget man väntar på nya spår för
   if(left<=0)return {id:'wait',text:'NYA SPÅR OM '+Math.max(1,Math.ceil((run.nextRainAt-run.t)||0))+' S',state:'wait'};
   let near=false;
   if(p)for(const rain of run.rains){if(!rain.gone&&rain.left>0&&Math.hypot(rain.x-p.x,rain.z-p.z)<=TRAILS.nearDrop){near=true;break;}}
