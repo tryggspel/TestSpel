@@ -164,6 +164,8 @@ personalen anger en **PIN** i spelarens telefon (`node tools/xmas-qr/make.mjs pi
 
 **Kupongen syns direkt:** som en egen rad överst på menyn (även för en helt ny spelare som kommer från en affisch, innan första uppdraget), som "NY KUPONG" i raden för hemligt paket och överst under Gömda julklappar. **Koderna i klartext och PIN-koden finns bara hos den som skapade dem** (`qr-out/`, ignorerad av git): förloras de går de inte att återskapa, bara ersätta med nya koder. Spelet påstår inga samarbeten: `partner` är tomt tills en butik står bakom kupongen.
 
+**Flytt av spelet (ni flyttar allt före den offentliga lanseringen):** QR-bilden på affischen innehåller **adressen** (`https://karlstad-julklappsjakten.vercel.app/?paket=KOD`), så **skriv inte ut förrän adressen är slutlig**. Koderna hör till spelets kod (kontrollsummorna i `QR_CODES`), inte till adressen: flyttas spelet med samma `QR_CODES` och `COUPONS` gäller samma koder på den nya adressen, och bara bladet behöver göras om: `node tools/xmas-qr/make.mjs poster --from=koder.csv --base=https://nya-adressen --out=<ny mapp>` (samma koder, nya QR-bilder; vägrar om en kod inte finns i bygget). `node tools/xmas-qr/make.mjs check --from=koder.csv --pin=<PIN>` kontrollerar att alla koder, kupongen och PIN:en fortfarande hör ihop med bygget och skriver aldrig ut en kod. Paketet `julgransrabatt-2026-SPARA.zip` som skickades till dig innehåller koderna, PIN:en, bladet och en README om detta.
+
 ## 8. Mätning och intäkter
 
 - Mätning utan egen server: Vercel Web Analytics (kakfri) kan slås på i projektet (en inställning du gör); spelet skickar inga händelser än.
@@ -183,6 +185,7 @@ personalen anger en **PIN** i spelarens telefon (`node tools/xmas-qr/make.mjs pi
 | Privat lager och anmälningsfunktion i Stockholm | Klart 2026-11-24 (avsnitt 6) |
 | Anmälan till dragningen | **Stängd** tills `controller` och `contact` är ifyllda (avsnitt 6) |
 | QR-affischer | Tolv affischer klara som PDF (A4), **inte uppsatta**. Rabattens belopp, säljare och villkor är inte bestämda |
+| Slutlig adress (QR-bilderna innehåller den) | **Inte beslutad:** ni flyttar allt före den offentliga lanseringen. Skriv inte ut förrän den är bestämd; bladet kan göras om med samma koder (`make.mjs poster`) |
 
 Rollback: förra produktionsdeployen ligger kvar och kan sättas tillbaka (`request_rollback`); en lott eller prydnad en spelare fått tas aldrig bort av en uppdatering (egen sparnyckel med version).
 
@@ -239,6 +242,7 @@ Lotterna skiljer sig 15 gånger mellan tillfällig och ivrig. Vill du jämna ut 
 - **Fusk med lotter:** se avsnitt 6. Kontrollera vinnaren.
 - **Tre stegar** (julpoäng-titel, grad, kalenderns stjärnor): kan förvirra; se 3.1.
 - **Okänd takt:** XP, odds och lotter är modellerade; justera i konfigurationen efter de första dagarna.
+- **Affischerna innehåller adressen:** en utskriven affisch pekar för alltid på adressen som stod i QR-bilden. Flyttas spelet efter utskrift fungerar affischerna bara om den gamla adressen finns kvar (ett projekt som ligger kvar eller en omdirigering). Skriv inte ut före flytten.
 - **Koder och PIN finns bara hos dig:** koderna i klartext (`koder.csv`) och personalens PIN (`kupong-pin.txt`) skickades till dig och finns inte i repot (där ligger bara kontrollsummor). Spara dem: förloras de går affischerna inte att återskapa.
 - **Kupongen utan belopp och butik:** den som skannar får en kupong som säger "be om julgransrabatten". Tills ni bestämt vem som ger den och hur stor den är kan personalen inte veta vad de ska göra: bestäm det före utskrift.
 - **Kalendern och spelet delar adress:** belöningarna läser kalenderns baslinje. Rensar spelaren webbläsarens lagring försvinner både framstegen och kalenderns läge.
