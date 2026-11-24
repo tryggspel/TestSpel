@@ -33,7 +33,7 @@ GitHub Pages-arbetsflödet `Deploy Karlstad City Mobile` publicerar bara `main`;
 Julversionens ändringar slås **inte** ihop med `main`. Förbättringar i grundspelet förs över till julgrenen med granskade Git-ändringar
 (`git switch release/jul-2026 && git merge main`, lös konflikter i de få filer som julgrenen rör (avsnitt 5), kör testerna).
 
-Versionsbeteckning: `X.Y.Z-xmas.N`, där `X.Y.Z` är basversionen på `main` och `N` räknar julbyggen (**`2.21.1-xmas.9`**). Det synliga namnet är
+Versionsbeteckning: `X.Y.Z-xmas.N`, där `X.Y.Z` är basversionen på `main` och `N` räknar julbyggen (**`2.21.1-xmas.10`**). Det synliga namnet är
 **Julklappsjakten – 2.21-XMS**. `node tools/set-version.mjs 2.21.1-xmas.10` (nästa bygge) sätter en enda cache-nyckel i alla moduler, HTML och CSS
 (testet `version.test.mjs` och CI kräver att den är densamma överallt). Samma beteckning visas i startvyn (längst ned), i `window.KarlstadRound.version`,
 i `?debug` och i `/api/build-info`.
@@ -44,7 +44,7 @@ i `?debug` och i `/api/build-info`.
 - Alla moduler, HTML och CSS bär samma `?v=`-nyckel, så en ny version kan aldrig blanda gamla och nya filer i webbläsarens cache.
 - Julmusiken syntetiseras i spelet: inga ljudfiler laddas ner (grundspelets mp3 hämtas först om jukeboxen används).
 - Spelmotorn (PlayCanvas 2.22.4) hämtas från jsDelivr med fast version, som i grundspelet.
-- Startvyn visar `Julklappsjakten – 2.21-XMS · bygge 2.21.1-xmas.9 · <miljö> <gren> <commit> · bas 2.21.1 (fadc36a)`. `/api/build-info` (Vercel-funktion)
+- Startvyn visar `Julklappsjakten – 2.21-XMS · bygge 2.21.1-xmas.10 · <miljö> <gren> <commit> · bas 2.21.1 (fadc36a)`. `/api/build-info` (Vercel-funktion)
   ger deployens commit, gren och miljö; lokalt visas "lokalt bygge".
 
 ## 4. Vercel-projektet för julversionen
@@ -514,3 +514,15 @@ Efter nästa genomspelning: Cervera gav bara grundspelets lilla kort (i grundspe
 | Test | `tests/xmas-door.test.mjs` (utökat), `tools/xmas-flow/links.mjs` (T9b, T13–T16) | Källkontroller av kopplingarna och färgerna; i Chromium: Cervera via lucka 3 (hela uppdraget med spelets egen provväg), kortet, luckrutan med "imorgon den 4/12", paus och FORTSÄTT, att grundspelets platskort inte syns, och de beräknade färgerna på Sandgrunds kort och luckrutan. |
 
 **Verifierat på 2.21.1-xmas.9:** enhetstesterna 623 av 623; Chromium: `links.mjs` 49/49, `missions.mjs` 31/31, `rush.mjs` 41/41, `guide.mjs` 56/56, `levels.mjs` 52/52, `flow.mjs` 59/59 (E3 och E5b är ändrade: leveransen av Pressbyrån-ordern visar nu bekräftelsekortet FIKAT ÄR LEVERERAT!, och nya E3b kontrollerar att FORTSÄTT tar upp jakten) och kalenderns `browser-check.mjs` 62/62.
+
+### 2.21.1-xmas.10: plockrutan i Tomtezombies på liggande telefoner (samma rättning som grundspelet 2.21.2)
+
+Grundspelets plockruta (`#journeyPickupToast`, "+25 KAFFEPOÄNG · +15 SOL" och liknande) blev på en liggande telefon bredare än 850 px (iPhone 11 är 896×414; 852–956 px är iPhone 15/16, Pro Max och Pixel) en hög lila ruta mitt i bild (222–248 px, 11–12 % av skärmen), eftersom den lilla pingen på 26 px bara gällde `max-width:850px`. Samma rättning gjordes i grundspelet 2.21.2 (`c5c9ac4` på `main`, 2026-10-14). Felet fanns i alla julbyggen (xmas.1–9). I julbygget syns rutan bara i **Tomtezombies**: `xmas.css` döljer den i Julklappsjakten, fri julvandring, JulRushen och butiksuppdragen (`body.xmas-cozy`).
+
+| Del | Var | Vad |
+|---|---|---|
+| Pingen | `last-round.css` (sist i filen) | Samma ändring som `c5c9ac4`: pingen gäller `(max-width:850px),(max-height:600px)`, en rad på 26 px som slutar med tre punkter (förut klipptes en lång text i båda ändar), liggande: `width:max-content`, högst 184–360 px. |
+| Julbygget | `xmas/xmas.css` | Stående Tomtezombies lägger pingen under pilen (låga telefoner) eller under målrutan i stället för på uppdragsraderna, där den döljs delvis; smal liggande telefon (iPhone SE, 667 px) håller den till höger om HUD:en. |
+| Test | `tests/pickup-toast.test.mjs` (7), `tools/xmas-flow/toast.mjs` | Testen räknar ut från mediefrågorna vilka telefoner som får pingen (13 liggande och 7 stående storlekar). Webbläsarkontrollen mäter rutan i Tomtezombies, Julklappsjakten och JulRushen vid tio skärmstorlekar: **114 av 114 OK** (före rättningen felade 9 kontroller vid 896×414: 184×238 px, 11,8 % av skärmen; efter: 144×26 px). |
+
+**Verifierat på 2.21.1-xmas.10:** enhetstesterna 630 av 630 (`node --test tests/*.mjs`, 623 från xmas.9 plus 7 nya); `toast.mjs` 114/114 i Chromium med mjukvaruritad grafik. **Inte provat:** hur det ser ut på en riktig iPhone/Safari, och att en riktig tomtezombiehändelse tänder rutan (provet tänder den med spelets egna texter). De övriga webbläsarkontrollerna (`links.mjs`, `missions.mjs`, `flow.mjs`, `guide.mjs` …) är inte körda om på xmas.10: ändringen rör bara rutans CSS.

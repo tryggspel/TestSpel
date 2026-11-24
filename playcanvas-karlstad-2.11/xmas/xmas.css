@@ -211,6 +211,12 @@ body.xmas-rush #tempoEdgeL.behind,body.xmas-rush #tempoEdgeR.behind{background:#
  body.xmas-rush #xmasPill{bottom:max(41%,calc(env(safe-area-inset-bottom) + 300px))}
 }
 body.xmas-cozy #solarWeapon,body.xmas-cozy #journeyPickupToast{display:none!important}
+/* 2.21.1-xmas.7: grundspelets plockruta (#journeyPickupToast, en ping på 26 px) syns bara i Tomtezombies (julbygget döljer den i övriga lägen, se raden ovan).
+   Stående: grundspelets plats (top:157px) ligger på uppdragsraderna och rutan döljs delvis av dem; här ligger den under pilen (på låga telefoner, där uppdragsraden bara visar aktuellt steg) eller under målrutan (xmasGoal, som visas de första sekunderna). Smal liggande telefon (iPhone SE, 667 px):
+   rutan hålls till höger om HUD:en (som är 236-250 px bred) i stället för mitt i bild. */
+@media(max-width:850px) and (min-height:701px){body.xmas-zombies.journey-playing #journeyPickupToast,body.xmas-zombies.journey-playing.one-hand #journeyPickupToast{top:max(300px,calc(env(safe-area-inset-top) + 294px))!important}}
+@media(max-width:850px) and (min-height:601px) and (max-height:700px){body.xmas-zombies.journey-playing #journeyPickupToast,body.xmas-zombies.journey-playing.one-hand #journeyPickupToast{top:max(194px,calc(env(safe-area-inset-top) + 188px))!important}}
+@media(max-height:600px) and (max-width:760px){body.xmas-on.journey-playing #journeyPickupToast,body.xmas-on.journey-playing.one-hand #journeyPickupToast{left:max(50%,360px)!important}}
 body.xmas-on.round-playing #roundToast{bottom:30%}
 body.xmas-zombies #xmasHud{width:min(250px,calc(100vw - 168px))}
 body.xmas-cozy .round-card .episode-label{color:#9fe3c0}

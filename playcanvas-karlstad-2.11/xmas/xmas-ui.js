@@ -1,15 +1,15 @@
 // Julklappsjakten: gränssnittet. Startvyn, fortsättningsmenyn och resultatkortet är vanliga paneler i index.html; HUD:en och pausmenyns
 // tillägg byggs här med textContent (aldrig HTML-strängar med data). Små mål: knappar är minst 52 px höga och spelvärlden syns ovanför.
 // JulRushen använder samma HUD: tempo och klockan i raden överst (stapeln är tiden till nästa paket), liv som hjärtan, poäng, kombo och gåvorna som små brickor.
-import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.9';
-import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.9';
-import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.9';
-import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.9';
-import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.9';
-import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.9';
-import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.9';
-import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.9';
-import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.9';
+import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.10';
+import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.10';
+import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.10';
+import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.10';
+import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.10';
+import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.10';
+import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.10';
+import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.10';
+import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.10';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 export const mmss=s=>{const n=Math.max(0,Math.round(s));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};
