@@ -53,6 +53,16 @@ export class XmasHunt{
   startFree(){return this.startRun({kind:'free',id:'free',title:'FRI JULVANDRING',goal:0,packages:[],tomte:null,windowSec:FREE_RAIN.chainWindow,drops:{}});}
   // Ett uppdrag med mål som är sök och hitta: introduktionen och rundorna (se xmas-rounds.mjs: buildSearch). def: {kind,id,title,goal,tomte,spawn,tree,stampId,drops:{cfg,area}}.
   startSearch(def){return this.startRun({windowSec:FREE_RAIN.chainWindow,soft:0,...def,packages:[],drops:def.drops||{}});}
+  // Gömda julklappar (xmas-hidden.mjs): guldpaket på fasta platser, bara i fri julvandring. list: [{id,spot,x,z}]. Räknas inte in i regularTotal eller bonusTotal. Returnerar hur många som lades in.
+  addHidden(list){
+    const r=this.run;if(!r||r.kind!=='free'||!Array.isArray(list))return 0;let n=0;
+    for(const h of list){
+      if(!h||r.byId.has(h.id)||!Number.isFinite(h.x)||!Number.isFinite(h.z))continue;
+      const k={id:h.id,x:h.x,z:h.z,y:0,kind:'bonus',cluster:0,collected:false,at:0,hidden:true,spot:h.spot};
+      r.packages.push(k);r.byId.set(k.id,k);n++;
+    }
+    return n;
+  }
   cancel(reason='avbruten'){
     if(!this.run)return;const r=this.run;
     if(this.active){r.phase='ended';this.emit({type:'xmas-cancel',kind:r.kind,id:r.id,reason});}
@@ -67,7 +77,7 @@ export class XmasHunt{
     return true;
   }
   inCatch(pkg,p,reach,sweep){
-    if(Math.abs((p.y??1.68)-1.68-(pkg.y||0))>=1.5)return false;
+    if(!pkg.hidden&&Math.abs((p.y??1.68)-1.68-(pkg.y||0))>=1.5)return false; // en gömd julklapp ligger på marken där platsen är (bro, brygga): höjden spelar ingen roll
     const q=sweep?closestOnSegment(pkg.x,pkg.z,sweep.x,sweep.z,p.x,p.z):{x:p.x,z:p.z,d:Math.hypot(p.x-pkg.x,p.z-pkg.z)};
     if(q.d>=reach)return false;
     return q.d<=CATCH.near||this.clearLine(q.x,q.z,pkg.x,pkg.z);
@@ -93,6 +103,8 @@ export class XmasHunt{
 
   take(pkg){
     const r=this.run;pkg.collected=true;pkg.at=r.t;
+    // En gömd julklapp (addHidden) räknas inte som ett vanligt paket: ingen kombo, inga poäng, inget mål. Spelet får en egen händelse och xmas-meta delar ut belöningen.
+    if(pkg.hidden){this.emit({type:'xmas-hidden',id:pkg.id,spot:pkg.spot,x:pkg.x,z:pkg.z});return;}
     const chainOk=r.t-r.lastPickAt<=r.windowSec;r.chain=chainOk?r.chain+1:1;r.lastPickAt=r.t;r.lastPickT=r.t;r.bestChain=Math.max(r.bestChain,r.chain);
     const mult=comboMult(r.chain),isBonus=pkg.kind==='bonus';
     let points=isBonus?PACKAGE_POINTS.bonus:PACKAGE_POINTS.regular*mult,praise=null,tierBonus=0;

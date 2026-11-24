@@ -325,14 +325,16 @@ export class XmasMeta{
     if(kind==='zombies')st.tried.zombies=true;
     if(kind==='rush')st.tried.rush=true;
     const isIntro=kind==='hunt'&&run.id==='intro';
+    // Första uppdraget är en genomgång: det ger XP, röd kula, första lotten, serie och mätare, men räknas inte mot dagens uppdrag (slutkortet ska inte svämma över och uppdragen börjar på noll).
+    const tutorial=cleared&&isIntro&&!st.welcomed;
     if(cleared&&isIntro)st.tried.intro=true;
     if(cleared&&kind==='hunt')st.tried.intro=true; // en jakt kan inte klaras utan att första uppdraget är gjort (sparningen kan ha rensats)
     // räknare
-    if(pk+bn>0){d.packages=Math.min(9999,d.packages+pk+bn);d.bonus=Math.min(9999,d.bonus+bn);}
-    d.chain=Math.max(d.chain,num(run.chain,99));
+    if(pk+bn>0&&!tutorial){d.packages=Math.min(9999,d.packages+pk+bn);d.bonus=Math.min(9999,d.bonus+bn);}
+    if(!tutorial)d.chain=Math.max(d.chain,num(run.chain,99));
     if(cleared){
       d.clears++;
-      if(kind==='hunt'){
+      if(kind==='hunt'&&!tutorial){
         d.runs++;
         const sec=num(run.seconds,99999);if(sec>0)d.fast=d.fast?Math.min(d.fast,sec):sec;
         const area=typeof run.area==='string'&&/^[a-z0-9-]{1,30}$/.test(run.area)?run.area:'';if(area&&!d.areas.includes(area))d.areas.push(area);
@@ -365,7 +367,7 @@ export class XmasMeta{
       this._advent(R,day);
     }
     this._meter(R,day,d,pk+bn);
-    this._missions(R,day,d);
+    if(!tutorial)this._missions(R,day,d);
     return this._finish(R,day);
   }
   // En julklapp i fri julvandring (som inte har något slutkort): XP, mätare och uppdrag räknas direkt. pick: {kind:'regular'|'bonus', chain}.

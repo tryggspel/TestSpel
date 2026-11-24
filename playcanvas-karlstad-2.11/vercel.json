@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/xmas-draw.mjs": {
+      "includeFiles": "xmas/*.mjs"
+    }
+  }
+}

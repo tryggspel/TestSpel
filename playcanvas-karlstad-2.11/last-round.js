@@ -434,7 +434,7 @@ export function createLastRound(pc, host) {
   function setPanel(name) {
     panel = name; document.body.classList.toggle('round-panel-open', !!name);
     $('roundPanel').hidden = !name;
-    for (const id of ['intro', 'pause', 'result', 'map','city-intro','city-result','album','daily-intro','moment','bus-intro','trail-result','tempo-result','boat-intro','bus-pick','musicpartner','xmas-intro','xmas-continue','xmas-result','xmas-rush','xmas-board','xmas-challenge','xmas-link']) $('round-' + id).hidden = name !== id;
+    for (const id of ['intro', 'pause', 'result', 'map','city-intro','city-result','album','daily-intro','moment','bus-intro','trail-result','tempo-result','boat-intro','bus-pick','musicpartner','xmas-intro','xmas-continue','xmas-result','xmas-rush','xmas-board','xmas-challenge','xmas-link','xmas-tree','xmas-draw','xmas-secrets']) $('round-' + id).hidden = name !== id;
     if(name==='city-intro'||name==='daily-intro')refreshDaily();
     if(name==='city-intro')renderFunStatus();
     if(name==='city-intro')$('cityControlCopy').textContent=host.oneHand?.()?'EN HAND: spaken går och svänger. Sikta mot zombien så skjuter du automatiskt. Byt till två händer i PAUS.':'WASD: gå · mus: sikta · klick: solstöt · E: uppdrag / buss · M: karta · T: turbo i City Explore. Samma snabba gång som tidigare.';

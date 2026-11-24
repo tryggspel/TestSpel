@@ -1,0 +1,8 @@
+{
+  "name": "karlstad-julklappsjakten",
+  "private": true,
+  "description": "Julklappsjakten (Karlstad 2.21, julbygget). Beroendet behövs bara av api/xmas-draw.mjs (anmälan till dragningen, privat Vercel Blob). Spelet i webbläsaren har inga beroenden.",
+  "dependencies": {
+    "@vercel/blob": "2.9.0"
+  }
+}

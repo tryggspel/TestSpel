@@ -284,3 +284,111 @@ body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
 .xmas-door a.xmas-link{display:block;box-sizing:border-box;width:100%;min-height:44px;margin-top:10px;padding:13px 12px;text-align:center;text-decoration:none;border:1px solid #f2d78acc;border-radius:3px;background:#0c2c2066;color:#ffe9a8;font:700 11px/18px system-ui}
 .xmas-door a.xmas-link:focus-visible{outline:2px solid #ffe9a8;outline-offset:2px}
 #round-result .xmas-door{margin-top:10px}
+
+/* ── Framstegen (2.21.1-xmas.11): remsan på menyerna, belöningsraden på slutkortet, julgranen, lotterna och gömda julklappar ─────────────────────
+   Samma färger och knappar som resten av julkorten. Text skrivs alltid med textContent. Teckenstorlekar: minst 11 px, knappar minst 48 px. */
+.xmas-news{display:grid;gap:6px;margin:10px 0 0}
+.xmas-news .xn-row{margin:0;padding:9px 10px;border-radius:6px;border-left:4px solid var(--xmas-gold);background:#ffd36b1c;color:#ffe9a8;font:800 12px/1.35 system-ui,sans-serif;letter-spacing:.03em;text-align:left}
+.xmas-news .xn-row.codebad{border-left-color:#d9473f;background:#d9473f1c;color:#ffd0cc}
+.xmas-prize-note{color:#ffe9a8}
+.xmas-strip{margin:12px 0 6px;padding:11px 12px 12px;border-radius:8px;background:#0c241f;border:1px solid #85aa8566;text-align:left}
+.xs-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.xs-grade{font:1000 22px/1 system-ui,sans-serif;color:var(--xmas-gold);letter-spacing:-.01em}
+.xs-name{font:900 12px/1.1 system-ui,sans-serif;letter-spacing:.14em;color:var(--paper)}
+.xs-xp{margin-left:auto;font:800 11px/1 system-ui,sans-serif;letter-spacing:.1em;color:#9fc0a8}
+.xs-bar,.xrw-bar{display:block;height:9px;margin:8px 0 4px;border-radius:5px;background:#ffffff1c;overflow:hidden}
+.xs-bar u,.xrw-bar u{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--xmas-red),var(--xmas-gold));text-decoration:none;transition:width .5s ease}
+.round-card p.xs-next,.round-card p.xrw-sub{margin:0 0 8px;font:700 11px/1.4 system-ui,sans-serif;letter-spacing:.06em;color:#9fc0a8}
+.xs-missions{list-style:none;margin:8px 0 6px;padding:0;display:grid;gap:4px}
+.xs-missions li{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:6px;align-items:center;padding:6px 8px;border-radius:5px;background:#ffffff0d;font:700 12px/1.3 system-ui,sans-serif;color:var(--paper)}
+.xs-missions li.xs-title{display:block;background:none;padding:2px 0;font:900 10px/1.2 system-ui,sans-serif;letter-spacing:.16em;color:#9fc0a8}
+.xs-missions li.done{background:#2d8a5f33;color:#dcffe6}
+.xs-missions li.done .xs-text{text-decoration:line-through;text-decoration-color:#dcffe6aa}
+.xs-missions .xs-mark{font-weight:900;color:var(--xmas-gold);text-align:center}
+.xs-missions .xs-have{font:900 10px/1 system-ui,sans-serif;letter-spacing:.1em;color:#9fc0a8;white-space:nowrap}
+.xs-missions li.done .xs-have{color:var(--xmas-gold)}
+.xs-missions li.xs-gift{display:block;background:none;padding:3px 0 0;font:800 11px/1.35 system-ui,sans-serif;color:var(--xmas-gold)}
+.xs-missions li.xs-gift.dim{color:#9fc0a8;font-weight:700}
+.xs-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0 4px}
+.xs-chip{display:block;padding:7px 4px;border-radius:6px;background:#ffffff0d;text-align:center}
+.xs-chip b{display:block;font:1000 18px/1.1 system-ui,sans-serif;color:var(--paper)}
+.xs-chip span{display:block;margin-top:2px;font:800 9px/1.2 system-ui,sans-serif;letter-spacing:.1em;color:#9fc0a8;text-transform:uppercase}
+.xs-chip.risk{outline:1px solid var(--xmas-red)}.xs-chip.risk b{color:#ff9d96}
+.round-card p.xs-goal{margin:8px 0 0;font:900 11px/1.4 system-ui,sans-serif;letter-spacing:.08em;color:var(--xmas-gold)}
+.round-card p.xs-advent{margin:6px 0 0;padding:7px 9px;border-radius:5px;background:#d9473f26;font:800 11px/1.4 system-ui,sans-serif;color:#ffd0cc}
+.xs-buttons{display:grid;gap:6px;margin-top:10px}
+.xmas-card .xs-btn{min-height:48px;font-size:12px;letter-spacing:.06em;text-align:left;justify-content:flex-start}
+
+/* Belöningsraden på slutkortet */
+.xmas-reward{margin:12px 0 4px;padding:11px 12px;border-radius:8px;background:#0c241f;border:1px solid var(--xmas-gold);text-align:left}
+.xrw-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.xrw-xp{font:1000 26px/1 system-ui,sans-serif;color:var(--xmas-gold);letter-spacing:-.02em}
+.xrw-grade{font:900 12px/1.1 system-ui,sans-serif;letter-spacing:.12em;color:var(--paper)}
+.xrw-chips{display:grid;gap:6px;margin:6px 0}
+.xrw-chip{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:6px;background:#ffffff10;border:1px solid transparent}
+.xrw-chip.new{background:#ffd36b22;border-color:#ffd36b88}
+.xrw-chip.r-rare{border-color:#7fb4ff88}.xrw-chip.r-epic{border-color:#c79bff99}.xrw-chip.r-legendary{border-color:#ffd36b;box-shadow:0 0 12px #ffd36b66}
+.xrw-chip .xo-icon{flex:none}
+.xrw-chip .xo-ticket{flex:none;width:30px;text-align:center;font-size:22px;line-height:30px}
+.xrw-t{display:grid;gap:1px;min-width:0}
+.xrw-t b{font:900 13px/1.25 system-ui,sans-serif;color:var(--paper);overflow-wrap:anywhere}
+.xrw-chip.ticket .xrw-t b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.04em}
+.xrw-t em{font:800 10px/1.3 system-ui,sans-serif;font-style:normal;letter-spacing:.1em;color:#9fc0a8}
+.xrw-list{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px}
+.xrw-list li{padding:4px 0 4px 10px;border-left:3px solid #85aa8566;font:800 11px/1.4 system-ui,sans-serif;letter-spacing:.04em;color:#cfe3d5}
+.xrw-list li.level{border-left-color:var(--xmas-gold);color:var(--xmas-gold)}
+.xrw-list li.mission,.xrw-list li.gift{border-left-color:var(--xmas-green);color:#dcffe6}
+.xrw-list li.advent,.xrw-list li.door{border-left-color:var(--xmas-red);color:#ffd0cc}
+.round-card p.xrw-goal{margin:8px 0 0;font:900 11px/1.4 system-ui,sans-serif;letter-spacing:.08em;color:var(--xmas-gold)}
+
+/* Julgranen */
+.xmas-tree-wrap{display:grid;gap:10px;margin:6px 0 4px}
+.xmas-tree-canvas{display:block;width:min(100%,300px);height:auto;margin:0 auto;border-radius:8px;background:radial-gradient(ellipse at 50% 30%,#1b4a4a,#0c241f 70%)}
+.xmas-orn-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.xmas-orn-list li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:7px;align-items:center;padding:5px 7px;border-radius:6px;background:#ffffff0d;border:1px solid transparent;text-align:left}
+.xmas-orn-list li.have{background:#ffffff14}
+.xmas-orn-list li.new{border-color:var(--xmas-gold);background:#ffd36b1f}
+.xmas-orn-list .xo-icon{grid-row:1/3}
+.xmas-orn-list .xo-name{font:800 12px/1.2 system-ui,sans-serif;color:var(--paper);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xmas-orn-list li.miss .xo-name{color:#7f9a88}
+.xmas-orn-list .xo-rarity{grid-column:2;font:800 9px/1.2 system-ui,sans-serif;letter-spacing:.1em;color:#9fc0a8}
+.xmas-orn-list li.r-rare .xo-rarity{color:#9cc4ff}.xmas-orn-list li.r-epic .xo-rarity{color:#d3b3ff}.xmas-orn-list li.r-legendary .xo-rarity{color:var(--xmas-gold)}
+.xmas-orn-list .xo-count{grid-row:1/3;grid-column:3;font:900 11px/1 system-ui,sans-serif;color:var(--xmas-gold)}
+
+/* Lotter och anmälan */
+.xmas-ticketbox{display:flex;align-items:baseline;gap:10px;margin:8px 0 4px}
+.xmas-ticketbox b{font:1000 54px/1 system-ui,sans-serif;color:var(--xmas-gold);letter-spacing:-.03em}
+.xmas-ticketbox span{font:900 13px/1 system-ui,sans-serif;letter-spacing:.16em;color:var(--paper)}
+.xmas-meter{margin:2px 0 4px}
+.xmas-tickets{list-style:none;margin:8px 0;padding:0;max-height:150px;overflow:auto;display:grid;gap:4px}
+.xmas-tickets li{padding:7px 9px;border-radius:5px;background:#0c241f;border:1px solid #85aa8544;font:700 13px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.05em;color:var(--paper);text-align:left}
+.xmas-tickets li.sent{color:#9fc0a8}.xmas-tickets li.empty{font-family:system-ui,sans-serif;letter-spacing:0;color:#9fc0a8}
+.xmas-drawform{margin:10px 0 6px}
+.xmas-check{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:start;margin:10px 0;text-align:left;font:600 12px/1.45 system-ui,sans-serif;color:#cfe3d5}
+.xmas-check input{width:24px;height:24px;margin:0;accent-color:var(--xmas-red)}
+.xmas-terms{margin:8px 0;padding:8px 10px;border-radius:6px;background:#0c241f;border:1px solid #85aa8544;text-align:left}
+.xmas-terms summary{min-height:40px;display:flex;align-items:center;cursor:pointer;font:900 11px/1.3 system-ui,sans-serif;letter-spacing:.1em;color:var(--xmas-gold)}
+.xmas-terms p{margin:6px 0}
+
+/* Gömda julklappar, hemliga paket och kuponger */
+.xmas-hints{list-style:none;margin:8px 0;padding:0;display:grid;gap:4px;max-height:230px;overflow:auto}
+.xmas-hints li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;align-items:start;padding:7px 8px;border-radius:5px;background:#ffffff0d;font:700 12px/1.4 system-ui,sans-serif;color:var(--paper);text-align:left}
+.xmas-hints li.found{background:#2d8a5f33;color:#dcffe6}
+.xmas-hints li.locked{color:#7f9a88}
+.xmas-hints .xs-mark{text-align:center;color:var(--xmas-gold)}
+.xmas-codebox{margin:14px 0 6px;padding:10px 12px;border-radius:8px;background:#0c241f;border:1px solid #85aa8566}
+.xmas-coupons{display:grid;gap:8px;margin:12px 0}
+.xs-coupon{padding:10px 12px;border-radius:8px;border:1px dashed var(--xmas-gold);background:#ffd36b14;text-align:left}
+.xs-coupon b{display:block;font:900 14px/1.3 system-ui,sans-serif;color:var(--xmas-gold)}
+.xs-coupon span{display:block;font:700 11px/1.4 system-ui,sans-serif;color:#cfe3d5}
+.xs-coupon.used,.xs-coupon.expired{opacity:.6;border-style:solid}
+.xs-coupon .xs-pin{width:100%;min-height:48px;margin:6px 0;padding:0 12px;border-radius:8px;border:2px solid #85aa8588;background:#0c241f;color:var(--paper);font:800 16px/1.2 system-ui,sans-serif;box-sizing:border-box}
+
+/* Liggande telefon: granen får ett bredare kort så att bilden och listan ryms sida vid sida */
+@media (max-height:600px) and (min-width:560px){
+  #round-xmas-tree{width:min(720px,94vw)}
+  .xmas-tree-wrap{grid-template-columns:minmax(150px,230px) minmax(0,1fr);align-items:start}
+  .xmas-tree-canvas{width:100%}
+  .xmas-card .xs-btn{font-size:12px}
+}
+@media (prefers-reduced-motion:reduce){.xs-bar u,.xrw-bar u{transition:none}}

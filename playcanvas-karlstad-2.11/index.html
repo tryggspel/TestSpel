@@ -129,8 +129,11 @@
     <div class="episode-label"><span>KARLSTAD / JULEN</span><span class="game-version">2.21.1-xmas.1</span></div>
     <h1>JULKLAPPS<br><em>JAKTEN.</em></h1>
     <p class="round-lead">Tomtarna har tappat julklapparna runt om i Karlstad. Gå runt, följ deras spår i snön och hitta dem!</p>
+    <div id="xmasNewsStart" class="xmas-news" hidden></div>
     <button id="xmasCozy" class="round-primary xmas-primary" type="button">JULKLAPPSJAKTEN 🎁 <span>→</span></button>
     <p id="xmasCozyNote" class="round-fine"></p>
+    <div id="xmasStripStart" class="xmas-strip" hidden></div>
+    <p id="xmasPrizeNote" class="round-fine xmas-prize-note" hidden></p>
     <button id="xmasRushStart" class="round-secondary xmas-rush" type="button">JULRUSHEN <span>→</span></button>
     <p id="xmasRushStartNote" class="round-fine"></p>
     <button id="xmasZombies" class="round-secondary xmas-zombie" type="button">TOMTEZOMBIES <span>→</span></button>
@@ -143,9 +146,11 @@
   <section id="round-xmas-continue" class="round-card compact xmas-card" hidden>
     <div class="episode-label"><span>JULKLAPPSJAKTEN</span><span>FORTSÄTT JULEN</span></div>
     <h2>VAD<br><em>NU?</em></h2>
+    <div id="xmasNewsContinue" class="xmas-news" hidden></div>
     <p id="xmasContinueStatus" class="round-fine"></p>
     <button id="xmasRound" class="round-primary xmas-primary" type="button">NÄSTA JULKLAPPSJAKT <span>→</span></button>
     <p id="xmasRoundNote" class="round-fine"></p>
+    <div id="xmasStripContinue" class="xmas-strip" hidden></div>
     <button id="xmasRushGo" class="round-secondary xmas-rush" type="button">JULRUSHEN <span>→</span></button>
     <p id="xmasRushGoNote" class="round-fine"></p>
     <button id="xmasShops" class="round-secondary" type="button">BUTIKSUTMANINGAR <span>→</span></button>
@@ -174,6 +179,7 @@
     <button id="xmasResultContinue" class="round-primary xmas-primary" type="button">FORTSÄTT <span>→</span></button>
     <button id="xmasResultShare" class="round-secondary" type="button" hidden>UTMANA EN VÄN <span>→</span></button>
     <button id="xmasResultFree" class="round-secondary" type="button">FRI JULVANDRING</button>
+    <button id="xmasResultMenu" class="round-tertiary" type="button" hidden>JULMENYN</button>
   </section>
   <section id="round-xmas-rush" class="round-card compact xmas-card" hidden>
     <div class="episode-label"><span>JULKLAPPSJAKTEN</span><span id="xmasRushStars">★ 0 / 36</span></div>
@@ -219,6 +225,51 @@
     <p id="xmasLinkNote" class="round-fine"></p>
     <button id="xmasLinkGo" class="round-primary xmas-primary" type="button">STARTA UPPDRAGET <span>→</span></button>
     <button id="xmasLinkSkip" class="round-tertiary" type="button">Till startvyn</button>
+  </section>
+  <section id="round-xmas-tree" class="round-card compact xmas-card" hidden>
+    <div class="episode-label"><span>MITT JUL</span><span id="xmasTreeCount">0 / 24</span></div>
+    <h2>DIN<br><em>JULGRAN.</em></h2>
+    <div class="xmas-tree-wrap">
+      <canvas id="xmasTreeCanvas" class="xmas-tree-canvas" width="480" height="560" role="img" aria-label="Din julgran med prydnaderna du samlat"></canvas>
+      <ul id="xmasTreeList" class="xmas-orn-list"></ul>
+    </div>
+    <p id="xmasTreeLine" class="round-fine"></p>
+    <button id="xmasTreeBack" class="round-primary xmas-primary" type="button">TILLBAKA <span>→</span></button>
+  </section>
+  <section id="round-xmas-draw" class="round-card compact xmas-card" hidden>
+    <div class="episode-label"><span>MITT JUL</span><span>LOTTER</span></div>
+    <h2>VINN EN<br><em id="xmasDrawTitle">JULGRAN.</em></h2>
+    <p id="xmasDrawLine" class="round-lead"></p>
+    <div class="xmas-ticketbox"><b id="xmasDrawCount">0</b><span id="xmasDrawCountLabel">LOTTER</span></div>
+    <div id="xmasDrawMeter" class="xmas-meter"></div>
+    <p id="xmasDrawHow" class="round-fine"></p>
+    <ul id="xmasDrawTickets" class="xmas-tickets"></ul>
+    <div id="xmasDrawForm" class="xmas-drawform" hidden>
+      <label class="xmas-field"><span>NAMN</span><input id="xmasDrawName" type="text" autocomplete="name" maxlength="40"></label>
+      <label class="xmas-field"><span>E-POST ELLER TELEFON</span><input id="xmasDrawContact" type="text" inputmode="email" autocomplete="email" maxlength="120"></label>
+      <label class="xmas-check"><input id="xmasDrawGuardian" type="checkbox"><span>Jag är 18 år eller äldre, eller har en målsmans tillåtelse att delta.</span></label>
+      <label class="xmas-check"><input id="xmasDrawConsent" type="checkbox"><span>Jag har läst villkoren och integritetstexten och godkänner att mitt namn, mina kontaktuppgifter och mina lottkoder sparas för dragningen.</span></label>
+      <button id="xmasDrawSend" class="round-primary xmas-primary" type="button">SKICKA IN MINA LOTTER <span>→</span></button>
+      <p id="xmasDrawStatus" class="round-fine" role="status"></p>
+      <details class="xmas-terms"><summary>VILLKOR</summary><div id="xmasDrawRules"></div></details>
+      <details class="xmas-terms"><summary>INTEGRITET: SÅ BEHANDLAS DINA UPPGIFTER</summary><div id="xmasDrawPrivacy"></div></details>
+    </div>
+    <p id="xmasDrawSoon" class="round-fine" hidden></p>
+    <button id="xmasDrawBack" class="round-primary xmas-primary" type="button">TILLBAKA <span>→</span></button>
+  </section>
+  <section id="round-xmas-secrets" class="round-card compact xmas-card" hidden>
+    <div class="episode-label"><span>MITT JUL</span><span id="xmasSecretsCount">0 / 20</span></div>
+    <h2>GÖMDA<br><em>JULKLAPPAR.</em></h2>
+    <p id="xmasSecretsLine" class="round-fine"></p>
+    <ul id="xmasSecretsList" class="xmas-hints"></ul>
+    <button id="xmasSecretsFree" class="round-primary xmas-primary" type="button">LETA I FRI JULVANDRING <span>→</span></button>
+    <div id="xmasCoupons" class="xmas-coupons" hidden></div>
+    <div class="xmas-codebox">
+      <label class="xmas-field"><span>HAR DU EN KOD FRÅN EN AFFISCH?</span><input id="xmasCodeInput" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24"></label>
+      <button id="xmasCodeGo" class="round-secondary" type="button">HÄMTA HEMLIGT PAKET</button>
+      <p id="xmasCodeStatus" class="round-fine" role="status"></p>
+    </div>
+    <button id="xmasSecretsBack" class="round-tertiary" type="button">Tillbaka</button>
   </section>
   <section id="round-city-intro" class="round-card city-card" hidden>
     <div class="episode-label"><span>KARLSTAD / STADSJAKTEN</span><span class="game-version">2.11.22</span></div>

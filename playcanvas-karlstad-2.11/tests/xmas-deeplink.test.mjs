@@ -114,7 +114,8 @@ test('spelet hanterar allt modulen kan ge: varje fn har en gren i xmas-boot.js, 
   for(const fn of fns){if(fn==='menu')continue;assert.match(boot,new RegExp(`case '${fn}':`),`xmas-boot.js saknar grenen för ${fn}`);}
   assert.match(boot,/parseLink\(location\.search\)/);assert.match(boot,/if\(link\)\{/);assert.match(boot,/searchParams\.delete\(LINK_PARAM\)/,'adressen städas så att en omladdning inte startar om kortet');
   for(const id of ['round-xmas-link','xmasLinkKicker','xmasLinkTitle','xmasLinkLine','xmasLinkNote','xmasLinkGo','xmasLinkSkip'])assert.ok(html.includes(`id="${id}"`),id);
-  assert.match(lr,/'xmas-challenge','xmas-link'\]/,'panelen finns i setPanel-listan');
+  assert.match(lr,/'xmas-challenge','xmas-link'(,'xmas-[a-z]+')*\]/,'panelen finns i setPanel-listan');
+  for(const id of ['xmas-tree','xmas-draw','xmas-secrets']){assert.ok(lr.includes("'"+id+"'"),id+' är med i panellistan');assert.ok(html.includes('id="round-'+id+'"'),'round-'+id+' finns i index.html');}
   assert.match(ui,/on\('xmasLinkGo',\(\)=>fx\.linkGo\(\)\)/);assert.match(ui,/on\('xmasLinkSkip',\(\)=>fx\.linkSkip\(\)\)/);assert.match(boot,/linkGo,linkSkip/);
   assert.match(html,/id="xmasLinkGo" class="round-primary xmas-primary"/,'stora, tydliga tryckytor');
 });

@@ -23,6 +23,10 @@ import {SANDGRUND,sandgrundOutcome,sandgrundLine} from './xmas-sandgrund.mjs?v=2
 import {BOAT,buildMarieberg,boatBonus} from './xmas-marieberg.mjs?v=2.21.1-xmas.10';
 import {parseLink,describeLink,LINK_PARAM,DOOR_PARAM} from './xmas-deeplink.mjs?v=2.21.1-xmas.10';
 import {doorBox,resultMatches} from './xmas-door.mjs?v=2.21.1-xmas.10';
+import {XmasMeta} from './xmas-meta.mjs?v=2.21.1-xmas.10';
+import {hiddenPackages,nearestHidden,warmth,hiddenSpot} from './xmas-hidden.mjs?v=2.21.1-xmas.10';
+import {DOORS} from '../julkalender/doors.mjs?v=2.21.1-xmas.10';
+import {GAME_SAVE_KEY,STORAGE_KEY as CALENDAR_KEY,readGame,evaluate,hasAutoCheck,metricsOf} from '../julkalender/rules.mjs?v=2.21.1-xmas.10';
 
 // Julbygget har inga termosar, hemligheter eller skatter: paketen ersätter dem. Anropas direkt efter att resan skapats, innan någon vy ritas.
 export function prepareXmasJourney(journey){
@@ -34,6 +38,11 @@ export function installXmas(ctx){
   const {pc,host,journey,root,$,texture,labelTex,toast,fanfare,sound,note,setPanel,startCity,pause,resume,isPlaying,placeActive,indoors,openPass,dismissPlaceResult,params,storage,startMission,boardBoat,boatActive,explore}=ctx;
   registerXmasProps();
   const save=new XmasSave(storage);
+  // Framstegen (xmas-meta.mjs): grad, julgran, dagliga uppdrag, serie, lotter, gömda julklappar. Alltid fail-soft: går något fel där fortsätter jakten utan dem.
+  const meta=new XmasMeta({storage});
+  const M=(fn,fallback=null)=>{try{return fn();}catch(e){console.error('[Framstegen]',e);return fallback;}};
+  const newsRaw=[]; // nyheter sedan sist som visas överst på nästa meny: {R,label}
+  M(()=>{const R=meta.adopt({introDone:save.introDone,zombies:save.zombies.cleared,rush:save.rush.cleared});if(R)newsRaw.push({R,label:'VÄLKOMMEN TILLBAKA'});});
   let fault=false;
   const guard=(fn,fallback)=>{if(fault)return fallback;try{return fn();}catch(e){fault=true;console.error('[Jultillägget stängdes av efter fel]',e);try{hunt.cancel('fel');julrush.cleanup();zombieTune.off();ui.showHud(false);view.clear();document.body.classList.remove('xmas-on','xmas-cozy','xmas-zombies','xmas-rush');journey.xmas=null;}catch{}return fallback;}}; // grundspelets HUD och regler tar över igen
 
@@ -103,13 +112,71 @@ export function installXmas(ctx){
   // Luckan man kom från (djuplänkens kort, när man tryckt STARTA): när just det uppdraget är klart visas rutan "Lucka N är avklarad" (xmas-door.mjs). Nollas när man går till menyn.
   let doorLink=null;
   const doorFor=res=>{try{return doorLink&&resultMatches(doorLink.gives,res)?doorBox({door:doorLink.door,state:save.state,points:res.points||0}):null;}catch{return null;}};
+  // ── Framstegen: belöningar efter varje körning ──────────────────────────────────────────────────────────────────────────────────────────────
+  const AREA={intro:'torget','round-torget':'torget','round-kungsgatan':'kungsgatan','round-drottninggatan':'drottninggatan',marieberg:'marieberg'};
+  // Julkalenderns luckor: samma villkor som kalendern själv (julkalender/rules.mjs: evaluate) mot spelets sparning och kalenderns baslinje (skrivskyddat: kalendern och julspelet ändras inte).
+  // Luckan ger sin belöning när kalendern skulle räkna den som klar och dagen har kommit (xmas-meta.mjs: syncCalendar).
+  function syncDoors(){
+    return M(()=>{
+      const game=readGame({getItem:k=>k===GAME_SAVE_KEY?JSON.stringify(save.state):null});
+      let base=null;try{const c=JSON.parse(storage.getItem(CALENDAR_KEY)||'null');if(c&&c.version===1&&c.baseline&&typeof c.baseline==='object')base=c.baseline;}catch{}
+      const baseline=base||metricsOf(game); // inget besök i kalendern än: räknare mäts från nu, så ingen lucka blir klar av gammal statistik
+      return meta.syncCalendar(n=>{const d=DOORS[n-1];return !!d&&hasAutoCheck(d.check)&&evaluate(d.check,game,baseline).done;});
+    });
+  }
+  // Ett resultat från spelet som en körning för framstegen (xmas-meta.mjs: onRun). null = räknas inte.
+  function metaRun(res){
+    switch(res.kind){
+      case 'intro':case 'round':case 'marieberg':return {kind:'hunt',id:res.id,cleared:true,packages:res.collected,bonus:res.bonusCollected,chain:res.bestChain,seconds:res.seconds,area:AREA[res.id]||''};
+      case 'delivery':case 'place':return {kind:'place',id:res.id,cleared:true,first:!!res.stamp};
+      case 'zombies':return {kind:'zombies',id:'zombies',cleared:!res.failed,level:res.level,packages:res.collected,bonus:res.bonusCollected,chain:res.bestChain,seconds:res.seconds,countPackages:!res.failed};
+      case 'rush':{const k=res.rush;return {kind:'rush',id:k?'rush-'+k.n:'maraton',cleared:!!(k&&k.cleared),level:k?k.n:0,stars:k?k.stars:0,tempo:res.level,packages:res.collected,bonus:0,chain:res.bestChain,seconds:res.seconds};}
+      default:return null;
+    }
+  }
+  // Delar ut belöningen för ett resultat och lägger den på resultatet (res.meta) så att slutkortet kan visa den. Anropas högst en gång per körning.
+  function giveMeta(res){
+    const run=metaRun(res);if(!run)return res;
+    const R=M(()=>meta.onRun(run));if(!R)return res;
+    const cal=run.cleared?syncDoors():null;
+    res.meta={R,cal,status:M(()=>meta.status()),goal:M(()=>meta.nextGoal())};
+    return res;
+  }
+  // Det som händer mitt i en vandring (uppdrag klart, ny grad, lott, prydnad): en rad i taget efter fyndets egen puff. skip = sådant som redan sagts.
+  function announce(R,{skip=[]}={}){
+    const lines=[];
+    for(const l of R.levelUps)lines.push({text:'GRAD '+l.n+' · '+l.name+'!',big:true});
+    for(const m of R.missions)lines.push({text:'UPPDRAG KLART · +'+m.xp+' XP'});
+    if(R.gift)lines.push({text:'DAGENS JULKLAPP ÖPPNAD!',big:true});
+    if(!skip.includes('orn'))for(const o of R.ornaments)lines.push({text:(o.isNew?'NY PRYDNAD · ':'DUBBLETT · ')+o.name.toUpperCase()});
+    if(!skip.includes('ticket'))for(const t of R.tickets)lines.push({text:'NY LOTT · '+t.code});
+    lines.slice(0,4).forEach((l,i)=>setTimeout(()=>guard(()=>{
+      if(mode!=='cozy'||!hunt.active)return;
+      if(l.big){try{sound('win');}catch{}}
+      ui.showPill(l.text,1800,performance.now(),'bonus');
+    }),700+i*1900));
+  }
+  // Nyheter sedan sist (luckor som blivit klara, ett hemligt paket): en rad var överst på menyn, en gång.
+  function flushNews(){
+    const items=[];
+    for(const n of newsRaw.splice(0)){
+      if(n.text){items.push({kind:n.kind||'',text:n.text});continue;}
+      const R=n.R;
+      if(R.calendar&&R.calendar.length){
+        for(const c of R.calendar){const bits=[...c.ornaments.map(o=>(o.isNew?'ny prydnad ':'dubblett ')+o.name),...(c.tickets.length?[c.tickets.length+' '+(c.tickets.length===1?'lott':'lotter')]:[]),...(c.xp?['+'+c.xp+' XP']:[])];items.push({kind:'door',text:'LUCKA '+c.n+' ÄR KLAR · '+(bits.join(' · ')||'tack!')});}
+      }else{
+        const bits=ui.meta?ui.meta.describe(R).map(x=>x.text):[];if(bits.length)items.push({kind:'welcome',text:(n.label?n.label+' · ':'')+bits.join(' · ')});
+      }
+    }
+    M(()=>ui.meta?.setNews(items));
+  }
   // Butiksuppdrag (Cervera, och Pressbyrån när leveransen sker mitt i en jakt) har inget eget resultatkort i julbygget: grundspelets lilla kort döljs (xmas.css) och det här visas i julens färger,
   // med rutan "Lucka N är avklarad" om man kom från kalendern. Spelet pausas och FORTSÄTT JULVANDRINGEN tar upp det där man var.
   const PLACE_TITLES={cervera:'FIKABORDET ÄR DUKAT!',pressbyran:'FIKAT ÄR LEVERERAT!'};
   function showPlaceDone(i){
     guard(()=>{
       const res={kind:'place',id:i.placeId,stampId:i.placeId,title:PLACE_TITLES[i.placeId]||'UPPDRAGET ÄR KLART!',line:i.line||'',points:i.points||0,stamp:!!i.first,seconds:i.seconds||0,mistakes:i.mistakes};
-      res.door=doorFor(res);
+      res.door=doorFor(res);giveMeta(res);
       clearTimeout(resultTimer);
       resultTimer=setTimeout(()=>guard(()=>{try{dismissPlaceResult?.();}catch{}journey.pause?.();ui.showResult(res);setPanel('xmas-result');resultOpen=true;}),i.delay??800);
     });
@@ -119,6 +186,9 @@ export function installXmas(ctx){
     const l=parseLink(location.search);
     if(l){if(!incoming&&!badLink)link=l;const u=new URL(location.href);u.searchParams.delete(LINK_PARAM);u.searchParams.delete(DOOR_PARAM);history.replaceState(null,'',u.pathname+u.search+u.hash);}
   }catch{}
+  // Hemligt paket (?paket=KOD, QR på en affisch): koden löses in första gången menyn öppnas, aldrig mitt i en jakt. Adressen städas så att en omladdning inte löser in den igen.
+  let pendingCode='';
+  try{const q=new URLSearchParams(location.search).get('paket');if(q){pendingCode=q;const u=new URL(location.href);u.searchParams.delete('paket');history.replaceState(null,'',u.pathname+u.search+u.hash);}}catch{}
   const guideUi=createGuideUi({});
 
   function goBase(){
@@ -223,6 +293,7 @@ export function installXmas(ctx){
     caughtAt=performance.now();
     const res={kind:'zombies',failed:true,level:zLevel?.n||r.level||1,collected:r.collected,goal:r.goal,regularTotal:r.regularTotal,bonusCollected:r.bonusCollected,bonusTotal:r.bonusTotal,bestChain:r.bestChain,seconds:Math.round(r.t),points:r.points};
     hunt.cancel('tagen');journey.pause?.();journey.actors.forEach(a=>{a.active=false;});
+    giveMeta(res);
     clearTimeout(resultTimer);
     resultTimer=setTimeout(()=>guard(()=>{ui.showResult(res);setPanel('xmas-result');resultOpen=true;}),900);
     return true;
@@ -261,13 +332,14 @@ export function installXmas(ctx){
       const o=sandgrundOutcome(r,{hadStamp:save.hasStamp(SANDGRUND.id)});
       const leave=document.getElementById('roundLeave');if(leave)leave.textContent='Tillbaka till Julmenyn';
       const det=document.getElementById('roundResultDetail');if(det)det.textContent=(r.rescued||0)+'/3 besökare räddade · '+(r.accuracy||0)+'% träffsäkerhet · bästa kedja '+(r.bestChain||0)+'×'; // grundspelets rad nämner kaffepoäng till en stadsvandring som inte finns i julspelet
-      if(!o.count){ui.placeDoor(null);return true;}
+      if(!o.count){ui.placeDoor(null);M(()=>ui.meta?.placeReward(null));return true;}
       if(o.stamp)save.stamp(SANDGRUND.id);
       save.record(SANDGRUND.id,{points:r.score,seconds:r.seconds,packages:r.rescued,bonus:0});
       save.addTotals({points:o.points});
       const line=sandgrundLine(o,{label:STAMPS.find(s=>s.id===SANDGRUND.id)?.label||''}),t=document.getElementById('roundResultTarget');
       if(t&&line)t.textContent=line;
       ui.placeDoor(doorFor({id:SANDGRUND.id,stampId:SANDGRUND.id,points:o.points}),document.getElementById('round-result'),document.getElementById('roundNext')); // rutan "Lucka N är avklarad" om man kom från kalendern
+      M(()=>{const R=meta.onRun({kind:'sandgrund',id:SANDGRUND.id,cleared:true,first:!!o.stamp}),cal=syncDoors();ui.meta?.placeReward({R,cal,status:meta.status(),goal:meta.nextGoal()},document.getElementById('round-result'),document.getElementById('roundNext'));});
       if(o.stamp)try{sound('win');}catch{}
       return true;
     },false);
@@ -361,7 +433,9 @@ export function installXmas(ctx){
       const keep=mode==='cozy'&&isPlaying();
       if(!keep)enter('free');else{setPanel(null);resume?.();}
       hunt.startFree();setPanel(null);
-      toast('FRI JULVANDRING','Tomtarna tappar julklappar här och där i staden. Leta efter deras spår i snön och följ dem.',4);
+      M(()=>{hunt.addHidden(hiddenPackages(meta.state.hidden));hiddenBand='cold';});
+      const clue=M(()=>{const h=meta.status().hidden;const open=h.hints.filter(x=>x.visible&&!x.found);return open.length?open[open.length-1].clue:'';},'');
+      toast('FRI JULVANDRING','Tomtarna tappar julklappar här och där i staden. Leta efter deras spår i snön och följ dem.'+(clue?' Gömd julklapp: "'+clue+'"':''),clue?5.6:4);
       ui.showHud(true);ui.setProgress(hunt.run);view.clear();
     });
   }
@@ -373,6 +447,7 @@ export function installXmas(ctx){
       doorLink=null;ui.placeDoor(null);hunt.cancel('meny');view.clear();ui.showHud(false);guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;journey.pause?.();mode='menu';boatInfo=null;caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush','xmas-mission');
       if(incoming){ui.renderChallenge(incoming);setPanel('xmas-challenge');return;}
       if(link){const l=link;link=null;if(showLink(l))return;}
+      menuFrom='intro';takeCode();flushNews();
       ui.renderStart(buildDetail(stamp));setPanel('xmas-intro');
       if(badLink){badLink=false;toast('UTMANINGEN','Länken gick inte att läsa. Be din vän skicka den igen.',3.4);}
       if(linkBad){linkBad=false;toast('LÄNKEN','Uppdraget i länken finns inte. Det här är startvyn.',3.6);} // efter setPanel, som annars tar bort meddelandet
@@ -405,14 +480,33 @@ export function installXmas(ctx){
   // Knappen i rutan "Lucka N klar": Julmenyn (efter första uppdraget) eller startvyn
   function doorMenuGo(){guard(()=>{openMenu();if(save.introDone)openContinue();});}
   function linkSkip(){guard(()=>{pendingLink=null;openMenu();});}
-  function openContinue(){guard(()=>{ui.renderContinue();setPanel('xmas-continue');});}
+  function openContinue(){guard(()=>{menuFrom='continue';takeCode();flushNews();ui.renderContinue();setPanel('xmas-continue');});}
+  // Panelerna för julgranen, lotterna och de gömda julklapparna: tillbaka går till menyn man kom från.
+  let menuFrom='intro';
+  const menuBack=()=>{if(menuFrom==='continue'&&save.introDone)openContinue();else openMenu();};
+  function openTree(){guard(()=>{ui.meta?.renderTree();setPanel('xmas-tree');});}
+  function openDraw(){guard(()=>{ui.meta?.renderDraw();setPanel('xmas-draw');});}
+  function openSecrets(){guard(()=>{ui.meta?.renderSecrets();setPanel('xmas-secrets');});}
+  // Kalenderns luckor och ett hemligt paket (?paket=) räknas när menyn öppnas, aldrig mitt i en jakt.
+  function takeCode(){
+    M(()=>{const R=syncDoors();if(R)newsRaw.push({R});});
+    if(!pendingCode)return;
+    const code=pendingCode;pendingCode='';
+    M(()=>{
+      const r=meta.redeemCode(code);
+      if(r.ok){const bits=ui.meta?ui.meta.describe(r.reward).map(x=>x.text):[];newsRaw.push({kind:'code',text:'HEMLIGT PAKET! '+(r.label?r.label+' · ':'')+'+'+r.reward.xp+' XP'+(bits.length?' · '+bits.join(' · '):'')});}
+      else newsRaw.push({kind:'codebad',text:r.reason==='anvand'?'Det här hemliga paketet har du redan hämtat.':'Koden från länken känns inte igen.'});
+    });
+  }
+  function codeRedeemed(r){M(()=>{if(r&&r.ok)sound('win');});}
   function setWeather(level){save.setWeather(level);try{decor?.setWeather(level);}catch(e){console.error(e);}}
 
-  const ui=createXmasUi({save,fx:{
+  const ui=createXmasUi({save,meta,fx:{
     cozy:()=>{if(save.introDone)openContinue();else startIntro();},
     intro:()=>startIntro(),round:()=>startRound(),shops:()=>openShops(),free:()=>startFree(),zombies:()=>startZombies(),zombiesNext,zombiesAgain,sandgrund:()=>startSandgrund(),boat:()=>startBoat(),
     openRush:()=>openRush(),rushPlay:n=>startRush(n),marathon:()=>startRush(0),rushNext,rushAgain,openBoard,boardBack:()=>{if(boardFrom==='result')setPanel('xmas-result');else openRush(ui.selectedRush());},challengeGo,challengeSave,challengeSkip,
-    openMenu,openContinue,goBase,setWeather,linkGo,linkSkip,doorMenu:doorMenuGo,placeResume
+    openMenu,openContinue,goBase,setWeather,linkGo,linkSkip,doorMenu:doorMenuGo,placeResume,
+    openTree:()=>openTree(),openDraw:()=>openDraw(),openSecrets:()=>openSecrets(),menuBack:()=>menuBack(),codeRedeemed:r=>codeRedeemed(r)
   }});
 
   // ── Händelser från motorn → ljud, effekter och gränssnitt ──────────────────────────────────────────────────────
@@ -424,6 +518,8 @@ export function installXmas(ctx){
   const handlers={
     'xmas-start':(e,now)=>{ui.setProgress(hunt.run);},
     'xmas-pick':(e,now)=>{
+      // Fri julvandring har inget slutkort: varje julklapp ger XP och räknas mot mätaren och dagens uppdrag direkt (xmas-meta.mjs: onPick).
+      if(mode==='cozy'&&hunt.run&&hunt.run.kind==='free'){const R=M(()=>meta.onPick({kind:e.kind,chain:e.chain}));if(R&&R.notable)announce(R);}
       if(mode==='zombies')journey.energy=Math.min(100,(journey.energy||0)+(e.kind==='bonus'?30:8)); // paketen är ammunition i Tomtezombies
       const mult=e.mult>1?' ×'+e.mult:'';
       if(e.kind==='bonus'){[659.25,880,1174.66,1568].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.22,.08),i*70));view.burst(e.x,e.z,{big:true});ui.showPill('BONUSPAKET! +'+e.points,1500,now,'bonus');}
@@ -433,6 +529,15 @@ export function installXmas(ctx){
     },
     'xmas-goal':(e,now)=>{sound('win');[523.25,659.25,783.99,1046.5].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.28,.08),i*90));ui.showGoal('Bra! Lämna julklapparna hos tomten.',5500,now);fanfare(e.goal+' JULKLAPPAR!','Följ pilen till tomten och lämna dem.',2.4,'win');ui.setProgress(hunt.run);},
     'xmas-chain-lost':(e,now)=>{ui.showPill('KEDJAN BRÖTS · '+e.chain+' I RAD',1200,now,'lost');},
+    // En gömd julklapp (xmas-hidden.mjs) hittad i fri julvandring: egen fanfar, XP, en prydnad och ibland en lott.
+    'xmas-hidden':(e,now)=>{
+      const R=M(()=>meta.onHidden(e.spot));
+      sound('win');[523.25,659.25,783.99,1046.5,1318.5,1568].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.3,.09),i*80));
+      view.burst(e.x,e.z,{big:true,y:1.2});
+      const sp=hiddenSpot(e.spot),o=R&&R.ornaments[0];
+      fanfare('GÖMD JULKLAPP!',(sp?sp.name+'. ':'')+(R?'+'+R.xp+' XP'+(o?' · '+(o.isNew?'ny prydnad: ':'dubblett: ')+o.name:'')+(R.tickets.length?' · en lott':'')+' · '+R.hidden.count+' av '+R.hidden.total:''),3.4,'win');
+      if(R)announce(R,{skip:['orn','ticket']});
+    },
     // Tomtarna tappar julklappar med god tid emellan (xmas-drops.mjs): hela fanfaren bara om den förra är mer än 25 s gammal, annars en kort rad.
     // Det finns ingen pil: spåren i snön leder till julklapparna (fri julvandring och Julklappsjakten är sök och hitta).
     'xmas-rain':(e,now)=>{sound('energy');if(now-rainToastAt>25000){rainToastAt=now;ui.showGoal('Tomtarna tappade julklappar! Leta efter deras spår i snön.',5200,now);fanfare('TAPPADE JULKLAPPAR!','Följ tomtarnas spår i snön och leta upp '+e.count+' julklappar och ett bonuspaket.',2.6,'energy');}else ui.showPill('NYA SPÅR I SNÖN · '+e.count+' JULKLAPPAR',1600,now);},
@@ -471,6 +576,7 @@ export function installXmas(ctx){
       const r=e.result,k=r.rush;lastRush=k||null;
       // en tagen utmaning: slog du vännen? (en rush som inte klarades räknas inte, och utmaningen ligger kvar tills den är slagen)
       r.door=doorFor({...r,kind:'rush',rush:k||null});
+      {const tmp={...r,kind:'rush',rush:k||null};giveMeta(tmp);if(tmp.meta)r.meta=tmp.meta;}
       if(k&&k.cleared&&pending&&pending.focus===k.n){const v=versus({points:r.points,toBeat:pending.toBeat,name:pending.name.toLocaleUpperCase('sv-SE')});if(v){r.versus=v;if(v.beat)pending=null;}}
       host.music?.tempo?.(1);sound(r.record||(k&&k.cleared)?'win':'boss');ui.setRush(julrush.snapshot(),[],now);
       clearTimeout(resultTimer);
@@ -483,7 +589,7 @@ export function installXmas(ctx){
         e.result={...e.result,level:n,next:nx?nx.n:0,nextPlace:nx?nx.place:'',nextGoal:nx?nx.goal:0,levelFirst:prog.first,levelRecord:prog.record};lastZombie=e.result;
       }
       if(e.result.kind==='marieberg')e.result={...e.result,boat:boatInfo||{saved:0,points:0}};
-      e.result={...e.result,door:doorFor(e.result)};
+      e.result={...e.result,door:doorFor(e.result)};giveMeta(e.result);
       sound('win');[523.25,659.25,783.99,1046.5,1318.5].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.34,.09),i*100));
       ui.setProgress(hunt.run);view.burst(hunt.run.tomte.x,hunt.run.tomte.z,{big:true,y:1.4});ui.showGoal('Tack! Du räddade julen.',4000,now);
       clearTimeout(resultTimer);
@@ -519,6 +625,16 @@ export function installXmas(ctx){
     if(now-missionAt>140){missionAt=now;guideUi.setMission(missionView(hunt.run,p,hunt.run.drops&&mode==='cozy'&&hunt.run.kind!=='intro'?shopRow(p):null));}
   }
 
+  // Gömda julklappar: en rad när man kommer nära (varmt, glödhet). Samma band två gånger i rad sägs inte om förrän det gått en stund.
+  let hiddenAt=0,hiddenBand='cold',hiddenSaid=0;
+  function hiddenHint(p,now){
+    const n=nearestHidden(p,meta.state.hidden);if(!n)return;
+    const band=warmth(n.distance);
+    if(band==='cold'){hiddenBand='cold';return;}
+    if(band===hiddenBand&&now-hiddenSaid<(band==='hot'?9000:30000))return;
+    hiddenBand=band;hiddenSaid=now;
+    ui.showPill(band==='hot'?'GLÖDHET! EN GÖMD JULKLAPP ÄR HÄR NÄRA':'VARMT · EN GÖMD JULKLAPP I NÄRHETEN',2200,now,'bonus');
+  }
   // ── Varje bildruta ──────────────────────────────────────────────────────────────────────────────────────────────
   function update(p,now,dt){
     guard(()=>{
@@ -536,6 +652,7 @@ export function installXmas(ctx){
       // Tomtezombies från nivå 2: nästa patrull ligger aldrig längre fram än nivåns takt (grundspelets egen takt är 14 s i början).
       if(mode==='zombies'&&zLevel?.patrolEvery&&hunt.active){const zr=journey.rush;if(zr&&zr.state==='playing'){const cap=zr.spent+zLevel.patrolEvery;if(zr.nextPatrol>cap)zr.nextPatrol=cap;}}
       handle(now);
+      if(mode==='cozy'&&hunt.run&&hunt.run.kind==='free'&&hunt.active&&now-hiddenAt>900){hiddenAt=now;hiddenHint(p,now);}
       updateGuide(p,now,dt);
       view.update(p,now,dt);
       if(mode==='rush'&&julrush.active&&now-rushHudAt>60){rushHudAt=now;ui.setRush(julrush.snapshot(),julrush.powers(powerBuf),now);}
@@ -565,7 +682,7 @@ export function installXmas(ctx){
   loadBuildStamp().then(s=>{stamp=s;try{$('xmasBuild').textContent=buildDetail(s);const v=document.querySelectorAll('.game-version');v.forEach(x=>{x.textContent=s.version;});}catch{}});
   ui.renderStart(buildDetail(stamp));
   const api={
-    hunt,save,view,ui,sprites,handlers,decor,
+    hunt,save,meta,view,ui,sprites,handlers,decor,syncDoors,giveMeta,
     get active(){return mode==='rush'?julrush.active:hunt.active;},get cozy(){return mode==='cozy';},get zombieMode(){return mode==='zombies';},get zombieLevel(){return zLevel;},get rushMode(){return mode==='rush'&&julrush.active;},julrush,
     startSandgrund,missionDone,afterMission,startBoat,boatArrive,boatAbort,get missionMode(){return mode==='mission';},get boatMode(){return mode==='boat';},
     update,hudText,startRound,startZombies,startRush,openRush,openBoard,challengeGo,rushNext,rushAgain,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,
@@ -575,7 +692,7 @@ export function installXmas(ctx){
     objective:p=>{if(fault)return null;const o=mode==='rush'?julrush.objective(p):hunt.objective(p);return o&&o.kind==='xmas'?{...o,quiet:true}:o;},
     guide,guideUi,
     gov,
-    snapshot:()=>({mode,fault,gov:{level:gov.level,ema:+gov.ema.toFixed(1),on:gov.on},hunt:hunt.snapshot(),rush:julrush.snapshot(),guide:{on:guide.state.on,id:guide.state.id,label:guide.state.label,distance:guide.state.distance,angle:+guide.state.angle.toFixed(1),hint:guide.state.hint,straight:guide.state.straight,segs:guide.state.segCount,edgeL:guide.state.edgeL,edgeR:guide.state.edgeR,mission:guideUi.missionText},incoming:incoming?{name:incoming.profile.name,focus:incoming.focus,toBeat:incoming.toBeat}:null,pending:pending?{...pending}:null,view:view.snapshot(),decor:decor?decor.snapshot():null,build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone}}),
+    snapshot:()=>({mode,fault,gov:{level:gov.level,ema:+gov.ema.toFixed(1),on:gov.on},hunt:hunt.snapshot(),rush:julrush.snapshot(),guide:{on:guide.state.on,id:guide.state.id,label:guide.state.label,distance:guide.state.distance,angle:+guide.state.angle.toFixed(1),hint:guide.state.hint,straight:guide.state.straight,segs:guide.state.segCount,edgeL:guide.state.edgeL,edgeR:guide.state.edgeR,mission:guideUi.missionText},incoming:incoming?{name:incoming.profile.name,focus:incoming.focus,toBeat:incoming.toBeat}:null,pending:pending?{...pending}:null,view:view.snapshot(),decor:decor?decor.snapshot():null,build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone},meta:M(()=>{const m=meta.status();return {xp:m.xp,grade:m.level.n,tickets:m.tickets,orn:m.ornaments.owned,streak:m.streak.cur,hidden:m.hidden.found,missions:m.missionsDone};})}),
     onResultClosed:()=>{resultOpen=false;}
   };
   return api;

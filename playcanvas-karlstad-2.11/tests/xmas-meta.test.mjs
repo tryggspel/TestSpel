@@ -438,3 +438,15 @@ test('en hel säsong för en vanlig spelare ger rimliga siffror (grad, prydnader
   assert.ok(s.level.n>=8,'grad '+s.level.n);assert.ok(s.ornaments.owned>=18,'prydnader '+s.ornaments.owned);assert.ok(s.tickets>=10&&s.tickets<=120,'lotter '+s.tickets);
   assert.ok(m.state.tickets.every(t=>validTicket(t.c)));assert.equal(new Set(m.ticketCodes()).size,m.ticketCount);assert.ok(day>0);
 });
+
+// ── Första uppdraget är en genomgång ────────────────────────────────────────────────────────────────────────────────
+test('första uppdraget räknas inte mot dagens uppdrag (slutkortet blir inte överlastat) men ger XP, röd kula, lott, serie och mätare',()=>{
+  const m=meta();
+  const R=m.onRun(intro({packages:16,bonus:1,chain:9,seconds:60}),at(D(1)));
+  assert.deepEqual(R.missions,[],'inga uppdrag klaras av genomgången, trots 16 julklappar, kombo 9 och en minut');assert.equal(R.gift,null);
+  assert.equal(m.status(at(D(1))).missionsDone,0);assert.equal(m.state.days[D(1)].packages,0);assert.equal(m.state.days[D(1)].chain,0);assert.equal(m.state.days[D(1)].runs,0);
+  assert.equal(m.state.meter,17,'mätaren räknar ändå');assert.equal(m.ticketCount,1);assert.ok(m.state.orn[FIRST_ORNAMENT]);assert.equal(m.state.streak.cur,1);assert.ok(R.xp>=100);
+  const R2=m.onRun(hunt({packages:16,bonus:0}),at(D(1),13));
+  assert.ok(m.state.days[D(1)].packages===16&&m.state.days[D(1)].runs===1,'nästa jakt räknas');
+  const again=m.onRun(intro(),at(D(1),14));assert.equal(m.state.days[D(1)].runs,2,'att spela första uppdraget igen är en vanlig jakt');void R2;void again;
+});
