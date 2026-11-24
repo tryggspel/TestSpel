@@ -1,4 +1,4 @@
-# Julklappsjakten – speldesign inför lanseringen (2.21.1-xmas.11)
+# Julklappsjakten – speldesign inför lanseringen (2.21.1-xmas.12)
 
 Skrivet 2026-11-24 efter att användaren bett om "en logik till varför man spelar och inte slutar", ett rakt spel, ett pris (en julgran), fler gömda julklappar runt Karlstad och QR-koder som kan bytas mot kaffe eller rabatt.
 Det som står under **Byggt** finns i spelet och är provat (enhetstester och Chromium, se avsnitt 11). Det som står under **Förslag** är inte byggt. Siffrorna ligger i `xmas/xmas-meta-config.mjs`
@@ -6,6 +6,8 @@ och är modellerade med `tools/xmas-meta/sim.mjs`. **Ingen människa har spelat 
 
 Beslut från användaren som detta bygger på: bygget ligger på den nyaste linjen (xmas.9, med Julkalendern); **butiksuppdragen och uppdragen i staden finns kvar** (Cervera, Pressbyrån, Sandgrund, Julbåten);
 **Julkalendern behålls som den är** och får belöningar (ingen andra kalender); **anmälan till dragningen går via en server med molnlagring**.
+
+**Beslut 2026-11-24 (efter xmas.11):** publicera på `karlstad-julklappsjakten`; **granen köper arrangören själv** (ingen sponsor); datum och tid enligt förslaget; villkoren (utkastet) är ok; provomgången har **bara QR-koder för rabatt på julgran** och ändras senare; molnlagring får användas (även för en kvallista); **veckofinaler varje advent i Mitt i City**; lag om **kanske tre personer**.
 
 ## 0. Svar på frågorna
 
@@ -17,10 +19,10 @@ Beslut från användaren som detta bygger på: bygget ligger på den nyaste linj
 | Vilka spel från start? | Bara Julklappsjakten. Resten öppnas av **första uppdraget**, inte av en grad: Julkalenderns luckor kräver rush, zombies, butiker och platsuppdrag redan från dag 4, så ett grad-lås skulle spärra luckor. |
 | Tomtezombies? | Finns kvar som ett **bonusläge** (kuslig musik, nivåer som förut). Det syns först efter första uppdraget, ger XP, prydnader och räknas i serien. Dagens uppdrag kräver det bara av den som provat det (annars väljs inget zombie-uppdrag). |
 | Stadssamarbeten? | Butiksuppdragen och Sandgrund/Julbåten finns kvar (ditt beslut), men startvyn och slutkorten handlar om det raka spelet. Inga partner påstås: se `PARTNERPLATSER.md`. |
-| Vinna en julgran? | Ja: lotter som tjänas genom att spela, dragning mån 21 dec kl 18 (inställning). Anmälan går via server (avsnitt 6) och är **stängd tills du fyllt i sponsor, ansvarig och villkor**; lotterna räknas ändå från första dagen. |
+| Vinna en julgran? | Ja: lotter som tjänas genom att spela, dragning mån 21 dec kl 18 (inställning). Anmälan går via server (avsnitt 6) och är **stängd tills ansvarig och kontakt (personuppgiftsansvarig) är ifyllda** (ingen sponsor: arrangören köper granen); lotterna räknas ändå från första dagen. |
 | Fler gömda paket? | 20 **gömda julklappar** på kontrollerade platser (avsnitt 3.6), alla provade i Chromium. |
-| QR-koder, kaffe, rabatt? | Mekanismen är byggd och provad (avsnitt 7). Den är tom tills du har platser (QR) och erbjudanden (kuponger): spelet påstår inga samarbeten. |
-| Lansera? | Första advent är söndag 29 nov. Allt är klart att provas före dess; publicering sker först efter ditt uttryckliga ja (avsnitt 9). |
+| QR-koder, kaffe, rabatt? | Byggt, provat och **i produktion sedan 2026-11-24 som provomgång**: tolv affischkoder som ger en kupong, rabatt på julgran, utan belopp och utan butik (avsnitt 7). Spelet påstår inga samarbeten. |
+| Lansera? | Första advent är söndag 29 nov. **Publicerat i produktion 2026-11-24 (xmas.12)** efter ditt uttryckliga ja; läget står i avsnitt 9. |
 | Seriespel, 1 mot 1 live och lag? | Avsnitt 10 (förslag, inte byggt): solo först, kval, sedan live på storbildsskärm. |
 
 ## 1. Principer
@@ -125,7 +127,9 @@ Efter första uppdraget går FORTSÄTT till Julmenyn. Därefter är den stora kn
 
 ## 6. Priset: "Vinn en julgran"
 
-**Datum:** dragning måndag 21 december kl 18.00 och anmälan som stänger samma dag kl 12.00 är *mitt förslag* (så att granen hinner levereras före jul), inte ett beslut: ändra `drawDate`, `drawTime` och `entryCloses` i `PRIZE`.
+**Datum:** dragning måndag 21 december kl 18.00 och anmälan som stänger samma dag kl 12.00 (så att granen hinner levereras före jul) var mitt förslag och är **godkänt av dig 2026-11-24** ("kör vi på ditt förslag"); ändra `drawDate`, `drawTime` och `entryCloses` i `PRIZE`.
+
+**Sponsor:** ingen. Arrangören köper granen själv, så `PRIZE.sponsor` är tomt och ingen "skänkt av" visas.
 
 **Regler (utkast i `xmas/xmas-draw-text.mjs`):** gratis, ingen köpplikt; anmälan med namn och e-post eller telefon, bekräftelse att man är myndig eller har en målsmans tillåtelse, och samtycke; vinnaren dras slumpmässigt bland alla inskickade lottkoder;
 vinnaren kontrolleras före utlämning. **Jag är inte jurist:** kontrollera om utlottningen kräver tillstånd eller anmälan, åldersgränsen, hur länge uppgifter får sparas och den rättsliga grunden innan anmälan öppnas.
@@ -142,13 +146,13 @@ Ska det bli rättvist på riktigt behöver lotterna utfärdas av servern (kräve
 **Dragning:** `tools/xmas-draw/export.mjs` hämtar anmälningarna, `pick.mjs pool` bygger poolen och ger en kontrollsumma som du publicerar före dragningen, `pick.mjs draw --seed="…"` drar vinnare och reserver ur SHA-256 av
 seed, poolens kontrollsumma och en räknare, så att vem som helst kan räkna om det ur `offentligt-bevis.json` (lottkoder, inga kontaktuppgifter). En person kan bara vinna en gång. Efter dragningen: `export.mjs --delete --yes` (senast `PRIZE.keepUntil`).
 
-**Det du behöver göra för att öppna anmälan:**
-1. Fyll i `PRIZE` i `xmas/xmas-meta-config.mjs`: `sponsor` (om någon), `controller` (vem som är personuppgiftsansvarig), `contact`, datum/tid, `keepUntil`; sätt `ready:true`. Texten i `xmas-draw-text.mjs` fylls då automatiskt och ett test kräver att inga platshållare blir kvar.
-2. Läs och ändra villkoren och integritetstexten (utkast) och låt en jurist granska dem.
-3. Ett **privat Blob-lager** (Stockholm, `arn1`) kopplat till det Vercel-projekt som blir produktion, så att `BLOB_READ_WRITE_TOKEN` finns där. Det är inte skapat än (jag skapar det när du säger vilket projekt det gäller).
-4. Prova med en riktig testanmälan på förhandsadressen och radera den.
+**Det som återstår för att öppna anmälan:**
+1. **`controller` (vem som är personuppgiftsansvarig) och `contact` (hur man når hen) i `PRIZE`** i `xmas/xmas-meta-config.mjs` saknas: det är det enda som hindrar. Sätt därefter `ready:true`. Texten i `xmas-draw-text.mjs` fylls då automatiskt och ett test kräver att inga platshållare blir kvar. (Sponsor: ingen. Datum och tid: godkända. `keepUntil` 2027-01-31 står kvar: ändra om uppgifterna ska sparas kortare.)
+2. Villkoren och integritetstexten (utkast) är godkända av dig som text. Jag är inte jurist: bestäm om en jurist ska granska dem innan anmälan öppnas.
+3. **Klart 2026-11-24:** det privata Blob-lagret `julklappsjakten-dragning` (`store_cEFxaYRRl7UtWRV8`, privat, `arn1`/Stockholm) är kopplat till `karlstad-julklappsjakten`, så `BLOB_READ_WRITE_TOKEN` finns i Production, Preview och Development. Funktionen körs också i `arn1` (`vercel.json`), så att namn och kontakt inte passerar USA. Vercel flaggar variabeln som `readable-secret` (typen "encrypted": teammedlemmar kan läsa den i dashboarden); den ger läs- och skrivrätt till lagret, så markera den gärna som *Sensitive* i Vercel.
+4. Prova med en riktig testanmälan när formuläret öppnats och radera den (`tools/xmas-draw/export.mjs --delete`). **En POST mot det riktiga lagret är inte provad än** (anmälan är stängd, så inget har skrivits).
 
-## 7. Kuponger och QR-koder (byggt, tomt tills du har innehåll)
+## 7. Kuponger och QR-koder (byggt; provomgång med julgransrabatt i produktion)
 
 **Hemligt paket (QR i verkligheten):** en affisch med en QR-kod öppnar spelet på `?paket=KOD`. Koden löses in första gången menyn öppnas och ger XP, en sällsynt prydnad eller bättre, ev. en lott och ev. en kupong, **en gång per enhet**.
 Koderna står bara som SHA-256-kontrollsummor i `QR_CODES` (aldrig i klartext i bygget). `node tools/xmas-qr/make.mjs koder --base=https://din-adress --labels="Affisch Torget,…"` skapar koderna (12 tecken, ca 60 bitar), `qr-config.txt` att klistra in,
@@ -156,7 +160,9 @@ Koderna står bara som SHA-256-kontrollsummor i `QR_CODES` (aldrig i klartext i 
 
 **Kuponger (kaffe, rabatt):** ett erbjudande är data i `COUPONS`: `{id, title, partner, text, terms, validTo, pin}`. Spelaren får kupongen som belöning (en QR-kod, en lucka, en grad) och ser den under Gömda julklappar. **Inlösen utan server:** spelaren visar kupongen,
 personalen anger en **PIN** i spelarens telefon (`node tools/xmas-qr/make.mjs pin <id> <pin>` ger kontrollsumman), och kupongen blir inlöst och går inte att använda igen på enheten. Det duger för små belopp; man kan få en ny genom att rensa webbläsarens lagring.
-Inga kuponger visas förrän du anger riktiga erbjudanden: **spelet påstår inga samarbeten**.
+**Provomgången (xmas.12, 2026-11-24):** tolv koder som alla ger samma kupong, **RABATT PÅ JULGRAN** (en per enhet), 30 XP och en sällsynt prydnad eller bättre, ingen lott. Kupongen anger inget belopp och ingen butik ("Visa kupongen när du köper din julgran och be om julgransrabatten."); den gäller t.o.m. 2026-12-24 och löses in med personalens PIN. **Det som är ditt att bestämma innan affischerna sätts upp:** vem som ger rabatten och hur stor den är, villkoren, var affischerna hänger och vem som får veta PIN-koden. Texten ändras i `COUPONS` (den slås upp vid visning, så den gäller också kuponger som redan delats ut) och kräver en ny publicering. Fler koder eller andra kuponger: `make.mjs koder … --coupon=<id> --lead="…"` och `make.mjs pin <id> <pin>`, klistra in raderna och publicera.
+
+**Kupongen syns direkt:** som en egen rad överst på menyn (även för en helt ny spelare som kommer från en affisch, innan första uppdraget), som "NY KUPONG" i raden för hemligt paket och överst under Gömda julklappar. **Koderna i klartext och PIN-koden finns bara hos den som skapade dem** (`qr-out/`, ignorerad av git): förloras de går de inte att återskapa, bara ersätta med nya koder. Spelet påstår inga samarbeten: `partner` är tomt tills en butik står bakom kupongen.
 
 ## 8. Mätning och intäkter
 
@@ -168,13 +174,15 @@ Inga kuponger visas förrän du anger riktiga erbjudanden: **spelet påstår ing
 
 | Steg | Status |
 |---|---|
-| Framstegen, gömda julklappar, hemliga paket, kuponger, anmälan (stängd) | Byggt i xmas.11, provat (avsnitt 11) |
+| Framstegen, gömda julklappar, hemliga paket, kuponger, anmälan (stängd) | Byggt i xmas.11 och xmas.12, provat (avsnitt 11) |
 | Förhandsvisning på Vercel (`karlstad-julklappsjakten`, bakom inloggning) | Följer grenen `claude/stoic-tesla-59znyc` |
-| **Beslut: vilken adress blir produktion?** | `karlstad-julklappsjakten.vercel.app` (idag xmas.6) eller `karlstad-julkalender.vercel.app` (idag xmas.9, med kalendern på `/julkalender/`) |
-| Provning på riktig telefon (iPhone 11, Safari) | **Inte gjort** |
-| Produktionsdeploy | **Först efter ditt uttryckliga ja** |
-| Anmälan till dragningen | Efter punkterna i avsnitt 6 |
-| QR-affischer | När du har platser och adressen är beslutad |
+| Vilken adress är produktion? | **`karlstad-julklappsjakten.vercel.app`** (beslut 2026-11-24). `karlstad-julkalender.vercel.app` (xmas.9) är orörd |
+| Provning på riktig telefon (iPhone 11, Safari), också en skanning av en utskriven affisch | **Inte gjort** |
+| Produktionsdeploy | **Klar 2026-11-24:** xmas.12, `dpl_GwetMc96ce8WiUChZy3nZHwMjC6K` (commit `8f83646`), efter ditt uttryckliga ja. Återställning: `dpl_6S6JKaht5z2TWkMwButiEkn5FVmW` (xmas.6) |
+| Produktionsadressen öppnas utan Vercel-inloggning | **Inte kontrollerat** (byggmiljön når inte `*.vercel.app`): öppna den i ett privat fönster före utskrift |
+| Privat lager och anmälningsfunktion i Stockholm | Klart 2026-11-24 (avsnitt 6) |
+| Anmälan till dragningen | **Stängd** tills `controller` och `contact` är ifyllda (avsnitt 6) |
+| QR-affischer | Tolv affischer klara som PDF (A4), **inte uppsatta**. Rabattens belopp, säljare och villkor är inte bestämda |
 
 Rollback: förra produktionsdeployen ligger kvar och kan sättas tillbaka (`request_rollback`); en lott eller prydnad en spelare fått tas aldrig bort av en uppdatering (egen sparnyckel med version).
 
@@ -200,15 +208,18 @@ Tekniskt för live: en storbildssida (`/live/`) som visar ställningen, en liten
 **Beslut jag behöver från dig innan jag bygger det:** (1) får molnlagring användas även för en kvallista med smeknamn? (2) vad är "Karlstads största julklapp": priset, eller en särskild bana (till exempel en jätteklapp vid mål)? (3) var och när hålls finalerna och vilken utrustning finns där (dator, skärm, telefoner, nät)? (4) lagstorlek (2–5?) och
 om lagen ska spela stafett eller summera sina kvalpoäng?
 
+**Svar 2026-11-24:** (1) ja, molnlagring får användas; (3) **veckofinaler varje advent i Mitt i City** (29 nov, 6, 13 och 20 dec); (4) lag om **kanske tre personer**. **Mitt förslag:** den första finalen kan inte vara 29 nov. Kvallistan och en fast bana är inte byggda, och en final fem dagar efter publiceringen skulle spelas utan kvalspel. Den första realistiska finalen är **söndag 6 dec**, och bara om kvallistan öppnar senast omkring 30 nov; annars 13 dec. Kvar att besluta: (2) vad "Karlstads största julklapp" är, (3) utrustning och nät i Mitt i City, (4) om lag om tre spelar stafett eller summerar kvalpoäng. **Inget av seriespelet är byggt.**
+
 ## 11. Vad som är provat och vad som inte är det
 
 **Provat (kan upprepas):**
-- `node --test tests/*.mjs`: 700 av 700 tester, bland dem `xmas-meta` (belöningar en gång, serie, frysdagar, tak, advent, luckor, gömda, koder, kuponger, sparskydd), `xmas-draw` (formulär, server, lagring med ETag, spärr), `xmas-draw-pick` (poolen och att dragningen går att räkna om och är rättvis), `xmas-hidden` (paketmotorn).
+- `node --test tests/*.mjs`: 710 av 710 tester (CI grön på xmas.12), bland dem `xmas-meta` (belöningar en gång, serie, frysdagar, tak, advent, luckor, gömda, koder, kuponger, sparskydd), `xmas-draw` (formulär, server, lagring med ETag, spärr), `xmas-draw-pick` (poolen och att dragningen går att räkna om och är rättvis), `xmas-hidden` (paketmotorn).
 - `node tools/xmas-flow/meta.mjs` (Chromium, mjukvarurenderad grafik): första start → första uppdraget → slutkort → Julmeny → julgran, lotter, gömda julklappar → alla 20 platser plockas → hemligt paket och kupong med PIN → klara luckor en senare dag (klockan flyttad) → anmälan mot en låtsasserver → liggande telefon (896×414).
-- QR-bilderna avkodas av en oberoende läsare; SHA-256 mot Nodes egen för 200+ strängar.
+- QR-bilderna avkodas av en oberoende läsare (jsQR; de tolv på affischbladet: 12 av 12 ger exakt adressen); SHA-256 mot Nodes egen för 200+ strängar.
+- De **tolv riktiga affischkoderna och den riktiga PIN:en** i Chromium mot bygget på disk: ny spelare som skannar (adressen städas, raden nämner rabatten, kupongraden syns, stora knappen syns utan att rulla på 414×896, 375×667 och 896×414), fel och rätt PIN, en andra affisch på samma enhet (XP men ingen andra kupong), samma affisch igen ("redan hämtat"), alla tolv på var sin ny enhet, en felskriven kod, och ingen kod i klartext i det som levereras.
 - `node tools/xmas-meta/sim.mjs`: takten för tre sorters spelare (nedan).
 
-**Inte provat:** en riktig telefon (iPhone 11/Safari), en människas upplevelse (läsbarhet, tempo, om första uppdraget hittas), anmälan mot den **riktiga** lagringen (lagret finns inte än; servern är provad mot en låtsaslagring med samma gränssnitt),
+**Inte provat:** en riktig telefon (iPhone 11/Safari), en människas upplevelse (läsbarhet, tempo, om första uppdraget hittas), anmälan mot den **riktiga** lagringen (lagret finns sedan 2026-11-24 men anmälan är stängd, så ingen skrivning har gjorts; servern är provad mot en låtsaslagring med samma gränssnitt), en skanning av en **utskriven** affisch med en riktig telefon, att produktionsadressen öppnas utan Vercel-inloggning,
 en POST mot funktionen på Vercel (förhandsadressen är bakom inloggning och verktyget kan bara göra GET; en GET mot `/api/xmas-draw` svarade däremot `405 POST only` från funktionen själv, vilket visar att filerna bundlades och att `@vercel/blob` installerades: 31 paket, ingen felrad i bygget), många datum i Julkalendern i webbläsaren (provat: 4 dec).
 
 **Takten, modellerad** (`tools/xmas-meta/sim.mjs`, 400 spelare per sort, median och 10–90 %; ingen har spelat så här):
@@ -228,4 +239,6 @@ Lotterna skiljer sig 15 gånger mellan tillfällig och ivrig. Vill du jämna ut 
 - **Fusk med lotter:** se avsnitt 6. Kontrollera vinnaren.
 - **Tre stegar** (julpoäng-titel, grad, kalenderns stjärnor): kan förvirra; se 3.1.
 - **Okänd takt:** XP, odds och lotter är modellerade; justera i konfigurationen efter de första dagarna.
+- **Koder och PIN finns bara hos dig:** koderna i klartext (`koder.csv`) och personalens PIN (`kupong-pin.txt`) skickades till dig och finns inte i repot (där ligger bara kontrollsummor). Spara dem: förloras de går affischerna inte att återskapa.
+- **Kupongen utan belopp och butik:** den som skannar får en kupong som säger "be om julgransrabatten". Tills ni bestämt vem som ger den och hur stor den är kan personalen inte veta vad de ska göra: bestäm det före utskrift.
 - **Kalendern och spelet delar adress:** belöningarna läser kalenderns baslinje. Rensar spelaren webbläsarens lagring försvinner både framstegen och kalenderns läge.
