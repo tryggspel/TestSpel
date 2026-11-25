@@ -675,4 +675,4 @@ Versionsnyckeln är `2.21.1-xmas.15` (89 filer, `tools/set-version.mjs`).
 
 **Publicerat 2026-11-25 efter användarens ja:** `dpl_Bb8jCW9P5At18CurGfvNT5hdAM3B` (`target: production`, omdeploy av förhandsvisningen `dpl_2Tmzv8tg8FEZQdXcKfxeo2RAKjnn`, commit `c4035e6`, READY efter ca 12 s, tilldelad `karlstad-julklappsjakten.vercel.app`, `aliasError: null`).
 Efter: produktionsadressens `/api/build-info` visar `environment: production` och commit `c4035e6`; `version.json` visar `2.21.1-xmas.15`.
-**Återställning:** xmas.14 `dpl_6v9ysM8vdZ1v4c3ZjYkatSmVAq96` (Vercel → Deployments → Instant Rollback). xmas.14 läser Platsjaktens nya sparning (listor per dag och `recent`) som okänd och tar bort den nästa gång den sparar; rekordtiderna blir kvar.
+**Återställning:** xmas.14 `dpl_6v9ysM8vdZ1v4c3ZjYkatSmVAq96` (Vercel → Deployments → Instant Rollback). xmas.14 gör om dagens lista över platser med paket till en textrad och tappar `recent` nästa gång den sparar (då kan dagens paket ges igen); rekordtiderna blir kvar.
