@@ -651,4 +651,6 @@ Under arbetet hittade flödena två riktiga fel som är rättade: lokalen låg d
 Skärmbilder (1280×720 och 414×896) av Rådhuset, Domkyrkans torn från väster, från Kungsgatan och från torget, och Fredsmonumentet.
 
 **Inte provat:** bildfrekvensen på en riktig telefon i O'Learys-lokalen och med de nya byggnaderna; om fingerdragen i O'Learys-spelen känns rätt på en riktig skärm; om karlstadsbor känner igen Rådhuset, spiran och torget; CI på GitHub.
-**Produktionen är oförändrad (xmas.13)**: xmas.14 publiceras först efter ett nytt uttryckligt ja.
+**Publicerat 2026-11-25 efter användarens ja:** `dpl_6v9ysM8vdZ1v4c3ZjYkatSmVAq96` (`target: production`, en omdeploy av förhandsvisningen `dpl_BF32cMy3RBWMez5PApt8py18Pecy`, commit `201f232`, READY efter ca 12 s, tilldelad `karlstad-julklappsjakten.vercel.app`, `aliasError: null`).
+Före publiceringen: förhandsvisningens `/api/build-info` visade `201f232` och `xmas/olearys-data.mjs?v=2.21.1-xmas.14` levererades. Efter: produktionsadressens `/api/build-info` visar `environment: production`, commit `201f232`, deployment `dpl_6v9ysM…`.
+**Återställning:** xmas.13 `dpl_5sAp5oXKvsSTK5oJq3cJzdTN4QfH` (Vercel → Deployments → Instant Rollback). xmas.13 känner inte till Platsjaktens rekord och tar bort dem ur spelarens framsteg nästa gång den sparar; O'Learys-resultaten ligger i en egen nyckel och blir kvar.
