@@ -251,9 +251,8 @@ await ev(()=>window.KarlstadDebug.journey().xmas.startZombies());await wait(2600
 const zs=await ev(()=>({mode:window.KarlstadDebug.journey().xmas.snapshot().mode,peaceful:window.KarlstadDebug.journey().rush.peaceful,vit:!document.querySelector('.xh-vitals').hidden,music:window.KarlstadMusic.snapshot().xmas.mode}));
 check('F1 Tomtezombies startar i zombieläge med liv och kuslig musik',zs.mode==='zombies'&&!zs.peaceful&&zs.vit&&zs.music==='eerie',JSON.stringify(zs));
 check('F1b grundspelets resultatkort från Cervera ligger inte kvar över Tomtezombies',await ev(()=>document.getElementById('placeResult').hidden));
-await ev(()=>{const j=window.KarlstadDebug.journey();const p=window.__pos();for(const [i,k] of ['walker','runner','tank','golden'].entries()){const a=j.actors.find(a=>!a.active);j.spawn(a,{x:p[0]-4.5+i*3,z:p[1]-9},k);}});
-// Direkt efter att de skapats: de jagar spelaren och Stress-Nisse är snabb, så en stund senare kan en redan ha nått fram och försvunnit.
-const names=await ev(()=>window.KarlstadDebug.journey().actors.filter(a=>a.active).map(a=>a.name));
+// Namnen läses i samma anrop som de skapas: de jagar spelaren och Stress-Nisse är snabb, så redan nästa bildruta kan en ha nått fram och försvunnit.
+const names=await ev(()=>{const j=window.KarlstadDebug.journey();const p=window.__pos();for(const [i,k] of ['walker','runner','tank','golden'].entries()){const a=j.actors.find(a=>!a.active);j.spawn(a,{x:p[0]-4.5+i*3,z:p[1]-9},k);}return j.actors.filter(a=>a.active).map(a=>a.name);});
 check('F2 de fyra tomtezombierna finns (Paket-Pelle, Stress-Nisse, Gröt-Gunnar, Guld-Nisse)',['Paket-Pelle','Stress-Nisse','Gröt-Gunnar','Guld-Nisse'].every(nm=>names.includes(nm)),names.join(','));
 await wait(1200);await shot('20-tomtezombies');
 const act=await ev(()=>window.KarlstadDebug.journey().actors.filter(a=>a.active).length);
