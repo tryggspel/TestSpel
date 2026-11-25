@@ -147,3 +147,14 @@ test('menyn och spelet: knapparna finns och huvudspåret är överst', ()=>{
   assert.match(intro,/id="xmasTermos" class="round-primary xmas-primary/);
   assert.match(boot,/isDailyId\(e\.id\)/);assert.match(boot,/syncDonations/);
 });
+
+test('djuplänkar: ?uppdrag=termosjakten och ?uppdrag=dagens (för affischer och kalendern) startar inget av sig själva och kräver inte första uppdraget', async ()=>{
+  const {parseLink,describeLink}=await import('../xmas/xmas-deeplink.mjs');
+  const save=new XmasSave(mem());
+  for(const [key,fn] of [['termosjakten','termos'],['dagens','daily']]){
+    const l=parseLink('?uppdrag='+key);assert.ok(l.known,key);
+    const d=describeLink(key,{save});assert.equal(d.direct,false);assert.equal(d.startable,true);assert.equal(d.go.fn,fn);assert.ok(d.title&&d.line&&d.button);
+  }
+  const boot=fs.readFileSync(new URL('../xmas/xmas-boot.js',import.meta.url),'utf8');
+  assert.match(boot,/case 'termos':startRush\(0,null,'termos'\)/);assert.match(boot,/case 'daily':startDaily\(\)/);
+});

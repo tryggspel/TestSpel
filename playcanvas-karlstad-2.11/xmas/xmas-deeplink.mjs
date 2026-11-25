@@ -22,11 +22,12 @@ export const DOORS_MAX=24;
 //   cervera, pressbyran                         butiksutmaningarna (Karlstadpasset öppnas, man trycker GÅ DIT)
 //   sandgrund, batbuss                          Julvernissagen och Julbåten
 //   maraton                                     JulRushen: Maraton
+//   termosjakten, dagens                        huvudspåret Termosjakten och dagens julklappsjakt (xmas.13); inget av dem kräver första uppdraget
 //   rush, topplista, meny                       rushmenyn, topplistan och Julmenyn (öppnas direkt, inget kort)
 const ROUND_KEYS=Object.freeze({torget:'round-torget',kungsgatan:'round-kungsgatan',drottninggatan:'round-drottninggatan'});
 const SHOP_KEYS=Object.freeze({cervera:XMAS_CERVERA,pressbyran:XMAS_PRESSBYRAN});
 const DIRECT_KEYS=Object.freeze(['rush','topplista','meny']);
-const FIXED_KEYS=Object.freeze(['intro',...Object.keys(ROUND_KEYS),...Object.keys(SHOP_KEYS),'sandgrund','batbuss','maraton',...DIRECT_KEYS]);
+const FIXED_KEYS=Object.freeze(['intro',...Object.keys(ROUND_KEYS),...Object.keys(SHOP_KEYS),'sandgrund','batbuss','maraton','termosjakten','dagens',...DIRECT_KEYS]);
 export const LINK_KEYS=FIXED_KEYS;
 
 const KEY_RE=/^[a-z]{3,14}[0-9]{0,2}$/;
@@ -57,7 +58,7 @@ export function linkUrl(base,key,door=0){
 // Vad kortet visar och vad knappen gör. save = XmasSave. Resultat:
 //   {key,door,kicker,direct,startable,go,instead,title,line,note,button,gives}
 //   direct   true = ingen bekräftelse, panelen öppnas direkt (rushmenyn, topplistan, Julmenyn)
-//   go       {fn,arg}: vad STARTA gör. fn: intro | round | shops | sandgrund | boat | rush | marathon | zombies | rushmenu | board | continue | menu
+//   go       {fn,arg}: vad STARTA gör. fn: intro | round | shops | sandgrund | boat | rush | marathon | termos | daily | zombies | rushmenu | board | continue | menu
 //   startable false = något saknas (låst eller första uppdraget ej klart): knappen gör `instead` i stället och noten säger varför
 //   gives    vad uppdraget ger, för kalenderns test: {stamp} | {rush:n(,stamp)} | {zombies:n} | {marathon:true}
 export function describeLink(key,{save,door=0}={}){
@@ -83,6 +84,8 @@ export function describeLink(key,{save,door=0}={}){
   }
   if(key==='sandgrund')return needIntro({go:{fn:'sandgrund',arg:null},title:SANDGRUND.menu,line:sandgrundNote(false),note:stamped(SANDGRUND.id,'Julvernissagen är redan stämplad. Spela om den för '+SANDGRUND.points.again+' julpoäng till.'),gives:{stamp:SANDGRUND.id}});
   if(key==='batbuss')return needIntro({go:{fn:'boat',arg:null},title:BOAT.menu,line:boatNote(false),note:stamped(BOAT.id,'Julbåten är redan stämplad. Åk igen för fler julpoäng.'),gives:{stamp:BOAT.id}});
+  if(key==='termosjakten')return card({go:{fn:'termos',arg:null},title:'TERMOSJAKTEN',button:'STARTA TERMOSJAKTEN',line:'TempoRush med julens termosar. Följ pilen och den gröna strålen och hinn fram före klockan. Tempot stiger var 12:e sekund. Spela hur många rundor du vill.',gives:{termos:true}});
+  if(key==='dagens')return card({go:{fn:'daily',arg:null},title:'DAGENS JULKLAPPSJAKT',button:'BÖRJA LETA',line:'En ny julklapp är gömd i Karlstad i dag. Du får en gåta vid tomtens stuga på Torget, och det blir varmare när du närmar dig.',gives:{daily:true}});
   if(key==='maraton')return card({go:{fn:'marathon',arg:null},title:'JULRUSHEN · MARATON',line:'Tempot stiger var 12:e sekund och klockan blir trängre. Tre hjärtan hela vägen. Följ pilen och den gröna strålen.',gives:{marathon:true}});
   if(base==='rush'){
     const def=rushDef(n),open=isUnlocked(save.rush,n),k=nextRush(save.rush),title='RUSH '+n+' · '+def.name;

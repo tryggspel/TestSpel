@@ -31,7 +31,7 @@ import {hiddenPackages,nearestHidden,warmth,hiddenSpot} from './xmas-hidden.mjs?
 import {TERMOS,goalFor as termosGoalFor} from './xmas-termos.mjs?v=2.21.1-xmas.13';
 import {DAILY} from './xmas-daily-config.mjs?v=2.21.1-xmas.13';
 import {dailyFor,isDailyId,dailyWarmth,hintLevel} from './xmas-daily.mjs?v=2.21.1-xmas.13';
-import {COTTAGE} from './xmas-market-data.mjs?v=2.21.1-xmas.13';
+import {COTTAGE,BOOTH} from './xmas-market-data.mjs?v=2.21.1-xmas.13';
 import {DOORS} from '../julkalender/doors.mjs?v=2.21.1-xmas.13';
 import {GAME_SAVE_KEY,STORAGE_KEY as CALENDAR_KEY,readGame,evaluate,hasAutoCheck,metricsOf} from '../julkalender/rules.mjs?v=2.21.1-xmas.13';
 
@@ -497,6 +497,13 @@ export function installXmas(ctx){
     d.band=band;d.said=now;
     ui.showPill(band==='hot'?'GLÖDHET! DAGENS JULKLAPP ÄR HÄR NÄRA':'VARMT · DAGENS JULKLAPP ÄR I NÄRHETEN',2200,now,'bonus');
   }
+  // Insamlingsbåset på Torget: går man fram till det i fri julvandring berättar det hur många termosar man samlat i Termosjakten (en gång per besök, inte oftare än varannan minut).
+  let boothSaid=-1e9;
+  function boothHint(p,now){
+    if(Math.hypot(p.x-BOOTH.x,p.z-BOOTH.z)>BOOTH.w/2+3.5||now-boothSaid<120000)return;
+    boothSaid=now;const n=save.termos?.total||0;
+    fanfare('INSAMLINGEN',n?'Du har plockat '+n.toLocaleString('sv-SE')+(n===1?' termos':' termosar')+' i Termosjakten. Varje termos räknas på räkneverket här.':'Varje termos du plockar i Termosjakten räknas på räkneverket här. Spela en runda från Julmenyn!',3.2,'energy');
+  }
   function dailyFoundAt(e,now){
     const def=dailyFor(todayKey());if(!def)return;
     const R=M(()=>meta.onDaily(def.reward));
@@ -538,6 +545,8 @@ export function installXmas(ctx){
       case 'boat':startBoat();return true;
       case 'rush':startRush(go.arg);return true;
       case 'marathon':startRush(0);return true;
+      case 'termos':startRush(0,null,'termos');return true;
+      case 'daily':startDaily();return true;
       case 'zombies':startZombies(go.arg);return true;
       case 'rushmenu':openRush();return true;
       case 'board':openBoard(0);return true;
@@ -732,7 +741,7 @@ export function installXmas(ctx){
       // Tomtezombies från nivå 2: nästa patrull ligger aldrig längre fram än nivåns takt (grundspelets egen takt är 14 s i början).
       if(mode==='zombies'&&zLevel?.patrolEvery&&hunt.active){const zr=journey.rush;if(zr&&zr.state==='playing'){const cap=zr.spent+zLevel.patrolEvery;if(zr.nextPatrol>cap)zr.nextPatrol=cap;}}
       handle(now);
-      if(mode==='cozy'&&hunt.run&&hunt.run.kind==='free'&&hunt.active&&now-hiddenAt>900){hiddenAt=now;hiddenHint(p,now);dailyHint(p,now);}
+      if(mode==='cozy'&&hunt.run&&hunt.run.kind==='free'&&hunt.active&&now-hiddenAt>900){hiddenAt=now;hiddenHint(p,now);dailyHint(p,now);boothHint(p,now);}
       updateGuide(p,now,dt);
       view.update(p,now,dt);
       if(mode==='rush'&&julrush.active&&now-rushHudAt>60){rushHudAt=now;ui.setRush(julrush.snapshot(),julrush.powers(powerBuf),now);}

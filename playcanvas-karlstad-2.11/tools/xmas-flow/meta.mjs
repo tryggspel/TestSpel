@@ -162,7 +162,9 @@ await scenario('2 · julmenyn, julgranen, lotter och gömda julklappar (spelare 
   // fri julvandring med de gömda julklapparna
   await g.click('xmasSecretsFree');await g.wait(1500);
   const free=await g.ev(()=>{const x=window.KarlstadDebug.journey().xmas,r=x.hunt.run;return {mode:x.snapshot().mode,kind:r.kind,hidden:r.packages.filter(p=>p.hidden).length,total:r.regularTotal,bonusTotal:r.bonusTotal,ids:r.packages.filter(p=>p.hidden).map(p=>p.id)};});
-  check('2k fri julvandring lägger ut de tjugo gömda julklapparna utan att röra paketräknarna',free.mode==='cozy'&&free.kind==='free'&&free.hidden===20&&free.total===0&&free.bonusTotal===0,JSON.stringify({m:free.mode,k:free.kind,h:free.hidden,t:free.total}));
+  // xmas.13: dagens julklapp (xmas-daily.mjs, id d:YYYY-MM-DD) ligger också gömd i fri julvandring tills den är hittad
+  const gomda=free.ids.filter(id=>id.startsWith('h:')).length,dagens=free.ids.filter(id=>id.startsWith('d:')).length;
+  check('2k fri julvandring lägger ut de tjugo gömda julklapparna (och dagens julklapp) utan att röra paketräknarna',free.mode==='cozy'&&free.kind==='free'&&gomda===20&&dagens===1&&free.hidden===21&&free.total===0&&free.bonusTotal===0,JSON.stringify({m:free.mode,k:free.kind,h:free.hidden,gomda,dagens,t:free.total}));
   // nära en gömd julklapp (30 m): ljusstrålen syns och raden säger glödhet
   {const s0=HIDDEN_SPOTS[0];await g.tp(s0.x+30,s0.z,1700);
    const near=await g.ev(()=>{const x=window.KarlstadDebug.journey().xmas,v=x.view.snapshot();return {beams:v.beams,shown:v.shown,pill:document.getElementById('xmasPill').textContent,on:document.getElementById('xmasPill').classList.contains('on')};});
@@ -282,9 +284,9 @@ await scenario('7 · liten stående telefon (375×667): stora knappen syns direk
   await ctx.addInitScript(seed=>{if(!localStorage.getItem('__seeded')){localStorage.setItem('__seeded','1');for(const [k,v] of Object.entries(seed))localStorage.setItem(k,JSON.stringify(v));}},SEED_DONE);
   const page=await ctx.newPage();await page.route(/cdn\.jsdelivr\.net\/npm\/playcanvas/,r=>r.fulfill({contentType:'text/javascript',body:pcSource}));
   await page.goto(ORIGIN+'/?debug');await page.waitForFunction(()=>{const l=document.getElementById('loading');return l&&l.classList.contains('hide')&&getComputedStyle(l).opacity==='0';},null,{timeout:180000});await page.waitForTimeout(900);
-  const R=await page.evaluate(()=>{const b=document.getElementById('xmasCozy').getBoundingClientRect(),n=document.getElementById('xmasNewsStart'),c=document.getElementById('round-xmas-intro');return {ctaTop:Math.round(b.top),ctaBottom:Math.round(b.bottom),vh:innerHeight,news:!n.hidden,noX:c.scrollWidth<=c.clientWidth+1};});
+  const R=await page.evaluate(()=>{const b=document.getElementById('xmasTermos').getBoundingClientRect(),n=document.getElementById('xmasNewsStart'),c=document.getElementById('round-xmas-intro');return {ctaTop:Math.round(b.top),ctaBottom:Math.round(b.bottom),vh:innerHeight,news:!n.hidden,noX:c.scrollWidth<=c.clientWidth+1};});
   if(SHOTS){fs.mkdirSync(SHOTS,{recursive:true});await page.screenshot({path:path.join(SHOTS,'7a-liten-telefon.png')});}
-  check('7a 375×667 med en nyhetsrad: stora knappen JULKLAPPSJAKTEN syns utan att rulla och inget rinner ut',R.news&&R.ctaBottom<=R.vh&&R.noX,JSON.stringify(R));
+  check('7a 375×667 med en nyhetsrad: stora knappen TERMOSJAKTEN (huvudspåret sedan xmas.13) syns utan att rulla och inget rinner ut',R.news&&R.ctaBottom<=R.vh&&R.noX,JSON.stringify(R));
   await ctx.close();
 });
 
@@ -339,9 +341,9 @@ await scenario('5 · liggande telefon (896×414): remsan och granen ryms och kna
   await page.goto(ORIGIN+'/?debug');await page.waitForFunction(()=>{const l=document.getElementById('loading');return l&&l.classList.contains('hide')&&getComputedStyle(l).opacity==='0';},null,{timeout:180000});await page.waitForTimeout(900);
   const L=await page.evaluate(()=>{
     const out={};
-    {const e=document.getElementById('round-xmas-intro'),b=document.getElementById('xmasCozy').getBoundingClientRect();out['round-xmas-intro']={noX:e.scrollWidth<=e.clientWidth+1,h:Math.round(e.getBoundingClientRect().height),vh:innerHeight,ctaBottom:Math.round(b.bottom)};}
+    {const e=document.getElementById('round-xmas-intro'),b=document.getElementById('xmasTermos').getBoundingClientRect();out['round-xmas-intro']={noX:e.scrollWidth<=e.clientWidth+1,h:Math.round(e.getBoundingClientRect().height),vh:innerHeight,ctaBottom:Math.round(b.bottom)};}
     window.KarlstadDebug.journey().xmas.openContinue();
-    {const e=document.getElementById('round-xmas-continue'),b=document.getElementById('xmasRound').getBoundingClientRect();out['round-xmas-continue']={noX:e.scrollWidth<=e.clientWidth+1,h:Math.round(e.getBoundingClientRect().height),vh:innerHeight,ctaBottom:Math.round(b.bottom)};}
+    {const e=document.getElementById('round-xmas-continue'),b=document.getElementById('xmasTermosGo').getBoundingClientRect();out['round-xmas-continue']={noX:e.scrollWidth<=e.clientWidth+1,h:Math.round(e.getBoundingClientRect().height),vh:innerHeight,ctaBottom:Math.round(b.bottom)};}
     document.querySelector('#xmasStripContinue .xs-btn').click();
     return out;
   });

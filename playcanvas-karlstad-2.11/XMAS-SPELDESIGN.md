@@ -113,12 +113,14 @@ adventssöndagarna (2 vardera), var femte gömd julklapp och hemliga paket. Hög
 
 | Läge | Öppnas | Anmärkning |
 |---|---|---|
+| **Termosjakten** (huvudspåret, xmas.13) | Från start, överst | TempoRush med julens termosar, obegränsat antal rundor, dagsmål, rekord och insamlingen (avsnitt 13) |
+| **Dagens julklappsjakt** (xmas.13) | Från start | En ny julklapp gömd i Karlstad varje dag, belöning en gång per dag (avsnitt 13) |
 | Första uppdraget (Stora Torget) | Från start | Guidat, en genomgång: ger XP, röd kula, första lotten, serie |
 | Julklappsjakt (Torget, Kungsgatan, Drottninggatan), fri julvandring, gömda julklappar | Efter första uppdraget | Nästa runda väljs av spelet |
 | JulRushen och Maraton, Tomtezombies, butiksuppdrag, Sandgrund, Julbåten | Efter första uppdraget | Som förut. Inget låses av graden |
 | Julkalendern (länk), lotter, julgran | Från start (kalendern öppnar 1 dec) | |
 
-Startvyn är **den stora knappen först**, sedan remsan (grad, dagens uppdrag, serie, lotter, prydnader, tre knappar). Bakåtlänken till grundspelet är kvar som en liten länk.
+Startvyn är **den stora knappen först** (sedan xmas.13: TERMOSJAKTEN, därefter DAGENS JULKLAPPSJAKT och Julklappsjakten), sedan remsan (grad, dagens uppdrag, serie, lotter, prydnader, tre knappar). Bakåtlänken till grundspelet är kvar som en liten länk.
 
 ## 5. Efter varje jakt (slutkortet)
 
@@ -246,3 +248,18 @@ Lotterna skiljer sig 15 gånger mellan tillfällig och ivrig. Vill du jämna ut 
 - **Koder och PIN finns bara hos dig:** koderna i klartext (`koder.csv`) och personalens PIN (`kupong-pin.txt`) skickades till dig och finns inte i repot (där ligger bara kontrollsummor). Spara dem: förloras de går affischerna inte att återskapa.
 - **Kupongen utan belopp och butik:** den som skannar får en kupong som säger "be om julgransrabatten". Tills ni bestämt vem som ger den och hur stor den är kan personalen inte veta vad de ska göra: bestäm det före utskrift.
 - **Kalendern och spelet delar adress:** belöningarna läser kalenderns baslinje. Rensar spelaren webbläsarens lagring försvinner både framstegen och kalenderns läge.
+
+## 13. Huvudspåret och dagens julklappsjakt (2.21.1-xmas.13, byggt)
+
+Användarens önskan 2026-11-25: Termosjakten tillbaka som huvudspåret, *TempoRush som man kan spela obegränsat varje dag*, och *en daglig julklappsjakt där QR-koder och erbjudanden kan gömmas*. Förlagan till julmarknaden är *Vinter i Solstaden* på Stora torget (julmarknad, foodtrucks, scenprogram och insamling), bara som inspiration (`KARLSTAD-JUL-2026.md`).
+
+**Beslut (fattade i bygget, går att ändra i konfigurationen):**
+
+- **Termosjakten = JulRushens maraton med termosar** (`xmas-termos.mjs`). Samma motor och samma svårighet som Maraton (som ställdes in med `difficulty.mjs` i xmas.4), egna rekord. Varför inte en egen motor: Maraton är redan inställd och provad, och två motorer betyder två saker att hålla i ordning. JulRushens tolv rusher finns kvar som de är.
+- **Varför man spelar igen samma dag:** dagens mål (ett per datum, samma för alla, 60 XP och en prydnad en gång), dagens fem bästa rundor, rekordet, tempostämpeln och insamlingen. Ingen gräns för antalet rundor, och XP per runda är som Maraton (termosar och tempo), så det går inte att samla lotter snabbare än förut: lotterna kommer som förut av mätaren med sitt dagliga tak.
+- **Insamlingen** är ett räkneverk för spelarens egna termosar, inte en verklig insamling: inga pengar, ingen organisation, ingen gemensam summa för alla spelare (den skulle kräva molnlagring, se avsnitt 10). Vill arrangören koppla spelet till en verklig insamling krävs ett avtal och en egen text, och då ska namnet stå i konfigurationen, inte i koden.
+- **Dagens julklappsjakt** (`xmas-daily.mjs`): sju områden, en plats per dag ur grundspelets kontrollerade termosplatser, gåta → varmt/glödhett → områdets namn (100 s) → pil till området (220 s). Pilen leder aldrig ända fram: det ska vara en jakt. Belöningen ges en gång per dag och räknas som en klarad dag i serien.
+- **Erbjudanden och QR i den dagliga jakten** läggs in per datum i `xmas-daily-config.mjs` (`DAILY_HUNTS`: `coupon`, `qr`, `area`, `spot`, `xp`, `orn`, `tickets`, `note`). En kupong delas ut en gång per spelare (samma regel som QR-koderna). QR-raden säger var en affisch hänger i verkligheten; själva koden står aldrig i bygget. **Inga erbjudanden ligger i schemat nu**: julgransrabatten delas bara ut av de tolva QR-koderna, som beslutades 2026-11-24.
+- **Ljuset efter klockan:** julmarknaden och Termosjakten ser bäst ut i mörker, och i december är det mörkt från halv fyra i Karlstad. Spelaren kan välja fast dag, skymning eller kväll i pausmenyn.
+
+**Inte provat med människor:** om dagsmålen är lagom svåra (de är satta efter bedömning och en enda botrunda, inte provade med `difficulty.mjs`), om gåtorna är för lätta eller för svåra och om 100 s och 220 s är rätt tider för hjälpen. Ändra i `DAILY_GOALS` och `DAILY`.
