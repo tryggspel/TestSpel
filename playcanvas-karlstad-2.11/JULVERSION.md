@@ -641,3 +641,14 @@ Grundspelets filer: `app.js` (importen av `venueColliders`/`inVenue`, lokalens k
 
 **Osäkert i byggnaderna (står i källkoden):** Rådhusets pilastrar (vita på 1960-talet enligt KT, i dag gula; här ljusare gul med vita kapitäl), spirans exakta form och kopparns nyans, antalet fönsteraxlar och höjderna (uppskattade).
 SVT rapporterade att Fredsmonumentet fördes till Göteborg för renovering; spelet visar det på sin plats. Inga bilder från källorna används.
+
+**Verifierat på 2.21.1-xmas.14 (2026-11-25):** enhetstesterna **761 av 761**. Webbläsarflödena i Chromium (mjukvaruritad grafik):
+`olearys.mjs` **22 OK** (dörren på torget, lokalen, att man kan gå inne, väggar och bar fasta, alla nio stationer, bowling, shuffleboard, dart, straffar och biljard spelade klart med fingerdrag, sparningen, FBK-tipset, femkampen, vägen ut, XP-taket),
+`platsjakt.mjs` **14 OK** (bilden från spelets kamera och att den inte är tom, klockan, ledtråden halvvägs, inga intro-texter under jakten, paketet vid platsen, rekordet och dagens belöning, andra försöket utan ny belöning, tiden slut, menyn rensar),
+`julguide.mjs` **11 OK**, `termos.mjs` **19 OK**, `meta.mjs` **67 OK**, `links.mjs` **49 OK**, `rush.mjs` **41 OK** och `flow.mjs` **59 OK**, inga fel i konsolen.
+Under arbetet hittade flödena två riktiga fel som är rättade: lokalen låg där grundspelets vattenkoll blockerade all gång (man kunde komma in men inte gå), och Platsjaktens bild var ett stående närbildsutsnitt med halva ytan snö.
+`flow.mjs` F2 föll en gång för att Stress-Nisse hann nå spelaren mellan två anrop i testet; kontrollen läser nu namnen i samma anrop (ingen ändring i spelet).
+Skärmbilder (1280×720 och 414×896) av Rådhuset, Domkyrkans torn från väster, från Kungsgatan och från torget, och Fredsmonumentet.
+
+**Inte provat:** bildfrekvensen på en riktig telefon i O'Learys-lokalen och med de nya byggnaderna; om fingerdragen i O'Learys-spelen känns rätt på en riktig skärm; om karlstadsbor känner igen Rådhuset, spiran och torget; CI på GitHub.
+**Produktionen är oförändrad (xmas.13)**: xmas.14 publiceras först efter ett nytt uttryckligt ja.
