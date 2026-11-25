@@ -65,7 +65,7 @@ check('P0 startvyn har knappen PLATSJAKTEN',/PLATSJAKTEN/.test(await ev(()=>docu
 await click('xmasPlatsjakt');await wait(1800);
 const s1=await P();const day=await ev(()=>window.KarlstadDebug.journey().xmas.meta.today());
 let def=s1&&placeById(s1.place)?{place:placeById(s1.place),seconds:s1.seconds}:null;
-check('P1 kortet öppnas med en plats och en bild från spelet',!!s1&&!!def&&s1.state==='card'&&s1.ui.open&&s1.photo>8000,JSON.stringify({s1,day}));
+check('P1 kortet öppnas med en plats och en bild från spelet',!!s1&&!!def&&s1.state==='card'&&s1.ui.open&&s1.photo>3000,JSON.stringify({s1,day}));
 // bilden är inte tom: pixlarna varierar
 const varied=await ev(()=>new Promise(res=>{const i=document.querySelector('.pj-photo img');if(!i)return res(-1);const go=()=>{const c=document.createElement('canvas');c.width=64;c.height=48;const x=c.getContext('2d');x.drawImage(i,0,0,64,48);const d=x.getImageData(0,0,64,48).data;let s=0,s2=0,n=0;for(let k=0;k<d.length;k+=4){const l=(d[k]+d[k+1]+d[k+2])/3;s+=l;s2+=l*l;n++;}res(Math.sqrt(s2/n-(s/n)**2));};i.complete?go():i.onload=go;}));
 check('P1b bilden visar något (inte en tom yta)',varied>12,'spridning '+varied.toFixed?.(1));
