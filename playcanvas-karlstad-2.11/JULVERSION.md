@@ -714,4 +714,7 @@ Användarens rapport 2026-11-25: i dagens julklappsjakt bytte pilen mellan den g
 
 **Verifierat (2026-11-25):** enhetstesterna **774 av 774**. Webbläsarflödena: `termos.mjs` **24 OK** (nya kontroller: eget läge utan regn även efter 8 s, panelen med gåtan och ledtråd 1/5, ledtrådarna OMRÅDET och VÄDERSTRECK efter två minuter utan pil, pilen till området efter tre minuter, LEDTRÅD NU till steg 5 med pilen ända fram, värmemätaren VARMT/GLÖDHETT nära, fyndet och tillbaka till fri julvandring), `flow.mjs` **60 OK**, `links.mjs` **49 OK**, `meta.mjs` **67 OK**, `missions.mjs` **31 OK**, `kiosk.mjs` **16 OK**, `platsjakt.mjs` **20 OK**, `guide.mjs` **56 OK**.
 Versionsnyckeln är `2.21.1-xmas.17`.
-**Inte provat:** om tiderna för ledtrådarna känns rätt för människor, och panelens storlek på små telefoner. **Produktionen är oförändrad (xmas.16)** tills ett nytt ja.
+**Inte provat:** om tiderna för ledtrådarna känns rätt för människor, och panelens storlek på små telefoner.
+**Publicerat 2026-11-25 efter användarens ja:** `dpl_DCdvcJ92Yev8MnSdeFDiHQDx3m8R` (`target: production`, omdeploy av förhandsvisningen `dpl_6RW3tworQF6tvhK9Xdky2BBtbLQE`, commit `97b0721`, READY efter ca 12 s, tilldelad `karlstad-julklappsjakten.vercel.app`, `aliasError: null`).
+Efter: produktionsadressens `/api/build-info` visar `environment: production` och commit `97b0721`; `version.json` visar `2.21.1-xmas.17`.
+**Återställning:** xmas.16 `dpl_HCXbiMYoHnzaGRHhsPkMgp5xegW1` (Vercel → Deployments → Instant Rollback). Sparningen påverkas inte (xmas.17 lade inte till något i den).
