@@ -701,3 +701,17 @@ Två testförväntningar ändrades för att kalenderlänken är borttagen (T5, T
 **Publicerat 2026-11-25 efter användarens ja:** `dpl_HCXbiMYoHnzaGRHhsPkMgp5xegW1` (`target: production`, omdeploy av förhandsvisningen `dpl_H9NECQiWMy2BjfKDa1UsuJmk4jws`, commit `123c4cf`, READY efter ca 10 s, tilldelad `karlstad-julklappsjakten.vercel.app`, `aliasError: null`).
 Efter: produktionsadressens `/api/build-info` visar `environment: production` och commit `123c4cf`; `version.json` visar `2.21.1-xmas.16`.
 **Återställning:** xmas.15 `dpl_Bb8jCW9P5At18CurGfvNT5hdAM3B` (Vercel → Deployments → Instant Rollback). xmas.15 har länkarna till grundspelet och Julkalendern, Sista rundan och Löfbergs-kiosken; rekorden i Tomtekön och Duka julbordet ligger i egna nycklar och blir kvar, dagens räknare för butiksspelen (`shop`) tas bort ur sparningen.
+
+### 2.21.1-xmas.17: Dagens julklappsjakt som eget läge med tydliga ledtrådar
+
+Användarens rapport 2026-11-25: i dagens julklappsjakt bytte pilen mellan den gömda julklappen och tomtarnas tappade julklappar med nya spår i snön, och "Lös gåtan och hitta dagens julklapp" hamnade i skuggan av spåren. Önskan: tydligare tips om var den gömda klappen är, och de två uppdragen separerade.
+
+| Ändring | Var |
+|---|---|
+| Eget läge (`run.dailyMode`): inga regn av tappade julklappar, inga gömda paket och inga påminnelser om dem, bara dagens julklapp. Uppdragsraden visar bara dagens steg (LÖS GÅTAN, SÖK I OMRÅDET, GÅ VÄSTERUT …). Efter fyndet blir det vanlig fri julvandring igen (efter ca 5 s). | `xmas/xmas-boot.js`, `xmas/xmas-guide.mjs` |
+| Panelen överst: gåtan, värmemätaren (ISKALLT, KALLT, LJUMMET, VARMT, GLÖDHETT; ▲ VARMARE / ▼ KALLARE när man går), ledtrådarna (de två senaste; tryck för alla, tryck igen för att fälla ihop), när nästa kommer och LEDTRÅD NU. | `xmas/xmas-daily-ui.js`, `xmas/xmas.css` |
+| Ledtrådstrappan: 1 gåtan, 2 området (1 min), 3 väderstreck och avstånd härifrån (2 min), 4 pilen till området (3 min), 5 pilen ända fram (5 min). Pilen pekar bara mot dagens julklapp, aldrig mot spår. | `xmas/xmas-daily.mjs` (`dailyStep`, `nextStepIn`, `warmthLevel`, `stepText`), `xmas/xmas-daily-config.mjs` |
+
+**Verifierat (2026-11-25):** enhetstesterna **774 av 774**. Webbläsarflödena: `termos.mjs` **24 OK** (nya kontroller: eget läge utan regn även efter 8 s, panelen med gåtan och ledtråd 1/5, ledtrådarna OMRÅDET och VÄDERSTRECK efter två minuter utan pil, pilen till området efter tre minuter, LEDTRÅD NU till steg 5 med pilen ända fram, värmemätaren VARMT/GLÖDHETT nära, fyndet och tillbaka till fri julvandring), `flow.mjs` **60 OK**, `links.mjs` **49 OK**, `meta.mjs` **67 OK**, `missions.mjs` **31 OK**, `kiosk.mjs` **16 OK**, `platsjakt.mjs` **20 OK**, `guide.mjs` **56 OK**.
+Versionsnyckeln är `2.21.1-xmas.17`.
+**Inte provat:** om tiderna för ledtrådarna känns rätt för människor, och panelens storlek på små telefoner. **Produktionen är oförändrad (xmas.16)** tills ett nytt ja.

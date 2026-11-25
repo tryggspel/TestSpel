@@ -560,3 +560,5 @@ body.kiosk-on .place-hud,body.kiosk-on #placeHud{display:none!important}
 .xd-hud.closed .xd-body{display:none}
 .xd-hud.found{border-color:#7fe0a0}
 @keyframes xdNew{from{background:#ffd77a44}to{background:transparent}}
+.xd-hints li.old{display:none}.xd-hud.all .xd-hints li.old{display:list-item}.xd-hud.all .xd-more{display:none}
+.xd-more{margin:2px 0 0;font:11px system-ui;opacity:.65}.xd-more:empty{display:none}

@@ -12,17 +12,22 @@ export function createDailyUi({onHint=null}={}){
   const warmRow=el('div','xd-warm'),warmLab=el('b','xd-wlab','ISKALLT'),trend=el('span','xd-trend','');warmRow.append(warmLab,trend);
   const body=el('div','xd-body'),riddle=el('p','xd-riddle',''),hints=el('ul','xd-hints');
   const foot=el('div','xd-foot'),next=el('span','xd-next',''),btn=el('button','xd-btn','LEDTRÅD NU');btn.type='button';foot.append(next,btn);
-  body.append(riddle,hints,foot);hud.append(top,meter,warmRow,body);document.body.append(hud);
+  const more=el('p','xd-more','');
+  body.append(riddle,hints,more,foot);hud.append(top,meter,warmRow,body);document.body.append(hud);
   let open=true,shown=[],state=null;
-  top.addEventListener('click',()=>{open=!open;hud.classList.toggle('closed',!open);top.setAttribute('aria-expanded',String(open));});
+  // tryck: kompakt (två senaste ledtrådarna) → alla ledtrådar → ihopfälld → kompakt
+  let view=0;const setView=v=>{view=v;open=v!==2;hud.classList.toggle('all',v===1);hud.classList.toggle('closed',v===2);top.setAttribute('aria-expanded',String(open));};
+  top.addEventListener('click',()=>setView((view+1)%3));hud.addEventListener('click',e=>{if(e.target===btn||top.contains(e.target))return;if(view===0)setView(1);});
   btn.addEventListener('click',ev=>{ev.stopPropagation();onHint?.();});
-  function start(def){open=true;hud.classList.remove('closed','found');riddle.textContent='”'+def.area.riddle+'”';hints.replaceChildren();shown=[];hud.hidden=false;state=null;}
+  function start(def){setView(0);hud.classList.remove('found');riddle.textContent='”'+def.area.riddle+'”';hints.replaceChildren();shown=[];hud.hidden=false;state=null;}
   // s: {step, texts:{2:'…',3:'…'}, warm (0–4), trend (-1 kallare, 0, 1 varmare), nextIn (s eller null)}
   function update(s){
     state=s;stepEl.textContent='LEDTRÅD '+s.step+'/5 · '+DAILY_STEPS[s.step-1].row;
     segs.forEach((g,i)=>g.classList.toggle('on',i<=s.warm));hud.dataset.warm=String(s.warm);
     warmLab.textContent=WARMTH_LABELS[s.warm];trend.textContent=s.trend>0?'▲ VARMARE':s.trend<0?'▼ KALLARE':'';trend.className='xd-trend'+(s.trend>0?' up':s.trend<0?' down':'');
     for(let k=2;k<=s.step;k++)if(!shown.includes(k)&&s.texts[k]){shown.push(k);const li=el('li','new');li.append(el('b',null,DAILY_STEPS[k-1].label+': '),document.createTextNode(s.texts[k]));hints.append(li);setTimeout(()=>li.classList.remove('new'),1600);}
+    // bara de två senaste ledtrådarna syns; trycker man på panelen visas alla
+    [...hints.children].forEach((li,i,a)=>li.classList.toggle('old',i<a.length-2));more.textContent=hints.children.length>2?'+'+(hints.children.length-2)+' tidigare: tryck på panelen':'';
     next.textContent=s.nextIn==null?'Alla ledtrådar är framme.':'Nästa ledtråd om '+mmss(s.nextIn);btn.hidden=s.step>=5;
   }
   function found(){hud.classList.add('found');stepEl.textContent='HITTAD!';btn.hidden=true;next.textContent='Fri julvandring igen om en stund.';}

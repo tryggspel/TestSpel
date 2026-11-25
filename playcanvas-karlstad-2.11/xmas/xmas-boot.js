@@ -648,7 +648,7 @@ export function installXmas(ctx){
     }
     // värmemätaren: varmare/kallare jämfört med förra mätningen (minst 3 m skillnad)
     if(d.last!=null&&Math.abs(dist-d.last)>=3){d.trend=dist<d.last?1:-1;d.last=dist;}else if(d.last==null)d.last=dist;
-    dailyUi.update({step:d.level,texts:d.texts,warm:warmthLevel(dist),trend:d.trend,nextIn:nextStepIn(sec,Math.min(5,dailyStep(sec))),dist});
+    dailyUi.update({step:d.level,texts:d.texts,warm:warmthLevel(dist),trend:d.trend,nextIn:d.level>=5?null:nextStepIn(sec,dailyStep(sec)),dist}); // nästa steg kommer när tidens steg ökar (LEDTRÅD NU lägger till ovanpå)
     const band=dailyWarmth(dist);
     if(band==='hot'&&(d.band!=='hot'||now-d.said>8000)){d.said=now;ui.showPill('GLÖDHET! DAGENS JULKLAPP ÄR HÄR',2200,now,'bonus');}
     d.band=band;
