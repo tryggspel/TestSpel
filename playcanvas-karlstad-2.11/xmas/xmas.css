@@ -401,3 +401,26 @@ body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
   .xmas-card .xs-btn{font-size:12px}
 }
 @media (prefers-reduced-motion:reduce){.xs-bar u,.xrw-bar u{transition:none}}
+/* Julguiden (xmas.14): rutan när man går förbi en skylt, kortet och listan */
+.xmas-guide-near{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 232px);z-index:42;display:flex;align-items:center;gap:10px;max-width:min(92vw,420px);padding:10px 14px;border:2px solid #ffd77a;border-radius:14px;background:#1d2b27f2;color:#fffbe9;font:800 14px/1.2 system-ui;box-shadow:0 6px 18px #0008;cursor:pointer;text-align:left}
+.xmas-guide-near[hidden]{display:none}
+.xmas-guide-near .xgn-kind{padding:4px 7px;border-radius:7px;background:#b8322c;color:#fff6df;font-size:11px;letter-spacing:.06em;white-space:nowrap}
+.xmas-guide-near b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xmas-guide-near .xgn-go{color:#ffd77a;white-space:nowrap}
+.xmas-guide-layer{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:#061e18b8;overflow:auto}
+.xmas-guide-layer[hidden]{display:none}
+.xmas-guide-card{max-height:calc(100vh - 32px);overflow:auto}
+.xmas-guide-card h2{font-size:34px!important}
+.xmas-guide-card .xgc-grid{display:grid;gap:6px;margin:10px 0}
+.xmas-guide-card .xgc-row{display:flex;gap:10px;align-items:baseline;border-bottom:1px solid #accaa930;padding:4px 0}
+.xmas-guide-card .xgc-row span{min-width:64px;font:800 11px system-ui;letter-spacing:.08em;color:#ffd77a}
+.xmas-guide-card .xgc-row b{font:600 14px/1.35 system-ui}
+.xmas-guide-card .xgc-offer{border-left:4px solid #ffd77a;padding-left:10px;color:#fff3c4!important}
+.xmas-guide-card .xgc-xp{color:#7be495!important;font-weight:800!important}
+.xmas-guide-card .xgc-head{margin:16px 0 6px;font:900 13px system-ui;letter-spacing:.1em;color:#ffd77a}
+.xmas-guide-card .xgc-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.xmas-guide-card .xgc-list li{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid #accaa935;border-radius:10px}
+.xmas-guide-card .xgc-list li.seen{border-color:#7be49566}
+.xmas-guide-card .xgc-li{flex:1;min-width:0;display:grid;gap:2px}
+.xmas-guide-card .xgc-li b{font:800 14px system-ui}.xmas-guide-card .xgc-li span{font:500 12px/1.3 system-ui;color:#c3d1ba}
+.xmas-guide-card .xgc-go{min-height:40px!important;padding:6px 12px!important;width:auto!important;margin:0!important}

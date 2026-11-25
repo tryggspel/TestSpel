@@ -33,7 +33,8 @@ export const XP=Object.freeze({
   place:Object.freeze({first:40,repeat:10}),sandgrund:Object.freeze({first:60,repeat:15}), // butiksuppdrag (Cervera, Pressbyrån) och Sandgrund
   dupe:15,hidden:60,mission:Object.freeze({easy:40,medium:60,hard:80}),code:30,
   // 2.21.1-xmas.13: Termosjakten (räknas som klarad vid minst termosMin termosar; dagsmålet ger termosGoal en gång per dag) och dagens julklappsjakt (daily, en gång per dag)
-  termosMin:15,termosGoal:60,daily:80
+  termosMin:15,termosGoal:60,daily:80,
+  guide:10   // 2.21.1-xmas.14: julguiden, första gången man läser om ett julbord eller en julmarknad (en gång per ställe)
 });
 
 // ── Julgranen: 24 prydnader ───────────────────────────────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@
 //
 // Ritanrop: marknadens fasta delar går i samma meshar som granen och stånden (decor S), lamporna i samma tre blinkande grupper (decor L), fönster och lyktglas i en
 // mesh som alltid lyser (lamp), glaset i en genomskinlig mesh, skyltarna i en, effekterna i en, skärmen och räkneverket i var sin. Inga ljuskällor och ingen fysik.
-import {TRUCKS,TRUCK,TABLES,LANE,LANE_STALL,ALLEY,LOT,LOT_TREES,STAGE,BOOTH,COTTAGE,FIRES,POLES,STRINGS,SNOWBANKS,SIGNS,stageActAt,nextActAfter} from './xmas-market-data.mjs?v=2.21.1-xmas.13';
+import {TRUCKS,TRUCK,TABLES,LANE,LANE_STALL,ALLEY,LOT,LOT_TREES,STAGE,BOOTH,COTTAGE,FIRES,POLES,STRINGS,SNOWBANKS,SIGNS,stageActAt,nextActAfter} from './xmas-market-data.mjs?v=2.21.1-xmas.14';
 
 const TAU=Math.PI*2,SNOW='#f7fbff',SNOW2='#e4eef6',WOOD='#8a5e3b',WOOD2='#6e4a2f',PLANK='#b98a5b',IRON='#2b2f36',IRON2='#1d2126';
 // Små byggstenar (samma som i xmas-decor.js; egna kopior så att modulerna inte beror på varandra)

@@ -3,10 +3,10 @@
 // Egen sparning (karlstad-xmas:meta:1), skild från julspelets (karlstad-xmas:save:1) som Julkalendern läser: den här modulen ändrar aldrig den och kalendern ändrar aldrig den här.
 // Alla belöningar delas ut av den här modulen och bara en gång: en lucka, en söndag, en gömd julklapp eller en kod kan inte ge samma sak två gånger, hur man än laddar om eller rör klockan.
 // Tiden är svensk kalenderdag (Europe/Stockholm). Spelet och kalendern räknar likadant (tests/xmas-meta.test.mjs jämför dem).
-import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,ORNAMENT_POLICY,FIRST_ORNAMENT,MISSIONS,MISSION_TIERS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,QR_CODES,COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.13';
-import {makeTicket,validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.13';
-import {codeHash,pinHash,normalizeCode} from './xmas-hash.mjs?v=2.21.1-xmas.13';
-import {HIDDEN_SPOTS,hintsShown} from './xmas-hidden.mjs?v=2.21.1-xmas.13';
+import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,ORNAMENT_POLICY,FIRST_ORNAMENT,MISSIONS,MISSION_TIERS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,QR_CODES,COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.14';
+import {makeTicket,validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.14';
+import {codeHash,pinHash,normalizeCode} from './xmas-hash.mjs?v=2.21.1-xmas.14';
+import {HIDDEN_SPOTS,hintsShown} from './xmas-hidden.mjs?v=2.21.1-xmas.14';
 
 export const META_KEY='karlstad-xmas:meta:1';
 const ORN_BY_ID=new Map(ORNAMENTS.map(o=>[o.id,o]));
@@ -40,7 +40,7 @@ export function levelFor(xp,levels=LEVELS){
 
 // ── Sparning ─────────────────────────────────────────────────────────────────────────────────────────────────────
 const blankDay=()=>({runs:0,clears:0,packages:0,bonus:0,chain:0,fast:0,areas:[],hidden:0,zombies:0,rush:0,termos:0,termosRuns:0,termosGoal:false,daily:false,meter:0,first:false,gift:false,done:{},pick:[]});
-export const blankMeta=()=>({v:1,xp:0,lv:1,dry:0,orn:{},seen:{},tickets:[],meter:0,days:{},streak:{cur:0,best:0,last:'',freezes:0,got:{}},cal:{doors:{},advent:{}},hidden:{},qr:{},daily:{},coupons:[],draw:{sent:[],at:0},tried:{intro:false,zombies:false,rush:false,termos:false},welcomed:false,first:''});
+export const blankMeta=()=>({v:1,xp:0,lv:1,dry:0,orn:{},seen:{},tickets:[],meter:0,days:{},streak:{cur:0,best:0,last:'',freezes:0,got:{}},cal:{doors:{},advent:{}},hidden:{},qr:{},daily:{},guide:{},coupons:[],draw:{sent:[],at:0},tried:{intro:false,zombies:false,rush:false,termos:false},welcomed:false,first:''});
 
 function sanitizeDay(r){
   const d=blankDay();if(!isObj(r))return d;
@@ -78,6 +78,7 @@ export function sanitizeMeta(raw){
   if(isObj(c.doors))for(let n=1;n<=24;n++)if(c.doors[n]===true)out.cal.doors[n]=true;
   if(isObj(c.advent))for(const a of ADVENT)if(c.advent[a.id]===true)out.cal.advent[a.id]=true;
   if(isObj(raw.hidden))for(const [id,day] of Object.entries(raw.hidden))if(SPOT_IDS.has(id))out.hidden[id]=dayOk(day)?day:'';
+  if(isObj(raw.guide))for(const [id,day] of Object.entries(raw.guide).slice(0,60))if(/^[a-z0-9-]{1,30}$/.test(id))out.guide[id]=dayOk(day)?day:'';
   if(isObj(raw.daily))for(const day of Object.keys(raw.daily).filter(dayOk).sort().slice(-60))out.daily[day]=num(raw.daily[day],4102444800000);
   if(isObj(raw.qr))for(const [id,day] of Object.entries(raw.qr))if(/^[a-z0-9-]{1,40}$/.test(id))out.qr[id]=dayOk(day)?day:'';
   if(Array.isArray(raw.coupons)){
@@ -420,6 +421,12 @@ export class XmasMeta{
     const found=Object.keys(st.daily).length;R.daily={day,found};R.notable=true;
     this._streak(R,day); // dagens julklapp räknas som en klarad dag i serien
     this._missions(R,day,d);
+    return this._finish(R,day);
+  }
+  // Julguiden (xmas-julguide-data.mjs): första gången man öppnar kortet för ett ställe. null om det redan är läst.
+  onGuide(id,when=this.clock()){
+    const st=this.state;if(typeof id!=='string'||!/^[a-z0-9-]{1,30}$/.test(id)||Object.prototype.hasOwnProperty.call(st.guide,id))return null;
+    const day=dayOf(when),R=this._reward();st.guide[id]=day;this._xp(R,XP.guide,'Julguiden');
     return this._finish(R,day);
   }
   dailyFound(when=this.clock()){return Object.prototype.hasOwnProperty.call(this.state.daily,dayOf(when));}

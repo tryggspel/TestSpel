@@ -4,7 +4,7 @@
 // Förebild: vinterfestivalen på Stora torget inför första advent (julmarknad, foodtrucks, scenprogram och en insamling). Spelet använder inga riktiga namn på
 // evenemang, företag, artister eller insamlingar: allt här är påhittat (se XMAS-SPELDESIGN.md). Allt ligger utanför introduktionens spiral (r ≤ 27 m) och
 // utanför startvyn (x −14…14, z 24…44), på den stora öppna ytan runt marknadsringen (torget är ungefär x −68…78, z −50…41 i spelets koordinater; granen i origo, norr = −z).
-import {INTRO,TREE,TORGET_PROPS} from './xmas-layout.mjs?v=2.21.1-xmas.13';
+import {INTRO,TREE,TORGET_PROPS} from './xmas-layout.mjs?v=2.21.1-xmas.14';
 
 export const OPEN=Object.freeze({minx:-68,maxx:78,minz:-50,maxz:41}); // den öppna ytan enligt spelets kollisionskarta (byggnaderna börjar strax utanför)
 export const START_VIEW=Object.freeze({minx:-14,maxx:14,minz:24,maxz:44}); // det spelaren ser vid start (söder om granen, vänd mot den): ingenting högt här
@@ -17,9 +17,10 @@ export const TRUCK_KINDS=Object.freeze([
   {name:'LÅNGOS',sub:'GRÄDDFIL · LÖJROM',body:'#3c64a8',trim:'#ffe9b8',menu:['LÅNGOS','OST & SKINKA']},
   {name:'GLÖGG & LUSSE',sub:'VARMT · SÖTT',body:'#8f2d56',trim:'#ffd56b',menu:['GLÖGG','LUSSEKATTER']}
 ]);
-export const TRUCKS=Object.freeze([22,31,40,49].map((x,i)=>Object.freeze({id:'truck-'+i,x,z:37.6,facing:Object.freeze({x:0,z:-1}),kind:TRUCK_KINDS[i],
+// xmas.14: tre truckar väster om O'Learys entré och en öster om den, så att dörren (Tingvallagatan 9, x ≈ 48,5) syns och går att nå från torget.
+export const TRUCKS=Object.freeze([18,27,36,60].map((x,i)=>Object.freeze({id:'truck-'+i,x,z:37.6,facing:Object.freeze({x:0,z:-1}),kind:TRUCK_KINDS[i],
   hatch:Object.freeze({x,z:37.6-TRUCK.wid/2-.1}),queue:Object.freeze({x,z:33.4})})));
-export const TABLES=Object.freeze([[26.5,31.2],[35.5,31.6],[44.5,31.2],[53.5,33.8],[18,33.2]].map(([x,z],i)=>Object.freeze({id:'table-'+i,x,z})));
+export const TABLES=Object.freeze([[22.5,31.2],[31.5,31.6],[40.5,31.4],[57,32.4],[19.4,33.6]].map(([x,z],i)=>Object.freeze({id:'table-'+i,x,z})));
 
 // ── Marknadsgatan: en gränd i nordost med stånd på båda sidor (norra raden vänd mot söder, södra raden vänd mot norr) ─────────────────────
 // Grundspelets uteserveringar på Kungsgatan (kungsgatan-reference.mjs, vid x −24 och 18, z −40) och marknadsborden (city-south.js, x 28 och 40, z −20) står kvar orörda.
@@ -85,13 +86,13 @@ export const BOOTH=Object.freeze({x:-40,z:-30,w:7.4,d:4.6,h:3.3,box:Object.freez
 export const COTTAGE=Object.freeze({x:-30,z:37.4,w:4.6,d:3.4,h:2.6,bench:Object.freeze({x:-30,z:34.6})});
 
 // ── Eldkorgar (med bänkar och fårskinn), lyktstolpar och ljusslingor ─────────────────────────────────────────────────
-export const FIRES=Object.freeze([[30.5,28.2],[47.6,29],[46,-14.8],[46,15.2],[-45.6,-9.4],[-45.6,7.8],[-49.6,-25],[-38.4,31.6],[54.4,-39.5]].map(([x,z],i)=>Object.freeze({id:'fire-'+i,x,z})));
+export const FIRES=Object.freeze([[30.5,28.2],[43.4,28.4],[46,-14.8],[46,15.2],[-45.6,-9.4],[-45.6,7.8],[-49.6,-25],[-38.4,31.6],[54.4,-39.5]].map(([x,z],i)=>Object.freeze({id:'fire-'+i,x,z})));
 // Stolpar för ljusslingor och lyktor (inga kollisioner: smala och höga). Slingorna går i sicksack mellan stolparna i varje grupp.
 export const POLES=Object.freeze([
   // längs marknadsgränden (båda sidor), slingor i sicksack tvärs över
   ...[32.7,37.3,41.9,46.5,51.1].map(x=>[x,-42.4]),...[32.7,37.3,41.9,46.5,51.1].map(x=>[x,-36.6]),
   // framför foodtrucksen
-  ...[19.6,28.4,37.2,46,54.6].map(x=>[x,34.4]),
+  ...[14.8,23.2,31.8,40.4,56.2,64.6].map(x=>[x,34.4]),
   // in mot julgransförsäljningen
   [-47.8,-6],[-47.8,3.8],
   // runt scenens publikyta
@@ -103,18 +104,18 @@ const AX=[32.7,37.3,41.9,46.5,51.1];
 export const STRINGS=Object.freeze([
   ...AX.slice(0,-1).map((x,k)=>k%2?[poleIx(x,-36.6),poleIx(AX[k+1],-42.4)]:[poleIx(x,-42.4),poleIx(AX[k+1],-36.6)]),   // sicksack över gränden
   ...AX.slice(0,-1).map((x,k)=>k%2?[poleIx(x,-42.4),poleIx(AX[k+1],-36.6)]:[poleIx(x,-36.6),poleIx(AX[k+1],-42.4)]),
-  ...[[19.6,28.4],[28.4,37.2],[37.2,46],[46,54.6]].map(([a,b])=>[poleIx(a,34.4),poleIx(b,34.4)]),
+  ...[[14.8,23.2],[23.2,31.8],[31.8,40.4],[56.2,64.6]].map(([a,b])=>[poleIx(a,34.4),poleIx(b,34.4)]),
   [poleIx(-47.8,-6),poleIx(-47.8,3.8)],
   [poleIx(54.6,-12.4),poleIx(42.4,-12.4)],[poleIx(54.6,12.4),poleIx(42.4,12.4)],[poleIx(42.4,-12.4),poleIx(42.4,12.4)]
 ].map(([a,b])=>Object.freeze({a,b,sag:.6})));
 // Snövallar (plogad snö) längs byggnaderna och i hörnen: [x, z, längd, bredd, höjd, vinkel i grader]. Bara utsmyckning.
-export const SNOWBANKS=Object.freeze([[-60,-46,14,3,1.1,8],[-20,-48.6,10,2.4,.9,0],[48,-48,16,3,1.2,-4],[66,-30,10,3,1,82],[70,22,12,3.2,1.2,90],[-58,38.6,12,2.6,1,-6],[60,39.4,10,2.4,.9,4]]
+export const SNOWBANKS=Object.freeze([[-60,-46,14,3,1.1,8],[-20,-48.6,10,2.4,.9,0],[48,-48,16,3,1.2,-4],[66,-30,10,3,1,82],[70,22,12,3.2,1.2,90],[-58,38.6,12,2.6,1,-6],[71.5,39.6,8,2.4,.9,4]]
   .map(([x,z,len,wid,h,yaw],i)=>Object.freeze({id:'bank-'+i,x,z,len,wid,h,yaw})));
 
 // Skyltar (en bildatlas för alla, ritas i en mesh): text, plats, höjd, bredd, vinkel (grader, 0 = vänd mot +z, söderut) och färger.
 export const SIGNS=Object.freeze([
   {id:'lane',lines:['MARKNADSGRÄNDEN','HANTVERK · GODIS · JULMAT'],x:ALLEY.minx-1.2,z:(ALLEY.north+ALLEY.south)/2,y:4.6,w:6.2,h:1.5,yaw:-90,bg:'#b52f2f',fg:'#fff4d6'}, // läses västerifrån (från granen)
-  {id:'trucks',lines:['FOODTRUCKS','VARMT · GOTT · NÄRA'],x:35.5,z:39.6,y:4.9,w:6,h:1.4,yaw:180,bg:'#22463e',fg:'#ffe08a'},
+  {id:'trucks',lines:['FOODTRUCKS','VARMT · GOTT · NÄRA'],x:27,z:39.6,y:4.9,w:6,h:1.4,yaw:180,bg:'#22463e',fg:'#ffe08a'},
   {id:'lot',lines:LOT.sign.lines,x:LOT.maxx+.22,z:(LOT.gate.minz+LOT.gate.maxz)/2,y:3.55,w:5.6,h:1.25,yaw:90,bg:'#2f6b45',fg:'#fff4d6'}, // på portalen, läses österifrån (yaw 90)
   {id:'stage',lines:['VINTERSCENEN','STORA TORGET'],x:STAGE.minx+.2,z:0,y:STAGE.deck+STAGE.truss+.9,w:7.4,h:1.4,yaw:-90,bg:'#151f3d',fg:'#ffd56b'},
   {id:'booth',lines:['INSAMLINGEN','VARJE TERMOS RÄKNAS'],x:BOOTH.x,z:BOOTH.z+BOOTH.d/2+.05,y:BOOTH.h+.75,w:6.4,h:1.25,yaw:0,bg:'#7a1f4f',fg:'#fff1f6'},
