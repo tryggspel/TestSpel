@@ -54,15 +54,18 @@ const panelText=()=>ev(()=>{const c=document.querySelector('.pj-layer');return c
 const P=()=>ev(()=>window.KarlstadDebug.journey().xmas.snapshot().platsjakt);
 const pjSet=t0=>ev(t=>{const pj=window.KarlstadDebug.journey().xmas.pj;pj.t0=performance.now()-t*1000;},t0);
 const fanfareText=()=>ev(()=>[...document.querySelectorAll('.xmas-fanfare,.fanfare,[class*="fanfare"]')].map(e=>e.textContent).join(' | '));
-const {platsjaktFor,PLATSJAKT}=await import(pathToFileURL(path.join(root,'xmas/xmas-platsjakt.mjs')).href);
+const {placeById,PLATSJAKT,RECENT_KEEP}=await import(pathToFileURL(path.join(root,'xmas/xmas-platsjakt.mjs')).href);
+const btn=re=>ev(r=>{const b=[...document.querySelectorAll('.pj-layer button')].find(b=>new RegExp(r).test(b.textContent));if(b)b.click();return !!b;},re.source);
+const H=()=>ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return r?{plats:!!r.plats,rains:r.rains.length,ids:r.packages.filter(k=>!k.collected).map(k=>String(k.id)),title:r.title}:null;});
+const row=()=>ev(()=>document.body.innerText);
 
 // P0: menyn
 check('P0 startvyn har knappen PLATSJAKTEN',/PLATSJAKTEN/.test(await ev(()=>document.getElementById('xmasPlatsjakt')?.textContent||'')));
 // P1: kortet med bilden
 await click('xmasPlatsjakt');await wait(1800);
 const s1=await P();const day=await ev(()=>window.KarlstadDebug.journey().xmas.meta.today());
-const def=platsjaktFor(day);
-check('P1 kortet öppnas med dagens plats och en bild från spelet',!!s1&&s1.state==='card'&&s1.ui.open&&s1.place===def.place.id&&s1.photo>8000,JSON.stringify({s1,day,place:def.place.id}));
+let def=s1&&placeById(s1.place)?{place:placeById(s1.place),seconds:s1.seconds}:null;
+check('P1 kortet öppnas med en plats och en bild från spelet',!!s1&&!!def&&s1.state==='card'&&s1.ui.open&&s1.photo>8000,JSON.stringify({s1,day}));
 // bilden är inte tom: pixlarna varierar
 const varied=await ev(()=>new Promise(res=>{const i=document.querySelector('.pj-photo img');if(!i)return res(-1);const go=()=>{const c=document.createElement('canvas');c.width=64;c.height=48;const x=c.getContext('2d');x.drawImage(i,0,0,64,48);const d=x.getImageData(0,0,64,48).data;let s=0,s2=0,n=0;for(let k=0;k<d.length;k+=4){const l=(d[k]+d[k+1]+d[k+2])/3;s+=l;s2+=l*l;n++;}res(Math.sqrt(s2/n-(s/n)**2));};i.complete?go():i.onload=go;}));
 check('P1b bilden visar något (inte en tom yta)',varied>12,'spridning '+varied.toFixed?.(1));
@@ -70,15 +73,19 @@ const t1=await panelText();
 check('P1c kortet: VAR ÄR DETTA?, tiden, ledtråden och startknappen',/VAR ÄR DETTA\?/.test(t1)&&/STARTA KLOCKAN/.test(t1)&&t1.includes(def.place.hint),t1.slice(0,160));
 await shot('p01-bilden');
 // P2: klockan går
-await ev(()=>[...document.querySelectorAll('.pj-layer button')].find(b=>/STARTA KLOCKAN/.test(b.textContent))?.click());await wait(1500);
+await btn(/STARTA KLOCKAN/);await wait(1500);
 const s2=await P(),hud=await ev(()=>{const h=document.querySelector('.pj-hud');return {vis:!!h&&!h.hidden,clock:h?.querySelector('.pj-clock')?.textContent||''};});
 const pos2=await ev(()=>window.__pos());
 check('P2 jakten startar vid granen: klockan syns och räknar ned',s2.state==='run'&&hud.vis&&/^\d+:\d\d$/.test(hud.clock)&&Math.hypot(pos2[0]-PLATSJAKT.start.x,pos2[1]-PLATSJAKT.start.z)<3,JSON.stringify({state:s2.state,hud,pos2}));
-const pk=await ev(()=>window.KarlstadDebug.journey().xmas.snapshot().hunt);
 await shot('p02-klockan');
+// P2b: inga tappade julklappar under jakten (vänta längre än första regnet i fri julvandring), bara paketet vid platsen, och uppdragsraden säger HITTA PLATSEN
+await wait(9000);
+const h2=await H(),r2=await row();
+check('P2b inga tomtar som tappar julklappar under Platsjakten: inga regn, bara paketet vid platsen',!!h2&&h2.plats&&h2.rains===0&&h2.ids.length===1&&h2.ids[0].startsWith('p:')&&!/TAPPADE JULKLAPPAR|Tomtarna tappade|HITTA TOMTARNAS SPÅR|NYA SPÅR/.test(r2),JSON.stringify(h2));
+check('P2c uppdragsraden: HITTA PLATSEN',/HITTA PLATSEN/.test(r2));
 // P3: ledtråden halvvägs
 await pjSet(def.seconds*.55);await wait(900);
-const ft=await ev(()=>document.body.innerText);
+const ft=await row();
 check('P3 halvvägs kommer ledtråden med väderstrecket',/LEDTRÅD/.test(ft)&&/(norrut|nordost|österut|sydost|söderut|sydväst|västerut|nordväst)/.test(ft),'');
 check('P3b inga intro-texter från fri julvandring mitt i jakten',!/Tomtarna tappade|FRI JULVANDRING/.test(ft));
 await shot('p03-ledtraden');
@@ -89,28 +96,43 @@ check('P4 en bit bort: inget paket än',(await P()).state==='run');
 await tp(def.place.view.x,def.place.view.z,Math.atan2(-(def.place.look.x-def.place.view.x),-(def.place.look.z-def.place.view.z))*180/Math.PI,1400,-2);await shot('p04-platsen');
 await tp(def.place.x,def.place.z,0,2200);
 const s4=await P(),t4=await panelText();
-check('P4b vid platsen: paketet plockas och resultatkortet säger HITTAD med tiden och belöningen',s4.state==='done'&&/HITTAD/.test(t4)&&/XP/.test(t4),t4.slice(0,200));
-const best=await ev(p=>window.KarlstadDebug.journey().xmas.meta.state.platsjakt,def.place.id);
-check('P4c rekordtiden sparas och dagens belöning är tagen',best.best[def.place.id]>0&&best.won[day]===def.place.id,JSON.stringify(best));
+check('P4b vid platsen: paketet plockas och resultatkortet säger HITTAD med tiden och belöningen',s4.state==='done'&&/HITTAD/.test(t4)&&/XP/.test(t4)&&/NY PLATS/.test(t4),t4.slice(0,220));
+const best=await ev(()=>window.KarlstadDebug.journey().xmas.meta.state.platsjakt);
+check('P4c rekordtiden sparas och platsen har gett dagens paket',best.best[def.place.id]>0&&(best.won[day]||[]).includes(def.place.id),JSON.stringify(best));
 await shot('p05-hittad');
-// P5: springa igen: tiden räknas men ingen ny belöning
-await ev(()=>[...document.querySelectorAll('.pj-layer button')].find(b=>/SPRINGA IGEN/.test(b.textContent))?.click());await wait(1500);
-await ev(()=>[...document.querySelectorAll('.pj-layer button')].find(b=>/STARTA KLOCKAN/.test(b.textContent))?.click());await wait(1200);
+// P5: samma plats igen på tid: tiden räknas men ingen ny belöning för den platsen
+await btn(/Samma plats igen/);await wait(1500);
+const s5a=await P();
+await btn(/STARTA KLOCKAN/);await wait(1200);
 await tp(def.place.x,def.place.z,0,2200);
 const t5=await panelText();
-check('P5 andra gången samma dag: tiden räknas, belöningen kommer i morgon',/HITTAD/.test(t5)&&/redan öppnat/.test(t5),t5.slice(0,200));
-// P6: tiden tar slut
-await ev(()=>[...document.querySelectorAll('.pj-layer button')].find(b=>/SPRINGA IGEN/.test(b.textContent))?.click());await wait(1500);
-await ev(()=>[...document.querySelectorAll('.pj-layer button')].find(b=>/STARTA KLOCKAN/.test(b.textContent))?.click());await wait(1000);
+check('P5 samma plats igen: samma plats, tiden räknas, inget nytt paket för den',s5a.place===def.place.id&&/HITTAD/.test(t5)&&/redan gett sitt paket/.test(t5),t5.slice(0,220));
+// P6: NY PLATS ger en annan plats, flera gånger i rad (aldrig någon av de senaste)
+const places=[def.place.id];
+for(let k=0;k<4;k++){await btn(/^NY PLATS$|Ny plats/);await wait(1700);const sk=await P();places.push(sk?.place);
+  if(k<3){await btn(/STARTA KLOCKAN/);await wait(600);const pl=placeById(sk.place);await tp(pl.x,pl.z,0,2000);}}
+const distinct=new Set(places).size;
+check('P6 NY PLATS: en ny plats varje gång, ingen upprepning bland de senaste',places.every(Boolean)&&distinct===places.length,JSON.stringify(places));
+def={place:placeById(places.at(-1)),seconds:(await P()).seconds};
+const wonNow=(await ev(()=>window.KarlstadDebug.journey().xmas.meta.state.platsjakt.won))[day]||[];
+check('P6b högst tre platser ger paket per dag',wonNow.length===PLATSJAKT.rewardsPerDay,JSON.stringify(wonNow));
+// P7: tiden tar slut på den nya platsen; FÖRSÖK IGEN ger samma plats
+await btn(/STARTA KLOCKAN/);await wait(1000);
 await pjSet(def.seconds+1);await wait(900);
-const s6=await P(),t6=await panelText(),left=await ev(()=>(window.KarlstadDebug.journey().xmas.hunt?.run?.packages||[]).filter(k=>String(k.id).startsWith('p:')).length);
-check('P6 tiden tar slut: kortet säger var platsen var och paketet försvinner',s6.state==='done'&&/TIDEN TOG SLUT/.test(t6)&&/FÖRSÖK IGEN/.test(t6),t6.slice(0,160)+' paket kvar: '+left);
+const s7=await P(),t7=await panelText(),left=await ev(()=>(window.KarlstadDebug.journey().xmas.hunt?.run?.packages||[]).filter(k=>String(k.id).startsWith('p:')&&!k.collected).length);
+check('P7 tiden tar slut: kortet säger var platsen var och paketet försvinner',s7.state==='done'&&/TIDEN TOG SLUT/.test(t7)&&/FÖRSÖK IGEN/.test(t7)&&/Ny plats/.test(t7)&&left===0,t7.slice(0,160)+' paket kvar: '+left);
 await shot('p06-tiden-slut');
-// P7: menyn rensar jakten
-await ev(()=>[...document.querySelectorAll('.pj-layer button')].find(b=>/Fortsätt gå/.test(b.textContent))?.click());await wait(500);
+await btn(/FÖRSÖK IGEN/);await wait(1700);
+check('P7b FÖRSÖK IGEN: samma plats',(await P())?.place===def.place.id);
+// P8: stänga kortet ger vanlig fri julvandring igen (med tomtarnas julklappar)
+await btn(/Inte nu/);await wait(800);
+const h8=await H();
+check('P8 Inte nu: tillbaka i vanlig fri julvandring',!!h8&&!h8.plats&&h8.title==='FRI JULVANDRING'&&!(await P()),JSON.stringify(h8));
+// P9: menyn rensar jakten
+await click('xmasPlatsjakt');await wait(1800);await btn(/STARTA KLOCKAN/);await wait(800);
 await ev(()=>window.KarlstadDebug.journey().xmas.openMenu());await wait(800);
-check('P7 till menyn: jakten och klockan är borta',!(await P())&&!(await ev(()=>{const h=document.querySelector('.pj-hud');return !!h&&!h.hidden;})));
-check('P8 inga fel i sidan',errs.length===0,errs.slice(0,4).join(' | '));
+check('P9 till menyn: jakten och klockan är borta',!(await P())&&!(await ev(()=>{const h=document.querySelector('.pj-hud');return !!h&&!h.hidden;})));
+check('P10 inga fel i sidan',errs.length===0,errs.slice(0,4).join(' | '));
 console.log(failed?`\n${failed} kontroll(er) FEL`:'\nAlla kontroller OK');
 await browser.close();server.close();
 process.exit(failed?1:0);

@@ -654,3 +654,17 @@ Skärmbilder (1280×720 och 414×896) av Rådhuset, Domkyrkans torn från väste
 **Publicerat 2026-11-25 efter användarens ja:** `dpl_6v9ysM8vdZ1v4c3ZjYkatSmVAq96` (`target: production`, en omdeploy av förhandsvisningen `dpl_BF32cMy3RBWMez5PApt8py18Pecy`, commit `201f232`, READY efter ca 12 s, tilldelad `karlstad-julklappsjakten.vercel.app`, `aliasError: null`).
 Före publiceringen: förhandsvisningens `/api/build-info` visade `201f232` och `xmas/olearys-data.mjs?v=2.21.1-xmas.14` levererades. Efter: produktionsadressens `/api/build-info` visar `environment: production`, commit `201f232`, deployment `dpl_6v9ysM…`.
 **Återställning:** xmas.13 `dpl_5sAp5oXKvsSTK5oJq3cJzdTN4QfH` (Vercel → Deployments → Instant Rollback). xmas.13 känner inte till Platsjaktens rekord och tar bort dem ur spelarens framsteg nästa gång den sparar; O'Learys-resultaten ligger i en egen nyckel och blir kvar.
+
+### 2.21.1-xmas.15: Platsjakten utan tappade julklappar och med ny plats varje gång
+
+Användarens rapport 2026-11-25 (efter publiceringen av xmas.14): i Platsjakten dök tomtarnas tappade julklappar upp, vilket förvirrade uppdraget, och platsen var Åhléns varje gång.
+Orsaker: Platsjakten startade vanlig fri julvandring (med regn av tappade julklappar, gömda paket och dagens julklapp), och platsen valdes efter datum (samma hela dagen för alla).
+
+| Ändring | Var |
+|---|---|
+| Platsjaktens eget läge: `startFree({plats:true})` sätter `run.plats`, inga regn (`nextRainAt = Infinity`), inga gömda paket och ingen dagens julklapp. Uppdragsraden säger HITTA PLATSEN, ingen butiksrad. När man stänger kortet blir det vanlig fri julvandring igen där man står. | `xmas/xmas-boot.js`, `xmas/xmas-guide.mjs` |
+| Ny plats för varje jakt: slumpas bland platserna som inte är bland de fyra senaste (`RECENT_KEEP`, sparas i framstegen som `platsjakt.recent`). FÖRSÖK IGEN behåller platsen; efter ett fynd är NY PLATS huvudknappen och "Samma plats igen på tid" finns kvar. Under en kampanj gäller kampanjens plats för alla. | `xmas/xmas-platsjakt.mjs`, `xmas/xmas-platsjakt-ui.js` |
+| Belöningen en gång per plats och dag, högst tre platser om dagen (`PLATSJAKT.rewardsPerDay`); rekordtiden sparas alltid. Äldre sparningar (en plats per dag som sträng) läses som en lista. | `xmas/xmas-meta.mjs`, `xmas/xmas-platsjakt.mjs` |
+| Testet "fri vandring är sök och hitta" i `tests/xmas-guide.test.mjs` föll i ungefär 0,4 % av körningarna (punkten "långt bort" låg fast 90 m österut och hamnade ibland vid spårets början). Punkten ligger nu på andra sidan högen än spåret: 3000 av 3000. | `tests/xmas-guide.test.mjs` |
+
+Versionsnyckeln är `2.21.1-xmas.15` (89 filer, `tools/set-version.mjs`).

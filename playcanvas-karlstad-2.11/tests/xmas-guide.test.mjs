@@ -171,7 +171,8 @@ test('fri vandring är sök och hitta: ingen pil till paketen, bara en liten hj�
   assert.equal(h.guideTarget({x:0,z:0}),null,'ingen pil mot paketen, hur nära de än ligger');
   assert.equal(h.objective({x:0,z:0}).kind,'wait','inga pilar på marken och ingen flagga');
   h.run.lastPickT=h.run.t-TRAILS.idleAssist-1;              // länge utan fynd
-  const rain=h.run.rains[0],far={x:rain.x+90,z:rain.z};
+  // långt bort på andra sidan högen än spårets början (en fast punkt österut hamnade ibland vid spårets början, som kan gå åt vilket håll som helst)
+  const rain=h.run.rains[0],dl=Math.hypot(rain.head.x-rain.x,rain.head.z-rain.z)||1,far={x:rain.x-(rain.head.x-rain.x)/dl*90,z:rain.z-(rain.head.z-rain.z)/dl*90};
   const t=h.guideTarget(far);assert.ok(t&&t.kind==='trail'&&t.label==='SPÅR I SNÖN',JSON.stringify(t));
   assert.equal(t.x,rain.head.x);assert.equal(t.z,rain.head.z,'pekar på spårets början, inte på paketen');
   assert.ok(Math.abs(t.distance-Math.hypot(rain.head.x-far.x,rain.head.z-far.z))<1e-6);

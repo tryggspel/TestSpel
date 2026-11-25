@@ -1,6 +1,6 @@
-import {mallInside,mallWalkable,escalatorAt,MALL_CACHE,MALL_CORRIDORS,MALL_ROOMS} from './mall-space.mjs?v=2.21.1-xmas.14';
-import {CityNavigation} from './city-missions.mjs?v=2.21.1-xmas.14';
-import {CityGuidance} from './city-guidance.mjs?v=2.21.1-xmas.14';
+import {mallInside,mallWalkable,escalatorAt,MALL_CACHE,MALL_CORRIDORS,MALL_ROOMS} from './mall-space.mjs?v=2.21.1-xmas.15';
+import {CityNavigation} from './city-missions.mjs?v=2.21.1-xmas.15';
+import {CityGuidance} from './city-guidance.mjs?v=2.21.1-xmas.15';
 export function createMallGuidance(streetGuide){
   const nav=new CityNavigation((x,z)=>!mallWalkable(x,z,true)||!!escalatorAt(x,z),{minX:-165,maxX:-99,minZ:72,maxZ:135},1);
   const guide=new CityGuidance(nav);

@@ -7,7 +7,8 @@ import {bowlingScore,pinsStanding,BOWL_FRAMES,dartScore,DART_ORDER,shuffleZone,s
 import {makeWorld,addBody,stepWorld,moving,drain} from '../xmas/olearys-physics.mjs';
 import {VENUE,FURNITURE,STATIONS,LANES,venueColliders,inVenue,toWorld,FBK_MATCHES} from '../xmas/olearys-data.mjs';
 import {JULGUIDE,placedGuide,nearestGuide,guideById,GUIDE} from '../xmas/xmas-julguide-data.mjs';
-import {PLATSER,platsjaktFor,compass,found,sanitizePlatsjakt,PLATSJAKT,contestFor} from '../xmas/xmas-platsjakt.mjs';
+import {PLATSER,platsjaktFor,compass,found,sanitizePlatsjakt,PLATSJAKT,contestFor,nextPlace,RECENT_KEEP} from '../xmas/xmas-platsjakt.mjs';
+import {missionView} from '../xmas/xmas-guide.mjs';
 import {XmasMeta} from '../xmas/xmas-meta.mjs';
 import {XP,COUPONS} from '../xmas/xmas-meta-config.mjs';
 import {marketColliders,TRUCKS,TRUCK} from '../xmas/xmas-market-data.mjs';
@@ -113,18 +114,37 @@ test('julguiden: uppgifter, platser och närhet', ()=>{
   const m=new XmasMeta({storage:mem()});assert.equal(m.onGuide('fratelli').xp,XP.guide);assert.equal(m.onGuide('fratelli'),null);assert.equal(m.onGuide('<x>'),null);
 });
 
-test('Platsjakten: en plats per dag, tidsgräns efter avståndet, belöning en gång per dag', ()=>{
-  let prev=null;const seen=new Set();
-  for(const d of days('2026-11-25',40)){const x=platsjaktFor(d);assert.ok(x.seconds>=60&&x.seconds<=PLATSJAKT.maxSeconds);assert.notEqual(x.place.id,prev);prev=x.place.id;seen.add(x.place.id);}
-  assert.equal(seen.size,PLATSER.length);assert.equal(platsjaktFor('fel'),null);assert.equal(contestFor('2026-12-01'),null);
+test('Platsjakten: en ny plats för varje jakt, aldrig någon av de senaste, samma plats vid FÖRSÖK IGEN', ()=>{
+  let seed=7;const rand=()=>((seed=(seed*16807)%2147483647)/2147483647);
+  const recent=[],seen=new Set();
+  for(let i=0;i<60;i++){const x=platsjaktFor('2026-12-02',{recent,rand});assert.ok(x.seconds>=60&&x.seconds<=PLATSJAKT.maxSeconds);
+    assert.ok(!recent.slice(-RECENT_KEEP).includes(x.place.id),'inte en av de '+RECENT_KEEP+' senaste: '+x.place.id);recent.push(x.place.id);seen.add(x.place.id);}
+  assert.equal(seen.size,PLATSER.length,'alla platser kommer');
+  const first=platsjaktFor('2026-12-02',{recent:[],rand:()=>0}),again=platsjaktFor('2026-12-02',{recent:[first.place.id],placeId:first.place.id});assert.equal(again.place.id,first.place.id,'FÖRSÖK IGEN: samma plats');
+  assert.notEqual(nextPlace([first.place.id],()=>0).id,first.place.id);
+  const camp=[{id:'t',from:'2026-12-10',to:'2026-12-12',place:'domkyrkan',title:'KAMPANJ'}];
+  assert.equal(platsjaktFor('2026-12-11',{recent:['domkyrkan'],contests:camp}).place.id,'domkyrkan','kampanjens plats gäller för alla');
+  assert.equal(platsjaktFor('fel'),null);assert.equal(contestFor('2026-12-01'),null);
   for(const p of PLATSER){assert.ok(Math.hypot(p.view.x-p.x,p.view.z-p.z)>15,'kameran står en bit ut');assert.ok(Math.hypot(p.look.x-p.x,p.look.z-p.z)<4,'målet ligger vid fasaden');}
   assert.equal(compass({x:0,z:0},{x:0,z:-100}),'norrut');assert.equal(compass({x:0,z:0},{x:100,z:0}),'österut');assert.equal(compass({x:0,z:0},{x:-50,z:50}),'sydväst');
   assert.ok(found({x:-69,z:-15},PLATSER[0]));assert.ok(!found({x:0,z:0},PLATSER[0]));
+  // uppdragsraden i Platsjakten: inga spår i snön
+  assert.deepEqual(missionView({plats:true,drops:true,phase:'free',packages:[],rains:[],goal:0}).rows.map(r=>r.text),['HITTA PLATSEN']);
+});
+
+test('Platsjakten: belöning en gång per plats och dag, högst tre platser om dagen, rekordtiden alltid', ()=>{
   const m=new XmasMeta({storage:mem(),rng:()=>.4}),when=new Date('2026-12-02T12:00:00Z');
-  const a=m.onPlatsjakt('radhuset',80,{xp:70,orn:'rare'},when);assert.ok(a.R&&a.R.xp>=70&&a.best);
-  const b=m.onPlatsjakt('radhuset',60,{xp:70},when);assert.equal(b.R,null);assert.ok(b.best);assert.equal(m.state.platsjakt.best.radhuset,60);
-  const c=m.onPlatsjakt('radhuset',90,{},when);assert.ok(!c.best);
-  assert.deepEqual(sanitizePlatsjakt({best:{radhuset:'55.55',okänd:3},won:{'2026-12-02':'radhuset',fel:'x'}}),{best:{radhuset:55.6},won:{'2026-12-02':'radhuset'}});
+  const a=m.onPlatsjakt('radhuset',80,{xp:70,orn:'rare'},when);assert.ok(a.R&&a.R.xp>=70&&a.best);assert.equal(a.left,2);
+  const b=m.onPlatsjakt('radhuset',60,{xp:70},when);assert.equal(b.R,null);assert.ok(b.best&&b.already);assert.equal(m.state.platsjakt.best.radhuset,60);
+  assert.ok(m.onPlatsjakt('domkyrkan',90,{},when).R);assert.ok(m.onPlatsjakt('ahlens',90,{},when).R);
+  const d=m.onPlatsjakt('duvan',90,{},when);assert.equal(d.R,null,'högst tre om dagen');assert.ok(!d.already);assert.equal(d.left,0);
+  assert.equal(m.platsjaktWon(when),3);
+  assert.ok(m.onPlatsjakt('duvan',95,{},new Date('2026-12-03T12:00:00Z')).R,'nästa dag igen');
+  m.notePlatsjakt('sandgrund');m.notePlatsjakt('ahlens');m.notePlatsjakt('sandgrund');assert.deepEqual(m.state.platsjakt.recent,['ahlens','sandgrund']);
+  for(const id of ['radhuset','domkyrkan','duvan','biblioteket'])m.notePlatsjakt(id);assert.equal(m.state.platsjakt.recent.length,RECENT_KEEP);
+  // äldre sparning (en sträng per dag) blir en lista; okända platser och fel datum försvinner
+  assert.deepEqual(sanitizePlatsjakt({best:{radhuset:'55.55',okänd:3},won:{'2026-12-02':'radhuset','2026-12-03':['ahlens','x','ahlens'],fel:'x'},recent:['ahlens','<x>']}),
+    {best:{radhuset:55.6},won:{'2026-12-02':['radhuset'],'2026-12-03':['ahlens']},recent:['ahlens']});
 });
 
 test("O'Learys-aktiviteterna ger XP, högst åtta gånger om dagen", ()=>{

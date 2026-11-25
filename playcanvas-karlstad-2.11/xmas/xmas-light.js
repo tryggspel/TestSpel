@@ -2,7 +2,7 @@
 // Staden ritas mest med obelysta material (färgade trianglar), så ljuskällorna räcker inte: de materialen tonas genom sin självlysande färg.
 // Det som ska lysa (ljusslingor, lyktor, fönster, skyltar, eld, sken) lämnas orört och syns därför starkare ju mörkare det blir.
 // Fail-soft: ett material som spelet självt ändrar färg på (blinkar, byter färg) märks och lämnas i fred.
-import {LIGHT_MODES,darknessFor,gradeFor,gradeKind,phaseName} from './xmas-light.mjs?v=2.21.1-xmas.14';
+import {LIGHT_MODES,darknessFor,gradeFor,gradeKind,phaseName} from './xmas-light.mjs?v=2.21.1-xmas.15';
 
 // Material som lyser av sig själva även om de är ogenomskinliga och obelysta (efter material- eller nodnamn): de lämnas orörda.
 const GLOW=/lykt|fönster|window|lamp|neon|glow|sken|stjärn|\bstar\b|ljus|bulb|flam|lågor|skärm|screen/i;

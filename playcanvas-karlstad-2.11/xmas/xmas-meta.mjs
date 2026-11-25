@@ -3,11 +3,11 @@
 // Egen sparning (karlstad-xmas:meta:1), skild från julspelets (karlstad-xmas:save:1) som Julkalendern läser: den här modulen ändrar aldrig den och kalendern ändrar aldrig den här.
 // Alla belöningar delas ut av den här modulen och bara en gång: en lucka, en söndag, en gömd julklapp eller en kod kan inte ge samma sak två gånger, hur man än laddar om eller rör klockan.
 // Tiden är svensk kalenderdag (Europe/Stockholm). Spelet och kalendern räknar likadant (tests/xmas-meta.test.mjs jämför dem).
-import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,ORNAMENT_POLICY,FIRST_ORNAMENT,MISSIONS,MISSION_TIERS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,QR_CODES,COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.14';
-import {makeTicket,validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.14';
-import {codeHash,pinHash,normalizeCode} from './xmas-hash.mjs?v=2.21.1-xmas.14';
-import {HIDDEN_SPOTS,hintsShown} from './xmas-hidden.mjs?v=2.21.1-xmas.14';
-import {sanitizePlatsjakt} from './xmas-platsjakt.mjs?v=2.21.1-xmas.14';
+import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,ORNAMENT_POLICY,FIRST_ORNAMENT,MISSIONS,MISSION_TIERS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,QR_CODES,COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.15';
+import {makeTicket,validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.15';
+import {codeHash,pinHash,normalizeCode} from './xmas-hash.mjs?v=2.21.1-xmas.15';
+import {HIDDEN_SPOTS,hintsShown} from './xmas-hidden.mjs?v=2.21.1-xmas.15';
+import {sanitizePlatsjakt,PLATSJAKT,RECENT_KEEP} from './xmas-platsjakt.mjs?v=2.21.1-xmas.15';
 
 export const META_KEY='karlstad-xmas:meta:1';
 const ORN_BY_ID=new Map(ORNAMENTS.map(o=>[o.id,o]));
@@ -41,7 +41,7 @@ export function levelFor(xp,levels=LEVELS){
 
 // ── Sparning ─────────────────────────────────────────────────────────────────────────────────────────────────────
 const blankDay=()=>({runs:0,clears:0,packages:0,bonus:0,chain:0,fast:0,areas:[],hidden:0,zombies:0,rush:0,termos:0,termosRuns:0,termosGoal:false,daily:false,ol:0,meter:0,first:false,gift:false,done:{},pick:[]});
-export const blankMeta=()=>({v:1,xp:0,lv:1,dry:0,orn:{},seen:{},tickets:[],meter:0,days:{},streak:{cur:0,best:0,last:'',freezes:0,got:{}},cal:{doors:{},advent:{}},hidden:{},qr:{},daily:{},guide:{},platsjakt:{best:{},won:{}},coupons:[],draw:{sent:[],at:0},tried:{intro:false,zombies:false,rush:false,termos:false},welcomed:false,first:''});
+export const blankMeta=()=>({v:1,xp:0,lv:1,dry:0,orn:{},seen:{},tickets:[],meter:0,days:{},streak:{cur:0,best:0,last:'',freezes:0,got:{}},cal:{doors:{},advent:{}},hidden:{},qr:{},daily:{},guide:{},platsjakt:{best:{},won:{},recent:[]},coupons:[],draw:{sent:[],at:0},tried:{intro:false,zombies:false,rush:false,termos:false},welcomed:false,first:''});
 
 function sanitizeDay(r){
   const d=blankDay();if(!isObj(r))return d;
@@ -431,21 +431,23 @@ export class XmasMeta{
     const day=dayOf(when),R=this._reward();st.guide[id]=day;this._xp(R,XP.guide,'Julguiden');
     return this._finish(R,day);
   }
-  // Platsjakten (xmas-platsjakt.mjs): platsen hittad på seconds sekunder. Bästa tiden sparas alltid; belöningen (reward: {xp, orn, coupon, tickets}) en gång per dag.
-  // Returnerar {R (belöningen eller null om dagens redan är tagen), best (true = ny bästa tid)}.
+  // Platsjakten (xmas-platsjakt.mjs): platsen hittad på seconds sekunder. Bästa tiden sparas alltid; belöningen (reward: {xp, orn, coupon, tickets}) en gång per plats och dag,
+  // högst PLATSJAKT.rewardsPerDay platser om dagen.
   onPlatsjakt(place,seconds,reward={},when=this.clock()){
     const st=this.state,P=st.platsjakt,day=dayOf(when),sec=Math.round(Math.max(0,Number(seconds)||0)*10)/10;
-    if(typeof place!=='string'||!/^[a-z0-9-]{1,30}$/.test(place))return {R:null,best:false};
+    if(typeof place!=='string'||!/^[a-z0-9-]{1,30}$/.test(place))return {R:null,best:false,left:0};
     const prev=P.best[place],best=!(prev>0)||sec<prev;if(best)P.best[place]=sec;
-    let R=null;
-    if(!Object.prototype.hasOwnProperty.call(P.won,day)){
-      P.won[day]=place;const d=this._day(day);R=this._reward();
+    const won=P.won[day]||[];let R=null;
+    if(!won.includes(place)&&won.length<PLATSJAKT.rewardsPerDay){
+      P.won[day]=[...won,place];const d=this._day(day);R=this._reward();
       this._give(R,{xp:reward.xp??XP.platsjakt,orn:reward.orn||'rare',tickets:reward.tickets||0,coupon:reward.coupon,src:'daily'},{day,label:'Platsjakten',odds:'dailyGift'});
       R.notable=true;this._missions(R,day,d);R=this._finish(R,day);
     }else this.save();
-    return {R,best};
+    return {R,best,left:Math.max(0,PLATSJAKT.rewardsPerDay-(P.won[day]||[]).length),already:won.includes(place)};
   }
-  platsjaktWon(when=this.clock()){return Object.prototype.hasOwnProperty.call(this.state.platsjakt.won,dayOf(when));}
+  // En jakt har börjat på place: den kommer inte tillbaka som ny plats förrän RECENT_KEEP andra har varit.
+  notePlatsjakt(place){const P=this.state.platsjakt;if(typeof place!=='string')return;P.recent=[...P.recent.filter(x=>x!==place),place].slice(-RECENT_KEEP);this.save();}
+  platsjaktWon(when=this.clock()){return (this.state.platsjakt.won[dayOf(when)]||[]).length;}
   // O'Learys (olearys-games.js): en avslutad aktivitet eller femkamp. Högst XP.activityDay belöningar om dagen. null när dagens tak är nått.
   onActivity({id='',points=0,penta=false}={},when=this.clock()){
     const day=dayOf(when),d=this._day(day);if(d.ol>=XP.activityDay)return null;
