@@ -263,3 +263,15 @@ Användarens önskan 2026-11-25: Termosjakten tillbaka som huvudspåret, *TempoR
 - **Ljuset efter klockan:** julmarknaden och Termosjakten ser bäst ut i mörker, och i december är det mörkt från halv fyra i Karlstad. Spelaren kan välja fast dag, skymning eller kväll i pausmenyn.
 
 **Inte provat med människor:** om dagsmålen är lagom svåra (de är satta efter bedömning och en enda botrunda, inte provade med `difficulty.mjs`), om gåtorna är för lätta eller för svåra och om 100 s och 220 s är rätt tider för hjälpen. Ändra i `DAILY_GOALS` och `DAILY`.
+
+## 14. O'Learys, Platsjakten, julguiden och staden (2.21.1-xmas.14, byggt)
+
+**Beslut (går att ändra i data/konfiguration):**
+
+- **O'Learys är en lokal, inte en meny.** Man går in genom dörren på torget och går fram till stationerna; varje aktivitet är ett kort spel med fingerdrag (en slangbella), så att det fungerar på telefon. Femkampen är "samma kväll, fem grenar" och ger ett eget rekord. Färger och ton: mörk grön/svart, guld och vitt, sportbar.
+- **FBK-tipset ger aldrig något som kan likna spel om pengar:** inga insatser, inga priser, inga XP och inga lotter, bara tipspoäng i spelet. Matchtider kan ändras (en källa anger en annan tid för 5 december); `result` fylls i efter matcherna.
+- **Platsjakten** ska få folk att lära sig staden: bilden är tagen i spelet, inte ett foto, och tiden räcker om man vet vart man ska. Belöningen en gång per dag, men man kan springa om på tid hur många gånger man vill. En kampanj (period, plats, kupong, QR) läggs in i `CONTESTS` när någon står bakom ett erbjudande.
+- **Julguiden** visar verkliga julbord och julmarknader med pris och källa, och säger att det inte finns något samarbete. Rabatt via QR-kod (fälten `coupon`/`qr`) kopplas på först när ett ställe vill vara med.
+- **Byggnaderna:** de få byggnader man orienterar sig efter (Rådhuset, Domkyrkans spira, Fredsmonumentet) byggs som geometri efter skrivna källor. Utan bilder eller källor gissar spelet inte fram fasader på vanliga hus.
+
+**Inte provat med människor:** om Platsjaktens tider och ledtrådar är lagom, om spelen hos O'Learys är lagom svåra med fingret, och om karlstadsbor känner igen sig. Mät gärna det sista med Platsjakten (hur fort hittar man Rådhuset och Domkyrkan?).
