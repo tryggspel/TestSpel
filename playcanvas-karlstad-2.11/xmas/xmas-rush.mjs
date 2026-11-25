@@ -11,13 +11,13 @@
 // bär en gåva, och vid sidan av banan ligger valfria sidopaket (alltid med gåva) som kräver en avstickare: de räknas inte mot målet och kostar ingen tid om man hoppar över dem.
 // Ingenting här ändrar grundspelets regler: allt sker via journey-objektets egna funktioner, och den här klassen skriver aldrig i journey.events,
 // så grundspelets tempo-hanterare (som talar om termosar) körs aldrig i julbygget.
-import {TEMPO,tempoPoints,tempoSpeed} from '../tempo-run.mjs?v=2.21.1-xmas.16';
-import {catchReach,tempoReach,TEMPO_COURSE} from '../journey-rules.mjs?v=2.21.1-xmas.16';
-import {POWER,powerFor} from '../powerups.mjs?v=2.21.1-xmas.16';
-import {PACKAGE_POINTS,COMBO,comboMult} from './xmas-config.mjs?v=2.21.1-xmas.16';
-import {RUSH_COUNT,RUSH_MAX,PRESSURE,clockFor,goalProgress,starsFor,seriesHearts} from './xmas-rushes.mjs?v=2.21.1-xmas.16';
-import {TERMOS,termosName} from './xmas-termos.mjs?v=2.21.1-xmas.16';
-import {dayOf} from './xmas-meta.mjs?v=2.21.1-xmas.16';
+import {TEMPO,tempoPoints,tempoSpeed} from '../tempo-run.mjs?v=2.21.1-xmas.17';
+import {catchReach,tempoReach,TEMPO_COURSE} from '../journey-rules.mjs?v=2.21.1-xmas.17';
+import {POWER,powerFor} from '../powerups.mjs?v=2.21.1-xmas.17';
+import {PACKAGE_POINTS,COMBO,comboMult} from './xmas-config.mjs?v=2.21.1-xmas.17';
+import {RUSH_COUNT,RUSH_MAX,PRESSURE,clockFor,goalProgress,starsFor,seriesHearts} from './xmas-rushes.mjs?v=2.21.1-xmas.17';
+import {TERMOS,termosName} from './xmas-termos.mjs?v=2.21.1-xmas.17';
+import {dayOf} from './xmas-meta.mjs?v=2.21.1-xmas.17';
 
 export const RUSH=Object.freeze({
   id:'julrush',

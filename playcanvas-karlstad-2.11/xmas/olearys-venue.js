@@ -1,10 +1,10 @@
 // O'Learys Karlstad (2.21.1-xmas.14): lokalen i 3D, gästerna och personalen, skärmarna och dörrarna. Ritningen ligger i olearys-data.mjs.
 // Allt fast är sammanslaget i ett par meshar (ComicMesh med vertexfärger); skärmar, skyltar och logotyp är bildkort med egna texturer. Ingen snö, inget ljus som tonas:
 // materialen läggs i julbyggets "bright"-mängd, så att lokalen är lika ljus på kvällen som på dagen.
-import {ComicMesh} from '../city-architecture.js?v=2.21.1-xmas.16';
-import {VENUE,OL_COLORS as C,FURNITURE,LANES,STATIONS,toWorld,toLocal,inVenue,FBK_MATCHES} from './olearys-data.mjs?v=2.21.1-xmas.16';
-import {PEOPLE_ATLAS,PEOPLE_CELL,drawPeopleAtlas,peopleUv,styleIndex,PEOPLE_STYLES} from './xmas-people-art.js?v=2.21.1-xmas.16';
-import {matchStart} from './olearys-rules.mjs?v=2.21.1-xmas.16';
+import {ComicMesh} from '../city-architecture.js?v=2.21.1-xmas.17';
+import {VENUE,OL_COLORS as C,FURNITURE,LANES,STATIONS,toWorld,toLocal,inVenue,FBK_MATCHES} from './olearys-data.mjs?v=2.21.1-xmas.17';
+import {PEOPLE_ATLAS,PEOPLE_CELL,drawPeopleAtlas,peopleUv,styleIndex,PEOPLE_STYLES} from './xmas-people-art.js?v=2.21.1-xmas.17';
+import {matchStart} from './olearys-rules.mjs?v=2.21.1-xmas.17';
 
 const O=VENUE.origin;
 // ComicMesh i världskoordinater med lokalens origo

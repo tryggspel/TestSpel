@@ -21,7 +21,11 @@ export const DAILY_HUNTS=Object.freeze({
 export const DAILY=Object.freeze({
   xp:80,            // XP för dagens julklapp (om dagen inte säger annat)
   warm:140,hot:50,  // "varmt" och "glödhett" (meter till julklappen)
-  areaHintAfter:100,// sekunder: därefter står områdets namn i uppdragsraden
-  arrowAfter:220,   // sekunder: därefter visar pilen vägen till området (inte till själva julklappen)
+  cool:250,cold:450,// värmemätaren (2.21.1-xmas.17): ljummet inom cool, kallt inom cold, annars iskallt
+  // Ledtrådstrappan (2.21.1-xmas.17): sekunder från start. Knappen LEDTRÅD NU tar nästa steg direkt.
+  areaHintAfter:60, // 2: områdets namn
+  compassAfter:120, // 3: väderstreck och ungefärligt avstånd härifrån
+  arrowAfter:180,   // 4: pilen visar vägen till området
+  spotArrowAfter:300,// 5: pilen visar vägen ända fram till julklappen
   areaRadius:70     // pilen leder hit: områdets mitt, inom så här många meter från julklappen
 });

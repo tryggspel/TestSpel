@@ -1,9 +1,9 @@
 // Folklivet på julmarknaden (2.21.1-xmas.13): ritar folkmassan (xmas-crowd.mjs) och scenens artister som bildkort i en enda mesh (ett ritanrop).
 // Varje figur vänder sig mot kameran runt den lodräta axeln och speglas efter gångriktningen (den som går åt vänster i bild ses från sidan åt vänster).
 // Bara när spelaren är vid torget; simuleringen går med full fart inom 140 m och står still längre bort.
-import {Crowd,CROWD} from './xmas-crowd.mjs?v=2.21.1-xmas.16';
-import {PEOPLE_STYLES,PEOPLE_ATLAS,PEOPLE_CELL,drawPeopleAtlas,peopleUv,stylesOf,styleIndex} from './xmas-people-art.js?v=2.21.1-xmas.16';
-import {STAGE,stageActAt} from './xmas-market-data.mjs?v=2.21.1-xmas.16';
+import {Crowd,CROWD} from './xmas-crowd.mjs?v=2.21.1-xmas.17';
+import {PEOPLE_STYLES,PEOPLE_ATLAS,PEOPLE_CELL,drawPeopleAtlas,peopleUv,stylesOf,styleIndex} from './xmas-people-art.js?v=2.21.1-xmas.17';
+import {STAGE,stageActAt} from './xmas-market-data.mjs?v=2.21.1-xmas.17';
 
 const FIG=178/192; // figurens höjd i cellen (vuxen): kortet är lite högre än personen
 export function quadHeight(style){const s=PEOPLE_STYLES[style];return s.kind==='kid'?s.h/(.74*FIG):s.h/FIG;}

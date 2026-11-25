@@ -542,3 +542,21 @@ body.kiosk-on .place-hud,body.kiosk-on #placeHud{display:none!important}
 .tm-tray{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:auto;min-height:96px}
 .tm-item{width:86px;min-height:86px;border:0;border-radius:16px;background:linear-gradient(#fff9e8,#efdcb2);color:#2a0d16;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 4px 0 #b99b62;font-weight:900;font-size:10px}
 .tm-item img{width:50px;height:50px}.tm-item.sel{outline:4px solid #ffd76a;transform:translateY(-4px)}
+/* ── Dagens julklappsjakt: panelen (2.21.1-xmas.17, xmas/xmas-daily-ui.js) ───────────────────────────────────── */
+.xd-hud{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 108px);z-index:41;width:min(92vw,400px);padding:8px 10px 10px;border:2px solid #ffd77a;border-radius:16px;
+  background:#1d2b27f2;color:#fffbe9;box-shadow:0 6px 18px #0008;font-family:system-ui,sans-serif}
+.xd-hud[hidden]{display:none}
+.xd-top{all:unset;display:flex;justify-content:space-between;align-items:baseline;gap:8px;width:100%;cursor:pointer}
+.xd-kicker{font:900 11px system-ui;letter-spacing:.12em;color:#ffd77a}.xd-step{font:800 11px system-ui;letter-spacing:.04em;opacity:.9}
+.xd-meter{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin:6px 0 3px}
+.xd-seg{height:8px;border-radius:4px;background:#ffffff22}.xd-seg.on.s0{background:#7fb6ff}.xd-seg.on.s1{background:#a6d4ff}.xd-seg.on.s2{background:#ffd77a}.xd-seg.on.s3{background:#ff9a4a}.xd-seg.on.s4{background:#ff4a3a}
+.xd-hud[data-warm="4"]{border-color:#ff4a3a;animation:pjPulse .7s infinite alternate}
+.xd-warm{display:flex;justify-content:space-between;font:900 13px system-ui}.xd-trend.up{color:#ffb36a}.xd-trend.down{color:#9fd0ff}
+.xd-riddle{margin:6px 0 4px;font:600 13px/1.3 system-ui;font-style:italic}
+.xd-hints{list-style:none;margin:0;padding:0;display:grid;gap:3px;font:13px/1.3 system-ui}.xd-hints b{color:#ffd77a;font-size:11px;letter-spacing:.06em}
+.xd-hints li.new{animation:xdNew 1.6s}
+.xd-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px}.xd-next{font:12px system-ui;opacity:.8}
+.xd-btn{border:0;border-radius:10px;min-height:36px;padding:0 12px;background:#d9473f;color:#fff;font:900 12px system-ui;letter-spacing:.05em}.xd-btn[hidden]{display:none}
+.xd-hud.closed .xd-body{display:none}
+.xd-hud.found{border-color:#7fe0a0}
+@keyframes xdNew{from{background:#ffd77a44}to{background:transparent}}

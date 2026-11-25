@@ -1,10 +1,10 @@
 // Julklappsjakten: gränssnittet för framstegen (xmas-meta.mjs). Remsan på start- och julmenyn (grad, dagens uppdrag, serie, lotter), belöningsraden på slutkortet, julgranen, lotterna och gömda julklappar.
 // Allt skrivs med textContent (aldrig HTML-strängar med data). Knapparna är minst 48 px höga. Panelerna finns som tomma kort i index.html och fylls här.
-import {RARITY_LABEL,PRIZE,TICKETS,TIER_LABEL,LEVELS} from './xmas-meta-config.mjs?v=2.21.1-xmas.16';
-import {drawOrnament,drawTree} from './xmas-tree-art.js?v=2.21.1-xmas.16';
-import {HIDDEN_SPOTS} from './xmas-hidden.mjs?v=2.21.1-xmas.16';
-import {drawDateText,entryAvailable,entryOpen,validateEntry,buildPayload,submitEntry,reasonText} from './xmas-draw-client.mjs?v=2.21.1-xmas.16';
-import {drawTexts} from './xmas-draw-text.mjs?v=2.21.1-xmas.16';
+import {RARITY_LABEL,PRIZE,TICKETS,TIER_LABEL,LEVELS} from './xmas-meta-config.mjs?v=2.21.1-xmas.17';
+import {drawOrnament,drawTree} from './xmas-tree-art.js?v=2.21.1-xmas.17';
+import {HIDDEN_SPOTS} from './xmas-hidden.mjs?v=2.21.1-xmas.17';
+import {drawDateText,entryAvailable,entryOpen,validateEntry,buildPayload,submitEntry,reasonText} from './xmas-draw-client.mjs?v=2.21.1-xmas.17';
+import {drawTexts} from './xmas-draw-text.mjs?v=2.21.1-xmas.17';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 const fmt=n=>Number(n).toLocaleString('sv-SE');

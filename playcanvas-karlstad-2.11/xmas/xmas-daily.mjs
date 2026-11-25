@@ -2,8 +2,9 @@
 // Gömställena är grundspelets egna termosplatser (explore-places.mjs: FX_THERMOS), som redan är kontrollerade mot spelets karta (minst 1,1 m fritt, på verkliga gator och stigar).
 // En gåta pekar ut området; "varmt" och "glödhett" leder sista biten. Efter en stund står områdets namn i uppdragsraden, och ännu senare visar pilen vägen till området.
 // Alla spelare har samma gömställe samma dag. Två dagar i rad ligger aldrig i samma område. Schemat för erbjudanden och QR-rader ligger i xmas-daily-config.mjs.
-import {FX_THERMOS} from '../explore-places.mjs?v=2.21.1-xmas.16';
-import {DAILY,DAILY_HUNTS} from './xmas-daily-config.mjs?v=2.21.1-xmas.16';
+import {FX_THERMOS} from '../explore-places.mjs?v=2.21.1-xmas.17';
+import {DAILY,DAILY_HUNTS} from './xmas-daily-config.mjs?v=2.21.1-xmas.17';
+import {compass} from './xmas-platsjakt.mjs?v=2.21.1-xmas.17';
 
 const near=(list,max=720)=>list.map(([x,z])=>({x,z})).filter(p=>Math.hypot(p.x,p.z)<max).sort((a,b)=>Math.hypot(a.x,a.z)-Math.hypot(b.x,b.z));
 // Områdena: namn, gåta (pekar ut området, inte platsen) och gömställena (närmast Torget först).
@@ -46,4 +47,27 @@ export function untilTomorrow(now=new Date()){
     const h=+parts.find(p=>p.type==='hour').value%24,m=+parts.find(p=>p.type==='minute').value;
     const left=24*60-(h*60+m);return {h:Math.floor(left/60),m:left%60};
   }catch{return {h:0,m:0};}
+}
+
+// ── Ledtrådstrappan och värmemätaren (2.21.1-xmas.17) ─────────────────────────────────────────────────────────────
+// Dagens julklappsjakt är ett eget läge (inga tappade julklappar eller spår i snön). Hjälpen kommer i steg, efter tid eller med knappen LEDTRÅD NU (bonus):
+//   1 gåtan · 2 området · 3 väderstreck och avstånd härifrån · 4 pilen till området · 5 pilen ända fram till julklappen.
+export const DAILY_STEPS=Object.freeze([
+  {n:1,key:'riddle',label:'GÅTAN',row:'LÖS GÅTAN'},{n:2,key:'area',label:'OMRÅDET',row:'SÖK I OMRÅDET'},{n:3,key:'compass',label:'VÄDERSTRECK',row:'GÅ I RÄTT RIKTNING'},
+  {n:4,key:'arrow',label:'PILEN TILL OMRÅDET',row:'FÖLJ PILEN'},{n:5,key:'spot',label:'PILEN ÄNDA FRAM',row:'PILEN VISAR VÄGEN'}
+].map(o=>Object.freeze(o)));
+const STEP_AT=cfg=>[0,cfg.areaHintAfter,cfg.compassAfter,cfg.arrowAfter,cfg.spotArrowAfter];
+export function dailyStep(seconds,bonus=0,cfg=DAILY){const t=STEP_AT(cfg);let s=1;for(let i=1;i<t.length;i++)if(seconds>=t[i])s=i+1;return Math.min(5,s+Math.max(0,Math.floor(bonus)||0));}
+// Sekunder till nästa steg som kommer av sig själv (null när alla steg är framme).
+export function nextStepIn(seconds,step,cfg=DAILY){const t=STEP_AT(cfg);return step>=5?null:Math.max(0,t[step]-seconds);}
+export const WARMTH_LABELS=Object.freeze(['ISKALLT','KALLT','LJUMMET','VARMT','GLÖDHETT']);
+export function warmthLevel(distance,cfg=DAILY){return distance<=cfg.hot?4:distance<=cfg.warm?3:distance<=cfg.cool?2:distance<=cfg.cold?1:0;}
+export function distanceText(m){return m<100?'under 100 m':'ungefär '+(Math.round(m/50)*50).toLocaleString('sv-SE')+' m';}
+// Texten för ett steg (p = där spelaren står).
+export function stepText(step,def,p){
+  if(step<=1)return '”'+def.area.riddle+'”';
+  if(step===2)return 'Dagens julklapp ligger i '+def.area.name+'.';
+  if(step===3)return 'Den ligger '+compass(p,def.spot)+' härifrån, '+distanceText(Math.hypot(def.spot.x-p.x,def.spot.z-p.z))+'.';
+  if(step===4)return 'Pilen visar vägen till '+def.area.name+'. Där blir det varmt.';
+  return 'Pilen visar nu vägen ända fram till julklappen.';
 }

@@ -102,17 +102,32 @@ check('T5 DAGENS JULKLAPPSJAKT startar vid tomtens stuga på Torget med dagens g
 await wait(600);
 const mission=await ev(()=>[...document.querySelectorAll('.xg-mission li, .xg-mission div, #xmasMission *')].map(e=>e.textContent).join(' | ')||document.body.innerText.match(/DAGENS JULKLAPP[^\n]*/)?.[0]||'');
 check('T5b uppdragsraden visar DAGENS JULKLAPP · LÖS GÅTAN',/DAGENS JULKLAPP · LÖS GÅTAN/.test(mission),mission.slice(0,160));
+// 2.21.1-xmas.17: eget läge – inga tappade julklappar eller spår i snön, bara dagens julklapp; panelen med gåtan och värmemätaren
+await wait(8000);
+const t5m=await ev(()=>{const x=window.KarlstadDebug.journey().xmas,r=x.hunt.run,s=x.snapshot();return {mode:!!r.dailyMode,rains:r.rains.length,ids:r.packages.filter(k=>!k.collected).map(k=>String(k.id)),panel:s.daily?.panel,
+  text:document.body.innerText};});
+check('T5m dagens jakt är ett eget läge: inga tappade julklappar eller spår i snön (vänta längre än första regnet), bara dagens julklapp',t5m.mode&&t5m.rains===0&&t5m.ids.length===1&&t5m.ids[0].startsWith('d:')&&!/TAPPADE JULKLAPPAR|HITTA TOMTARNAS SPÅR|NYA SPÅR/.test(t5m.text),JSON.stringify({mode:t5m.mode,rains:t5m.rains,ids:t5m.ids}));
+check('T5n panelen överst: DAGENS JULKLAPP med gåtan, värmemätaren och ledtråd 1/5',!!t5m.panel&&t5m.panel.open&&t5m.panel.step===1&&t5m.panel.riddle.includes(def.area.riddle.slice(0,25))&&Number.isInteger(t5m.panel.warm)&&/LEDTRÅD 1\/5/.test(t5m.text),JSON.stringify(t5m.panel));
 await shot('t05-dagens');
-// steg 3: pilen leder till området (tiden spolas fram)
-await ev(()=>{const d=window.KarlstadDebug.journey().xmas.daily;d.t0=performance.now()-230000;});await wait(1800);
+// steg 2 och 3 med tiden: området, sedan väderstreck och avstånd (ingen pil än)
+await ev(()=>{const d=window.KarlstadDebug.journey().xmas.daily;d.t0=performance.now()-125000;});await wait(1800);
+const t5k=await ev(()=>{const s=window.KarlstadDebug.journey().xmas.snapshot();return {level:s.daily?.level,hints:s.daily?.panel.hints,guide:s.guide.on?s.guide.id:null,text:document.querySelector('.xd-hints')?.textContent||''};});
+check('T5k efter två minuter: ledtrådarna OMRÅDET och VÄDERSTRECK står i panelen, och ingen pil än',t5k.level===3&&t5k.hints===2&&t5k.text.includes(def.area.name)&&/(norrut|nordost|österut|sydost|söderut|sydväst|västerut|nordväst)/.test(t5k.text)&&!t5k.guide,JSON.stringify(t5k));
+await shot('t05k-ledtradar');
+// steg 4: pilen leder till området (tiden spolas fram)
+await ev(()=>{const d=window.KarlstadDebug.journey().xmas.daily;d.t0=performance.now()-190000;});await wait(1800);
 const t5c=await ev(()=>{const s=window.KarlstadDebug.journey().xmas.snapshot();return {level:s.daily?.level,guide:s.guide.id,label:s.guide.label,on:s.guide.on};});
-check('T5c efter en stund leder pilen till dagens område (inte till julklappen) och uppdragsraden säger områdets namn',t5c.level===3&&t5c.guide==='xmas-daily'&&t5c.label===def.area.name.toUpperCase(),JSON.stringify(t5c));
+check('T5c efter tre minuter leder pilen till dagens område (inte till julklappen, aldrig till spår)',t5c.level===4&&t5c.guide==='xmas-daily'&&t5c.label===def.area.name.toUpperCase(),JSON.stringify(t5c));
+// LEDTRÅD NU: steg 5, pilen ända fram
+await ev(()=>document.querySelector('.xd-btn')?.click());await wait(1500);
+const t5l=await ev(()=>{const s=window.KarlstadDebug.journey().xmas.snapshot();return {level:s.daily?.level,bonus:s.daily?.bonus,guide:s.guide.id,on:s.guide.on};});
+check('T5l LEDTRÅD NU: sista steget, pilen visar vägen ända fram till julklappen',t5l.level===5&&t5l.bonus===1&&t5l.on&&t5l.guide==='xmas-daily-spot',JSON.stringify(t5l));
 await shot('t05c-pilen');
 // varmt nära julklappen, sedan hittad
 const sp=def.spot;
 await ev(([x,z])=>window.__tp(x+38,z,90,-4),[sp.x,sp.z]);await wait(1500);
-const warm=await ev(()=>document.body.innerText.match(/(VARMT|GLÖDHET)[^\n]*DAGENS JULKLAPP[^\n]*/)?.[0]||'');
-check('T5d nära gömstället: VARMT eller GLÖDHET om dagens julklapp',/DAGENS JULKLAPP/.test(warm),warm);
+const warm=await ev(()=>({lab:document.querySelector('.xd-wlab')?.textContent||'',warm:window.KarlstadDebug.journey().xmas.snapshot().daily?.panel.warm}));
+check('T5d nära gömstället: värmemätaren säger VARMT eller GLÖDHETT',warm.warm>=3&&/VARMT|GLÖDHETT/.test(warm.lab),JSON.stringify(warm));
 await shot('t05d-varmt');
 for(const k of [20,10,4,1.5,0]){await ev(([x,z,k])=>window.__tp(x+k,z,90,-8),[sp.x,sp.z,k]);await wait(500);}
 const foundOk=await until(()=>window.KarlstadDebug.journey().xmas.snapshot().dailyFound===true,20);
@@ -120,6 +135,9 @@ await wait(800);
 const t5e=await ev(()=>{const x=window.KarlstadDebug.journey().xmas;return {found:x.snapshot().dailyFound,daily:x.meta.state.daily,orn:Object.keys(x.meta.state.orn).length,xp:x.meta.state.xp,text:document.body.innerText.match(/DAGENS JULKLAPP![^\n]*\n?[^\n]*/)?.[0]||''};});
 check('T5e julklappen hittas: belöning (XP och en prydnad) och dagen är markerad som hittad',foundOk&&t5e.found&&t5e.daily[today]>0&&t5e.xp>t3.xp,JSON.stringify(t5e));
 await shot('t05e-hittad');
+await wait(5500);
+const t5h=await ev(()=>{const x=window.KarlstadDebug.journey().xmas,r=x.hunt.run;return {mode:!!r?.dailyMode,title:r?.title,panel:x.snapshot().daily,open:!document.querySelector('.xd-hud')?.hidden};});
+check('T5h efter fyndet: tillbaka i vanlig fri julvandring (tomtarna tappar julklappar igen) och panelen är borta',!t5h.mode&&t5h.title==='FRI JULVANDRING'&&!t5h.open,JSON.stringify(t5h));
 await ev(()=>window.KarlstadDebug.journey().xmas.openMenu());await wait(900);
 const t5f=await ev(()=>({btn:document.getElementById('xmasDaily').textContent.trim(),found:document.getElementById('xmasDaily').classList.contains('found'),note:document.getElementById('xmasDailyNote').textContent}));
 check('T5f menyn: DAGENS JULKLAPP HITTAD ✓ och när nästa göms',/HITTAD ✓/.test(t5f.btn)&&t5f.found&&/En ny julklapp göms om/.test(t5f.note),JSON.stringify(t5f));

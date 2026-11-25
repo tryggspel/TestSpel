@@ -4,7 +4,7 @@
 // Förebild: vinterfestivalen på Stora torget inför första advent (julmarknad, foodtrucks, scenprogram och en insamling). Spelet använder inga riktiga namn på
 // evenemang, företag, artister eller insamlingar: allt här är påhittat (se XMAS-SPELDESIGN.md). Allt ligger utanför introduktionens spiral (r ≤ 27 m) och
 // utanför startvyn (x −14…14, z 24…44), på den stora öppna ytan runt marknadsringen (torget är ungefär x −68…78, z −50…41 i spelets koordinater; granen i origo, norr = −z).
-import {INTRO,TREE,TORGET_PROPS} from './xmas-layout.mjs?v=2.21.1-xmas.16';
+import {INTRO,TREE,TORGET_PROPS} from './xmas-layout.mjs?v=2.21.1-xmas.17';
 
 export const OPEN=Object.freeze({minx:-68,maxx:78,minz:-50,maxz:41}); // den öppna ytan enligt spelets kollisionskarta (byggnaderna börjar strax utanför)
 export const START_VIEW=Object.freeze({minx:-14,maxx:14,minz:24,maxz:44}); // det spelaren ser vid start (söder om granen, vänd mot den): ingenting högt här

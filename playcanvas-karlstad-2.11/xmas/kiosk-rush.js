@@ -1,8 +1,8 @@
 // TOMTEKÖN på Pressbyrån (2.21.1-xmas.16): gränssnittet. Reglerna ligger i kiosk-rush.mjs; kopplingen till butiksuppdraget (stämpel, belöning,
 // leveransen till tomten utanför) i xmas-boot.js. Ett eget lager över spelet, byggt för telefon: stora knappar, tangenterna 1–6 på dator.
-import {createKioskGame,KIOSK,KIOSK_ITEMS,CUSTOMERS,starsFor,comboMult,KIOSK_KEY,blankKiosk,sanitizeKiosk,recordKiosk} from './kiosk-rush.mjs?v=2.21.1-xmas.16';
-import {drawProp} from '../place-art.js?v=2.21.1-xmas.16';
-import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.16';
+import {createKioskGame,KIOSK,KIOSK_ITEMS,CUSTOMERS,starsFor,comboMult,KIOSK_KEY,blankKiosk,sanitizeKiosk,recordKiosk} from './kiosk-rush.mjs?v=2.21.1-xmas.17';
+import {drawProp} from '../place-art.js?v=2.21.1-xmas.17';
+import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.17';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;};
 const ICONS=new Map();

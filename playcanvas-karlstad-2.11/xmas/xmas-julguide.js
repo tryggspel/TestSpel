@@ -1,7 +1,7 @@
 // Julguiden (2.21.1-xmas.14): skyltar för julbord och julmarknader vid sina riktiga adresser (xmas-julguide-data.mjs), en ruta när man går förbi och ett kort med uppgifterna.
 // Skyltarna är gatupratare (A-skyltar) med en lykta ovanpå som syns på håll. Alla skyltar är en mesh och en bildatlas; lyktorna delar julens sken-material.
 // Kortet och listan är egna lager ovanpå spelet (inga av grundspelets paneler), så att spelet fortsätter bakom dem.
-import {GUIDE,JULGUIDE,placedGuide,nearestGuide,guideById} from './xmas-julguide-data.mjs?v=2.21.1-xmas.16';
+import {GUIDE,JULGUIDE,placedGuide,nearestGuide,guideById} from './xmas-julguide-data.mjs?v=2.21.1-xmas.17';
 
 const CELL_W=256,CELL_H=320,COLS=4;
 const COLORS=Object.freeze({julbord:{band:'#b8322c',bandDark:'#7f1f1b',label:'JULBORD'},julmarknad:{band:'#1f6b47',bandDark:'#134a30',label:'JULMARKNAD'}});

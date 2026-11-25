@@ -1,7 +1,7 @@
 // DUKA JULBORDET på Cervera (2.21.1-xmas.16): gränssnittet. Reglerna i table-memory.mjs; kopplingen (efter porslinsjakten) i xmas-boot.js.
-import {createTableGame,TABLE,TABLE_ITEMS,TABLE_KEY,blankTable,sanitizeTable,recordTable} from './table-memory.mjs?v=2.21.1-xmas.16';
-import {drawProp} from '../place-art.js?v=2.21.1-xmas.16';
-import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.16';
+import {createTableGame,TABLE,TABLE_ITEMS,TABLE_KEY,blankTable,sanitizeTable,recordTable} from './table-memory.mjs?v=2.21.1-xmas.17';
+import {drawProp} from '../place-art.js?v=2.21.1-xmas.17';
+import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.17';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;};
 const ICONS=new Map();
