@@ -43,6 +43,10 @@ const tp=async(x,z,yaw,pitch=-4,ms=1300)=>{await ev(([x,z,y,p])=>window.__tp(x,z
 const yawTo=(px,pz,tx,tz)=>Math.atan2(-(tx-px),-(tz-pz))*180/Math.PI;
 const click=id=>ev(i=>document.getElementById(i)?.click(),id);
 const until=async(fn,max=60)=>{const t0=Date.now();while(Date.now()-t0<max*1000){if(await ev(fn))return true;await wait(250);}return false;};
+// Tomtekön (2.21.1-xmas.16): öppna kassan, låt passet sluta med 13 serverade tomtar (en stjärna) och lämna ordern. Returnerar om spelet öppnades.
+const kioskWin=async()=>{const ok=await until(()=>!!window.KarlstadDebug.journey().xmas.kiosk?.isOpen,10);if(!ok)return false;
+  await ev(()=>{const k=window.KarlstadDebug.journey().xmas.kiosk;k.start();const g=k._game();g.state.served=13;g.state.score=2600;g.end();});await wait(500);
+  await ev(()=>document.querySelector('.kr-card .kr-go')?.click());await wait(300);return true;};
 const snap=()=>ev(()=>window.KarlstadDebug.journey().xmas.hunt.snapshot());
 // Sök och hitta (introduktionen, rundorna, fri julvandring) är utan pilar till paketen. Testet går som en spelare som följer spåren: till närmaste ej plockade paket (i små steg genom spelets egen
 // fångstlogik), och väntar på nästa tappade hög när inget finns. Stannar när fasen inte längre är "collect" (målet nått). Läser också av var varje ny hög hamnade (avstånd mellan högarna).
@@ -68,7 +72,7 @@ await page.goto(`http://localhost:${PORT}/?debug`);await ready();await helpers()
 
 // ── A: startvyn och versionen ────────────────────────────────────────────────────────────────────────────────────
 const menu=await ev(()=>({visible:!document.getElementById('round-xmas-intro').hidden,build:document.getElementById('xmasBuild').textContent,title:document.title,
-  btns:['xmasCozy','xmasZombies','xmasBack'].map(id=>Math.round(document.getElementById(id).getBoundingClientRect().height)),version:window.KarlstadRound.version}));
+  btns:['xmasCozy','xmasZombies'].map(id=>Math.round(document.getElementById(id).getBoundingClientRect().height)),version:window.KarlstadRound.version}));
 const VERSION=JSON.parse(fs.readFileSync(path.join(root,'version.json'),'utf8')).version;
 check('A1 startvyn visas med Julklappsjakten, Tomtezombies och Tillbaka',menu.visible);
 check('A2 rätt version visas i startvyn och i spelet',menu.version===VERSION&&menu.build.includes(VERSION),menu.build);
@@ -180,7 +184,7 @@ await shot('free-2-nytt-regn');
 await ev(()=>window.KarlstadDebug.journey().xmas.startFree());await wait(1200);
 const a=await ev(()=>window.KarlstadDebug.journey().places.arrivalFor('pressbyran'));await tp(a.x,a.z,a.yaw,-4,1200);
 const prompt=await ev(()=>window.KarlstadDebug.journey().places.prompt(window.KarlstadDebug.position()));
-check('E1 Pressbyrån erbjuder Tomtarnas fikaorder',!!prompt&&/TOMTARNAS FIKAORDER/.test(prompt.tactic),prompt?.label);
+check('E1 Pressbyrån erbjuder Tomtekön',!!prompt&&/TOMTEKÖN/.test(prompt.tactic),prompt?.label);
 await shot('15-pressbyran');
 check('E1b det snöar utomhus vid Pressbyrån',await ev(()=>window.KarlstadDebug.journey().xmas.decor.snapshot().flakes>0));
 await wait(400);
@@ -188,8 +192,8 @@ const shopRowTxt=await ev(()=>window.KarlstadDebug.journey().xmas.snapshot().gui
 check('E1c i fri julvandring visar uppdragsraden att en butiksutmaning finns i närheten (UPPDRAG: …), utan pil',/UPPDRAG: /.test(shopRowTxt),shopRowTxt);
 const serialBefore=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.serial);
 await ev(()=>window.KarlstadDebug.use());await wait(700);await shot('16-pressbyran-order');
-const order=await ev(()=>window.KarlstadDebug.journey().places.run?.order.items);
-for(const id of order||[]){await ev(i=>window.KarlstadDebug.journey().places.pick(i),id);await wait(150);}
+const kioskOpen=await kioskWin();
+check('E1d Pressbyrån öppnar Tomtekön (eget spel) och en vunnen omgång lämnar ordern',kioskOpen);
 await wait(1200);await shot('17-pressbyran-klart');
 const del=await snap();
 const delGuide=await ev(()=>window.KarlstadDebug.journey().xmas.snapshot().guide);
@@ -235,7 +239,7 @@ const r5=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;retu
 const avail5=await until(()=>window.KarlstadDebug.journey().places.available(),30);
 const a5=await ev(()=>window.KarlstadDebug.journey().places.arrivalFor('pressbyran'));await tp(a5.x,a5.z,a5.yaw,-4,1500);
 let ord5=null;for(let t=0;t<3&&!ord5;t++){await ev(()=>window.KarlstadDebug.use());await wait(700);ord5=await ev(()=>window.KarlstadDebug.journey().places.run?.order?.items||null);}
-for(const id of ord5||[]){await ev(i=>window.KarlstadDebug.journey().places.pick(i),id);await wait(150);}
+await kioskWin();
 await wait(1200);
 await ev(()=>{const r=document.getElementById('placeResult');if(r&&!r.hidden)r.querySelector('.pr-close').click();});
 const e5=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run;return {serial:r.serial,id:r.id,phase:r.phase,errand:r.errand?r.errand.id:null};});
@@ -337,7 +341,7 @@ check('H1 vädereffekter går att minska och stänga av (100 → 0 flingor) och 
 await ev(()=>window.KarlstadMusic.setMuted(true));check('H2 mute stänger av musiken',await ev(()=>window.KarlstadMusic.muted===true));await ev(()=>window.KarlstadMusic.setMuted(false));
 
 // ── I: vägen tillbaka till grundspelet ───────────────────────────────────────────────────────────────────────────
-check('I1 knappen Tillbaka till Karlstad-spelet finns i startvyn och i pausmenyn',await ev(()=>!!document.getElementById('xmasBack')&&!!document.getElementById('xmasBackPause')));
+check('I1 ingen väg till grundspelet (utan jul): varken i startvyn, i julmenyn eller i pausmenyn (2.21.1-xmas.16)',await ev(()=>!document.getElementById('xmasBack')&&!document.getElementById('xmasBackPause')&&!document.getElementById('xmasContinueBack')&&![...document.querySelectorAll('a')].some(a=>/visual-twin/.test(a.href))));
 check('J inga oväntade fel i konsolen',errs.length===0,errs.slice(0,3).join(' | '));
 
 console.log(`\n${VIEW}: ${results.length-failed}/${results.length} OK, ${failed} fel`);

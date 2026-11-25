@@ -9,7 +9,7 @@ import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.15';
 import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.15';
 import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.15';
 import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.15';
-import {baseGameUrl,WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.15';
+import {WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.15';
 import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.15';
 import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.15';
 import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.15';
@@ -38,6 +38,7 @@ import {createOlearysGames,loadOlearys,saveOlearys} from './olearys-games.js?v=2
 import {inVenue} from './olearys-data.mjs?v=2.21.1-xmas.15';
 import {PLATSJAKT,platsjaktFor,compass} from './xmas-platsjakt.mjs?v=2.21.1-xmas.15';
 import {createPlatsjaktUi} from './xmas-platsjakt-ui.js?v=2.21.1-xmas.15';
+import {createKioskRush} from './kiosk-rush.js?v=2.21.1-xmas.15';
 import {COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.15';
 import {DOORS} from '../julkalender/doors.mjs?v=2.21.1-xmas.15';
 import {GAME_SAVE_KEY,STORAGE_KEY as CALENDAR_KEY,readGame,evaluate,hasAutoCheck,metricsOf} from '../julkalender/rules.mjs?v=2.21.1-xmas.15';
@@ -115,6 +116,11 @@ export function installXmas(ctx){
     olGames=createOlearysGames({storage,meta,today:()=>todayKey(),onGuide:id=>{const e=julguide?.entry(id);if(e)julguideUi?.openEntry(e);},
       sound:k=>{if(k==='goal'){sound('win');return;}const s=OL_SOUND[k];if(s)note(s[0],s[1],s[2],s[3]);},onClose:()=>{}});
   }catch(e){console.error("[O'Learys hoppades över]",e);}
+  // TOMTEKÖN (kiosk-rush.mjs): Pressbyråns butiksutmaning som ett arkadspel. Ljuden är korta toner.
+  const KIOSK_SOUND={item:[660,'triangle',.07,.05],wrong:[170,'square',.16,.05],served:[880,'triangle',.12,.07],rush:[1175,'triangle',.18,.08],walkout:[196,'sawtooth',.28,.05],
+    change:[520,'square',.1,.04],shuffle:[440,'triangle',.1,.05],special:[988,'sine',.12,.05],lose:[147,'sawtooth',.4,.05]};
+  let kiosk=null;
+  try{kiosk=createKioskRush({storage,sound:k=>{if(k==='win'){sound('win');return;}if(k==='start'){sound('energy');return;}const t=KIOSK_SOUND[k];if(t)note(t[0],t[1],t[2],t[3]);}});}catch(e){console.error('[Tomtekön hoppades över]',e);}
   function enterVenue(){
     if(!venue)return;
     fadeThen(()=>{
@@ -193,7 +199,6 @@ export function installXmas(ctx){
     if(out.R)announce(out.R,{skip:['orn','ticket']});
   }
   let light=null;try{light=createXmasLight(pc,host,{decor,mode:LIGHT_MODES.includes(ljusParam)?ljusParam:save.light});}catch(e){console.error('[Ljuset hoppades över]',e);}
-  const baseUrl=baseGameUrl(location.search,location.hostname);
   let stamp=baseStamp,mode='menu'; // menu | cozy | zombies | rush | mission (Julvernissagen) | boat (Julbåten, tills båten lagt till)
   let boatInfo=null; // båtresans resultat (räddade, poäng) som följer med jakten i Mariebergsskogen
   let rainToastAt=-1e9; // när den senaste hela fanfaren om tappade julklappar visades
@@ -320,10 +325,7 @@ export function installXmas(ctx){
   try{const q=new URLSearchParams(location.search).get('paket');if(q){pendingCode=q;const u=new URL(location.href);u.searchParams.delete('paket');history.replaceState(null,'',u.pathname+u.search+u.hash);}}catch{}
   const guideUi=createGuideUi({});
 
-  function goBase(){
-    try{save.save();journey.save?.();}catch{}
-    location.assign(baseUrl);
-  }
+  // 2.21.1-xmas.16: julversionen har ingen väg till grundspelet (utan jul); goBase och knapparna är borttagna.
   // ── Vad som händer när en körning startar ─────────────────────────────────────────────────────────────────────
   function enter(kind,spawn=null){
     try{dismissPlaceResult?.();}catch{} // grundspelets resultatkort från ett butiksuppdrag ska inte ligga kvar över nästa läge
@@ -538,6 +540,17 @@ export function installXmas(ctx){
     toast('TOMTEN VÄNTAR','Följ pilen och lämna fikat. Tomten står '+Math.round(Math.hypot(spot.x-host.player.getPosition().x,spot.z-host.player.getPosition().z))+' m bort.',3.4);
   }
   function onPlaceEvent(e){
+    if(e&&e.type==='place-start'&&e.placeId==='pressbyran'&&e.questType==='order'&&kiosk){
+      // Pressbyrån spelas som TOMTEKÖN: motorn väntar (markExternal) och får resultatet när spelet är klart; stämpel, poäng och leveransen till tomten som förut.
+      guard(()=>{
+        const Q=journey.places;if(!Q?.markExternal?.())return;
+        kiosk.open({
+          onFinish:r=>guard(()=>Q.finishExternal({ok:r.stars>0,fraction:r.stars/3,mistakes:r.wrong,line:'Tomtekön är tom! '+r.served+' tomtar fick sin julfika ('+'★'.repeat(r.stars)+'). Nu väntar tomten utanför på sin.'})),
+          onCancel:()=>guard(()=>{if(Q.run?.external)Q.cancel('user');})
+        });
+      });
+      return;
+    }
     if(!e||e.type!=='place-complete')return;
     guard(()=>{
       const place=journey.places?.get?.(e.placeId);if(!place)return;
@@ -640,7 +653,7 @@ export function installXmas(ctx){
       try{dismissPlaceResult?.();}catch{}clearTimeout(resultTimer);
       if(julrush.active){julrush.quit();} // att ge upp i pausmenyn sparar körningen som en förlust (om den hade några paket)
       leaveRush();restoreTurbo();zombieTune.off();try{host.music?.tempo?.(1);}catch{}
-      if(pj){pj=null;pjUi.close();removePjPackage();}
+      if(pj){pj=null;pjUi.close();removePjPackage();}if(kiosk?.isOpen)kiosk.close();
       daily=null;guideTo=null;julguideUi?.hide();olGames?.close();showOlPrompt(null);document.body.classList.remove('xmas-venue');doorLink=null;ui.placeDoor(null);hunt.cancel('meny');view.clear();ui.showHud(false);guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;journey.pause?.();mode='menu';boatInfo=null;caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush','xmas-mission');
       if(incoming){ui.renderChallenge(incoming);setPanel('xmas-challenge');return;}
       if(link){const l=link;link=null;if(showLink(l))return;}
@@ -714,7 +727,7 @@ export function installXmas(ctx){
     intro:()=>startIntro(),round:()=>startRound(),shops:()=>openShops(),free:()=>startFree(),zombies:()=>startZombies(),zombiesNext,zombiesAgain,sandgrund:()=>startSandgrund(),boat:()=>startBoat(),
     termos:()=>startRush(0,null,'termos'),daily:()=>startDaily(),guideList:()=>julguideUi?.openList(true),olearys:()=>enterVenue(),platsjakt:()=>openPlatsjakt(),
     openRush:()=>openRush(),rushPlay:n=>startRush(n),marathon:()=>startRush(0),rushNext,rushAgain,openBoard,boardBack:()=>{if(boardFrom==='result')setPanel('xmas-result');else openRush(ui.selectedRush());},challengeGo,challengeSave,challengeSkip,
-    openMenu,openContinue,goBase,setWeather,setLight,linkGo,linkSkip,doorMenu:doorMenuGo,placeResume,
+    openMenu,openContinue,setWeather,setLight,linkGo,linkSkip,doorMenu:doorMenuGo,placeResume,
     openTree:()=>openTree(),openDraw:()=>openDraw(),openSecrets:()=>openSecrets(),menuBack:()=>menuBack(),codeRedeemed:r=>codeRedeemed(r)
   }});
 
@@ -909,7 +922,7 @@ export function installXmas(ctx){
     hunt,save,meta,view,ui,sprites,handlers,decor,syncDoors,giveMeta,
     get active(){return mode==='rush'?julrush.active:hunt.active;},get cozy(){return mode==='cozy';},get zombieMode(){return mode==='zombies';},get zombieLevel(){return zLevel;},get rushMode(){return mode==='rush'&&julrush.active;},julrush,
     startSandgrund,missionDone,afterMission,startBoat,boatArrive,boatAbort,get missionMode(){return mode==='mission';},get boatMode(){return mode==='boat';},
-    update,hudText,startRound,startZombies,startRush,openRush,openBoard,challengeGo,rushNext,rushAgain,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,startDaily,enterVenue,exitVenue,openPlatsjakt,runPlatsjakt,get pj(){return pj;},get olGames(){return olGames;},startTermos:()=>startRush(0,null,'termos'),get daily(){return daily;},goBase,setWeather,setLight,get light(){return light;},
+    update,hudText,startRound,startZombies,startRush,openRush,openBoard,challengeGo,rushNext,rushAgain,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,startDaily,enterVenue,exitVenue,openPlatsjakt,runPlatsjakt,get pj(){return pj;},get kiosk(){return kiosk;},get olGames(){return olGames;},startTermos:()=>startRush(0,null,'termos'),get daily(){return daily;},setWeather,setLight,get light(){return light;},
     // Medan ett butiksuppdrag pågår står jaktens tid still (inga nya tappade julklappar, inget som försvinner).
     step:(dt,p,sweep,speed)=>guard(()=>mode==='rush'?julrush.step(dt,p,sweep,speed):hunt.step(placeActive?.()?0:dt,p,sweep,speed)),
     // Grundspelets små pilar på marken och flaggan "DITT MÅL" ritas inte för julens mål (quiet): julbandet, pilen och strålen ersätter dem (i JulRushen pilen och strålen). Radarn och kartan visar vägen som förut.

@@ -472,3 +472,57 @@ body.ol-open #roundOverlay,body.ol-open .ol-prompt,body.ol-open .xmas-guide-near
 .pj-hud .pj-hudtext{display:grid;line-height:1.05}.pj-hud .pj-lab{font:900 10px system-ui;letter-spacing:.12em;color:#ffd77a}.pj-hud .pj-clock{font:900 26px system-ui;font-variant-numeric:tabular-nums}
 .pj-hud.urgent{border-color:#ff6f59;animation:pjPulse .8s infinite alternate}.pj-hud.urgent .pj-clock{color:#ff9a88}
 @keyframes pjPulse{to{box-shadow:0 0 18px #ff6f59aa}}
+
+/* ── Tomtekön på Pressbyrån (2.21.1-xmas.16, xmas/kiosk-rush.js) ─────────────────────────────────────────────── */
+.kr-layer{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;gap:8px;padding:max(10px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));
+  background:radial-gradient(120% 70% at 50% 0%,#24508a 0%,#132f57 55%,#0a1a33 100%);color:#fff6df;font-family:system-ui,sans-serif;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.kr-layer[hidden]{display:none}
+.kr-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.kr-brand{font-weight:900;letter-spacing:.08em;font-size:13px;color:#ffd76a;flex:1}
+.kr-close{width:40px;height:40px;border-radius:12px;border:0;background:#ffffff22;color:#fff;font-size:18px}
+.kr-stats{width:100%;display:flex;align-items:baseline;gap:6px;font-variant-numeric:tabular-nums}
+.kr-lab{font-size:10px;letter-spacing:.1em;opacity:.7}
+.kr-clock{font-size:26px;font-weight:900;margin-right:8px}.kr-clock.urgent{color:#ff8a7a;animation:kr-pulse .6s infinite alternate}
+.kr-score{font-size:22px;font-weight:900;color:#ffd76a}
+.kr-combo{margin-left:auto;font-weight:900;font-size:13px;color:#9ff0c8}.kr-combo.rush{color:#ffd76a;text-shadow:0 0 10px #ffb43c}
+.kr-lives{font-size:16px;letter-spacing:2px}
+.kr-queue{display:flex;justify-content:flex-end;gap:6px;min-height:64px}
+.kr-q{width:54px;height:54px;position:relative;opacity:.9}.kr-q svg{width:100%;height:100%}
+.kr-mini{position:absolute;left:6px;right:6px;bottom:-4px;height:5px;border-radius:3px;background:#0006;overflow:hidden}.kr-mini i{display:block;height:100%;background:#8fe3a8}
+.kr-counter{display:grid;grid-template-columns:96px 1fr;grid-template-rows:auto auto auto;gap:6px 10px;align-items:center;background:#ffffff12;border-radius:18px;padding:10px}
+.kr-counter.shake{animation:kr-shake .35s}
+.kr-who{grid-row:1/3;width:96px;height:96px}.kr-who svg{width:100%;height:100%}
+.kr-bubble{min-height:84px;border:0;border-radius:18px;background:#fff6df;color:#1a2a44;display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;padding:8px;position:relative}
+.kr-bubble:disabled{opacity:1}
+.kr-bubble::before{content:'';position:absolute;left:-10px;top:30px;border:10px solid transparent;border-right-color:#fff6df;border-left:0}
+.kr-want{width:58px;height:58px;border-radius:12px;background:#f1e3c0;display:grid;place-items:center}.kr-want img{width:52px;height:52px}
+.kr-want.got{opacity:.28;filter:grayscale(1)}
+.kr-wait{font-weight:800;font-size:13px;color:#5b6b85;text-align:center}
+.kr-bar{grid-column:2;height:10px;border-radius:5px;background:#0006;overflow:hidden}.kr-bar i{display:block;height:100%;background:#8fe3a8;transition:width .1s linear}.kr-bar.low i{background:#ff7a6a}
+.kr-line{grid-column:1/3;font-size:12px;opacity:.85;min-height:16px}
+.kr-shelf{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:auto}
+.kr-item{position:relative;min-height:96px;border:0;border-radius:18px;background:linear-gradient(#fff9e8,#efdcb2);color:#1a2a44;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 4px 0 #b99b62}
+.kr-item:active{transform:translateY(3px);box-shadow:0 1px 0 #b99b62}
+.kr-item img{width:56px;height:56px}.kr-name{font-weight:900;font-size:11px;letter-spacing:.04em}
+.kr-key{position:absolute;top:6px;right:8px;font-size:10px;opacity:.45}
+.kr-item.bad{animation:kr-shake .35s;background:linear-gradient(#ffd9d2,#f0a99d)}
+.kr-fx{position:absolute;left:0;right:0;top:38%;pointer-events:none;display:flex;flex-direction:column;align-items:center}
+.kr-float{font-weight:900;font-size:24px;color:#ffd76a;text-shadow:0 2px 6px #0008;animation:kr-up .9s forwards}.kr-float.bad{color:#ff8a7a}.kr-float.gold{color:#fff0a0}
+.kr-banner{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%) scale(.6);font-weight:900;font-size:28px;color:#ffd76a;text-shadow:0 3px 12px #000a;opacity:0;pointer-events:none;white-space:nowrap}
+.kr-banner.on{animation:kr-banner 1.3s}
+.kr-card{position:absolute;left:12px;right:12px;top:50%;transform:translateY(-50%);max-height:86vh;overflow:auto;background:#fff6df;color:#1a2a44;border-radius:22px;padding:18px;box-shadow:0 12px 40px #0009}
+.kr-card[hidden]{display:none}
+.kr-card h2{margin:4px 0 8px;font-size:30px;font-weight:900;letter-spacing:.02em}
+.kr-kicker{font-size:11px;font-weight:900;letter-spacing:.12em;color:#b5402f}
+.kr-lead{font-size:15px;line-height:1.35;margin:0 0 10px}.kr-fine{font-size:12px;opacity:.75;margin:8px 0}
+.kr-rules{list-style:none;margin:0;padding:0;display:grid;gap:6px}.kr-rules li{display:flex;gap:8px;align-items:center;font-size:13px}
+.kr-face{width:36px;height:36px;flex:none}.kr-face svg{width:100%;height:100%}
+.kr-stars{font-size:40px;color:#e0a92e;letter-spacing:4px}
+.kr-go{width:100%;min-height:52px;margin-top:8px;border:0;border-radius:14px;background:#c8322b;color:#fff;font-weight:900;font-size:16px;letter-spacing:.04em}
+.kr-ghost{width:100%;min-height:44px;margin-top:6px;border:0;background:none;color:#1a2a44;text-decoration:underline;font-size:13px}
+.kr-layer:not(.playing) .kr-shelf,.kr-layer:not(.playing) .kr-counter,.kr-layer:not(.playing) .kr-queue{opacity:.35}
+body.kiosk-on .place-hud,body.kiosk-on #placeHud{display:none!important}
+@keyframes kr-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+@keyframes kr-up{from{transform:translateY(0);opacity:1}to{transform:translateY(-60px);opacity:0}}
+@keyframes kr-banner{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+@keyframes kr-pulse{from{opacity:1}to{opacity:.55}}

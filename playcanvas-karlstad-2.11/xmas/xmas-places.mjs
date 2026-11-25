@@ -24,9 +24,10 @@ export const XMAS_CERVERA={...cervera,
 
 export const XMAS_PRESSBYRAN={...pressbyran,
   activity:{...pressbyran.activity,
-    title:'TOMTARNAS FIKAORDER',pitch:'Ta emot tomtarnas julfika i rätt ordning och bär den till tomten utanför.',verb:'TA EMOT ORDER',marker:'UPPDRAG · TOMTARNAS FIKAORDER',
-    intro:'Tomtekön växer! Varje tomte vill ha sin julfika i exakt rätt ordning. Tryck på rätt sak, en i taget, innan klockan går ut. Sedan ska fikat bäras till tomten som väntar utanför.',
-    remind:'Följ beställningen uppe på skärmen. Rätt sak i rätt ordning.',
+    // 2.21.1-xmas.16: spelas som TOMTEKÖN (xmas/kiosk-rush.mjs): en kö av tomtar med beställningar, tålamod, kombo och specialkunder. Ordrarna nedan används bara av motorn.
+    title:'TOMTEKÖN',pitch:'Servera tomtekön på Pressbyrån: rätt julfika till rätt tomte innan tålamodet tar slut. Sedan ska fikat bäras till tomten utanför.',verb:'ÖPPNA KASSAN',marker:'UPPDRAG · TOMTEKÖN',
+    intro:'Hjälp! Hela tomtekön kom samtidigt. Ta kassan en stund: rätt fika till rätt tomte, och se upp för Glömske Gösta och Tomtemor.',
+    remind:'Servera tomtekön: tryck på varorna i pratbubblan.',
     menu:[{id:'kaffe',name:'KAFFE',art:'kaffe'},{id:'lussebulle',name:'LUSSEBULLE',art:'lussebulle'},{id:'pepparkaka',name:'PEPPARKAKA',art:'pepparkaka'},
       {id:'tidning',name:'TIDNING',art:'tidning'},{id:'choklad',name:'CHOKLAD',art:'choklad'},{id:'glogg',name:'GLÖGG',art:'glogg'}],
     orders:[

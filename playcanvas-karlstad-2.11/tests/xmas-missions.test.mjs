@@ -97,10 +97,11 @@ test('Julbåtens jakt spelas genom jaktmotorn: samla tolv, lämna hos tomten, st
   assert.ok(!('extra' in hunt.drain().find(e=>e.type==='xmas-deliver').result.parts));
 });
 
-test('koden i julbygget: knapparna, krokarna och länken till Julkalendern finns',()=>{
+test('koden i julbygget: knapparna och krokarna finns; ingen länk till Julkalendern eller grundspelet (2.21.1-xmas.16)',()=>{
   const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
-  for(const id of ['xmasSandgrund','xmasSandgrundNote','xmasBoat','xmasBoatNote','xmasCalendar','xmasCalendar2'])assert.ok(html.includes('id="'+id+'"'),id);
-  assert.match(html,/id="xmasCalendar" class="xmas-link" href="\.\/julkalender\/"/);
+  for(const id of ['xmasSandgrund','xmasSandgrundNote','xmasBoat','xmasBoatNote'])assert.ok(html.includes('id="'+id+'"'),id);
+  for(const id of ['xmasCalendar','xmasCalendar2','xmasBack','xmasContinueBack'])assert.ok(!html.includes('id="'+id+'"'),'borttagen: '+id);
+  assert.doesNotMatch(html,/href="\.\/julkalender\/"/);
   const lr=fs.readFileSync(new URL('../last-round.js',import.meta.url),'utf8');
   for(const hook of ['xmas?.missionDone','xmas?.boatArrive','xmas?.boatAbort','xmas?.afterMission','startMission:','boardBoat:','boatActive:','explore:'])assert.ok(lr.includes(hook),'last-round.js saknar '+hook);
   const br=fs.readFileSync(new URL('../boat-ride.js',import.meta.url),'utf8');assert.match(br,/onAbort/);

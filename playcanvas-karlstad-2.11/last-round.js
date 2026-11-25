@@ -235,14 +235,15 @@ export function createLastRound(pc, host) {
     c.fillStyle = '#ffecb7'; c.textAlign = 'center'; c.font = '900 66px sans-serif'; c.fillText('HEMGÅNG', w / 2, h / 2 + 23);
     c.font = '900 25px sans-serif'; c.fillText('KNUFFA FANSEN HIT', w / 2, h / 2 + 68);
   });
+  const lastRoundProps=[]; // 2.21.1-xmas.16: Sista rundans vakt, HEMGÅNG-zon, skylt och banlinjer döljs i julversionen (sparas till sommarspelet)
   const goal = card('Hemgång zone', goalTexture, layout.goal.radius * 2, layout.goal.radius * 2, layout.goal.x, .1, layout.goal.z + layout.goal.radius);
   goal.setEulerAngles(-90, 0, 0);
   const goalSign = card('Hemgång sign', labelTex(['HEMGÅNG', '↓ FANSEN HIT ↓']), 5.4, 1.6, layout.goal.x, 2.5, layout.goal.z - 4, true);
-  primitive('sign-post', 'box', layout.goal.x, 1.35, layout.goal.z - 4, .15, 2.7, .15);
+  lastRoundProps.push(guard,goal,goalSign,primitive('sign-post', 'box', layout.goal.x, 1.35, layout.goal.z - 4, .15, 2.7, .15));
   let b = layout.bounds;
-  primitive('court-line-a', 'box', b.minX, .07, (b.minZ + b.maxZ) / 2, .12, .025, b.maxZ - b.minZ, gold);
-  primitive('court-line-b', 'box', b.maxX, .07, (b.minZ + b.maxZ) / 2, .12, .025, b.maxZ - b.minZ, gold);
-  primitive('court-line-c', 'box', (b.minX + b.maxX) / 2, .07, b.maxZ, b.maxX - b.minX, .025, .12, gold);
+  lastRoundProps.push(primitive('court-line-a', 'box', b.minX, .07, (b.minZ + b.maxZ) / 2, .12, .025, b.maxZ - b.minZ, gold),
+    primitive('court-line-b', 'box', b.maxX, .07, (b.minZ + b.maxZ) / 2, .12, .025, b.maxZ - b.minZ, gold),
+    primitive('court-line-c', 'box', (b.minX + b.maxX) / 2, .07, b.maxZ, b.maxX - b.minX, .025, .12, gold));
   for (const c of layout.chargers) {
     chargerPads.push(primitive('solar-pad', 'cylinder', c.x, .07, c.z, 1.7, .08, 1.7, dark));
     chargers.push(primitive('solar-charge', 'sphere', c.x, .85, c.z, .65, .65, .65, gold));
@@ -398,8 +399,8 @@ export function createLastRound(pc, host) {
     deliverySign.setEulerAngles(0,Math.atan2(p.x-delivery.x,p.z-delivery.z)*180/Math.PI,0);
     plazaSign.setEulerAngles(0,Math.atan2(p.x-8,p.z-6)*180/Math.PI,0);
     pops.forEach(pop=>{pop.life=Math.max(0,pop.life-dt);pop.e.enabled=pop.life>0;if(!pop.e.enabled)return;pop.e.setPosition(pop.x,1.6+(.65-pop.life)*1.8,pop.z);pop.e.setEulerAngles(0,Math.atan2(p.x-pop.x,p.z-pop.z)*180/Math.PI,0);});
-    chargerPads.forEach((e,i)=>{e.enabled=!!layout.chargers[i];if(e.enabled)e.setPosition(layout.chargers[i].x,.07,layout.chargers[i].z);});
-    journeyView.update(p,now,game);plazaSign.enabled=!isJourney();guardSign.enabled=!isJourney();
+    chargerPads.forEach((e,i)=>{e.enabled=!!layout.chargers[i]&&!xmas;if(e.enabled)e.setPosition(layout.chargers[i].x,.07,layout.chargers[i].z);});
+    journeyView.update(p,now,game);plazaSign.enabled=!isJourney()&&!xmas;guardSign.enabled=!isJourney()&&!xmas;
   }
   function updateRoute(p,destination){
     const visible=!isPush()&&game.phase==='playing'&&destination.kind!=='wait'&&!destination.quiet&&(isJourney()||selectedMission!=='fikapanik'); // quiet: julen ritar egna markeringar (xmas/xmas-guide.mjs)
@@ -1098,6 +1099,7 @@ export function createLastRound(pc, host) {
     // 2.21.1-xmas.7: grundspelets uppdrag och båtbuss startas från Julmenyn (xmas-boot.js: startSandgrund, startBoat)
     startMission:id=>{selectMission(id);start(false);},boardBoat:()=>boardBoat(),boatActive:()=>boatRide.active(),explore:()=>explore()});
   journey.xmas=xmas;
+  if(xmas){for(const e of lastRoundProps)e.enabled=false;journeyView.hideStation('coffee');} // 2.21.1-xmas.16: varken Sista rundan eller Löfbergs-kiosken på torget i julversionen
   explore(true);
   if(xmas){xmas.openMenu();}
   else if(request.kind==='boat'){journey.pause();$('boatChallengeTarget').textContent=request.target?'ATT SLÅ: '+request.target+' XP':'Rädda minst 8 av 12 passagerare. Tryck på personen så väljs rätt räddningshjälp.';setPanel('boat-intro');}
@@ -1266,7 +1268,7 @@ export function createLastRound(pc, host) {
     }
     const face = Math.atan2(p.x - olearyLayout.guard.x, p.z - olearyLayout.guard.z) * 180 / Math.PI;
     guard.setEulerAngles(0, face, 0); guardSign.setEulerAngles(0, face, 0);
-    chargers.forEach((e, i) => {e.enabled = !!layout.chargers[i]&&game.chargerTimes[i] === 0;if(e.enabled)e.setLocalPosition(layout.chargers[i].x, .85 + Math.sin(now / 600 + i) * .12, layout.chargers[i].z);});
+    chargers.forEach((e, i) => {e.enabled = !!layout.chargers[i]&&game.chargerTimes[i] === 0&&!xmas;if(e.enabled)e.setLocalPosition(layout.chargers[i].x, .85 + Math.sin(now / 600 + i) * .12, layout.chargers[i].z);});
     if (now > toastUntil) $('roundToast').classList.remove('visible');
     if(now>pickupToastUntil)$('journeyPickupToast').classList.remove('visible');
     updateMissionViews(p,dt,now);

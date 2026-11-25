@@ -113,10 +113,10 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     {...journey.nav.point({x:-25,z:-125}),brand:'KARLSTADS ENERGI',name:'SOLSERVICE',type:'solar',color:'#177d82'},
     {...journey.nav.point({x:-43,z:6}),brand:'NWT',name:'STADENS HEMLIGHETER',type:'clue',color:'#d26147'}
   ].map(s=>{
-    const mat=material(s.color);primitive('concept-kiosk','box',s.x,.9,s.z,2.3,1.8,1.2,ink);
-    primitive('comic-kiosk-roof','box',s.x,2.7,s.z,3.4,.25,2.3,mat);
+    const mat=material(s.color),kiosk=primitive('concept-kiosk','box',s.x,.9,s.z,2.3,1.8,1.2,ink);
+    const roof=primitive('comic-kiosk-roof','box',s.x,2.7,s.z,3.4,.25,2.3,mat);
     const e=card('Konceptplats '+s.brand,labelTex([s.brand,s.name],s.color,'#fff0cb'),3.2,1,s.x,1.6,s.z+.65,true);
-    return {...s,e};
+    return {...s,e,parts:[kiosk,roof,e],hidden:false};
   });
   const ambushProps=journey.ambushes.map(a=>({a,e:card('Fikagömma',labelTex(['PAPPERSHÖG','INGET ATT SE HÄR'], '#d9c59e','#28463d'),1.4,.9,a.spawn.x,.01,a.spawn.z,true)}));
   const visitors=Array.from({length:3},(_,i)=>card('Besökare '+i,fanTex('visitor',['#e9b978','#75bbb5','#a990c9'][i]),1.5,2.3,0,0,0));
@@ -186,7 +186,9 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
   const officeSign=card('MusicPartner',labelTex(['MUSICPARTNER','CHECKA IN · MUSIK · XP'],'#252729','#e78336'),3.2,1.0,MUSIC_OFFICE.x+2.6,.15,MUSIC_OFFICE.z+1.5,true);
   const officePad=primitive('MusicPartner-ring','cylinder',MUSIC_OFFICE.x,.1,MUSIC_OFFICE.z,MUSIC_OFFICE.radius*1.2,.04,MUSIC_OFFICE.radius*1.2,material('#e78336'));
   officeSign.enabled=officePad.enabled=false;
-  function nearbyStation(p){return stations.find(s=>Math.hypot(p.x-s.x,p.z-s.z)<4);}
+  function nearbyStation(p){return stations.find(s=>!s.hidden&&Math.hypot(p.x-s.x,p.z-s.z)<4);}
+  // En station tas bort helt (syns inte, går inte att använda): julversionen 2.21.1-xmas.16 har ingen Löfbergs-kiosk på torget (type 'coffee').
+  function hideStation(type){let n=0;for(const s of stations)if(s.type===type){s.hidden=true;for(const e of s.parts)e.enabled=false;n++;}return n;}
   const rarityCache=new Map();let rarityDay='',lastNow=0;
   function update(p,now,game){
     const dtView=lastNow?Math.min(.1,Math.max(0,(now-lastNow)/1000)):0;lastNow=now;
@@ -277,5 +279,5 @@ export function createJourneyView(pc,host,draw,journey,portals,sandgrund){
     const chaos=journey.rush.chaosTarget;if(chaos){const [x,y]=point(chaos.spot.x,chaos.spot.z);c.fillStyle='#ffdf71';c.fillRect(x-4,y-4,8,8);}
     if(journey.rush.mode==='timed'){c.strokeStyle='#9ef2b2';c.lineWidth=2;for(const s of journey.safeZones){const [x,y]=point(s.x,s.z);c.strokeRect(x-7,y-7,14,14);}}
   }
-  return {update,radar,nearbyStation,burst};
+  return {update,radar,nearbyStation,hideStation,burst};
 }

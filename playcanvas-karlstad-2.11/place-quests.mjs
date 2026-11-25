@@ -190,6 +190,15 @@ export class PlaceQuests{
     if(r.step>=r.order.items.length){this.complete(place);return {ok:true,done:true};}
     return {ok:true,done:false,step:r.step};
   }
+  // Ett eget spel tar över beställningen (julversionens Tomtekön på Pressbyrån, 2.21.1-xmas.16): motorns klocka står still och spelet lämnar resultatet.
+  // fraction 0–1 ger hastighetsbonusen (som kvarvarande tid), mistakes avgör perfektbonusen, line är personalens replik.
+  markExternal(){const r=this.run;if(!r||r.type!=='order'||r.phase!=='serve')return false;r.external=true;this.touch();return true;}
+  finishExternal({ok=false,fraction=0,mistakes=0,line=''}={}){
+    const r=this.run;if(!r||r.type!=='order'||!r.external||r.phase!=='serve')return null;
+    const place=this.byId.get(r.placeId);if(!ok){this.fail(place,'external');return null;}
+    r.left=r.seconds*Math.max(0,Math.min(1,Number(fraction)||0));r.mistakes=Math.max(0,Math.floor(mistakes)||0);if(line)r.order.done=line;
+    return this.complete(place);
+  }
   fail(place,reason){
     const r=this.run;if(!r||r.phase==='failed')return;
     r.phase='failed';r.left=0;this.rec(place.id).aborted++;this.save();this.touch();
@@ -229,7 +238,7 @@ export class PlaceQuests{
       r.t+=Math.min(dt,1);
       const place=this.byId.get(r.placeId);
       if(r.type==='order'){
-        if(r.phase==='serve'){
+        if(r.phase==='serve'&&!r.external){
           r.left=Math.max(0,r.left-Math.min(dt,1));
           if(r.left<=0)this.fail(place,'timeout');
           else if(this.farFrom(place,p,QUEST.leaveRadius))this.cancel('left');

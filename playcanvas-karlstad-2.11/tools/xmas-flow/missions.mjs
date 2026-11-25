@@ -63,12 +63,12 @@ const walk=(tx,tz,step=6)=>ev(([tx,tz,step])=>new Promise(res=>{let n=0;const f=
 await page.goto(`${ORIGIN}/?debug`);await ready();
 
 // ── A: Julmenyn har de två nya uppdragen och länken till Julkalendern ────────────────────────────────────────────────
-check('A1 startvyn har länken till Julkalendern (en vanlig länk till ./julkalender/)',await ev(()=>{const a=document.getElementById('xmasCalendar');return !!a&&a.tagName==='A'&&a.getAttribute('href')==='./julkalender/'&&a.getBoundingClientRect().height>=44;}));
+check('A1 startvyn har ingen länk till Julkalendern (den avvaktar, 2.21.1-xmas.16)',await ev(()=>!document.getElementById('xmasCalendar')&&![...document.querySelectorAll('a')].some(a=>/julkalender/.test(a.getAttribute('href')||''))));
 await click('xmasCozy');await wait(900);
 const menu=await ev(()=>({panel:!document.getElementById('round-xmas-continue').hidden,btns:['xmasSandgrund','xmasBoat'].map(id=>Math.round(document.getElementById(id).getBoundingClientRect().height)),
   notes:['xmasSandgrundNote','xmasBoatNote'].map(id=>document.getElementById(id).textContent),status:document.getElementById('xmasContinueStatus').textContent,stamps:document.querySelectorAll('#xmasStampList li').length,
-  cal2:document.getElementById('xmasCalendar2').getAttribute('href')}));
-check('A2 Julmenyn visas med knapparna SANDGRUND och BÅTBUSSEN (minst 48 px höga) och Julkalendern',menu.panel&&menu.btns.every(h=>h>=48)&&menu.cal2==='./julkalender/',JSON.stringify(menu.btns));
+  cal2:document.getElementById('xmasCalendar2')?.getAttribute('href')||null}));
+check('A2 Julmenyn visas med knapparna SANDGRUND och BÅTBUSSEN (minst 48 px höga), utan länk till Julkalendern',menu.panel&&menu.btns.every(h=>h>=48)&&menu.cal2===null,JSON.stringify(menu.btns));
 check('A3 noterna berättar om uppdragen (Zombie-Lerin, Inre hamn)',/Zombie-Lerin/.test(menu.notes[0])&&/Inre hamn/.test(menu.notes[1]),menu.notes.join(' | '));
 check('A4 stämpellistan har tolv stämplar och status säger 1 / 12',menu.stamps===12&&/JULSTÄMPLAR 1 \/ 12/.test(menu.status),menu.stamps+' '+menu.status);
 await shot('m01-julmenyn');

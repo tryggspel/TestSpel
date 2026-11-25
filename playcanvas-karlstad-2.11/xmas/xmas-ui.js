@@ -120,8 +120,7 @@ export function createXmasUi({save,meta=null,mount=document.getElementById('roun
   const doorEl=el('div','xmas-door');doorEl.id='xmasDoor';doorEl.hidden=true;doorEl.setAttribute('role','status');
   const doorTitle=el('b','xd-title'),doorHead=el('span','xd-head'),doorLine=el('p','xd-line'),doorNext=el('p','xd-next'),doorTail=el('p','xd-tail');
   const doorMenu=el('button','round-secondary','JULMENYN →');doorMenu.type='button';doorMenu.id='xmasDoorMenu';
-  const doorCal=el('a','xmas-link','TILL JULKALENDERN →');doorCal.id='xmasDoorCal';doorCal.href='./julkalender/';
-  doorEl.append(doorTitle,doorHead,doorLine,doorNext,doorTail,doorMenu,doorCal);
+  doorEl.append(doorTitle,doorHead,doorLine,doorNext,doorTail,doorMenu); // 2.21.1-xmas.16: ingen länk till Julkalendern (den avvaktar)
   doorMenu.addEventListener('click',()=>fx.doorMenu()); // noden sitter inte i sidan förrän ett resultat visas, så den kopplas här och inte med on()
   // info = doorBox() eller null (rutan tas bort). parent/before = var på kortet rutan ska ligga (före knapparna).
   function placeDoor(info,parent=null,before=null){
@@ -427,8 +426,8 @@ export function createXmasUi({save,meta=null,mount=document.getElementById('roun
   const weatherBtn=el('button','round-secondary');weatherBtn.type='button';weatherBtn.id='xmasWeatherBtn';
   const lightBtn=el('button','round-secondary');lightBtn.type='button';lightBtn.id='xmasLightBtn';
   const modeBtn=el('button','round-secondary','JULMENY');modeBtn.type='button';modeBtn.id='xmasMenuBtn';
-  const backBtn=el('button','round-tertiary','← Tillbaka till Karlstad-spelet');backBtn.type='button';backBtn.id='xmasBackPause';
-  pauseBox.append(weatherBtn,lightBtn,modeBtn,backBtn);
+  // 2.21.1-xmas.16: ingen väg till grundspelet (utan jul) från julversionen.
+  pauseBox.append(weatherBtn,lightBtn,modeBtn);
   const resume=pauseCard?.querySelector('#roundResume');if(pauseCard)pauseCard.insertBefore(pauseBox,resume||pauseCard.firstChild);
   function renderWeather(level=save.weather){weatherBtn.textContent='VÄDEREFFEKTER: '+WEATHER[level].label;weatherBtn.setAttribute('aria-label','Vädereffekter: '+WEATHER[level].label+'. Tryck för att byta.');}
   weatherBtn.addEventListener('click',()=>{const next=WEATHER_ORDER[(WEATHER_ORDER.indexOf(save.weather)+1)%WEATHER_ORDER.length];fx.setWeather(next);renderWeather(next);});
@@ -436,7 +435,6 @@ export function createXmasUi({save,meta=null,mount=document.getElementById('roun
   function renderLight(mode=save.light){const l=LIGHT_LABEL[mode]||LIGHT_LABEL.auto;lightBtn.textContent='LJUS: '+l;lightBtn.setAttribute('aria-label','Ljus: '+l+'. Tryck för att byta.');}
   lightBtn.addEventListener('click',()=>{const next=LIGHT_MODES[(LIGHT_MODES.indexOf(save.light)+1)%LIGHT_MODES.length];fx.setLight?.(next);renderLight(next);});
   modeBtn.addEventListener('click',()=>fx.openMenu());
-  backBtn.addEventListener('click',()=>fx.goBase());
   renderWeather();renderLight();
 
   // ── Knappar ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -445,7 +443,7 @@ export function createXmasUi({save,meta=null,mount=document.getElementById('roun
   on('xmasOlearys',()=>fx.olearys?.());on('xmasOlearysGo',()=>fx.olearys?.());
   on('xmasGuide',()=>fx.guideList?.());on('xmasGuideGo',()=>fx.guideList?.());
   on('xmasTermos',()=>fx.termos());on('xmasTermosGo',()=>fx.termos());on('xmasDaily',()=>fx.daily());on('xmasDailyGo',()=>fx.daily());
-  on('xmasCozy',()=>fx.cozy());on('xmasZombies',()=>fx.zombies());on('xmasRushStart',()=>fx.openRush());on('xmasRushGo',()=>fx.openRush());on('xmasBack',()=>fx.goBase());
+  on('xmasCozy',()=>fx.cozy());on('xmasZombies',()=>fx.zombies());on('xmasRushStart',()=>fx.openRush());on('xmasRushGo',()=>fx.openRush());
   on('xmasRushPlay',()=>fx.rushPlay(selected));on('xmasRushMarathon',()=>fx.marathon());on('xmasRushBoard',()=>fx.openBoard(selected));on('xmasRushBack',()=>fx.openMenu());
   on('xmasBoardBack',()=>fx.boardBack());on('xmasBoardShare',()=>shareLink());on('xmasBoardCopy',async()=>boardStatus((await copyLink())?'Länken är kopierad. Klistra in den i ett meddelande till din vän.':'Markera länken ovan och kopiera den för hand.'));
   on('xmasLinkGo',()=>fx.linkGo());on('xmasLinkSkip',()=>fx.linkSkip());
@@ -456,7 +454,7 @@ export function createXmasUi({save,meta=null,mount=document.getElementById('roun
   if(boardSelect)boardSelect.addEventListener('change',()=>renderBoard(boardSelect.value));
   const nameInput=$('xmasBoardName');
   if(nameInput){nameInput.addEventListener('input',()=>refreshLink());nameInput.addEventListener('change',()=>{save.setName(nameInput.value);nameInput.value=save.name;refreshLink();});nameInput.addEventListener('blur',()=>{save.setName(nameInput.value);nameInput.value=save.name;refreshLink();});}
-  on('xmasSandgrund',()=>fx.sandgrund());on('xmasBoat',()=>fx.boat());on('xmasContinueIntro',()=>fx.intro());on('xmasRound',()=>fx.round());on('xmasShops',()=>fx.shops());on('xmasFree',()=>fx.free());on('xmasContinueMenu',()=>fx.openMenu());on('xmasContinueBack',()=>fx.goBase());
+  on('xmasSandgrund',()=>fx.sandgrund());on('xmasBoat',()=>fx.boat());on('xmasContinueIntro',()=>fx.intro());on('xmasRound',()=>fx.round());on('xmasShops',()=>fx.shops());on('xmasFree',()=>fx.free());on('xmasContinueMenu',()=>fx.openMenu());
   on('xmasResultContinue',()=>resultMode==='termos'?fx.termos():resultMode==='hunt-next'?fx.round():resultMode==='rush'?fx.marathon():resultMode==='rush-next'?fx.rushNext():resultMode==='rush-again'?fx.rushAgain():resultMode==='rush-done'?fx.openRush():resultMode==='fail'?fx.zombiesAgain():resultMode==='zombies-next'?fx.zombiesNext():resultMode==='zombies-done'?fx.openMenu():resultMode==='place'?fx.placeResume():fx.openContinue());
   on('xmasResultFree',()=>resultMode==='termos'||resultMode==='rush'||resultMode==='fail'||resultMode==='place'||resultMode.startsWith('zombies')?fx.openMenu():resultMode.startsWith('rush-')?fx.openRush():fx.free());
   return {hud,showGoal,showPill,setProgress,setCombo,setMode,setZombieLevel,setVitals,setRush,hitHearts,tick,showHud,showResult,renderStart,renderContinue,renderWeather,renderLight,renderRush,renderBoard,renderChallenge,renderLink,placeDoor,selectedRush,

@@ -70,7 +70,7 @@ async function open(search,saveName,opts={}){
         btnH:Math.round(b.height),inView:b.top>=0&&b.bottom<=innerHeight+1&&c.left>=0&&c.right<=innerWidth+1,search:location.search};}),
     helpers:()=>ev(()=>{window.__walk=(tx,tz,step=1.3)=>new Promise(res=>{let n=0;const f=()=>{const [x,z]=window.__pos();const dx=tx-x,dz=tz-z,d=Math.hypot(dx,dz);if(d<.4||++n>700){res(d);return;}const k=Math.min(1,step/d);window.__tp(x+dx*k,z+dz*k,Math.atan2(-dx,-dz)*180/Math.PI,-5);requestAnimationFrame(f);};f();});}),
     door:()=>ev(()=>{const e=document.getElementById('xmasDoor');if(!e||e.hidden||!e.isConnected)return null;const r=e.getBoundingClientRect(),vis=getComputedStyle(e).display!=='none';
-      return {vis,inCard:e.parentElement?.id||'',title:e.querySelector('.xd-title').textContent,head:e.querySelector('.xd-head').textContent,line:e.querySelector('.xd-line').textContent,next:e.querySelector('.xd-next').textContent,tail:e.querySelector('.xd-tail').textContent,menu:e.querySelector('button').textContent,cal:e.querySelector('a').getAttribute('href'),h:Math.round(r.height)};}),
+      return {vis,inCard:e.parentElement?.id||'',title:e.querySelector('.xd-title').textContent,head:e.querySelector('.xd-head').textContent,line:e.querySelector('.xd-line').textContent,next:e.querySelector('.xd-next').textContent,tail:e.querySelector('.xd-tail').textContent,menu:e.querySelector('button').textContent,cal:e.querySelector('a')?.getAttribute('href')||null,h:Math.round(r.height)};}),
     shot:async n=>{if(SHOTS){fs.mkdirSync(SHOTS,{recursive:true});await page.screenshot({path:path.join(SHOTS,n+'.png')});}}
   };
   return h;
@@ -243,7 +243,7 @@ async function playHunt(g,maxSec=420){
   const card=await g.vis('round-xmas-result'),d=await g.door();
   check('T3 resultatkortet har rutan "Lucka 1 är avklarad" med rätt rubrik och poäng',card&&!!d&&d.vis&&d.inCard==='round-xmas-result'&&d.title==='★ LUCKA 1 ÄR AVKLARAD!'&&/^Du fick \d+ julpoäng och 1 stjärna i kalendern\.$/.test(d.line),JSON.stringify(d));
   check('T4 rutan säger att nästa lucka öppnas imorgon den 2/12 (datumet satt till 1 dec)',!!d&&d.next==='Nästa lucka öppnas imorgon den 2/12.'&&/Under tiden kan du spela resten av Julspelet/.test(d.tail),d&&d.next+' | '+d.tail);
-  check('T5 rutan har en knapp till Julmenyn och en länk till kalendern (stora tryckytor)',!!d&&/JULMENYN/.test(d.menu)&&d.cal==='./julkalender/',d&&d.menu+' '+d.cal);
+  check('T5 rutan har en knapp till Julmenyn och ingen länk till kalendern (2.21.1-xmas.16)',!!d&&/JULMENYN/.test(d.menu)&&!d.cal,d&&d.menu+' '+d.cal);
   await g.ev(()=>document.getElementById('xmasDoor')?.scrollIntoView({block:'center'}));await g.shot('l04-lucka-klar');
   const bh=await g.ev(()=>[...document.querySelectorAll('#xmasDoor button,#xmasDoor a')].map(e=>Math.round(e.getBoundingClientRect().height)));
   check('T6 knapparna i rutan är minst 44 px höga',bh.length===2&&bh.every(h=>h>=44),bh.join('/'));

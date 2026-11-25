@@ -167,7 +167,7 @@ export function createMetaUi({meta,save,fx,$,mount=document.getElementById('roun
     const ul=$('xmasDrawTickets');ul.replaceChildren();
     if(!codes.length)ul.append(el('li','empty','Du har inga lotter än. Klara ditt första uppdrag så får du en.'));
     for(const c of codes.slice().reverse())ul.append(el('li',sent.has(c)?'sent':'',c+(sent.has(c)?'  ✓ inskickad':'')));
-    $('xmasDrawHow').textContent='Lotter får du av: första uppdraget, var 60:e julklapp, dagens tre uppdrag, serier, nya grader, Julkalenderns luckor, adventssöndagarna och var femte gömd julklapp.';
+    $('xmasDrawHow').textContent='Lotter får du av: första uppdraget, var 60:e julklapp, dagens tre uppdrag, serier, nya grader, adventssöndagarna och var femte gömd julklapp.';
     renderDrawForm();
   }
   // Anmälan: bara när arrangören fyllt i uppgifterna (PRIZE.ready), läget är api och tiden inte gått ut. Annars sparas lotterna på enheten och räknas med när anmälan öppnar.
