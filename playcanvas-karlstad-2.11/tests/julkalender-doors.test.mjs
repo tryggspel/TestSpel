@@ -179,15 +179,15 @@ test('djuplänkarna: varje lucka länkar rakt till rätt uppdrag, och Julspelet 
   }
   for(const k of ['sandgrund','batbuss','pressbyran','cervera','torget','kungsgatan','drottninggatan','intro','maraton','topplista'])assert.ok(seen.has(k),`ingen lucka länkar till ${k}`);
 });
-test('finalen kräver åtta av elva julstämplar och nås utan Tomtegalet',()=>{
-  assert.equal(STAMPS.length,11);
+test('finalen kräver åtta av tolv julstämplar och nås utan Tomtegalet',()=>{
+  assert.equal(STAMPS.length,12);
   const d=door(24);assert.deepEqual(d.check,{kind:'stamps',n:8,unit:'julstämplar'});
   // Lucka 12 (Tomtezombies nivå 1) ger stämpeln 'zombies' (rules.mjs: klarad nivå 1 = stämpeln).
   const gives=x=>x.check.kind==='stamp'?[x.check.id]:x.check.kind==='zombies'&&x.check.n===1?['zombies']:[];
   const givers=new Set(DOORS.flatMap(gives));
   assert.ok(givers.size>=d.check.n+1,`stämplar som luckorna ger: ${givers.size}`);assert.ok(!givers.has('julrush-12'),'Tomtegalet (alla tolv rusher) krävs inte');
   for(const n of [1,2,3,6,7,8,9,11,12,13])assert.ok(gives(door(n)).length===1,`lucka ${n} ger en stämpel`);
-  assert.ok(text(d).includes('8')||/åtta/.test(text(d)));assert.ok(d.steg.join(' ').includes('1, 2, 3, 6, 7, 8, 9, 11, 12 och 13'));assert.ok(d.steg.join(' ').includes('n / 11'));
+  assert.ok(text(d).includes('8')||/åtta/.test(text(d)));assert.ok(d.steg.join(' ').includes('1, 2, 3, 6, 7, 8, 9, 11, 12 och 13'));assert.ok(d.steg.join(' ').includes('n / 12'));
 });
 test('knapparna och rubrikerna luckorna hänvisar till finns i Julspelet',()=>{
   const julHtml=read('index.html')+'\n'+read('xmas/xmas-ui.js')+'\n'+read('xmas/xmas-boot.js');

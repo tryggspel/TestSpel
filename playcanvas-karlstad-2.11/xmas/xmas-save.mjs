@@ -5,6 +5,7 @@ import {RUSH_COUNT,RUSH_MAX,starsFor} from './xmas-rushes.mjs?v=2.21.1-xmas.13';
 import {cleanName,cleanFriends,mergeFriend} from './xmas-board.mjs?v=2.21.1-xmas.13';
 import {ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.13';
 import {LIGHT_MODES} from './xmas-light.mjs?v=2.21.1-xmas.13';
+import {blankTermos,sanitizeTermos,recordTermos,termosToday} from './xmas-termos.mjs?v=2.21.1-xmas.13';
 
 const STAMP_IDS=new Set(STAMPS.map(s=>s.id));
 const MAXP=9999999;
@@ -13,7 +14,7 @@ const num=(v,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max
 export const blankRush=()=>({cleared:0,stars:{},best:{},bestStreak:0});
 // zombies: framstegen i Tomtezombies ({cleared: högsta klarade nivå, best:{n:{points,seconds,packages}}}), se xmas-zombie-levels.mjs.
 export const blankZombies=()=>({cleared:0,best:{}});
-export const blankSave=()=>({v:1,stamps:{},records:{},totals:{packages:0,bonus:0,points:0,runs:0},opts:{weather:'full',light:'auto'},intro:{done:false},rush:blankRush(),zombies:blankZombies(),name:'',friends:[]});
+export const blankSave=()=>({v:1,stamps:{},records:{},totals:{packages:0,bonus:0,points:0,runs:0},opts:{weather:'full',light:'auto'},intro:{done:false},rush:blankRush(),zombies:blankZombies(),termos:blankTermos(),name:'',friends:[]});
 
 export function sanitizeSave(raw){
   const out=blankSave();
@@ -42,6 +43,7 @@ export function sanitizeSave(raw){
   for(let n=1;n<=ZOMBIE_MAX;n++){const b=z.best?.[n];if(b&&typeof b==='object'&&num(b.points,MAXP)>0)out.zombies.best[n]={points:Math.floor(num(b.points,MAXP)),seconds:Math.floor(num(b.seconds,99999)),packages:Math.floor(num(b.packages,9999))};}
   for(const n of Object.keys(out.zombies.best))out.zombies.cleared=Math.max(out.zombies.cleared,+n);
   if(out.stamps.zombies)out.zombies.cleared=Math.max(out.zombies.cleared,1);
+  out.termos=sanitizeTermos(raw.termos); // Termosjakten (xmas.13): rekord, dagens rundor och insamlingens termosar
   out.name=cleanName(raw.name);out.friends=cleanFriends(raw.friends);
   return out;
 }
@@ -92,6 +94,10 @@ export class XmasSave{
     return {record:!!record&&!!prev,first,unlocked};
   }
   get zombies(){return this.state.zombies;}
+  // Termosjakten: en avslutad runda ({points, thermos, tempo, chain, gold, seconds}) på dagen day ('YYYY-MM-DD'). null om den inte sparas (inga termosar).
+  recordTermos(run,day,at=Date.now()){const r=recordTermos(this.state.termos,run,day,at);if(r){this.dirty=true;this.save();}return r;}
+  get termos(){return this.state.termos;}
+  termosDay(day){return termosToday(this.state.termos,day);}
   noteStreak(len){const R=this.state.rush,v=Math.floor(num(len,99));if(v>R.bestStreak){R.bestStreak=v;this.dirty=true;this.save();return true;}return false;}
   get rush(){return this.state.rush;}
   // Summan av bästa poäng i varje klarad rush (de tolv namngivna), och antalet stjärnor: det som visas på topplistan och går med i utmaningslänken (som bara bär de tolv).

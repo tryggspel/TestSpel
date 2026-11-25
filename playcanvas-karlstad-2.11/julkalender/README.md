@@ -50,7 +50,7 @@ Kalenderns egna framsteg ligger i `julspelet:2026:v1`. Allt sparas bara på spel
 | 21 | mån 21 dec | Highscore: Rush 4 SNÖYRA | JulRushen | ≥ 4 500 poäng i Rush 4 | ★★★ |
 | 22 | tis 22 dec | Tomtezombies: nivå 4 | Tomtezombies | Tomtezombies nivå 4 klar | ★★★ |
 | 23 | ons 23 dec | Lilla julafton: Rush 10 SNÖSTORM | JulRushen | Rush 10 SNÖSTORM klar | ★★★ |
-| 24 | tor 24 dec | Julafton: åtta av elva julstämplar | Julfinal | 8 av 11 julstämplar | ★★★ |
+| 24 | tor 24 dec | Julafton: åtta av tolv julstämplar | Julfinal | 8 av 12 julstämplar | ★★★ |
 
 Summa 51 stjärnor. Titlar efter stjärnor: Julnisse (0), Pepparkaksbagare (6), Tomtens hjälpreda (15), Julklappsjägare (27), Granmästare (40), Karlstads tomte (51). Söndagarna 6, 13 och 20 december är advent; 13 december är Luciadagen. Rusherna kommer i trappa (1, 3, 5, 8, 10) som i spelet, och ingen lucka kräver Rush 12 TOMTEGALET eller alla elva stämplar: bara de mycket duktiga klarar det, och finalen ska gå att nå (luckorna ger tio olika stämplar, åtta krävs). Lucka 24 tänder stjärnan i granen.
 

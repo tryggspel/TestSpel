@@ -71,7 +71,7 @@ test('konfigurationen: graderna stiger, namnen krockar inte med julpoängens ell
 test('konfigurationen: uppdragen har unika id och kända sorter, adventssöndagarna är söndagar före jul',()=>{
   assert.equal(new Set(MISSIONS.map(m=>m.id)).size,MISSIONS.length);
   for(const t of ['easy','medium','hard'])assert.ok(MISSIONS.filter(m=>m.tier===t&&!m.needs).length>=2,t+' har minst två uppdrag utan krav');
-  for(const m of MISSIONS)assert.ok(['runs','packages','bonus','chain','fast','areas','hidden','zombies','rush'].includes(m.kind),m.id);
+  for(const m of MISSIONS)assert.ok(['runs','packages','bonus','chain','fast','areas','hidden','zombies','rush','termosRuns','termos','daily'].includes(m.kind),m.id);
   const days=new Set(['söndag']);
   for(const a of ADVENT){assert.equal(new Date(a.date+'T12:00:00Z').getUTCDay(),0,a.date+' ska vara en söndag');assert.ok(a.date<'2026-12-25');assert.ok(days.size)}
   assert.deepEqual(ADVENT.map(a=>a.date),['2026-11-29','2026-12-06','2026-12-13','2026-12-20']);
@@ -218,7 +218,7 @@ test('ett uppdrag klaras när räknaren når målet och ger XP en gång; alla tr
   const runs=[hunt({id:'round-torget',area:'torget',packages:50,bonus:5,chain:12,seconds:100}),hunt({id:'round-kungsgatan',area:'kungsgatan',packages:50,bonus:5,chain:12,seconds:100})];
   for(const r of runs)R.push(m.onRun(r,at(day)));
   const st=m.status(at(day));
-  if(ids.every(id=>!['zombie1','rush1','gomd1'].includes(id))){
+  if(ids.every(id=>!['zombie1','rush1','gomd1','termos1','termos60','dagens'].includes(id))){
     assert.equal(st.missionsDone,3);assert.ok(st.gift.opened);
     const g=R.find(r=>r.gift);assert.ok(g,'en julklapp delades ut');assert.ok(g.gift.ticket&&validTicket(g.gift.ticket));assert.ok(g.gift.ornament);
     assert.equal(R.filter(r=>r.gift).length,1);
@@ -413,9 +413,9 @@ test('zombies, rush, Maraton, butiksuppdrag och Sandgrund ger sina belöningar',
   const r=m.onRun({kind:'rush',cleared:true,level:3,stars:2,packages:30,bonus:0,chain:6,seconds:120},at(D(1)));assert.ok(r.parts.some(p=>p.label==='Rush 3 klar'));assert.equal(r.parts.find(p=>p.label==='Stjärnor').xp,2*XP.rushStar);
   const short=m.onRun({kind:'rush',level:0,tempo:2,cleared:false,packages:10,chain:3},at(D(1)));assert.equal(short.ornaments.length,0,'Maraton under 20 paket räknas inte som klar');
   const long=m.onRun({kind:'rush',level:0,tempo:5,cleared:false,packages:40,chain:6},at(D(1)));assert.ok(long.parts.some(p=>p.label==='Tempo'));assert.ok(long.ornaments.length>=1);
-  const p1=m.onRun({kind:'place',id:'cervera',cleared:true,first:true},at(D(1)));assert.equal(p1.xp,XP.place.first);assert.ok(p1.ornaments.length>=1);
+  const p1=m.onRun({kind:'place',id:'cervera',cleared:true,first:true},at(D(1)));assert.equal(p1.parts.find(p=>p.label==='Ny julstämpel').xp,XP.place.first);assert.ok(p1.ornaments.length>=1);
   const p2=m.onRun({kind:'place',id:'cervera',cleared:true,first:false},at(D(1)));assert.equal(p2.xp,XP.place.repeat);assert.equal(p2.ornaments.length,0);
-  const s1=m.onRun({kind:'sandgrund',id:'sandgrund',cleared:true,first:true},at(D(1)));assert.equal(s1.xp,XP.sandgrund.first);
+  const s1=m.onRun({kind:'sandgrund',id:'sandgrund',cleared:true,first:true},at(D(1)));assert.equal(s1.parts.find(p=>p.label==='Ny julstämpel').xp,XP.sandgrund.first);
   assert.ok(m.state.tried.zombies&&m.state.tried.rush);
 });
 

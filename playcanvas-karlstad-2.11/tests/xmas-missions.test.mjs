@@ -18,7 +18,7 @@ const park=(x,z)=>x>MARIEBERG.x+6||(Math.abs(((x%13)+13)%13)<1.6&&Math.abs(((z%1
 
 test('de två nya julstämplarna finns och hör ihop med uppdragen',()=>{
   for(const id of ['sandgrund','marieberg']){const st=STAMPS.find(s=>s.id===id);assert.ok(st&&st.label&&st.sub,id);assert.ok(st.label.length<=30,'stämpeln ryms på stämpelkortet: '+st.label);}
-  assert.equal(STAMPS.length,11);assert.equal(new Set(STAMPS.map(s=>s.id)).size,STAMPS.length,'unika id');
+  assert.equal(STAMPS.length,12);assert.equal(new Set(STAMPS.map(s=>s.id)).size,STAMPS.length,'unika id');
   assert.equal(SANDGRUND.id,'sandgrund');assert.ok(MISSIONS.some(m=>m.id===SANDGRUND.id),'Sandgrund finns som uppdrag i grundspelet');
   assert.equal(BOAT.id,'marieberg');
   assert.match(MISSIONS.find(m=>m.id==='sandgrund').place,/Sandgrund/);
@@ -36,7 +36,7 @@ test('Julvernissagen sparas som stämpel, rekord och julpoäng i julsparningen',
   const o=sandgrundOutcome({won:true,practice:false,score:1200,rescued:3,seconds:70},{hadStamp:save.hasStamp('sandgrund')});
   assert.equal(save.stamp('sandgrund'),o.stamp);save.record('sandgrund',{points:1200,seconds:70,packages:3,bonus:0});save.addTotals({points:o.points});
   const again=new XmasSave(st);
-  assert.equal(again.hasStamp('sandgrund'),true);assert.equal(again.state.records.sandgrund.points,1200);assert.equal(again.state.totals.points,200);assert.equal(again.stampTotal(),11);
+  assert.equal(again.hasStamp('sandgrund'),true);assert.equal(again.state.records.sandgrund.points,1200);assert.equal(again.state.totals.points,200);assert.equal(again.stampTotal(),12);
   assert.equal(save.stamp('sandgrund'),false,'stämpeln ges bara en gång');
 });
 

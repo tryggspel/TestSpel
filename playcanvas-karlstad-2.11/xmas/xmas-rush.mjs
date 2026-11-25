@@ -16,6 +16,8 @@ import {catchReach,tempoReach,TEMPO_COURSE} from '../journey-rules.mjs?v=2.21.1-
 import {POWER,powerFor} from '../powerups.mjs?v=2.21.1-xmas.13';
 import {PACKAGE_POINTS,COMBO,comboMult} from './xmas-config.mjs?v=2.21.1-xmas.13';
 import {RUSH_COUNT,RUSH_MAX,PRESSURE,clockFor,goalProgress,starsFor,seriesHearts} from './xmas-rushes.mjs?v=2.21.1-xmas.13';
+import {TERMOS,termosName} from './xmas-termos.mjs?v=2.21.1-xmas.13';
+import {dayOf} from './xmas-meta.mjs?v=2.21.1-xmas.13';
 
 export const RUSH=Object.freeze({
   id:'julrush',
@@ -78,7 +80,7 @@ const clamp01=v=>Math.max(0,Math.min(1,v));
 export class XmasRush{
   constructor({journey,save=null}={}){
     this.j=journey;this.save=save;this.events=[];this.state='idle'; // idle | starting | running | over
-    this.pk=new Map();this.list=[];this.reset();
+    this.pk=new Map();this.list=[];this.skin='paket';this.day='';this.reset();
   }
   reset(){
     this.def=null;this.startHearts=TEMPO.lives;this.streak=0;this.extra=0;this.graced=false;
@@ -89,6 +91,9 @@ export class XmasRush{
     this.spirit={active:false,x:0,z:0,fx:0,fz:0,t:0,target:null,cool:0};
   }
   get tempo(){return this.j.tempo;}
+  // Termosjakten (xmas-termos.mjs) är maratonet med termosar: samma regler, egna namn, egna rekord.
+  get termos(){return this.skin==='termos';}
+  nameFor(level){return this.def?this.def.name:this.termos?termosName(level):rushName(level);}
   get running(){return this.state==='running';}
   // Vyn och pilen visar paket så länge en körning pågår (även den första bildrutan innan banan lagts ut).
   get active(){return this.state==='running'||this.state==='starting';}
@@ -98,8 +103,10 @@ export class XmasRush{
   // ── Start och slut ────────────────────────────────────────────────────────────────────────────────────────────────
   // Själva starten sker i första steget (begin), så att banan läggs ut från spelarens verkliga plats och riktning och inte från en gammal.
   // def: en rush ur RUSHES (fast tempo, mål) eller null för Maraton. hearts: hjärtan att börja med (en serie tar med sig dem). streak: rusher klarade i rad före den här.
-  start({def=null,hearts=TEMPO.lives,streak=0}={}){
+  // skin: 'termos' = Termosjakten (bara utan def). day: dagen rundan räknas till (svensk kalenderdag), annars dagens datum.
+  start({def=null,hearts=TEMPO.lives,streak=0,skin='paket',day=''}={}){
     this.cleanup();this.reset();this.state='starting';this.events.length=0;
+    this.skin=skin==='termos'&&!def?'termos':'paket';this.day=/^20\d{2}-\d{2}-\d{2}$/.test(day)?day:dayOf();
     this.def=def||null;this.startHearts=Math.max(1,Math.min(TEMPO.lives,Math.floor(Number(hearts))||TEMPO.lives));this.streak=Math.max(0,Math.floor(Number(streak))||0);
     this.j.tempo.reset();
   }
@@ -113,7 +120,7 @@ export class XmasRush{
     t.lives=this.startHearts;
     this.installClock();
     this.state='running';
-    this.emit({type:'rush-start',level:t.level,lives:t.lives,name:def?def.name:rushName(1),n:def?.n||0,goal:def?{...def.goal}:null,streak:this.streak});
+    this.emit({type:'rush-start',level:t.level,lives:t.lives,skin:this.skin,name:this.nameFor(1),n:def?.n||0,goal:def?{...def.goal}:null,streak:this.streak});
   }
   // Tar bort allt paketbandet och nollställer grundspelets tempo och förmågor, så att inget ligger kvar när man går vidare till ett annat läge.
   cleanup(){
@@ -165,7 +172,7 @@ export class XmasRush{
     const t=this.j.tempo,picked=t.picked,level=t.level+(this.def?0:this.extra),score=t.score,seconds=Math.round(t.elapsed),hearts=Math.max(0,t.lives),def=this.def;
     this.state='over';
     const save=picked>=RUSH.minPicksToSave?this.save:null;
-    let record=false,stamp=false,stampId=RUSH.id,rush=null;
+    let record=false,stamp=false,stampId=RUSH.id,rush=null,termos=null;
     if(def){
       // En av tolv rusher: bara klarade rusher sparas (bästa poäng och stjärnor) och låser upp nästa. Streak = rusher klarade i rad (en serie).
       const prevBest=this.save?.state?.rush?.best?.[def.n],reachBefore=this.save?.state?.rush?.cleared||0,streak=win?this.streak+1:0,prog=win&&save?save.recordRush(def.n,{points:score,seconds,packages:picked,hearts,cleared:true}):null;
@@ -177,13 +184,20 @@ export class XmasRush{
       }
       rush={n:def.n,name:def.name,tempo:def.tempo,goal:{...def.goal},cleared:!!win,stars:win?starsFor(hearts):0,hearts,streak,first:!!prog?.first,unlockedNext:!!prog?.unlocked,
         next:win&&def.n<RUSH_MAX?def.n+1:0,nextHearts:win?seriesHearts(hearts,this.startHearts):0,startHearts:this.startHearts,flawless:!!win&&hearts>=this.startHearts,done:win&&def.n===RUSH_COUNT,overtime:!!def.overtime,newReach:!!win&&def.n>reachBefore,bestBefore:prevBest?{...prevBest}:null};
+    }else if(this.termos){
+      // Termosjakten: egna rekord, dagens topplista, dagsmålet och insamlingens termosar (xmas-termos.mjs). Stämpeln TERMOSJAKTEN vid tempo 5.
+      // Alla termosar räknas: banans, sidotermosarna och termosregnet (kedjan räknar också alla).
+      const all=picked+this.sideTaken;
+      termos=all>=TERMOS.minToSave&&this.save?.recordTermos?this.save.recordTermos({points:score,thermos:all,tempo:level,chain:this.bestChain,gold:this.golds,seconds},this.day):null;
+      record=!!termos?.record&&!!termos.prevBest;
+      if(save&&level>=TERMOS.stampTempo&&save.stamp(TERMOS.id)){stamp=true;stampId=TERMOS.id;}
     }else{
       record=save?save.record(RUSH.id,{points:score,seconds,packages:picked,bonus:this.golds,level}):false;
       stamp=save&&level>=RUSH.stampLevel?save.stamp(RUSH.id):false;
     }
-    save?.addTotals({packages:picked,bonus:this.golds,points:Math.round(score*RUSH.titleShare)});
-    const best=def?this.save?.state?.rush?.best?.[def.n]:this.save?.state?.records?.[RUSH.id];
-    this.result={kind:'rush',id:RUSH.id,title:'JULRUSHEN',points:score,level,name:def?def.name:rushName(level),collected:picked,gold:this.golds,gifts:this.gifts,bestChain:this.bestChain,seconds,misses:t.misses,
+    save?.addTotals({packages:this.termos?0:picked,bonus:this.termos?0:this.golds,points:Math.round(score*RUSH.titleShare)});
+    const best=def?this.save?.state?.rush?.best?.[def.n]:this.termos?this.save?.state?.termos?.best:this.save?.state?.records?.[RUSH.id];
+    this.result={kind:'rush',skin:this.skin,termos,id:this.termos?TERMOS.id:RUSH.id,title:this.termos?TERMOS.title:'JULRUSHEN',points:score,level,name:this.nameFor(level),collected:this.termos?picked+this.sideTaken:picked,gold:this.golds,gifts:this.gifts,bestChain:this.bestChain,seconds,misses:t.misses,
       record:!!record,stamp:!!stamp,stampId,quit,best:best?{...best}:null,rush,sideTaken:this.sideTaken};
     this.cleanup();
     this.emit({type:'rush-over',result:this.result});
@@ -229,14 +243,14 @@ export class XmasRush{
     if(this.def)t.levelClock=0; // fast tempo: inga nivåhöjningar mitt i en rush
     else t.levelClock+=dt*(RUSH.marathonRate-1); // Maraton: tempot stiger snabbare än i grundspelet
     for(const e of t.tick(dt,{freeze:frozen})){
-      if(e.type==='tempo-level')this.emit({type:'rush-level',level:e.level,name:rushName(e.level),speed:e.speed,mult:e.mult});
+      if(e.type==='tempo-level')this.emit({type:'rush-level',level:e.level,name:this.nameFor(e.level),speed:e.speed,mult:e.mult});
       else if(e.type==='tempo-miss'){this.chain=0;this.emit({type:'rush-miss',lives:e.lives});}
       else if(e.type==='tempo-over')this.finish(e);
     }
     // Maraton efter tempo 12: grundspelet höjer inte tempot mer, men klockan fortsätter bli trängre, ett steg per tempohöjning
     if(!this.def&&this.state==='running'&&t.level>=TEMPO.levels){
       const extra=Math.max(0,Math.floor(t.levelClock/TEMPO.levelSeconds));
-      if(extra>this.extra){this.extra=extra;this.emit({type:'rush-level',level:TEMPO.levels+extra,name:rushName(TEMPO.levels),speed:tempoSpeed(TEMPO.levels),mult:tempoPoints(TEMPO.levels),extra:true});}
+      if(extra>this.extra){this.extra=extra;this.emit({type:'rush-level',level:TEMPO.levels+extra,name:this.nameFor(TEMPO.levels),speed:tempoSpeed(TEMPO.levels),mult:tempoPoints(TEMPO.levels),extra:true});}
     }
   }
 
@@ -452,7 +466,7 @@ export class XmasRush{
   target(p){
     const tg=this.j.tempo.target;if(!this.running||!tg)return null;
     const pk=this.pk.get(tg.id);
-    return {x:tg.x,z:tg.z,id:tg.id,kind:pk?.kind==='bonus'?'bonus':'regular',gift:pk?.gift||null,label:pk?.kind==='bonus'?'GULDPAKET':'NÄSTA PAKET',distance:Math.hypot(tg.x-p.x,tg.z-p.z)};
+    return {x:tg.x,z:tg.z,id:tg.id,kind:pk?.kind==='bonus'?'bonus':'regular',gift:pk?.gift||null,label:this.termos?(pk?.kind==='bonus'?'GULDTERMOS':'NÄSTA TERMOS'):pk?.kind==='bonus'?'GULDPAKET':'NÄSTA PAKET',distance:Math.hypot(tg.x-p.x,tg.z-p.z)};
   }
   // För grundspelets vägledning på marken (ledpilar): bara när nästa paket ligger en bit bort.
   objective(p){
@@ -470,7 +484,7 @@ export class XmasRush{
   }
   snapshot(){
     const t=this.j.tempo,def=this.def;
-    return {state:this.state,running:this.running,level:t.level+(def?0:this.extra),name:def?def.name:rushName(t.level),n:def?.n||0,goal:def?goalProgress(def,{picked:t.picked,score:t.score}):null,streak:this.streak,lives:t.lives,maxLives:TEMPO.lives,score:t.score,picked:t.picked,gold:this.golds,gifts:this.gifts,
+    return {state:this.state,running:this.running,skin:this.skin,level:t.level+(def?0:this.extra),name:this.nameFor(t.level),n:def?.n||0,goal:def?goalProgress(def,{picked:t.picked,score:t.score}):null,streak:this.streak,lives:t.lives,maxLives:TEMPO.lives,score:t.score,picked:t.picked,gold:this.golds,gifts:this.gifts,
       chain:this.chain,bestChain:this.bestChain,ratio:t.target&&t.deadline>0?clamp01(t.left/t.deadline):1,left:Math.max(0,t.left),hasTarget:!!t.target,urgent:!!t.target&&t.deadline>0&&t.left/t.deadline<RUSH.urgent,
       levelLeft:Math.max(0,TEMPO.levelSeconds-(t.levelClock-(t.level>=TEMPO.levels?this.extra*TEMPO.levelSeconds:0)))/(def?1:RUSH.marathonRate),speed:t.speedMul(),mult:t.pointMul(),shield:this.shield,seconds:t.elapsed,packages:this.list.length,
       side:this.side.reduce((n,k)=>n+(k.rain?0:1),0),rain:this.side.reduce((n,k)=>n+(k.rain?1:0),0),sideTaken:this.sideTaken,magnet:this.timers.magnet>0,ghost:this.spirit.active,result:this.result};

@@ -28,6 +28,10 @@ import {doorBox,resultMatches} from './xmas-door.mjs?v=2.21.1-xmas.13';
 import {XmasMeta} from './xmas-meta.mjs?v=2.21.1-xmas.13';
 import {PRIZE} from './xmas-meta-config.mjs?v=2.21.1-xmas.13';
 import {hiddenPackages,nearestHidden,warmth,hiddenSpot} from './xmas-hidden.mjs?v=2.21.1-xmas.13';
+import {TERMOS,goalFor as termosGoalFor} from './xmas-termos.mjs?v=2.21.1-xmas.13';
+import {DAILY} from './xmas-daily-config.mjs?v=2.21.1-xmas.13';
+import {dailyFor,isDailyId,dailyWarmth,hintLevel} from './xmas-daily.mjs?v=2.21.1-xmas.13';
+import {COTTAGE} from './xmas-market-data.mjs?v=2.21.1-xmas.13';
 import {DOORS} from '../julkalender/doors.mjs?v=2.21.1-xmas.13';
 import {GAME_SAVE_KEY,STORAGE_KEY as CALENDAR_KEY,readGame,evaluate,hasAutoCheck,metricsOf} from '../julkalender/rules.mjs?v=2.21.1-xmas.13';
 
@@ -70,6 +74,9 @@ export function installXmas(ctx){
   try{decor=createXmasDecor(pc,host,{root,texture,labelTex,indoors,params:{weather:save.weather}},sprites);}catch(e){console.error('[Julmiljön hoppades över]',e);}
   // Ljuset (xmas-light.js): dag, skymning och kväll efter klockan i Karlstad, eller spelarens fasta val. ?ljus=dag|skymning|kvall|auto gäller bara den här sidvisningen och sparas inte.
   const ljusParam=params?.get?.('ljus');
+  // Insamlingen på Stora Torget: räkneverket visar alla termosar spelaren plockat i Termosjakten (xmas-termos.mjs).
+  const syncDonations=()=>{try{decor?.market?.setDonations?.(save.termos?.total||0);}catch(e){console.error(e);}};
+  syncDonations();
   let light=null;try{light=createXmasLight(pc,host,{decor,mode:LIGHT_MODES.includes(ljusParam)?ljusParam:save.light});}catch(e){console.error('[Ljuset hoppades över]',e);}
   const baseUrl=baseGameUrl(location.search,location.hostname);
   let stamp=baseStamp,mode='menu'; // menu | cozy | zombies | rush | mission (Julvernissagen) | boat (Julbåten, tills båten lagt till)
@@ -136,7 +143,8 @@ export function installXmas(ctx){
       case 'intro':case 'round':case 'marieberg':return {kind:'hunt',id:res.id,cleared:true,packages:res.collected,bonus:res.bonusCollected,chain:res.bestChain,seconds:res.seconds,area:AREA[res.id]||''};
       case 'delivery':case 'place':return {kind:'place',id:res.id,cleared:true,first:!!res.stamp};
       case 'zombies':return {kind:'zombies',id:'zombies',cleared:!res.failed,level:res.level,packages:res.collected,bonus:res.bonusCollected,chain:res.bestChain,seconds:res.seconds,countPackages:!res.failed};
-      case 'rush':{const k=res.rush;return {kind:'rush',id:k?'rush-'+k.n:'maraton',cleared:!!(k&&k.cleared),level:k?k.n:0,stars:k?k.stars:0,tempo:res.level,packages:res.collected,bonus:0,chain:res.bestChain,seconds:res.seconds};}
+      case 'rush':{if(res.skin==='termos')return {kind:'termos',id:'termos',cleared:true,tempo:res.level,packages:res.collected,bonus:0,chain:res.bestChain,seconds:res.seconds,goalNow:!!res.termos?.goalNow};
+        const k=res.rush;return {kind:'rush',id:k?'rush-'+k.n:'maraton',cleared:!!(k&&k.cleared),level:k?k.n:0,stars:k?k.stars:0,tempo:res.level,packages:res.collected,bonus:0,chain:res.bestChain,seconds:res.seconds};}
       default:return null;
     }
   }
@@ -243,15 +251,21 @@ export function installXmas(ctx){
     });
   }
   // n = 0: Maraton (tempot stiger var 12:e sekund, och klockan blir trängre). n = 1–99: en rush med fast tempo och ett mål (13 och uppåt är ÖVERTID). series: hjärtan och rusher i rad när man går vidare från en klarad rush.
-  function startRush(n=0,series=null){
+  // skin 'termos': Termosjakten (maratonet med termosar, xmas-termos.mjs). Bara med n = 0.
+  function startRush(n=0,series=null,skin='paket'){
     guard(()=>{
-      const def=n?rushDef(n):null;
+      const def=n?rushDef(n):null,termos=!def&&skin==='termos';
       if(n&&(!def||!isUnlocked(save.rush,n))){openRush();return;}
-      hunt.cancel('rush');enter('rush',rushSpawn());julrush.start({def,hearts:series?.hearts||3,streak:series?.streak||0});
+      hunt.cancel('rush');enter('rush',rushSpawn());julrush.start({def,hearts:series?.hearts||3,streak:series?.streak||0,skin:termos?'termos':'paket',day:M(()=>meta.today(),'')||''});
       try{const was=ctx.setTurbo?.(true);if(turboBefore==null&&typeof was==='boolean')turboBefore=was;}catch{} // klockan är räknad på turbons fart: den slås på av sig själv (man kan stänga av den, men då hinner man inte långt)
       try{host.music?.tempo?.(def?Math.min(1.35,1+.03*(def.tempo-1)):1);}catch{}
+      if(termos){
+        const g=termosGoalFor(M(()=>meta.today(),'')||''),td=save.termosDay(M(()=>meta.today(),'')||'');
+        toast('TERMOSJAKTEN','Följ pilen och den gröna strålen till nästa termos. Tempot stiger var 12:e sekund och klockan blir trängre. Dagens mål: '+g.text.toLowerCase()+(td.goal?' (klart!)':'')+'.',4);
+        ui.showGoal('Hinn fram till nästa termos före klockan!',5500);
+      }else
       toast(def?'RUSH '+def.n+' · '+def.name:'JULRUSHEN · MARATON',def?goalText(def)+'. Följ pilen och den gröna strålen. Turbon är på.':'Följ pilen och den gröna strålen till nästa paket. Tempot stiger var 12:e sekund och klockan blir trängre. Turbon är på.',3.6);
-      ui.showGoal(def?goalText(def)+'!':'Följ pilen: hinn fram före klockan!',5500);
+      if(!termos)ui.showGoal(def?goalText(def)+'!':'Följ pilen: hinn fram före klockan!',5500);
       ui.setRush(julrush.snapshot(),julrush.powers([]),performance.now());view.clear();
     });
   }
@@ -434,23 +448,72 @@ export function installXmas(ctx){
       setTimeout(()=>guard(()=>{try{openPass?.();}catch(err){console.error(err);}}),60);
     });
   }
-  function startFree(){
+  // Dagens julklapp (xmas-daily.mjs) ligger alltid gömd i fri julvandring tills den är hittad, så den går att snubbla över. Med DAGENS JULKLAPPSJAKT (startDaily) börjar man vid
+  // tomtens stuga på Torget med dagens gåta, och hjälpen kommer efter hand: områdets namn, sedan pilen till området.
+  let daily=null; // {def, t0, level, band, said, found}
+  const todayKey=()=>M(()=>meta.today(),'')||'';
+  function addDaily(){
+    const def=dailyFor(todayKey());if(!def||M(()=>meta.dailyFound(),false))return null;
+    M(()=>hunt.addHidden([{id:def.id,spot:'daily',x:def.spot.x,z:def.spot.z}]));return def;
+  }
+  function startFree(opts={}){
     guard(()=>{
-      const keep=mode==='cozy'&&isPlaying();
-      if(!keep)enter('free');else{setPanel(null);resume?.();}
+      const keep=!opts.spawn&&mode==='cozy'&&isPlaying();
+      if(!keep)enter('free',opts.spawn||null);else{setPanel(null);resume?.();}
       hunt.startFree();setPanel(null);
       M(()=>{hunt.addHidden(hiddenPackages(meta.state.hidden));hiddenBand='cold';});
-      const clue=M(()=>{const h=meta.status().hidden;const open=h.hints.filter(x=>x.visible&&!x.found);return open.length?open[open.length-1].clue:'';},'');
-      toast('FRI JULVANDRING','Tomtarna tappar julklappar här och där i staden. Leta efter deras spår i snön och följ dem.'+(clue?' Gömd julklapp: "'+clue+'"':''),clue?5.6:4);
+      const dd=addDaily();daily=opts.daily&&dd?{def:dd,t0:performance.now(),level:1,band:'cold',said:0,found:false}:null;
+      if(daily){
+        const d=daily.def;
+        toast('DAGENS JULKLAPPSJAKT','"'+d.area.riddle+'"'+(d.note?' '+d.note:''),6.5);
+        ui.showGoal('Lös gåtan och hitta dagens julklapp. Det blir varmare när du närmar dig.',7000);
+      }else{
+        const clue=M(()=>{const h=meta.status().hidden;const open=h.hints.filter(x=>x.visible&&!x.found);return open.length?open[open.length-1].clue:'';},'');
+        toast('FRI JULVANDRING','Tomtarna tappar julklappar här och där i staden. Leta efter deras spår i snön och följ dem.'+(clue?' Gömd julklapp: "'+clue+'"':''),clue?5.6:4);
+      }
       ui.showHud(true);ui.setProgress(hunt.run);view.clear();
     });
+  }
+  // DAGENS JULKLAPPSJAKT: start vid tomtens stuga, vänd mot dagens område. Redan hittad: fri julvandring och ett besked om när nästa göms.
+  function startDaily(){
+    guard(()=>{
+      const def=dailyFor(todayKey());
+      if(!def||M(()=>meta.dailyFound(),false)){toast('DAGENS JULKLAPP','Du har redan hittat dagens julklapp. En ny göms i natt, någon annanstans i Karlstad.',3.6);startFree();return;}
+      const x=COTTAGE.x+3,z=COTTAGE.z-6.5,c=def.area.center,yaw=Math.round(Math.atan2(-(c.x-x),-(c.z-z))*180/Math.PI);
+      startFree({spawn:{x,z,yaw},daily:true});
+    });
+  }
+  // Varmt och glödhett, och hjälpen efter hand. Anropas några gånger i sekunden i fri julvandring.
+  function dailyHint(p,now){
+    const d=daily;if(!d||d.found)return;
+    const dist=Math.hypot(d.def.spot.x-p.x,d.def.spot.z-p.z),band=dailyWarmth(dist),lv=hintLevel((now-d.t0)/1000);
+    if(lv>d.level){
+      d.level=lv;
+      if(lv===2)fanfare('TIPS','Dagens julklapp ligger i '+d.def.area.name+'.',2.6,'energy');
+      if(lv===3)fanfare('TIPS','Pilen visar vägen till '+d.def.area.name+'. Där blir det varmt.',2.6,'energy');
+    }
+    if(band==='cold'){d.band='cold';return;}
+    if(band===d.band&&now-d.said<(band==='hot'?8000:25000))return;
+    d.band=band;d.said=now;
+    ui.showPill(band==='hot'?'GLÖDHET! DAGENS JULKLAPP ÄR HÄR NÄRA':'VARMT · DAGENS JULKLAPP ÄR I NÄRHETEN',2200,now,'bonus');
+  }
+  function dailyFoundAt(e,now){
+    const def=dailyFor(todayKey());if(!def)return;
+    const R=M(()=>meta.onDaily(def.reward));
+    if(daily)daily.found=true;daily=null;
+    sound('win');[523.25,659.25,783.99,1046.5,1318.5,1568,2093].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.3,.09),i*80));
+    view.burst(e.x,e.z,{big:true,y:1.2});
+    const o=R&&R.ornaments[0],cp=R&&R.coupons[0];
+    fanfare('DAGENS JULKLAPP!',(R?'+'+R.xp+' XP'+(o?' · '+(o.isNew?'ny prydnad: ':'dubblett: ')+o.name:'')+(cp?' · NY KUPONG: '+cp.title:'')+(PRIZE.enabled&&R.tickets.length?' · en lott':''):'Den här har du redan hittat.')+' En ny göms i natt.',3.8,'win');
+    if(cp)setTimeout(()=>guard(()=>toast('NY KUPONG',cp.title+'. Du hittar den i Julmenyn under dina kuponger.',4)),4200);
+    if(R)announce(R,{skip:['orn','ticket']});
   }
   function openMenu(){
     guard(()=>{
       try{dismissPlaceResult?.();}catch{}clearTimeout(resultTimer);
       if(julrush.active){julrush.quit();} // att ge upp i pausmenyn sparar körningen som en förlust (om den hade några paket)
       leaveRush();restoreTurbo();zombieTune.off();try{host.music?.tempo?.(1);}catch{}
-      doorLink=null;ui.placeDoor(null);hunt.cancel('meny');view.clear();ui.showHud(false);guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;journey.pause?.();mode='menu';boatInfo=null;caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush','xmas-mission');
+      daily=null;doorLink=null;ui.placeDoor(null);hunt.cancel('meny');view.clear();ui.showHud(false);guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;journey.pause?.();mode='menu';boatInfo=null;caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush','xmas-mission');
       if(incoming){ui.renderChallenge(incoming);setPanel('xmas-challenge');return;}
       if(link){const l=link;link=null;if(showLink(l))return;}
       menuFrom='intro';takeCode();flushNews();
@@ -511,6 +574,7 @@ export function installXmas(ctx){
   const ui=createXmasUi({save,meta,fx:{
     cozy:()=>{if(save.introDone)openContinue();else startIntro();},
     intro:()=>startIntro(),round:()=>startRound(),shops:()=>openShops(),free:()=>startFree(),zombies:()=>startZombies(),zombiesNext,zombiesAgain,sandgrund:()=>startSandgrund(),boat:()=>startBoat(),
+    termos:()=>startRush(0,null,'termos'),daily:()=>startDaily(),
     openRush:()=>openRush(),rushPlay:n=>startRush(n),marathon:()=>startRush(0),rushNext,rushAgain,openBoard,boardBack:()=>{if(boardFrom==='result')setPanel('xmas-result');else openRush(ui.selectedRush());},challengeGo,challengeSave,challengeSkip,
     openMenu,openContinue,goBase,setWeather,setLight,linkGo,linkSkip,doorMenu:doorMenuGo,placeResume,
     openTree:()=>openTree(),openDraw:()=>openDraw(),openSecrets:()=>openSecrets(),menuBack:()=>menuBack(),codeRedeemed:r=>codeRedeemed(r)
@@ -538,6 +602,7 @@ export function installXmas(ctx){
     'xmas-chain-lost':(e,now)=>{ui.showPill('KEDJAN BRÖTS · '+e.chain+' I RAD',1200,now,'lost');},
     // En gömd julklapp (xmas-hidden.mjs) hittad i fri julvandring: egen fanfar, XP, en prydnad och ibland en lott.
     'xmas-hidden':(e,now)=>{
+      if(isDailyId(e.id)){dailyFoundAt(e,now);return;}
       const R=M(()=>meta.onHidden(e.spot));
       sound('win');[523.25,659.25,783.99,1046.5,1318.5,1568].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.3,.09),i*80));
       view.burst(e.x,e.z,{big:true,y:1.2});
@@ -564,12 +629,12 @@ export function installXmas(ctx){
       if(e.gold){[659.25,880,1174.66,1568].forEach((f,i)=>setTimeout(()=>note(f,'triangle',.22,.08),i*70));view.burst(e.x,e.z,{big:true});}
       else{note(chainFreq(e.chain),'triangle',.16,.075);setTimeout(()=>note(chainFreq(e.chain)*1.5,'sine',.2,.04),55);view.burst(e.x,e.z);}
       // Allt i en enda puff (i det här tempot hinner en separat kombotavla inte läsas): poäng, flyt och kombo eller kombonivåns beröm.
-      const who=e.by==='ghost'?'SPÖKET · ':e.by==='magnet'?'MAGNET · ':e.side&&!e.rain?'SIDOPAKET · ':'';
+      const who=e.by==='ghost'?'SPÖKET · ':e.by==='magnet'?'MAGNET · ':e.side&&!e.rain?(julrush.termos?'SIDOTERMOS · ':'SIDOPAKET · '):'';
       ui.showPill(who+'+'+e.points+(e.flow?' · FLYT':'')+(e.praise?' · '+e.praise:e.chain>=2?' · KOMBO '+e.chain:''),e.gold||e.praise?1500:900,now,e.gold||e.praise?'bonus':'');
     },
     'rush-gift':(e,now)=>{
       sound(e.kind==='bomb'?'boss':'win');(GIFT_JINGLE[e.kind]||GIFT_JINGLE.default).forEach(([f,type],i)=>setTimeout(()=>note(f,type||'triangle',.2,.07),i*(e.kind==='sleigh'?45:e.kind==='kaka'?35:e.kind==='ghost'?85:65)));
-      fanfare(e.label+(e.count>0?' · '+e.count+' PAKET':'')+'!',e.text+(e.seconds?' '+String(e.seconds).replace('.',',')+' sekunder.':''),2.2,'energy');
+      fanfare((julrush.termos&&e.kind==='rain'?'TERMOSREGNET':e.label)+(e.count>0?' · '+e.count+(julrush.termos?' TERMOSAR':' PAKET'):'')+'!',e.text+(e.seconds?' '+String(e.seconds).replace('.',',')+' sekunder.':''),2.2,'energy');
     },
     'rush-level':(e,now)=>{
       sound('boss');host.music?.tempo?.(Math.min(1.35,1+.03*(e.level-1)));
@@ -581,6 +646,7 @@ export function installXmas(ctx){
     'rush-chain-lost':(e,now)=>{ui.showPill('KEDJAN BRÖTS · '+e.chain+' I RAD',1200,now,'lost');},
     'rush-over':(e,now)=>{
       const r=e.result,k=r.rush;lastRush=k||null;
+      if(r.skin==='termos')syncDonations();
       // en tagen utmaning: slog du vännen? (en rush som inte klarades räknas inte, och utmaningen ligger kvar tills den är slagen)
       r.door=doorFor({...r,kind:'rush',rush:k||null});
       {const tmp={...r,kind:'rush',rush:k||null};giveMeta(tmp);if(tmp.meta)r.meta=tmp.meta;}
@@ -626,10 +692,17 @@ export function installXmas(ctx){
     }
     const on=(mode==='cozy'||mode==='zombies')&&!!hunt.run&&hunt.active&&!placeActive?.();
     if(!on){if(guideShown||guide.state.on){guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;}return;}
-    const g=guide.update(p,host.camera.forward,hunt.guideTarget(p),dt,now,view.lite);
+    let tgt=hunt.guideTarget(p);
+    // Dagens julklappsjakt, steg 3: pilen leder till dagens område (inte till själva julklappen).
+    if(daily&&!daily.found&&daily.level>=3&&mode==='cozy'){const c=daily.def.area.center,d=Math.hypot(c.x-p.x,c.z-p.z);if(d>DAILY.areaRadius*.6)tgt={x:c.x,z:c.z,id:'xmas-daily',kind:'tomte',label:daily.def.area.name.toUpperCase(),radius:DAILY.areaRadius*.6,distance:d};}
+    const g=guide.update(p,host.camera.forward,tgt,dt,now,view.lite);
     guideUi.set(g);view.setGuide(g.on?g:null);guideShown=true;
     // Butiksraden visas inte i det första uppdraget (bara jakten): där räcker spår och tomte.
-    if(now-missionAt>140){missionAt=now;guideUi.setMission(missionView(hunt.run,p,hunt.run.drops&&mode==='cozy'&&hunt.run.kind!=='intro'?shopRow(p):null));}
+    if(now-missionAt>140){
+      missionAt=now;const mv=missionView(hunt.run,p,hunt.run.drops&&mode==='cozy'&&hunt.run.kind!=='intro'?shopRow(p):null);
+      if(mv&&daily&&!daily.found){const t='DAGENS JULKLAPP · '+(daily.level>=2?daily.def.area.name.toUpperCase():'LÖS GÅTAN');mv.rows.unshift({id:'daily',text:t,state:'now'});mv.key='daily:'+t+'|'+mv.key;}
+      guideUi.setMission(mv);
+    }
   }
 
   // Gömda julklappar: en rad när man kommer nära (varmt, glödhet). Samma band två gånger i rad sägs inte om förrän det gått en stund.
@@ -659,7 +732,7 @@ export function installXmas(ctx){
       // Tomtezombies från nivå 2: nästa patrull ligger aldrig längre fram än nivåns takt (grundspelets egen takt är 14 s i början).
       if(mode==='zombies'&&zLevel?.patrolEvery&&hunt.active){const zr=journey.rush;if(zr&&zr.state==='playing'){const cap=zr.spent+zLevel.patrolEvery;if(zr.nextPatrol>cap)zr.nextPatrol=cap;}}
       handle(now);
-      if(mode==='cozy'&&hunt.run&&hunt.run.kind==='free'&&hunt.active&&now-hiddenAt>900){hiddenAt=now;hiddenHint(p,now);}
+      if(mode==='cozy'&&hunt.run&&hunt.run.kind==='free'&&hunt.active&&now-hiddenAt>900){hiddenAt=now;hiddenHint(p,now);dailyHint(p,now);}
       updateGuide(p,now,dt);
       view.update(p,now,dt);
       if(mode==='rush'&&julrush.active&&now-rushHudAt>60){rushHudAt=now;ui.setRush(julrush.snapshot(),julrush.powers(powerBuf),now);}
@@ -674,7 +747,7 @@ export function installXmas(ctx){
     if(mode==='rush'){ // kompassen pekar på nästa paket (samma mål som den stora pilen och den gröna strålen)
       const t=julrush.running?julrush.target(p):null;els.score.textContent=julrush.tempo.score.toLocaleString('sv-SE');
       if(t){const ang=Math.atan2(t.x-p.x,t.z-p.z)-Math.atan2(host.camera.forward.x,host.camera.forward.z);els.compassArrow.style.transform='rotate('+(-ang*180/Math.PI)+'deg)';els.compassArrow.textContent='↑';els.compassText.textContent=t.label+' · '+Math.round(t.distance)+' M';}
-      else{els.compassText.textContent=julrush.running?'LETAR NÄSTA PAKET':'SLUT';els.compassArrow.textContent='⌖';els.compassArrow.style.transform='none';}
+      else{els.compassText.textContent=julrush.running?(julrush.termos?'LETAR NÄSTA TERMOS':'LETAR NÄSTA PAKET'):'SLUT';els.compassArrow.textContent='⌖';els.compassArrow.style.transform='none';}
       return;
     }
     if(!hunt.run)return;
@@ -692,14 +765,14 @@ export function installXmas(ctx){
     hunt,save,meta,view,ui,sprites,handlers,decor,syncDoors,giveMeta,
     get active(){return mode==='rush'?julrush.active:hunt.active;},get cozy(){return mode==='cozy';},get zombieMode(){return mode==='zombies';},get zombieLevel(){return zLevel;},get rushMode(){return mode==='rush'&&julrush.active;},julrush,
     startSandgrund,missionDone,afterMission,startBoat,boatArrive,boatAbort,get missionMode(){return mode==='mission';},get boatMode(){return mode==='boat';},
-    update,hudText,startRound,startZombies,startRush,openRush,openBoard,challengeGo,rushNext,rushAgain,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,goBase,setWeather,setLight,get light(){return light;},
+    update,hudText,startRound,startZombies,startRush,openRush,openBoard,challengeGo,rushNext,rushAgain,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,startDaily,startTermos:()=>startRush(0,null,'termos'),get daily(){return daily;},goBase,setWeather,setLight,get light(){return light;},
     // Medan ett butiksuppdrag pågår står jaktens tid still (inga nya tappade julklappar, inget som försvinner).
     step:(dt,p,sweep,speed)=>guard(()=>mode==='rush'?julrush.step(dt,p,sweep,speed):hunt.step(placeActive?.()?0:dt,p,sweep,speed)),
     // Grundspelets små pilar på marken och flaggan "DITT MÅL" ritas inte för julens mål (quiet): julbandet, pilen och strålen ersätter dem (i JulRushen pilen och strålen). Radarn och kartan visar vägen som förut.
     objective:p=>{if(fault)return null;const o=mode==='rush'?julrush.objective(p):hunt.objective(p);return o&&o.kind==='xmas'?{...o,quiet:true}:o;},
     guide,guideUi,
     gov,
-    snapshot:()=>({mode,fault,gov:{level:gov.level,ema:+gov.ema.toFixed(1),on:gov.on},hunt:hunt.snapshot(),rush:julrush.snapshot(),guide:{on:guide.state.on,id:guide.state.id,label:guide.state.label,distance:guide.state.distance,angle:+guide.state.angle.toFixed(1),hint:guide.state.hint,straight:guide.state.straight,segs:guide.state.segCount,edgeL:guide.state.edgeL,edgeR:guide.state.edgeR,mission:guideUi.missionText},incoming:incoming?{name:incoming.profile.name,focus:incoming.focus,toBeat:incoming.toBeat}:null,pending:pending?{...pending}:null,view:view.snapshot(),decor:decor?decor.snapshot():null,light:light?light.snapshot():null,build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone},meta:M(()=>{const m=meta.status();return {xp:m.xp,grade:m.level.n,tickets:m.tickets,orn:m.ornaments.owned,streak:m.streak.cur,hidden:m.hidden.found,missions:m.missionsDone};})}),
+    snapshot:()=>({mode,fault,gov:{level:gov.level,ema:+gov.ema.toFixed(1),on:gov.on},hunt:hunt.snapshot(),rush:julrush.snapshot(),guide:{on:guide.state.on,id:guide.state.id,label:guide.state.label,distance:guide.state.distance,angle:+guide.state.angle.toFixed(1),hint:guide.state.hint,straight:guide.state.straight,segs:guide.state.segCount,edgeL:guide.state.edgeL,edgeR:guide.state.edgeR,mission:guideUi.missionText},incoming:incoming?{name:incoming.profile.name,focus:incoming.focus,toBeat:incoming.toBeat}:null,pending:pending?{...pending}:null,view:view.snapshot(),decor:decor?decor.snapshot():null,light:light?light.snapshot():null,daily:daily?{day:daily.def.day,area:daily.def.area.id,level:daily.level,found:daily.found}:null,dailyFound:M(()=>meta.dailyFound(),null),termos:{...save.termos,day:undefined,today:save.termosDay(todayKey())},build:stamp,save:{stamps:save.stampCount(),weather:save.weather,intro:save.introDone},meta:M(()=>{const m=meta.status();return {xp:m.xp,grade:m.level.n,tickets:m.tickets,orn:m.ornaments.owned,streak:m.streak.cur,hidden:m.hidden.found,missions:m.missionsDone};})}),
     onResultClosed:()=>{resultOpen=false;}
   };
   return api;

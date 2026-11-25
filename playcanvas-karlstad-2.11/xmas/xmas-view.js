@@ -103,8 +103,9 @@ export function createXmasView(pc,host,draw,sprites,hunt,rush=null){
       for(let i=0;i<buf.length;i++){
         const k=buf[i],s=pool[i],e=s.e;
         if(s.id!==k.id){
-          s.id=k.id;const v=sprites.packageVariant(k);
-          if(s.variant!==v){s.variant=v;sprites.setMaterial(e,sprites.packageMaterials[v]);}
+          // Termosjakten (xmas-termos.mjs): termosar i stället för paket. Varianterna 100 och uppåt är termosar, så att poolen byter material när läget byts.
+          const th=rr&&rush.termos;s.id=k.id;const v=th?100+sprites.thermosVariant(k):sprites.packageVariant(k);
+          if(s.variant!==v){s.variant=v;sprites.setMaterial(e,th?sprites.thermos()[v-100]:sprites.packageMaterials[v]);}
           s.kind=k.kind;
         }
         // Nästa paket längs JulRushens bana är större och guppar mer, så att det syns vilket man är på väg mot.

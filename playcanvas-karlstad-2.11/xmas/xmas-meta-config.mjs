@@ -31,7 +31,9 @@ export const XP=Object.freeze({
   zombieLevel:30,rushClear:25,rushStar:5,marathonMin:20,marathonPerTempo:3, // Maraton räknas som klarad vid minst marathonMin paket
   failedPerPackage:1,failedMax:20,                      // en jakt som misslyckas (tagen av tomtezombierna, slut på hjärtan) ger lite för mödan
   place:Object.freeze({first:40,repeat:10}),sandgrund:Object.freeze({first:60,repeat:15}), // butiksuppdrag (Cervera, Pressbyrån) och Sandgrund
-  dupe:15,hidden:60,mission:Object.freeze({easy:40,medium:60,hard:80}),code:30
+  dupe:15,hidden:60,mission:Object.freeze({easy:40,medium:60,hard:80}),code:30,
+  // 2.21.1-xmas.13: Termosjakten (räknas som klarad vid minst termosMin termosar; dagsmålet ger termosGoal en gång per dag) och dagens julklappsjakt (daily, en gång per dag)
+  termosMin:15,termosGoal:60,daily:80
 });
 
 // ── Julgranen: 24 prydnader ───────────────────────────────────────────────────────────────────────────────────────
@@ -60,7 +62,7 @@ export const ORNAMENT_POLICY=Object.freeze({bias:3,pity:8});
 export const FIRST_ORNAMENT='orn-red'; // det första uppdraget ger alltid en röd kula
 
 // ── Dagliga uppdrag ───────────────────────────────────────────────────────────────────────────────────────────────
-// kind: runs (klarade julklappsjakter) | packages (hittade julklappar, vanliga och bonus) | bonus (bonuspaket) | chain (bästa kombo i en körning) | fast (snabbaste klarade jakt, sekunder, högst target)
+// kind: termosRuns (rundor i Termosjakten) | termos (termosar i Termosjakten) | daily (dagens julklapp hittad) | runs (klarade julklappsjakter) | packages (hittade julklappar, vanliga och bonus) | bonus (bonuspaket) | chain (bästa kombo i en körning) | fast (snabbaste klarade jakt, sekunder, högst target)
 //       | areas (olika platser) | hidden (gömda julklappar) | zombies (klarade nivåer i Tomtezombies) | rush (klarade rusher).
 // needs: tried-zombies | tried-rush (bara om spelaren redan provat läget: ingen ska behöva Tomtezombies för att få dagens julklapp) | hidden (bara när gömda julklappar finns i bygget).
 export const MISSIONS=Object.freeze([
@@ -75,7 +77,11 @@ export const MISSIONS=Object.freeze([
   {id:'tvaplatser',tier:'hard',text:'Klara jakter på två olika platser',kind:'areas',target:2},
   {id:'gomd1',tier:'hard',text:'Hitta en gömd julklapp',kind:'hidden',target:1,needs:'hidden'},
   {id:'zombie1',tier:'hard',text:'Klara en nivå i Tomtezombies',kind:'zombies',target:1,needs:'tried-zombies'},
-  {id:'rush1',tier:'hard',text:'Klara en rush',kind:'rush',target:1,needs:'tried-rush'}
+  {id:'rush1',tier:'hard',text:'Klara en rush',kind:'rush',target:1,needs:'tried-rush'},
+  // 2.21.1-xmas.13: huvudspåret Termosjakten och dagens julklappsjakt
+  {id:'termos1',tier:'easy',text:'Spela en runda Termosjakten',kind:'termosRuns',target:1},
+  {id:'termos60',tier:'medium',text:'Plocka 60 termosar i Termosjakten',kind:'termos',target:60},
+  {id:'dagens',tier:'hard',text:'Hitta dagens julklapp',kind:'daily',target:1}
 ].map(m=>Object.freeze(m)));
 export const MISSION_TIERS=Object.freeze(['easy','medium','hard']);
 export const TIER_LABEL=Object.freeze({easy:'LÄTT',medium:'MEDEL',hard:'SVÅRT'});

@@ -1,6 +1,6 @@
 // Julklappsjakten: delade bildkort (paket, tomtar, stjärnor, sken). En enda fyrkantsmesh och ett fåtal material används av alla paket
 // och alla tomtar i staden, så antalet texturer och material beror på antalet varianter, inte på antalet föremål.
-import {drawPackageAtlas,PACKAGE_STYLES,PACKAGE_CELL,drawTomteAtlas,TOMTE_STYLES,TOMTE_ATLAS,TOMTE_CELL,drawStar,drawSnowflake,drawSparkle,drawGlow} from './xmas-art.js?v=2.21.1-xmas.13';
+import {drawPackageAtlas,PACKAGE_STYLES,PACKAGE_CELL,drawThermosAtlas,THERMOS_STYLES,drawTomteAtlas,TOMTE_STYLES,TOMTE_ATLAS,TOMTE_CELL,drawStar,drawSnowflake,drawSparkle,drawGlow} from './xmas-art.js?v=2.21.1-xmas.13';
 
 export const hash32=s=>{let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;};
 
@@ -17,6 +17,10 @@ export function createSprites(pc,host,{texture,root}){
   // ── paket: åtta celler i en bild (4×2)
   const pkgTex=texture((c)=>drawPackageAtlas(c),PACKAGE_CELL*4,PACKAGE_CELL*2);
   const packageMaterials=PACKAGE_STYLES.map((_,i)=>spriteMaterial(pkgTex,{tiling:[.25,.5],offset:[(i%4)*.25,1-(Math.floor(i/4)+1)*.5]}));
+  // ── termosar (Termosjakten): samma rutnät som paketen. Ritas först när de behövs (thermos()), så att den som aldrig spelar Termosjakten inte betalar för texturen.
+  let thermosMaterials=null;
+  const thermos=()=>{if(!thermosMaterials){const tt=texture((c)=>drawThermosAtlas(c),PACKAGE_CELL*4,PACKAGE_CELL*2);thermosMaterials=THERMOS_STYLES.map((_,i)=>spriteMaterial(tt,{tiling:[.25,.5],offset:[(i%4)*.25,1-(Math.floor(i/4)+1)*.5]}));}return thermosMaterials;};
+  const thermosVariant=pkg=>pkg.kind==='bonus'||pkg.gift?THERMOS_STYLES.length-1:hash32(pkg.id)%(THERMOS_STYLES.length-1);
   // ── tomtar: sex varianter × två bildrutor (6×2 celler)
   const tomteTex=texture((c)=>drawTomteAtlas(c),TOMTE_ATLAS.w,TOMTE_ATLAS.h);
   const tomteCols=TOMTE_ATLAS.cols,tomteRows=TOMTE_ATLAS.rows;
@@ -36,6 +40,6 @@ export function createSprites(pc,host,{texture,root}){
   const setMaterial=(e,m)=>{const mi=e.render.meshInstances[0];if(mi.material!==m)mi.material=m;};
   const packageVariant=pkg=>pkg.kind==='bonus'?PACKAGE_STYLES.length-1:hash32(pkg.id)%(PACKAGE_STYLES.length-1);
   const yawToward=(x,z,p)=>Math.atan2(p.x-x,p.z-z)*180/Math.PI;
-  return {quad,packageMaterials,tomteMaterials,starMat,flakeMat,sparkleMat,glowGold,glowWarm,spriteMaterial,spriteEntity,setMaterial,packageVariant,yawToward,
+  return {quad,packageMaterials,tomteMaterials,starMat,flakeMat,sparkleMat,glowGold,glowWarm,spriteMaterial,spriteEntity,setMaterial,packageVariant,thermos,thermosVariant,yawToward,
     drawCalls:()=>0,dispose(){}};
 }

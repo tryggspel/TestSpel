@@ -189,11 +189,11 @@ export const DOORS=Object.freeze([
     steg:['Tryck JULRUSHEN och välj Rush 10.','Använd gåvorna: fartgåvorna och Julmagneten gör störst skillnad.','Nå 10 850 poäng innan hjärtana tar slut.'],
     spel:JAKT('JULRUSHEN → Rush 10','rush10'),check:{kind:'rush',n:10}},
 
-  {n:24,typ:'final',titel:'Julafton: åtta av elva julstämplar',plats:'Stora Torget',stjarnor:3,
+  {n:24,typ:'final',titel:'Julafton: åtta av tolv julstämplar',plats:'Stora Torget',stjarnor:3,
     ledtrad:'Tomtarna samlas vid granen och räknar.',
-    story:'Julafton. Tomtarna samlas vid granen på Stora Torget och räknar stämplarna. Elva finns att samla, och åtta räcker för att julen ska bli räddad.',
-    mal:'Samla minst åtta av elva julstämplar.',
-    steg:['Tryck JULKLAPPSJAKTEN. Dina stämplar syns som JULSTÄMPLAR n / 11 på startvyn.','Saknar du någon? Luckorna 1, 2, 3, 6, 7, 8, 9, 11, 12 och 13 ger en stämpel var.','När du har åtta bockas luckan av, och stjärnan tänds i granen här.'],
+    story:'Julafton. Tomtarna samlas vid granen på Stora Torget och räknar stämplarna. Tolv finns att samla, och åtta räcker för att julen ska bli räddad.',
+    mal:'Samla minst åtta av tolv julstämplar.',
+    steg:['Tryck JULKLAPPSJAKTEN. Dina stämplar syns som JULSTÄMPLAR n / 12 på startvyn.','Saknar du någon? Luckorna 1, 2, 3, 6, 7, 8, 9, 11, 12 och 13 ger en stämpel var, och Termosjakten ger en när du når tempo 5.','När du har åtta bockas luckan av, och stjärnan tänds i granen här.'],
     spel:JAKT('JULKLAPPSJAKTEN','meny','Öppna Julmenyn'),check:{kind:'stamps',n:8,unit:'julstämplar'}}
 ]);
 

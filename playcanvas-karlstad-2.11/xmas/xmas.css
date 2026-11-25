@@ -13,6 +13,10 @@
 .xmas-card .xmas-primary{background:var(--xmas-red);color:#fff;box-shadow:0 4px 0 var(--xmas-red-dark)}
 .xmas-card .xmas-primary:hover{background:#e65b52}
 .xmas-card .xmas-primary:active{transform:translateY(2px);box-shadow:0 2px 0 var(--xmas-red-dark)}
+.xmas-card .xmas-termos{background:linear-gradient(180deg,#e0453c,#c32f2a);font-size:1.12em;min-height:60px}
+.xmas-card .xmas-termos-note{color:#ffe6b0}
+.xmas-card .xmas-daily{border-color:#ffd45a99;color:#fff3c4;min-height:52px}
+.xmas-card .xmas-daily.found{border-color:#7be49588;color:#c9f5d2}
 .xmas-card .xmas-zombie{border-color:#b58ad688;color:#e7d6ff;min-height:52px}
 .xmas-card .xmas-zombie[disabled]{opacity:.5}
 /* 2.21.1-xmas.7: länken till Julkalendern (en vanlig länk som ser ut som en lugn knapp) */

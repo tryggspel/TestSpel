@@ -38,6 +38,53 @@ export function drawPackageAtlas(c){
   PACKAGE_STYLES.forEach((s,i)=>drawPackage(c,(i%4)*PACKAGE_CELL,Math.floor(i/4)*PACKAGE_CELL,s));
 }
 
+// ── Termosar (Termosjakten, 2.21.1-xmas.13) ───────────────────────────────────────────────────────────
+// Julens termosar i samma stil som paketen: kropp, kork/kopp, handtag och ett julmönster. Sista varianten är den gyllene som bär en julgåva. Cell 128×128, nederkant = mark.
+export const THERMOS_STYLES=Object.freeze([
+  {body:'#d33a3a',dark:'#a82a2a',cap:'#f4efe3',band:'#ffffff',print:'flake'},     // julröd med snöflinga
+  {body:'#2f7a4f',dark:'#225c3a',cap:'#d33a3a',band:'#ffe9a6',print:'tree'},      // grangrön
+  {body:'#fbf4ea',dark:'#ddd2c0',cap:'#d63b3b',band:'#d63b3b',print:'stripes'},   // polkagris
+  {body:'#7a2140',dark:'#5a1630',cap:'#e8b93a',band:'#e8b93a',print:'star'},      // glögg
+  {body:'#a8662f',dark:'#84501f',cap:'#f4efe3',band:'#f4efe3',print:'icing'},     // pepparkaka
+  {body:'#5b9bd5',dark:'#3f7ab0',cap:'#f4efe3',band:'#ffffff',print:'dots'},      // isblå
+  {body:'#ffcf3f',dark:'#e3a914',cap:'#fff7d1',band:'#ff6f59',print:'star',gold:true} // den gyllene (bär en julgåva)
+]);
+export function drawThermos(c,x0,y0,style,{glow=true}={}){
+  c.save();c.translate(x0,y0);c.lineJoin='round';c.lineCap='round';
+  if(glow){const g=c.createRadialGradient(64,72,6,64,72,62);g.addColorStop(0,style.gold?'#fff6b8cc':'#ffffff66');g.addColorStop(1,'#ffffff00');c.fillStyle=g;c.fillRect(0,0,128,128);}
+  // ånga ur koppen: varm termos
+  c.strokeStyle='#ffffffcc';c.lineWidth=4;
+  for(const [x,ph] of [[56,0],[70,1]]){c.beginPath();c.moveTo(x,20);c.bezierCurveTo(x-8,14-ph*2,x+8,8,x,2+ph*2);c.stroke();}
+  // handtag
+  shape(c,'none',()=>{c.moveTo(88,52);c.bezierCurveTo(112,52,112,92,88,92);},0);
+  c.strokeStyle=INK;c.lineWidth=12;c.beginPath();c.moveTo(86,54);c.bezierCurveTo(110,54,110,90,86,90);c.stroke();
+  c.strokeStyle=style.dark;c.lineWidth=6;c.beginPath();c.moveTo(86,54);c.bezierCurveTo(110,54,110,90,86,90);c.stroke();
+  // kropp
+  shape(c,style.body,()=>c.roundRect(38,40,52,78,10),5);
+  // mönster (klipps till kroppen)
+  c.save();c.beginPath();c.roundRect(40,42,48,74,9);c.clip();
+  if(style.print==='stripes'){c.fillStyle=style.band;for(let i=-4;i<8;i++){c.beginPath();c.moveTo(30+i*14,120);c.lineTo(38+i*14,120);c.lineTo(68+i*14,40);c.lineTo(60+i*14,40);c.closePath();c.fill();}}
+  else if(style.print==='icing'){c.strokeStyle=style.band;c.lineWidth=4;for(const y of [62,96]){c.beginPath();for(let x=40;x<=88;x+=8)c.lineTo(x,y+((x/8)%2?5:-5));c.stroke();}}
+  else if(style.print==='dots'){c.fillStyle='#ffffffcc';for(const [x,y] of [[48,58],[76,66],[56,90],[80,100],[46,108]]){c.beginPath();c.arc(x,y,3.5,0,Math.PI*2);c.fill();}}
+  c.fillStyle='#ffffff40';c.fillRect(44,46,7,66); // glans
+  c.restore();
+  // band och tryck
+  shape(c,style.band,()=>c.rect(38,70,52,12),4);
+  if(style.print==='flake'){c.strokeStyle='#ffffff';c.lineWidth=3;for(let a=0;a<3;a++){const r=a*Math.PI/3;c.beginPath();c.moveTo(64-Math.cos(r)*10,98-Math.sin(r)*10);c.lineTo(64+Math.cos(r)*10,98+Math.sin(r)*10);c.stroke();}}
+  else if(style.print==='tree'){shape(c,'#ffe9a6',()=>{c.moveTo(64,88);c.lineTo(74,106);c.lineTo(54,106);c.closePath();},3);}
+  else if(style.print==='star'){sparkle(c,64,98,10,style.gold?'#ff6f59':'#ffd45a');}
+  // kopp/kork
+  shape(c,style.dark,()=>c.roundRect(42,30,44,14,4),5);
+  shape(c,style.cap,()=>c.roundRect(36,16,56,20,7),5);
+  c.fillStyle='#ffffff66';c.fillRect(42,20,10,10);
+  if(style.gold){sparkle(c,22,30,12);sparkle(c,108,36,9);sparkle(c,104,108,10);sparkle(c,24,104,7);}
+  else sparkle(c,100,50,6,'#ffffffcc');
+  c.restore();
+}
+export function drawThermosAtlas(c){
+  THERMOS_STYLES.forEach((s,i)=>drawThermos(c,(i%4)*PACKAGE_CELL,Math.floor(i/4)*PACKAGE_CELL,s));
+}
+
 // ── Tomtar ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 // Varianter: hattfärg, rock, skägg, rekvisita. frame 0/1 (andra bildrutan lyfter armen). Cell 160×240.
 export const TOMTE_STYLES=Object.freeze([

@@ -12,7 +12,7 @@ export const META_KEY='karlstad-xmas:meta:1';
 const ORN_BY_ID=new Map(ORNAMENTS.map(o=>[o.id,o]));
 const MISSION_BY_ID=new Map(MISSIONS.map(m=>[m.id,m]));
 const SPOT_IDS=new Set(HIDDEN_SPOTS.map(s=>s.id));
-const TICKET_SOURCES=new Set(['welcome','meter','gift','grade','streak','calendar','advent','hidden','code']);
+const TICKET_SOURCES=new Set(['welcome','meter','gift','grade','streak','calendar','advent','hidden','code','daily']);
 const DAY=/^20\d{2}-\d{2}-\d{2}$/;
 const isObj=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const num=(v,max=1e9,min=0)=>{const n=Number(v);return Number.isFinite(n)?Math.max(min,Math.min(max,Math.floor(n))):min;};
@@ -39,12 +39,13 @@ export function levelFor(xp,levels=LEVELS){
 }
 
 // ── Sparning ─────────────────────────────────────────────────────────────────────────────────────────────────────
-const blankDay=()=>({runs:0,clears:0,packages:0,bonus:0,chain:0,fast:0,areas:[],hidden:0,zombies:0,rush:0,meter:0,first:false,gift:false,done:{},pick:[]});
-export const blankMeta=()=>({v:1,xp:0,lv:1,dry:0,orn:{},seen:{},tickets:[],meter:0,days:{},streak:{cur:0,best:0,last:'',freezes:0,got:{}},cal:{doors:{},advent:{}},hidden:{},qr:{},coupons:[],draw:{sent:[],at:0},tried:{intro:false,zombies:false,rush:false},welcomed:false,first:''});
+const blankDay=()=>({runs:0,clears:0,packages:0,bonus:0,chain:0,fast:0,areas:[],hidden:0,zombies:0,rush:0,termos:0,termosRuns:0,termosGoal:false,daily:false,meter:0,first:false,gift:false,done:{},pick:[]});
+export const blankMeta=()=>({v:1,xp:0,lv:1,dry:0,orn:{},seen:{},tickets:[],meter:0,days:{},streak:{cur:0,best:0,last:'',freezes:0,got:{}},cal:{doors:{},advent:{}},hidden:{},qr:{},daily:{},coupons:[],draw:{sent:[],at:0},tried:{intro:false,zombies:false,rush:false,termos:false},welcomed:false,first:''});
 
 function sanitizeDay(r){
   const d=blankDay();if(!isObj(r))return d;
-  for(const k of ['runs','clears','packages','bonus','chain','hidden','zombies','rush','meter'])d[k]=num(r[k],9999);
+  for(const k of ['runs','clears','packages','bonus','chain','hidden','zombies','rush','meter','termosRuns'])d[k]=num(r[k],9999);
+  d.termos=num(r.termos,999999);d.termosGoal=!!r.termosGoal;d.daily=!!r.daily;
   d.fast=num(r.fast,99999);d.first=!!r.first;d.gift=!!r.gift;
   d.areas=Array.isArray(r.areas)?[...new Set(r.areas.filter(a=>typeof a==='string'&&/^[a-z0-9-]{1,30}$/.test(a)))].slice(0,12):[];
   if(isObj(r.done))for(const id of Object.keys(r.done))if(MISSION_BY_ID.has(id)&&r.done[id]===true)d.done[id]=true;
@@ -77,6 +78,7 @@ export function sanitizeMeta(raw){
   if(isObj(c.doors))for(let n=1;n<=24;n++)if(c.doors[n]===true)out.cal.doors[n]=true;
   if(isObj(c.advent))for(const a of ADVENT)if(c.advent[a.id]===true)out.cal.advent[a.id]=true;
   if(isObj(raw.hidden))for(const [id,day] of Object.entries(raw.hidden))if(SPOT_IDS.has(id))out.hidden[id]=dayOk(day)?day:'';
+  if(isObj(raw.daily))for(const day of Object.keys(raw.daily).filter(dayOk).sort().slice(-60))out.daily[day]=num(raw.daily[day],4102444800000);
   if(isObj(raw.qr))for(const [id,day] of Object.entries(raw.qr))if(/^[a-z0-9-]{1,40}$/.test(id))out.qr[id]=dayOk(day)?day:'';
   if(Array.isArray(raw.coupons)){
     for(const c2 of raw.coupons){
@@ -87,7 +89,7 @@ export function sanitizeMeta(raw){
   const dr=isObj(raw.draw)?raw.draw:{};
   out.draw={sent:Array.isArray(dr.sent)?[...new Set(dr.sent.filter(validTicket))].slice(0,MAX_TICKETS):[],at:num(dr.at,4102444800000)};
   const t=isObj(raw.tried)?raw.tried:{};
-  out.tried={intro:!!t.intro,zombies:!!t.zombies,rush:!!t.rush};
+  out.tried={intro:!!t.intro,zombies:!!t.zombies,rush:!!t.rush,termos:!!t.termos};
   out.welcomed=!!raw.welcomed;out.first=dayOk(raw.first)?raw.first:'';
   return out;
 }
@@ -159,6 +161,7 @@ export class XmasMeta{
       case 'runs':return d.runs;case 'packages':return d.packages;case 'bonus':return d.bonus;case 'chain':return d.chain;
       case 'fast':return d.fast>0&&d.fast<=m.target?1:0;
       case 'areas':return d.areas.length;case 'hidden':return d.hidden;case 'zombies':return d.zombies;case 'rush':return d.rush;
+      case 'termosRuns':return d.termosRuns;case 'termos':return d.termos;case 'daily':return d.daily?1:0;
       default:return 0;
     }
   }
@@ -167,7 +170,7 @@ export class XmasMeta{
   // Allt som hubben och slutkortet visar just nu.
   status(when=this.clock()){
     const day=dayOf(when),st=this.state,d=this._day(day),L=this.level;
-    const ids=st.tried.intro?this._picks(day,d):[];
+    const ids=st.tried.intro||st.tried.termos?this._picks(day,d):[]; // dagens uppdrag börjar efter första uppdraget eller första rundan i Termosjakten (huvudspåret)
     const missions=ids.map(id=>{
       const m=MISSION_BY_ID.get(id),have=this._progress(m,d),target=this._target(m);
       return {id,tier:m.tier,text:m.text,have:Math.min(have,target),target,done:!!d.done[id],xp:XP.mission[m.tier]||0,detail:m.kind==='fast'&&d.fast?d.fast:0};
@@ -204,7 +207,7 @@ export class XmasMeta{
   }
 
   // ── Belöningar ───────────────────────────────────────────────────────────────────────────────────────────────
-  _reward(){return {xp:0,parts:[],before:this.level.n,after:this.level.n,levelUps:[],ornaments:[],tickets:[],missions:[],gift:null,streak:null,calendar:[],advent:null,coupons:[],code:null,meter:null,welcome:false,hidden:null,notable:false};}
+  _reward(){return {xp:0,parts:[],before:this.level.n,after:this.level.n,levelUps:[],ornaments:[],tickets:[],missions:[],gift:null,streak:null,calendar:[],advent:null,coupons:[],code:null,meter:null,welcome:false,hidden:null,daily:null,termosGoal:false,notable:false};}
   _xp(R,amount,label){
     amount=Math.floor(amount);if(!(amount>0))return;
     this.state.xp=Math.min(999999,this.state.xp+amount);R.xp+=amount;R.parts.push({label,xp:amount});
@@ -275,7 +278,7 @@ export class XmasMeta{
     R.meter={have:m,target:TICKETS.meter,left:TICKETS.meter-m,added:n,capped:d.meter>=TICKETS.dailyCap&&m>=TICKETS.meter-1,today:d.meter,cap:TICKETS.dailyCap};
   }
   _missions(R,day,d){
-    if(!this.state.tried.intro)return;
+    if(!this.state.tried.intro&&!this.state.tried.termos)return;
     const ids=this._picks(day,d);
     for(const id of ids){
       const m=MISSION_BY_ID.get(id);if(!m||d.done[id])continue;
@@ -326,10 +329,16 @@ export class XmasMeta{
   //   place: butiksuppdrag och leverans (first = ny julstämpel). sandgrund: Julvernissagen (first = ny julstämpel).
   onRun(run,when=this.clock()){
     const day=dayOf(when),st=this.state,d=this._day(day),R=this._reward(),kind=run.kind;
-    const maraton=kind==='rush'&&!(run.level>0);
+    const maraton=kind==='rush'&&!(run.level>0),termos=kind==='termos';
     let cleared=!!run.cleared;
     const pk=run.countPackages===false?0:num(run.packages,999),bn=run.countPackages===false?0:num(run.bonus,999);
     if(maraton)cleared=pk+bn>=XP.marathonMin;
+    if(termos){
+      // Termosjakten (huvudspåret): termosarna räknas som julklappar i dagens uppdrag, och dagsmålet (xmas-termos.mjs) ger en belöning en gång per dag.
+      cleared=pk+bn>=XP.termosMin;if(pk+bn>0)st.tried.termos=true;
+      if(pk+bn>0){d.termosRuns=Math.min(9999,d.termosRuns+1);d.termos=Math.min(999999,d.termos+pk+bn);}
+      if(run.goalNow&&!d.termosGoal){d.termosGoal=true;this._xp(R,XP.termosGoal,'Dagens termosmål');this._ornament(R,{odds:'dailyGift',label:'Dagens termosmål'});R.termosGoal=true;R.notable=true;}
+    }
     if(kind==='zombies')st.tried.zombies=true;
     if(kind==='rush')st.tried.rush=true;
     const isIntro=kind==='hunt'&&run.id==='intro';
@@ -357,6 +366,7 @@ export class XmasMeta{
       else if(kind==='zombies'){this._xp(R,XP.zombieLevel,'Tomtezombies nivå '+num(run.level,99));this._xp(R,pk*XP.perPackage,'Julklappar');this._xp(R,bn*XP.perBonus,'Bonuspaket');}
       else if(kind==='rush'&&!maraton){this._xp(R,XP.rushClear,'Rush '+num(run.level,99)+' klar');this._xp(R,stars*XP.rushStar,'Stjärnor');this._xp(R,(pk+bn)*XP.perPackage,'Paket');}
       else if(maraton){this._xp(R,(pk+bn)*XP.perPackage,'Paket');this._xp(R,num(run.tempo,99)*XP.marathonPerTempo,'Tempo');}
+      else if(termos){this._xp(R,(pk+bn)*XP.perPackage,'Termosar');this._xp(R,num(run.tempo,99)*XP.marathonPerTempo,'Tempo');}
       else if(kind==='place')this._xp(R,run.first?XP.place.first:XP.place.repeat,run.first?'Ny julstämpel':'Uppdrag klart');
       else if(kind==='sandgrund')this._xp(R,run.first?XP.sandgrund.first:XP.sandgrund.repeat,run.first?'Ny julstämpel':'Uppdrag klart');
     }else{
@@ -365,7 +375,7 @@ export class XmasMeta{
     if(cleared){
       if(!d.first){d.first=true;this._xp(R,XP.firstOfDay,'Dagens första');}
       // belöningar för en klarad körning
-      const draws=kind==='hunt'||kind==='zombies'||kind==='rush'||((kind==='place'||kind==='sandgrund')&&run.first);
+      const draws=kind==='hunt'||kind==='zombies'||kind==='rush'||kind==='termos'||((kind==='place'||kind==='sandgrund')&&run.first);
       if(isIntro&&!st.welcomed){
         st.welcomed=true;R.welcome=true;
         this._ornament(R,{id:st.orn[FIRST_ORNAMENT]?null:FIRST_ORNAMENT,label:'Första uppdraget'});
@@ -401,6 +411,19 @@ export class XmasMeta{
     this._missions(R,day,d);
     return this._finish(R,day);
   }
+  // Dagens julklapp hittad (xmas-daily.mjs). spec: {xp, orn, tickets, coupon} för dagen (DAILY_HUNTS i xmas-daily-config.mjs). En gång per dag; null om dagens redan är hittad.
+  onDaily(spec={},when=this.clock()){
+    const day=dayOf(when),st=this.state;if(Object.prototype.hasOwnProperty.call(st.daily,day))return null;
+    const d=this._day(day),R=this._reward();
+    st.daily[day]=Date.now();d.daily=true;
+    this._give(R,{xp:spec.xp??XP.daily,orn:spec.orn||'rare',tickets:spec.tickets||0,coupon:spec.coupon,src:'daily'},{day,label:'Dagens julklapp',odds:'dailyGift'});
+    const found=Object.keys(st.daily).length;R.daily={day,found};R.notable=true;
+    this._streak(R,day); // dagens julklapp räknas som en klarad dag i serien
+    this._missions(R,day,d);
+    return this._finish(R,day);
+  }
+  dailyFound(when=this.clock()){return Object.prototype.hasOwnProperty.call(this.state.daily,dayOf(when));}
+  dailyCount(){return Object.keys(this.state.daily).length;}
   // Julkalenderns luckor: isDone(n) säger om kalendern räknar lucka n som klar (öppen sin dag och uppdraget uppfyllt). Varje lucka ger sin belöning en gång.
   syncCalendar(isDone,when=this.clock()){
     const day=dayOf(when),st=this.state,R=this._reward();let any=false;
