@@ -163,7 +163,8 @@ let worst=0,best=1e9,collected=0;
 for(let round=0;round<4;round++){
   for(const k of await uncollected()){await tp(k.x,k.z,0,-4,320);collected++;}
   let left=await uncollected();for(let again=0;again<3&&left.length;again++){for(const k of left){await tp(k.x,k.z,0,-4,320);}left=await uncollected();}
-  const t0=await runT();
+  // Mellanrummet räknas från när högen faktiskt tog slut (hunt.run.recent, speltid), inte från när testet är klart med sina anrop: i en tung, mjukvaruritad scen hinner det gå ett par sekunder speltid däremellan (xmas.13).
+  const t0=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run,last=r.recent[r.recent.length-1];return last?last.at:r.t;});
   // Speltiden går långsammare än klockan när bildrutorna är få (mjukvaruritad webbläsare på ett stort fönster): vänta länge i klocktid, men mät i speltid.
   const got=await until(()=>window.KarlstadDebug.journey().xmas.hunt.run.packages.some(k=>!k.collected&&!k.hidden),300);
   const gap=got?(await runT())-t0:999;worst=Math.max(worst,gap);best=Math.min(best,gap);
@@ -199,6 +200,7 @@ check('E2b resultatkortet efter Pressbyrån går att stänga med FORTSÄTT',awai
 await wait(500);await shot('18-pressbyran-leverans');
 const pointsBefore=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.points);
 const t3=await ev(()=>window.KarlstadDebug.journey().xmas.hunt.run.errand.tomte);await walk(t3.x,t3.z,1.8);await wait(1200);
+await until(()=>!document.getElementById('round-xmas-result').hidden,8); // kortet kommer 1,3 s efter leveransen (showPlaceDone delay), oavsett när promenaden tar slut
 const done3=await ev(()=>{const x=window.KarlstadDebug.journey().xmas,r=x.hunt.run;return {stamp:!!x.save.state.stamps.pressbyran,serial:r.serial,errand:r.errand,points:r.points,phase:r.phase,result:!document.getElementById('round-xmas-result').hidden};});
 const card3=await ev(()=>({title:document.getElementById('xmasResultTitle').textContent,cont:document.getElementById('xmasResultContinue').textContent,state:window.KarlstadRound.snapshot().phase}));
 check('E3 leverans ger stämpeln Tomtarnas fikaorder och +100 poäng; jakten är kvar i samma körning (2.21.1-xmas.9: med julens bekräftelsekort FIKAT ÄR LEVERERAT! som pausar och FORTSÄTT tar upp jakten)',done3.stamp&&done3.errand===null&&done3.serial===serialBefore&&done3.phase==='free'&&done3.points>=pointsBefore+100&&done3.result&&card3.title==='FIKAT ÄR LEVERERAT!'&&/FORTSÄTT JULVANDRINGEN/.test(card3.cont),JSON.stringify({...done3,card3,serialBefore,pointsBefore}));
