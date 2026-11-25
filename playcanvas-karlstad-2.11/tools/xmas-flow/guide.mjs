@@ -170,7 +170,11 @@ const gotRain=await until(()=>window.KarlstadDebug.journey().xmas.hunt.run.rains
 const q1=await snap();
 check('S2 efter första spåret: raden säger HITTA TOMTARNAS SPÅR eller FÖLJ SPÅREN, ingen pil, ingen stråle, ingen ring och inget julband mot paketen, men avtryck ritas i snön',gotRain&&/^(HITTA TOMTARNAS SPÅR|FÖLJ SPÅREN)$/.test(firstRow(q1.guide.mission))&&!q1.guide.on&&q1.view.goal===false&&q1.view.ribbon===0&&q1.view.prints>=2&&!(await vis('#xmasArrow')),JSON.stringify({m:q1.guide.mission,goal:q1.view.goal,ribbon:q1.view.ribbon,prints:q1.view.prints}));
 const rn1=await ev(()=>{const r=window.KarlstadDebug.journey().xmas.hunt.run.rains[0];return {x:r.x,z:r.z,head:r.head,trail:r.trail.map(p=>[p.x,p.z])};});
-const m1=rn1.trail[Math.floor(rn1.trail.length/2)],m2=rn1.trail[Math.min(rn1.trail.length-1,Math.floor(rn1.trail.length/2)+3)];
+// spårpunkten närmast mitten som ligger utanför "julklapparna nära"-radien (ett kort spår har sin mitt nära högen, och där säger raden rätteligen JULKLAPPARNA NÄRA!)
+const {TRAILS:TR}=await import(pathToFileURL(path.join(root,'xmas/xmas-config.mjs')).href);
+const farIdx=rn1.trail.map((p,i)=>i).filter(i=>Math.hypot(rn1.trail[i][0]-rn1.x,rn1.trail[i][1]-rn1.z)>TR.nearDrop+2);
+const mid=Math.floor(rn1.trail.length/2),i1=farIdx.length?farIdx.reduce((b,i)=>Math.abs(i-mid)<Math.abs(b-mid)?i:b,farIdx[0]):mid;
+const m1=rn1.trail[i1],m2=rn1.trail[Math.min(rn1.trail.length-1,i1+3)]&&i1+3<rn1.trail.length?rn1.trail[i1+3]:rn1.trail[Math.max(0,i1-3)];
 await tp(m1[0],m1[1],yawTo(m1[0],m1[1],m2[0],m2[1]),-6,1500);
 const q2=await snap();
 check('S3 mitt i spåret säger raden FÖLJ SPÅREN och avtrycken ritas i vyn (en enda mesh)',firstRow(q2.guide.mission)==='FÖLJ SPÅREN'&&q2.view.prints>=4&&q2.view.printQuads===q2.view.prints,JSON.stringify({m:q2.guide.mission,prints:q2.view.prints,quads:q2.view.printQuads}));
