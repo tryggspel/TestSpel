@@ -70,7 +70,7 @@ const menu=await ev(()=>({panel:!document.getElementById('round-xmas-continue').
   cal2:document.getElementById('xmasCalendar2').getAttribute('href')}));
 check('A2 Julmenyn visas med knapparna SANDGRUND och BÅTBUSSEN (minst 48 px höga) och Julkalendern',menu.panel&&menu.btns.every(h=>h>=48)&&menu.cal2==='./julkalender/',JSON.stringify(menu.btns));
 check('A3 noterna berättar om uppdragen (Zombie-Lerin, Inre hamn)',/Zombie-Lerin/.test(menu.notes[0])&&/Inre hamn/.test(menu.notes[1]),menu.notes.join(' | '));
-check('A4 stämpellistan har elva stämplar och status säger 1 / 11',menu.stamps===11&&/JULSTÄMPLAR 1 \/ 11/.test(menu.status),menu.stamps+' '+menu.status);
+check('A4 stämpellistan har tolv stämplar och status säger 1 / 12',menu.stamps===12&&/JULSTÄMPLAR 1 \/ 12/.test(menu.status),menu.stamps+' '+menu.status);
 await shot('m01-julmenyn');
 
 // ── B: Sandgrund: Julvernissagen ─────────────────────────────────────────────────────────────────────────────────────────
@@ -140,7 +140,7 @@ await walk(c2.tomte.x,c2.tomte.z,4);await wait(2600);
 const c4=await ev(()=>({panel:!document.getElementById('round-xmas-result').hidden,title:document.getElementById('xmasResultTitle').textContent,line:document.getElementById('xmasResultLine').textContent,cells:[...document.querySelectorAll('#xmasResultGrid .xr-cell')].map(e=>e.textContent),parts:document.getElementById('xmasResultParts').textContent,stamp:!document.getElementById('xmasResultStamp').hidden,status:document.getElementById('xmasResultStatus').textContent}));
 const s4=await save();
 check('C6 resultatkortet säger att julklapparna är framme, med passagerare, julklappar och julstämpel',c4.panel&&c4.title==='JULKLAPPARNA ÄR FRAMME!'&&/Mariebergsskogen/.test(c4.line)&&c4.stamp&&/PASSAGERARE/.test(c4.cells[0]),JSON.stringify({title:c4.title,cells:c4.cells}));
-check('C7 poängraden räknar med båtresan och statusen visar 3 av 11 stämplar',/BÅTRESAN|båtresan/.test(c4.parts)||s4.records.marieberg.points>0,c4.parts+' | '+c4.status);
+check('C7 poängraden räknar med båtresan och statusen visar 3 av 12 stämplar',/BÅTRESAN|båtresan/.test(c4.parts)||s4.records.marieberg.points>0,c4.parts+' | '+c4.status);
 check('C8 stämpel, rekord, paket och julpoäng sparas',!!s4.stamps.marieberg&&!!s4.records.marieberg&&s4.totals.packages>=14+12&&s4.totals.points>s3.totals.points,JSON.stringify({stamps:Object.keys(s4.stamps),points:s4.totals.points,packages:s4.totals.packages}));
 await shot('m07-batresultat');
 await click('xmasResultContinue');await wait(900);
