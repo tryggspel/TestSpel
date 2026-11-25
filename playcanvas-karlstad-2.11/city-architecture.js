@@ -1,6 +1,8 @@
 import {KUNGSGATAN_PROFILES,addKungsgatanFacade} from './kungsgatan-reference.mjs?v=2.21.1-xmas.14';
 import {addResidensetWall,addResidensetRoof,RESIDENSET_COLOURS} from './residenset-facade.mjs?v=2.21.1-xmas.14';
 import {addOperaFront,OPERA_COLOURS} from './opera-facade.mjs?v=2.21.1-xmas.14';
+import {addRadhusetWall,addRadhusetRoof,faceFrom,RADHUSET,RADHUSET_COLOURS,RADHUSET_FRONT} from './radhuset-facade.mjs?v=2.21.1-xmas.14';
+import {addDomkyrkanTower} from './domkyrkan-tower.mjs?v=2.21.1-xmas.14';
 import {visualTwinProfile,addVisualTwinFacade,visualTwinAudit,visualTwinFaceYaw,visualTwinFront} from './visual-twin.mjs?v=2.21.1-xmas.14';
 import {PHOTO_REFERENCE_PROFILES,PHOTO_REFERENCE_IDS,addPhotoReferenceFacade,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.21.1-xmas.14';
 import {addCityWowPass} from './city-wow-pass.mjs?v=2.21.1-xmas.14';
@@ -949,18 +951,16 @@ export function createCityArchitecture(pc,app,buildings,others=[]){
       m.box(x,6.3,z,w,12.6,18,'#f0e7d2','#d5d8c5');m.box(x+5,6.3,z,18,12.6,d,'#f0e7d2','#d5d8c5');
       m.box(x,.65,z,w+.3,1.3,18.3,'#93a69c');m.box(x+5,.65,z,18.3,1.3,d+.3,'#93a69c');
       m.roof(x,12.7,z,w+1,19.4,5.1,'x');m.roof(x+5,12.7,z,19.4,d+1,5.0,'z');
-      const tx=b.minx+7.3;
-      m.box(tx,12,z,14.6,24,14.6,'#f6ebd5','#dce1cd');
-      for(const level of [1,16.5,23.5])m.box(tx,level,z,15,.45,15,'#bac6b3');
-      m.box(tx,26,z,12.8,4.8,12.8,'#31464c');m.pyramid(tx,28.4,z,14.7,14.7,10.0);
-      m.box(tx,39.6,z,.18,3,.18,'#203a40');m.box(tx,40.2,z,1.3,.15,.15,'#bba365');
+      // 2.21.1-xmas.14: västtornet med den höga konformiga kopparspiran och urtavlor åt fyra håll (domkyrkan-tower.mjs), cirka 60 m.
+      addDomkyrkanTower(m,b.minx+7.3,z);
     }else if(b.osm===101456563){
-      // Rådhusets main facade faces EAST over Stora Torget.
-      m.box(x,5.8,z,w,11.6,d,'#e7debf','#c1bca4');m.roof(x,11.7,z,w+.6,d+.6,3.4);
-      for(const y of [.6,4,8,11.3])m.box(x,y,z,w+.4,.32,d+.4,y===.6?'#6c807c':'#f9efd5');
-      m.box(b.maxx+.42,5.9,z,.85,11.8,13.8,'#eee4c6');
-      m.roof(b.maxx-.5,11.9,z,4.2,14,2.8,'z');
-      for(const dz of [-7.2,7.2])m.box(b.maxx+.96,6.9,z+dz,.5,9.8,.65,'#fbefcd');
+      // Rådhuset (Ernst Jacobsson, 1869), 2.21.1-xmas.14: gulputsad nyrenässans i tre våningar som geometri (radhuset-facade.mjs).
+      // Torgfasaden åt öster har mittrisaliten med entréerna och krönet med uret och de två förgyllda örnarna.
+      const H=RADHUSET.H;
+      m.walls(b.polygon,0,H,RADHUSET_COLOURS.wall);
+      addRadhusetWall(m,faceFrom(RADHUSET_FRONT.a,RADHUSET_FRONT.q),{H,main:true});
+      for(const f of exposedFaces({...b,h:H},[],yaw=>Math.abs(yaw-90)>30,3.4))addRadhusetWall(m,f,{H});
+      addRadhusetRoof(m,H);
     }else if(b.osm===75360972){
       m.box(x,5,z,w,10,d,'#c59f72','#987b59');m.box(x,10.3,z,w+1,.65,d+1,'#334b4e');
       m.box(x,3.1,z,w+.1,2.1,d+.1,'#344e55');m.box(x,7.7,z,w+.15,2.35,d+.15,'#658b8d');

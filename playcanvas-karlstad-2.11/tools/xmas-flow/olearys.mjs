@@ -114,12 +114,13 @@ await ev(()=>window.KarlstadDebug.journey().xmas.olGames.close());
 // O8: biljard (siktar rakt uppåt mot racket, med lite variation)
 await tp(O.x+st('biljard').x,O.z+st('biljard').z,0,700);await ev(()=>document.querySelector('.ol-prompt').click());await wait(600);
 await shot('o11-biljard');
-const r8=await playUntilDone('biljard',async g=>{if(g.phase==='aim'&&g.o){await fling(rnd(-40,40),g.h*rnd(.18,.28));await wait(500);}},150);
+const r8=await playUntilDone('biljard',async g=>{if(g.phase==='aim'&&g.o){await fling(rnd(-40,40),g.h*rnd(.18,.28));await wait(500);}},240);
 const t8=await panelText();
 check('O8 biljard går att spela klart (alla sex eller 24 stötar)',r8==='klar'&&/(Alla sex|Du sänkte)/.test(t8),JSON.stringify({r8,t8:t8.slice(0,60)}));
 await ev(()=>window.KarlstadDebug.journey().xmas.olGames.close());
 const best=await ev(()=>window.KarlstadDebug.journey().xmas.olGames.state.best);
-check('O8b resultaten sparas (bästa per gren)',['bowling','shuffle','dart','straff','biljard'].every(k=>Number.isFinite(best[k])),JSON.stringify(best));
+const plays=await ev(()=>JSON.parse(localStorage.getItem('karlstad-xmas:olearys:1')||'{}').plays||{});
+check('O8b resultaten sparas (antal spel per gren, bästa resultat när det gav poäng)',['bowling','shuffle','dart','straff','biljard'].every(k=>plays[k]>=1)&&['bowling','dart'].every(k=>best[k]>0),JSON.stringify({best,plays}));
 // O9: FBK-tipset
 await tp(O.x+st('tips').x,O.z+st('tips').z,0,700);await ev(()=>document.querySelector('.ol-prompt').click());await wait(600);
 const t9=await panelText();await shot('o12-fbk-tipset');

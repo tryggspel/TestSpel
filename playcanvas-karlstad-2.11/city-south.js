@@ -1,3 +1,4 @@
+import {addFredsmonumentet} from './fredsmonumentet.mjs?v=2.21.1-xmas.14';
 import {addKungsgatanTerraces} from './kungsgatan-reference.mjs?v=2.21.1-xmas.14';
 import {KIL} from './scenic-transit.js?v=2.21.1-xmas.14';
 import {ComicMesh,curatedRoute} from './city-architecture.js?v=2.21.1-xmas.14';
@@ -75,10 +76,8 @@ export function createSouthCity(pc,app,buildings){
     }
   }
   const {x,z}=FREDSMONUMENT;
-  // Fredsmonumentet: stone plinth, robed figure and broken sword at its surveyed position.
-  square.box(x,.22,z,4.3,.44,4.3,'#bcc2b0');square.box(x,.92,z,2.2,1.4,2.2,'#8e9d93');
-  square.box(x,2.05,z,1.1,1.3,.70,'#527264');square.pyramid(x,1.55,z,1.65,.95,2.25,'#58796a');square.box(x,3.25,z,1.05,1.05,.62,'#58796a');square.box(x,4.15,z,.60,.72,.59,'#638370');
-  square.box(x-.78,3.35,z,.30,1.2,.32,'#526f63');square.box(x+.76,3.25,z,.25,1.2,.32,'#526f63');square.box(x-.9,3.99,z,.11,.65,.12,'#adbaa4');square.box(x-.9,3.63,z,.45,.09,.15,'#adbaa4');
+  // Fredsmonumentet (Ivar Johnsson 1955): granitsockel och bronsfiguren med det brutna svärdet över huvudet (fredsmonumentet.mjs).
+  addFredsmonumentet(square,x,z,1);
   for(const [bx,bz] of [[-47,-18],[-47,17],[56,-18],[56,17]]){square.box(bx,.6,bz,3.6,.3,.8,'#e3ddc5');square.box(bx,.28,bz,2.8,.55,.5,'#788c82');}
   {const tx=-42,tz=-19;const car=(x,z,w=8)=>{square.box(x,1.05,z,w,2.1,3.4,'#f1c735');square.box(x,2.22,z,w-.8,.55,3.1,'#315b86');square.box(x,1.45,z-1.73,w-.9,.7,.08,'#8dc1c3');for(const dx of [-w*.30,w*.30])square.box(x+dx,.34,z-1.55,1.2,.65,.5,'#26383d');};car(tx,tz,8.6);square.box(tx+2.8,2.55,tz,2.6,2.5,3.0,'#f1c735');square.box(tx+2.8,3.82,tz,3.0,.28,3.35,'#315b86');square.box(tx-3.3,2.0,tz,.55,2.2,.55,'#26383d');square.box(tx-3.3,3.1,tz,.9,.45,.9,'#315b86');car(tx+10.5,tz,7.6);car(tx+19.5,tz,7.6);for(const x of [tx+5.5,tx+15])square.box(x,.78,tz,1.4,.22,.35,'#394f54');}
   // Kungsgatan: two low glass-walled outdoor seating areas, kept off the central crossing.

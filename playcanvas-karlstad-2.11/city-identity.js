@@ -277,17 +277,11 @@ export function createCityIdentity(pc,host,{card,texture,labelTex}){
     const b=host.colliders.find(b=>b.osm===mark.osm);if(!b)continue;
     const x=(b.minx+b.maxx)/2,z=(b.minz+b.maxz)/2,w=b.maxx-b.minx-.3,d=b.maxz-b.minz-.3;
     if(mark.id==='domkyrkan'){
-      const tx=b.minx+.15+7.3,t=facade('tower',512,768),clock=texture(drawClock,256,256);
-      for(const [dx,dz,yaw] of [[0,7.33,0],[0,-7.33,180],[-7.33,0,-90],[7.33,0,90]]){
-        mount('Domkyrkan · tornfasad',t,14.6,24,tx+dx,0,z+dz,yaw);
-        mount('Domkyrkan · urtavla',clock,3.3,3.3,tx+dx/7.33*6.43,24.35,z+dz/7.33*6.43,yaw);
-      }
+      // 2.21.1-xmas.14: tornet, urtavlorna och spiran är geometri nu (domkyrkan-tower.mjs); inga tornkort.
       for(const side of [-1,1]){mount('Domkyrkan · långhus',facade('church'),w*.44,12.5,x+w*.26,0,z+side*9.035,side===1?0:180);mount('Domkyrkan · tvärskepp',facade('church'),17.8,12.5,x+5,0,z+side*(d/2+.04),side===1?0:180);}
       mount('Domkyrkan · platsnamn',labelTex(['DOMKYRKAN'],'#244b60','#ffefcb'),4.7,.62,b.minx-1,2.2,z-10,-90);
     }else if(mark.id==='radhuset'){
-      const rt=facade('radhuset',1024,256);
-      mount('Rådhuset · torgfasad',rt,d,11.6,b.maxx+.90,0,z,90);mount('Rådhuset · västfasad',rt,d,11.6,b.minx-.02,0,z,-90);
-      mount('Rådhuset · nordfasad',rt,w,11.6,x,0,b.minz-.08,180);mount('Rådhuset · sydfasad',rt,w,11.6,x,0,b.maxz+.08,0);
+      // 2.21.1-xmas.14: Rådhuset är geometri nu (radhuset-facade.mjs: gul nyrenässans, mittrisalit, ur och örnar); inga fasadkort.
     }else if(mark.id==='biblioteket'){
       const lt=facade('library',1024,256);
       mount('Biblioteket · Västra Torggatan',lt,d,10,b.minx-.05,0,z,-90);mount('Biblioteket · östfasad',lt,d,10,b.maxx+.08,0,z,90);
