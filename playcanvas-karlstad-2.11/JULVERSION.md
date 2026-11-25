@@ -669,3 +669,10 @@ Orsaker: Platsjakten startade vanlig fri julvandring (med regn av tappade julkla
 | Testet "fri vandring är sök och hitta" i `tests/xmas-guide.test.mjs` föll i ungefär 0,4 % av körningarna (punkten "långt bort" låg fast 90 m österut och hamnade ibland vid spårets början). Punkten ligger nu på andra sidan högen än spåret: 3000 av 3000. | `tests/xmas-guide.test.mjs` |
 
 Versionsnyckeln är `2.21.1-xmas.15` (89 filer, `tools/set-version.mjs`).
+
+**Verifierat på 2.21.1-xmas.15 (2026-11-25):** enhetstesterna **762 av 762**. `platsjakt.mjs` **alla kontroller OK** (inga regn under jakten, bara paketet vid platsen, HITTA PLATSEN, fem jakter i rad med fem olika platser, FÖRSÖK IGEN behåller platsen, högst tre belöningar om dagen, vanlig fri julvandring efter Inte nu),
+`flow.mjs` **59 OK**, `olearys.mjs` **22 OK**, `meta.mjs` **67 OK**, `termos.mjs` **19 OK**, `julguide.mjs` **11 OK**, `links.mjs` **49 OK**. Platsjaktens nio bilder granskade (Domkyrkans ny).
+
+**Publicerat 2026-11-25 efter användarens ja:** `dpl_Bb8jCW9P5At18CurGfvNT5hdAM3B` (`target: production`, omdeploy av förhandsvisningen `dpl_2Tmzv8tg8FEZQdXcKfxeo2RAKjnn`, commit `c4035e6`, READY efter ca 12 s, tilldelad `karlstad-julklappsjakten.vercel.app`, `aliasError: null`).
+Efter: produktionsadressens `/api/build-info` visar `environment: production` och commit `c4035e6`; `version.json` visar `2.21.1-xmas.15`.
+**Återställning:** xmas.14 `dpl_6v9ysM8vdZ1v4c3ZjYkatSmVAq96` (Vercel → Deployments → Instant Rollback). xmas.14 läser Platsjaktens nya sparning (listor per dag och `recent`) som okänd och tar bort den nästa gång den sparar; rekordtiderna blir kvar.
