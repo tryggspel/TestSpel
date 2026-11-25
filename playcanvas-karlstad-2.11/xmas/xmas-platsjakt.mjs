@@ -10,18 +10,18 @@
 export const PLATSJAKT=Object.freeze({radius:7,baseSeconds:70,perMeter:.28,maxSeconds:240,xp:70,orn:'rare',hintAt:.5,rewardsPerDay:3,start:Object.freeze({x:-2,z:31,yaw:-4})});
 export const RECENT_KEEP=4; // så många av de senaste platserna som inte kommer tillbaka direkt
 export const CONTESTS=Object.freeze([]);
-// [id, namn, mål (x, z: 3 m framför fasaden), kamera (x, z: 24 m ut), fasadens mitt (för kameran att titta på), kort ledtråd]
+// [id, namn, mål (x, z: 3 m framför fasaden), kamera (x, z: 24 m ut), fasadens mitt (för kameran att titta på), kort ledtråd, kamerans lutning uppåt i grader (valfri, 9)]
 export const PLATSER=Object.freeze([
   ['radhuset','Rådhuset',[-69.7,-15.5],[-48.8,-14.8],[-72.7,-15.6],'Vid Stora Torget.'],
   ['stadshotellet','Elite Stadshotellet',[-122.8,-56.8],[-123.4,-35.8],[-122.7,-59.8],'Vid Kungsgatan, mot älven.'],
   ['residenset','Residenset',[-160.1,8.6],[-139.1,9.1],[-163.1,8.5],'Väster om torget.'],
-  ['domkyrkan','Domkyrkan',[188.4,-69],[167.5,-70.1],[191.4,-68.9],'Öster om torget.'],
+  ['domkyrkan','Domkyrkan',[165.5,-83.9],[150,-31],[169.3,-83.9],'Öster om torget.',24], // vid västportalen under tornet; bilden från Kungsgatan visar tornet och spiran (xmas.15)
   ['biskopsgarden','Biskopsgården',[-73.4,-223.5],[-52.4,-222.9],[-76.4,-223.6],'Norr om torget, längs Västra Torggatan.'],
   ['biblioteket','Stadsbiblioteket',[-38.6,-335.1],[-59.6,-335.8],[-35.6,-335],'Långt norrut, längs Västra Torggatan.'],
   ['sandgrund','Sandgrund',[-14.8,-399.8],[-16,-378.8],[-14.7,-402.8],'Längst norrut, där konsten bor.'],
   ['duvan','Galleria Duvan',[-202.4,227.7],[-223.4,227.2],[-199.4,227.8],'Söder om torget, nära stationen.'],
   ['ahlens','Åhléns',[-217.2,203.1],[-196.2,203.8],[-220.2,203],'Söder om torget, nära stationen.']
-].map(([id,name,t,v,f,hint])=>Object.freeze({id,name,x:t[0],z:t[1],view:Object.freeze({x:v[0],z:v[1]}),look:Object.freeze({x:f[0],z:f[1]}),hint})));
+].map(([id,name,t,v,f,hint,pitch=9])=>Object.freeze({id,name,x:t[0],z:t[1],view:Object.freeze({x:v[0],z:v[1]}),look:Object.freeze({x:f[0],z:f[1]}),hint,pitch})));
 export const placeById=id=>PLATSER.find(p=>p.id===id)||null;
 const DAY=/^20\d{2}-\d{2}-\d{2}$/;
 const dayNum=day=>Math.round(Date.parse(day+'T12:00:00Z')/864e5);

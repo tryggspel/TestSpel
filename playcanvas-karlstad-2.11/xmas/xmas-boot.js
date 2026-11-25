@@ -134,14 +134,14 @@ export function installXmas(ctx){
   let pj=null;const PJ_PREFIX='p:';
   // onRetry: samma plats igen; onNew: en ny plats; onClose: tillbaka till vanlig fri julvandring där man står (med tomtarnas tappade julklappar igen).
   const pjUi=createPlatsjaktUi({onStart:()=>runPlatsjakt(),onRetry:()=>openPlatsjakt(true),onNew:()=>openPlatsjakt(false),onClose:()=>{pj=null;guard(()=>{if(hunt.run?.plats&&mode==='cozy')startFree({spawn:freeSpawn(),quiet:true});});}});
-  function capturePhoto(view,look){
+  function capturePhoto(view,look,pitch=9){
     try{
       const pl=host.player.getPosition().clone(),cam=host.camera,prevYaw=journey.heading||0,eu=host.player.getEulerAngles().clone(),ce=cam.getLocalEulerAngles().clone();
       const yaw=Math.atan2(-(look.x-view.x),-(look.z-view.z))*180/Math.PI,cc=cam.camera,fov0=cc.fov,hf0=cc.horizontalFov;
       // Ett liggande vykort oavsett hur telefonen hålls: vid vinkel 68° i sidled, och mittbandet (3:2) skärs ut ur bilden.
       let url='';
       try{
-        cc.horizontalFov=true;cc.fov=68;host.teleport(view.x,view.z,yaw,9);host.app.render();
+        cc.horizontalFov=true;cc.fov=68;host.teleport(view.x,view.z,yaw,pitch);host.app.render();
         const src=host.app.graphicsDevice.canvas,W=src.width,H=src.height;let cw=W,ch=Math.round(W*2/3);if(ch>H){ch=H;cw=Math.round(H*1.5);}
         const out=document.createElement('canvas');out.width=Math.min(640,cw);out.height=Math.round(out.width*ch/cw);
         out.getContext('2d').drawImage(src,(W-cw)/2,(H-ch)/2,cw,ch,0,0,out.width,out.height);url=out.toDataURL('image/jpeg',.82);
@@ -158,7 +158,7 @@ export function installXmas(ctx){
       M(()=>meta.notePlatsjakt(def.place.id));
       setPanel(null);resume?.();removePjPackage();
       startFree({spawn:PLATSJAKT.start,plats:true}); // Platsjaktens eget läge: inga tappade julklappar, gömda paket eller dagens julklapp, bara paketet vid platsen
-      const photo=capturePhoto(def.place.view,def.place.look);
+      const photo=capturePhoto(def.place.view,def.place.look,def.place.pitch);
       pj={def,photo,state:'card',t0:0,hint:false};
       host.teleport(PLATSJAKT.start.x,PLATSJAKT.start.z,PLATSJAKT.start.yaw,-4);
       pjUi.showPhoto(def,photo);

@@ -948,11 +948,13 @@ export function createCityArchitecture(pc,app,buildings,others=[]){
       // Cruciform cathedral with the bell/clock tower at its WEST end, facing Torget.
       // A visible raised stone precinct matches the simple collision footprint at the cross's corners.
       m.box(x,.45,z,w,.9,d,'#a3b19f','#79918a');
-      m.box(x,6.3,z,w,12.6,18,'#f0e7d2','#d5d8c5');m.box(x+5,6.3,z,18,12.6,d,'#f0e7d2','#d5d8c5');
+      // 2.21.1-xmas.15: långhuset börjar vid tornets östsida, så att västtornet står fritt i väständen med portalen mot väster (som det riktiga).
+      const tx=b.minx+7.3,n0=tx+6.5,nx=(n0+b.maxx)/2,nw=b.maxx-n0;
+      m.box(nx,6.3,z,nw,12.6,18,'#f0e7d2','#d5d8c5');m.box(x+5,6.3,z,18,12.6,d,'#f0e7d2','#d5d8c5');
       m.box(x,.65,z,w+.3,1.3,18.3,'#93a69c');m.box(x+5,.65,z,18.3,1.3,d+.3,'#93a69c');
-      m.roof(x,12.7,z,w+1,19.4,5.1,'x');m.roof(x+5,12.7,z,19.4,d+1,5.0,'z');
+      m.roof(nx,12.7,z,nw+1,19.4,5.1,'x');m.roof(x+5,12.7,z,19.4,d+1,5.0,'z');
       // 2.21.1-xmas.14: västtornet med den höga konformiga kopparspiran och urtavlor åt fyra håll (domkyrkan-tower.mjs), cirka 60 m.
-      addDomkyrkanTower(m,b.minx+7.3,z);
+      addDomkyrkanTower(m,tx,z);
     }else if(b.osm===101456563){
       // Rådhuset (Ernst Jacobsson, 1869), 2.21.1-xmas.14: gulputsad nyrenässans i tre våningar som geometri (radhuset-facade.mjs).
       // Torgfasaden åt öster har mittrisaliten med entréerna och krönet med uret och de två förgyllda örnarna.

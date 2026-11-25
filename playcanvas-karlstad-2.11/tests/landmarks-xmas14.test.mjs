@@ -45,5 +45,5 @@ test('kopplingen: inga gamla texturkort över de nya byggnaderna, nya moduler me
   const id=fs.readFileSync(new URL('../city-identity.js',import.meta.url),'utf8'),ar=fs.readFileSync(new URL('../city-architecture.js',import.meta.url),'utf8'),so=fs.readFileSync(new URL('../city-south.js',import.meta.url),'utf8');
   assert.doesNotMatch(id,/Domkyrkan · tornfasad|Rådhuset · torgfasad/);
   assert.match(ar,/radhuset-facade\.mjs\?v=/);assert.match(ar,/domkyrkan-tower\.mjs\?v=/);assert.match(so,/fredsmonumentet\.mjs\?v=/);
-  assert.match(ar,/addDomkyrkanTower\(m,b\.minx\+7\.3,z\)/);assert.match(ar,/addRadhusetWall\(m,faceFrom\(RADHUSET_FRONT\.a,RADHUSET_FRONT\.q\),\{H,main:true\}\)/);
+  assert.match(ar,/const tx=b\.minx\+7\.3,n0=tx\+6\.5/);assert.match(ar,/addDomkyrkanTower\(m,tx,z\)/);assert.match(ar,/addRadhusetWall\(m,faceFrom\(RADHUSET_FRONT\.a,RADHUSET_FRONT\.q\),\{H,main:true\}\)/);
 });
