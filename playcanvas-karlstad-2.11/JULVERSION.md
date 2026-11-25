@@ -698,4 +698,6 @@ Webbläsarflödena i Chromium: `kiosk.mjs` **16 OK** (inga länkar till grundspe
 Två testförväntningar ändrades för att kalenderlänken är borttagen (T5, T6), och `guide.mjs` S3 valde ibland en spårpunkt nära högen (där raden rätteligen säger JULKLAPPARNA NÄRA!); den väljer nu en punkt utanför radien.
 
 **Inte provat:** Tomtekön och Duka julbordet med fingret på en riktig telefon (svårighet och tryckytor), och om människor tycker att de är roliga.
-**Produktionen är oförändrad (xmas.15)**: xmas.16 publiceras först efter ett nytt uttryckligt ja.
+**Publicerat 2026-11-25 efter användarens ja:** `dpl_HCXbiMYoHnzaGRHhsPkMgp5xegW1` (`target: production`, omdeploy av förhandsvisningen `dpl_H9NECQiWMy2BjfKDa1UsuJmk4jws`, commit `123c4cf`, READY efter ca 10 s, tilldelad `karlstad-julklappsjakten.vercel.app`, `aliasError: null`).
+Efter: produktionsadressens `/api/build-info` visar `environment: production` och commit `123c4cf`; `version.json` visar `2.21.1-xmas.16`.
+**Återställning:** xmas.15 `dpl_Bb8jCW9P5At18CurGfvNT5hdAM3B` (Vercel → Deployments → Instant Rollback). xmas.15 har länkarna till grundspelet och Julkalendern, Sista rundan och Löfbergs-kiosken; rekorden i Tomtekön och Duka julbordet ligger i egna nycklar och blir kvar, dagens räknare för butiksspelen (`shop`) tas bort ur sparningen.
