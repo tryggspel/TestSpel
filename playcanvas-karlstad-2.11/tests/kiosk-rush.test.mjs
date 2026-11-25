@@ -85,3 +85,39 @@ test('julbygget: Tomtekön är inkopplad, och Sista rundan och Löfbergs-kiosken
   assert.match(lr,/if\(xmas\)\{for\(const e of lastRoundProps\)e\.enabled=false;journeyView\.hideStation\('coffee'\);\}/);
   assert.match(lr,/guardSign\.enabled=!isJourney\(\)&&!xmas/);assert.match(jv,/function hideStation\(type\)/);
 });
+
+import {createTableGame,TABLE,TABLE_ITEMS,blankTable,sanitizeTable,recordTable} from '../xmas/table-memory.mjs';
+import {XmasMeta} from '../xmas/xmas-meta.mjs';
+import {XP} from '../xmas/xmas-meta-config.mjs';
+
+test('Duka julbordet: titta, duka ur minnet, rätt plats låses och fel plats kostar; en stjärna per bord med högst ett fel', ()=>{
+  const g=createTableGame({rand:seeded(21)});g.start();const st=g.state;
+  assert.equal(st.phase,'show');assert.equal(st.layout.filter(Boolean).length,TABLE.rounds[0].items);assert.equal(st.tray.length,TABLE.rounds[0].items+TABLE.rounds[0].decoys);
+  assert.equal(g.place(0).ok,false,'inget kan läggas medan man tittar');
+  for(let t=0;t<TABLE.rounds[0].show+.2;t+=.1)g.step(.1);assert.equal(st.phase,'play');
+  // ett fel (tom plats), sedan rätt överallt
+  const empty=st.layout.findIndex(x=>!x);g.select(st.tray[0]);assert.ok(g.place(empty).wrong);assert.equal(st.wrong,1);
+  for(let k=0;k<st.layout.length;k++){const id=st.layout[k];if(!id)continue;assert.ok(g.select(id));assert.ok(g.place(k).ok);}
+  assert.equal(st.phase,'between');assert.equal(st.stars,1);assert.equal(st.results[0].wrong,1);
+  // bord 2: två fel = ingen stjärna; bord 3: tiden tar slut
+  g.start();assert.equal(st.layout.filter(Boolean).length,TABLE.rounds[1].items);assert.ok(st.tray.length>TABLE.rounds[1].items,'lockbeten');
+  for(let t=0;t<TABLE.rounds[1].show+.2;t+=.1)g.step(.1);
+  for(let i=0;i<2;i++){const e=st.layout.findIndex((x,k)=>!x);g.select(st.tray[0]);g.place(e);}
+  for(let k=0;k<st.layout.length;k++){const id=st.layout[k];if(!id)continue;g.select(id);g.place(k);}
+  assert.equal(st.stars,1,'två fel ger ingen stjärna');
+  g.start();for(let t=0;t<TABLE.rounds[2].show+TABLE.rounds[2].seconds+1;t+=.1)g.step(.1);
+  assert.ok(st.over);assert.equal(st.results[2].done,false);assert.ok(g.drain().some(e=>e.type==='over'));
+  for(const it of TABLE_ITEMS)assert.ok(it.art&&it.name);
+  const s=blankTable();assert.ok(recordTable(s,{score:500,stars:2}));assert.deepEqual(sanitizeTable({best:'9',stars:7,plays:1}),{v:1,best:9,stars:0,plays:1});
+});
+
+test('butiksspelen ger XP per stjärna, högst fyra belönade omgångar om dagen; noll stjärnor ger inget', ()=>{
+  const mem=()=>{const m=new Map();return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v))};};
+  const m=new XmasMeta({storage:mem()}),when=new Date('2026-12-02T12:00:00Z');
+  assert.equal(m.onShopGame({id:'tomtekon',stars:0},when),null);
+  assert.equal(m.onShopGame({id:'tomtekon',stars:2},when).xp,XP.shopStar*2);
+  assert.equal(m.onShopGame({id:'julbordet',stars:3},when).xp,XP.shopStar*3);
+  m.onShopGame({id:'tomtekon',stars:1},when);m.onShopGame({id:'tomtekon',stars:1},when);
+  assert.equal(m.onShopGame({id:'tomtekon',stars:3},when),null,'dagens tak');
+  assert.equal(m.onShopGame({id:'<x>',stars:3},new Date('2026-12-03T12:00:00Z')),null);
+});

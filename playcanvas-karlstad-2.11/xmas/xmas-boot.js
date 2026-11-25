@@ -1,47 +1,48 @@
 // Julklappsjakten: kopplar ihop motorn, vyn, gränssnittet och grundspelets system. Anropas en gång från last-round.js (bara i julbygget).
 // Allt här är fail-soft: om något i julkoden skulle kasta stängs jultilläggen av och grundspelet lever vidare (som platskoden i 2.21).
-import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.15';
-import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.15';
-import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.15';
-import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.15';
-import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.15';
-import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.15';
-import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.15';
-import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.15';
-import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.15';
-import {WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.15';
-import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.15';
-import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.15';
-import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.15';
-import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.15';
-import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.15';
-import {createXmasLight} from './xmas-light.js?v=2.21.1-xmas.15';
-import {LIGHT_MODES} from './xmas-light.mjs?v=2.21.1-xmas.15';
-import {nextRound,roundById,buildRound,buildSearch,INTRO_SEARCH} from './xmas-rounds.mjs?v=2.21.1-xmas.15';
-import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.15';
-import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.15';
-import {HARBOUR,atMarieberg} from '../city-south-space.mjs?v=2.21.1-xmas.15';
-import {SANDGRUND,sandgrundOutcome,sandgrundLine} from './xmas-sandgrund.mjs?v=2.21.1-xmas.15';
-import {BOAT,buildMarieberg,boatBonus} from './xmas-marieberg.mjs?v=2.21.1-xmas.15';
-import {parseLink,describeLink,LINK_PARAM,DOOR_PARAM} from './xmas-deeplink.mjs?v=2.21.1-xmas.15';
-import {doorBox,resultMatches} from './xmas-door.mjs?v=2.21.1-xmas.15';
-import {XmasMeta} from './xmas-meta.mjs?v=2.21.1-xmas.15';
-import {PRIZE} from './xmas-meta-config.mjs?v=2.21.1-xmas.15';
-import {hiddenPackages,nearestHidden,warmth,hiddenSpot} from './xmas-hidden.mjs?v=2.21.1-xmas.15';
-import {TERMOS,goalFor as termosGoalFor} from './xmas-termos.mjs?v=2.21.1-xmas.15';
-import {DAILY} from './xmas-daily-config.mjs?v=2.21.1-xmas.15';
-import {dailyFor,isDailyId,dailyWarmth,hintLevel} from './xmas-daily.mjs?v=2.21.1-xmas.15';
-import {COTTAGE,BOOTH} from './xmas-market-data.mjs?v=2.21.1-xmas.15';
-import {createJulguide,createJulguideUi} from './xmas-julguide.js?v=2.21.1-xmas.15';
-import {createOlearysVenue} from './olearys-venue.js?v=2.21.1-xmas.15';
-import {createOlearysGames,loadOlearys,saveOlearys} from './olearys-games.js?v=2.21.1-xmas.15';
-import {inVenue} from './olearys-data.mjs?v=2.21.1-xmas.15';
-import {PLATSJAKT,platsjaktFor,compass} from './xmas-platsjakt.mjs?v=2.21.1-xmas.15';
-import {createPlatsjaktUi} from './xmas-platsjakt-ui.js?v=2.21.1-xmas.15';
-import {createKioskRush} from './kiosk-rush.js?v=2.21.1-xmas.15';
-import {COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.15';
-import {DOORS} from '../julkalender/doors.mjs?v=2.21.1-xmas.15';
-import {GAME_SAVE_KEY,STORAGE_KEY as CALENDAR_KEY,readGame,evaluate,hasAutoCheck,metricsOf} from '../julkalender/rules.mjs?v=2.21.1-xmas.15';
+import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.16';
+import {XmasHunt} from './xmas-hunt.mjs?v=2.21.1-xmas.16';
+import {XmasGuide,missionView} from './xmas-guide.mjs?v=2.21.1-xmas.16';
+import {createGuideUi} from './xmas-guide-ui.js?v=2.21.1-xmas.16';
+import {XmasRush} from './xmas-rush.mjs?v=2.21.1-xmas.16';
+import {XmasSave} from './xmas-save.mjs?v=2.21.1-xmas.16';
+import {rushDef,isUnlocked,nextRush,goalText} from './xmas-rushes.mjs?v=2.21.1-xmas.16';
+import {decodeChallenge,tokenFromSearch,versus} from './xmas-board.mjs?v=2.21.1-xmas.16';
+import {INTRO,TREE,INTRO_GOAL} from './xmas-layout.mjs?v=2.21.1-xmas.16';
+import {WEATHER,STAMPS,DELIVERY} from './xmas-config.mjs?v=2.21.1-xmas.16';
+import {loadBuildStamp,buildDetail,baseStamp} from './xmas-build.mjs?v=2.21.1-xmas.16';
+import {createSprites} from './xmas-sprites.js?v=2.21.1-xmas.16';
+import {createXmasView} from './xmas-view.js?v=2.21.1-xmas.16';
+import {createXmasUi,mmss} from './xmas-ui.js?v=2.21.1-xmas.16';
+import {createXmasDecor} from './xmas-decor.js?v=2.21.1-xmas.16';
+import {createXmasLight} from './xmas-light.js?v=2.21.1-xmas.16';
+import {LIGHT_MODES} from './xmas-light.mjs?v=2.21.1-xmas.16';
+import {nextRound,roundById,buildRound,buildSearch,INTRO_SEARCH} from './xmas-rounds.mjs?v=2.21.1-xmas.16';
+import {zombieLevel,nextZombieLevel,isZombieUnlocked,ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.16';
+import {smoothPath} from '../city-guidance.mjs?v=2.21.1-xmas.16';
+import {HARBOUR,atMarieberg} from '../city-south-space.mjs?v=2.21.1-xmas.16';
+import {SANDGRUND,sandgrundOutcome,sandgrundLine} from './xmas-sandgrund.mjs?v=2.21.1-xmas.16';
+import {BOAT,buildMarieberg,boatBonus} from './xmas-marieberg.mjs?v=2.21.1-xmas.16';
+import {parseLink,describeLink,LINK_PARAM,DOOR_PARAM} from './xmas-deeplink.mjs?v=2.21.1-xmas.16';
+import {doorBox,resultMatches} from './xmas-door.mjs?v=2.21.1-xmas.16';
+import {XmasMeta} from './xmas-meta.mjs?v=2.21.1-xmas.16';
+import {PRIZE} from './xmas-meta-config.mjs?v=2.21.1-xmas.16';
+import {hiddenPackages,nearestHidden,warmth,hiddenSpot} from './xmas-hidden.mjs?v=2.21.1-xmas.16';
+import {TERMOS,goalFor as termosGoalFor} from './xmas-termos.mjs?v=2.21.1-xmas.16';
+import {DAILY} from './xmas-daily-config.mjs?v=2.21.1-xmas.16';
+import {dailyFor,isDailyId,dailyWarmth,hintLevel} from './xmas-daily.mjs?v=2.21.1-xmas.16';
+import {COTTAGE,BOOTH} from './xmas-market-data.mjs?v=2.21.1-xmas.16';
+import {createJulguide,createJulguideUi} from './xmas-julguide.js?v=2.21.1-xmas.16';
+import {createOlearysVenue} from './olearys-venue.js?v=2.21.1-xmas.16';
+import {createOlearysGames,loadOlearys,saveOlearys} from './olearys-games.js?v=2.21.1-xmas.16';
+import {inVenue} from './olearys-data.mjs?v=2.21.1-xmas.16';
+import {PLATSJAKT,platsjaktFor,compass} from './xmas-platsjakt.mjs?v=2.21.1-xmas.16';
+import {createPlatsjaktUi} from './xmas-platsjakt-ui.js?v=2.21.1-xmas.16';
+import {createKioskRush} from './kiosk-rush.js?v=2.21.1-xmas.16';
+import {createTableMemory} from './table-memory.js?v=2.21.1-xmas.16';
+import {COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.16';
+import {DOORS} from '../julkalender/doors.mjs?v=2.21.1-xmas.16';
+import {GAME_SAVE_KEY,STORAGE_KEY as CALENDAR_KEY,readGame,evaluate,hasAutoCheck,metricsOf} from '../julkalender/rules.mjs?v=2.21.1-xmas.16';
 
 // Julbygget har inga termosar, hemligheter eller skatter: paketen ersätter dem. Anropas direkt efter att resan skapats, innan någon vy ritas.
 export function prepareXmasJourney(journey){
@@ -120,6 +121,11 @@ export function installXmas(ctx){
   const KIOSK_SOUND={item:[660,'triangle',.07,.05],wrong:[170,'square',.16,.05],served:[880,'triangle',.12,.07],rush:[1175,'triangle',.18,.08],walkout:[196,'sawtooth',.28,.05],
     change:[520,'square',.1,.04],shuffle:[440,'triangle',.1,.05],special:[988,'sine',.12,.05],lose:[147,'sawtooth',.4,.05]};
   let kiosk=null;
+  // DUKA JULBORDET (table-memory.mjs): minnesspelet på Cervera efter porslinsjakten.
+  const TABLE_SOUND={show:[523,'sine',.12,.05],go:[784,'triangle',.12,.06],pick:[660,'triangle',.05,.04],right:[880,'triangle',.1,.06],wrong:[170,'square',.16,.05],star:[1175,'triangle',.2,.08],lose:[147,'sawtooth',.4,.05]};
+  let tableGame=null;
+  try{tableGame=createTableMemory({storage,sound:k=>{if(k==='win'){sound('win');return;}const t=TABLE_SOUND[k];if(t)note(t[0],t[1],t[2],t[3]);}});}catch(e){console.error('[Duka julbordet hoppades över]',e);}
+  const shopXp=(id,stars)=>{const R=M(()=>meta.onShopGame({id,stars}),null);if(R)announce(R,{skip:['orn','ticket']});};
   try{kiosk=createKioskRush({storage,sound:k=>{if(k==='win'){sound('win');return;}if(k==='start'){sound('energy');return;}const t=KIOSK_SOUND[k];if(t)note(t[0],t[1],t[2],t[3]);}});}catch(e){console.error('[Tomtekön hoppades över]',e);}
   function enterVenue(){
     if(!venue)return;
@@ -545,7 +551,7 @@ export function installXmas(ctx){
       guard(()=>{
         const Q=journey.places;if(!Q?.markExternal?.())return;
         kiosk.open({
-          onFinish:r=>guard(()=>Q.finishExternal({ok:r.stars>0,fraction:r.stars/3,mistakes:r.wrong,line:'Tomtekön är tom! '+r.served+' tomtar fick sin julfika ('+'★'.repeat(r.stars)+'). Nu väntar tomten utanför på sin.'})),
+          onFinish:r=>guard(()=>{Q.finishExternal({ok:r.stars>0,fraction:r.stars/3,mistakes:r.wrong,line:'Tomtekön är tom! '+r.served+' tomtar fick sin julfika ('+'★'.repeat(r.stars)+'). Nu väntar tomten utanför på sin.'});shopXp('tomtekon',r.stars);}),
           onCancel:()=>guard(()=>{if(Q.run?.external)Q.cancel('user');})
         });
       });
@@ -567,7 +573,10 @@ export function installXmas(ctx){
       const first=save.stamp(e.placeId);
       save.addTotals({points:e.points||0});
       if(first){ui.showPill('JULSTÄMPEL! '+(e.stamp?.label||place.name),2600,performance.now());sound('win');}
-      showPlaceDone({placeId:e.placeId,points:e.points||0,first,line:e.line,seconds:e.seconds,mistakes:e.mistakes});
+      const done=()=>showPlaceDone({placeId:e.placeId,points:e.points||0,first,line:e.line,seconds:e.seconds,mistakes:e.mistakes});
+      // Cervera: porslinet är lämnat, nu dukar man julbordet ur minnet (Duka julbordet) innan kortet med stämpeln visas
+      if(e.placeId==='cervera'&&tableGame){tableGame.open({onDone:r=>guard(()=>{shopXp('julbordet',r.stars);done();})});return;}
+      done();
     });
   }
   function openShops(){
@@ -653,7 +662,7 @@ export function installXmas(ctx){
       try{dismissPlaceResult?.();}catch{}clearTimeout(resultTimer);
       if(julrush.active){julrush.quit();} // att ge upp i pausmenyn sparar körningen som en förlust (om den hade några paket)
       leaveRush();restoreTurbo();zombieTune.off();try{host.music?.tempo?.(1);}catch{}
-      if(pj){pj=null;pjUi.close();removePjPackage();}if(kiosk?.isOpen)kiosk.close();
+      if(pj){pj=null;pjUi.close();removePjPackage();}if(kiosk?.isOpen)kiosk.close();if(tableGame?.isOpen)tableGame.close?.();
       daily=null;guideTo=null;julguideUi?.hide();olGames?.close();showOlPrompt(null);document.body.classList.remove('xmas-venue');doorLink=null;ui.placeDoor(null);hunt.cancel('meny');view.clear();ui.showHud(false);guide.reset();guideUi.show(false);view.setGuide(null);guideShown=false;journey.pause?.();mode='menu';boatInfo=null;caughtAt=0;journey.actors?.forEach(a=>{a.active=false;});document.body.classList.remove('xmas-cozy','xmas-zombies','xmas-rush','xmas-mission');
       if(incoming){ui.renderChallenge(incoming);setPanel('xmas-challenge');return;}
       if(link){const l=link;link=null;if(showLink(l))return;}
@@ -922,7 +931,7 @@ export function installXmas(ctx){
     hunt,save,meta,view,ui,sprites,handlers,decor,syncDoors,giveMeta,
     get active(){return mode==='rush'?julrush.active:hunt.active;},get cozy(){return mode==='cozy';},get zombieMode(){return mode==='zombies';},get zombieLevel(){return zLevel;},get rushMode(){return mode==='rush'&&julrush.active;},julrush,
     startSandgrund,missionDone,afterMission,startBoat,boatArrive,boatAbort,get missionMode(){return mode==='mission';},get boatMode(){return mode==='boat';},
-    update,hudText,startRound,startZombies,startRush,openRush,openBoard,challengeGo,rushNext,rushAgain,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,startDaily,enterVenue,exitVenue,openPlatsjakt,runPlatsjakt,get pj(){return pj;},get kiosk(){return kiosk;},get olGames(){return olGames;},startTermos:()=>startRush(0,null,'termos'),get daily(){return daily;},setWeather,setLight,get light(){return light;},
+    update,hudText,startRound,startZombies,startRush,openRush,openBoard,challengeGo,rushNext,rushAgain,caught,openShops,onPlaceEvent,runBusy,radar:(c,point,p)=>guard(()=>view.radar(c,point,p)),openMenu,openContinue,startIntro,startFree,startDaily,enterVenue,exitVenue,openPlatsjakt,runPlatsjakt,get pj(){return pj;},get kiosk(){return kiosk;},get tableGame(){return tableGame;},get olGames(){return olGames;},startTermos:()=>startRush(0,null,'termos'),get daily(){return daily;},setWeather,setLight,get light(){return light;},
     // Medan ett butiksuppdrag pågår står jaktens tid still (inga nya tappade julklappar, inget som försvinner).
     step:(dt,p,sweep,speed)=>guard(()=>mode==='rush'?julrush.step(dt,p,sweep,speed):hunt.step(placeActive?.()?0:dt,p,sweep,speed)),
     // Grundspelets små pilar på marken och flaggan "DITT MÅL" ritas inte för julens mål (quiet): julbandet, pilen och strålen ersätter dem (i JulRushen pilen och strålen). Radarn och kartan visar vägen som förut.

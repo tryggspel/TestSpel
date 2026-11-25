@@ -1,8 +1,8 @@
 // TOMTEKÖN på Pressbyrån (2.21.1-xmas.16): gränssnittet. Reglerna ligger i kiosk-rush.mjs; kopplingen till butiksuppdraget (stämpel, belöning,
 // leveransen till tomten utanför) i xmas-boot.js. Ett eget lager över spelet, byggt för telefon: stora knappar, tangenterna 1–6 på dator.
-import {createKioskGame,KIOSK,KIOSK_ITEMS,CUSTOMERS,starsFor,comboMult,KIOSK_KEY,blankKiosk,sanitizeKiosk,recordKiosk} from './kiosk-rush.mjs?v=2.21.1-xmas.15';
-import {drawProp} from '../place-art.js?v=2.21.1-xmas.15';
-import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.15';
+import {createKioskGame,KIOSK,KIOSK_ITEMS,CUSTOMERS,starsFor,comboMult,KIOSK_KEY,blankKiosk,sanitizeKiosk,recordKiosk} from './kiosk-rush.mjs?v=2.21.1-xmas.16';
+import {drawProp} from '../place-art.js?v=2.21.1-xmas.16';
+import {registerXmasProps} from './xmas-place-art.js?v=2.21.1-xmas.16';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;};
 const ICONS=new Map();
@@ -54,7 +54,7 @@ export function createKioskRush({storage=null,sound=null,rand=Math.random}={}){
   function tap(id,btn=null){
     if(phase!=='play'||!game)return;
     const r=game.tap(id);
-    if(r.wrong){btn?.classList.remove('bad');void btn?.offsetWidth;btn?.classList.add('bad');}
+    if(r.wrong){btn?.classList.remove('bad');void btn?.offsetWidth;btn?.classList.add('bad');setTimeout(()=>btn?.classList.remove('bad'),450);}
     handleEvents();render();
   }
   function handleEvents(){

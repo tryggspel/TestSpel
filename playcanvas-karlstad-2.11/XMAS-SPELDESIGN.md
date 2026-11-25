@@ -275,3 +275,12 @@ Användarens önskan 2026-11-25: Termosjakten tillbaka som huvudspåret, *TempoR
 - **Byggnaderna:** de få byggnader man orienterar sig efter (Rådhuset, Domkyrkans spira, Fredsmonumentet) byggs som geometri efter skrivna källor. Utan bilder eller källor gissar spelet inte fram fasader på vanliga hus.
 
 **Inte provat med människor:** om Platsjaktens tider och ledtrådar är lagom, om spelen hos O'Learys är lagom svåra med fingret, och om karlstadsbor känner igen sig. Mät gärna det sista med Platsjakten (hur fort hittar man Rådhuset och Domkyrkan?).
+
+## 15. Butiksutmaningarna som riktiga spel (2.21.1-xmas.16, byggt)
+
+- **Pressbyrån = TOMTEKÖN**, ett arkadspel med kö, tålamod, kombo och specialkunder i stället för fyra beställningar i rad. Det är svårt att få tre stjärnor: det ska gå att bli bättre och vilja slå sitt rekord.
+- **Cervera = porslinsjakten + DUKA JULBORDET**, ett minnesspel. Två olika sorters spel (reaktion och minne) så att butikerna känns olika.
+- Båda ger stämpeln som förut och XP efter stjärnor (taket fyra omgångar om dagen). Inga erbjudanden eller samarbeten påstås.
+- Julversionen länkar varken till grundspelet eller till Julkalendern; Sista rundan och Löfbergs-kiosken sparas till sommarspelet.
+
+**Inte provat med människor:** om Tomtekön och Duka julbordet är lagom svåra med fingret på en riktig telefon (svårigheten är satt med simulerade spelare och ett webbläsarflöde).

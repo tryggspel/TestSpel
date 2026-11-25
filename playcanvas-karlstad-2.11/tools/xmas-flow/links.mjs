@@ -295,13 +295,14 @@ async function playHunt(g,maxSec=420){
   const items=await g.ev(()=>window.KarlstadDebug.journey().places.run?.items.map(i=>({x:i.x,z:i.z})));
   for(const it of items||[]){await g.ev(([x,z])=>window.__tp(x,z,0,-8),[it.x,it.z]);await g.wait(700);}
   await g.ev(([x,z,yaw])=>window.__tp(x,z,yaw,-4),[c.x,c.z,c.yaw]);await g.wait(600);await g.ev(()=>window.KarlstadDebug.use());
+  await g.until(()=>!!window.KarlstadDebug.journey().xmas.tableGame?.isOpen,6);await g.ev(()=>document.querySelector('.tm-layer .kr-close')?.click()); // Duka julbordet (2.21.1-xmas.16) stängs
   const shown=await g.until(()=>!document.getElementById('round-xmas-result').hidden,20);
   const r=await g.ev(()=>({title:document.getElementById('xmasResultTitle').textContent,kicker:document.getElementById('xmasResultKicker').textContent,stamp:!document.getElementById('xmasResultStamp').hidden,
     line:document.getElementById('xmasResultLine').textContent,pts:document.getElementById('xmasResultPoints').textContent,base:getComputedStyle(document.getElementById('placeResult')).display,
     top:getComputedStyle(document.getElementById('round-xmas-result')).borderTopColor,cont:document.getElementById('xmasResultContinue').textContent.replace(/\s+/g,' ').trim(),phase:window.KarlstadRound.snapshot().phase}));
   check('T13 efter Cervera visas julens resultatkort: FIKABORDET ÄR DUKAT!, ny julstämpel och julpoäng, och grundspelets lilla platskort syns inte',shown&&r.title==='FIKABORDET ÄR DUKAT!'&&r.kicker==='NY JULSTÄMPEL!'&&r.stamp&&/JULPOÄNG/.test(r.pts)&&r.base==='none'&&r.top==='rgb(217, 71, 63)',JSON.stringify(r));
   const d=await g.door();
-  check('T14 kortet har rutan "Lucka 3 är avklarad" med nästa lucka imorgon den 4/12 och en knapp till Julmenyn',!!d&&d.title==='★ LUCKA 3 ÄR AVKLARAD!'&&d.next==='Nästa lucka öppnas imorgon den 4/12.'&&/Julspelet/.test(d.tail)&&/JULMENYN/.test(d.menu)&&d.cal==='./julkalender/',JSON.stringify(d));
+  check('T14 kortet har rutan "Lucka 3 är avklarad" med nästa lucka imorgon den 4/12 och en knapp till Julmenyn',!!d&&d.title==='★ LUCKA 3 ÄR AVKLARAD!'&&d.next==='Nästa lucka öppnas imorgon den 4/12.'&&/Julspelet/.test(d.tail)&&/JULMENYN/.test(d.menu)&&!d.cal,JSON.stringify(d));
   check('T15 spelet är pausat medan kortet visas och knappen heter FORTSÄTT JULVANDRINGEN',r.phase==='paused'&&/FORTSÄTT JULVANDRINGEN/.test(r.cont),r.phase+' '+r.cont);
   await g.ev(()=>document.getElementById('xmasDoor')?.scrollIntoView({block:'center'}));await g.shot('l06-cervera-klar');
   await g.click('xmasResultContinue');await g.wait(900);

@@ -3,9 +3,9 @@
 // och släpp (som en slangbella); i dart håller man inne för att stilla siktet och släpper för att kasta.
 // Reglerna och poängen ligger i olearys-rules.mjs, fysiken i olearys-physics.mjs.
 import {ACTIVITIES,activity,bowlingScore,pinsStanding,BOWL_FRAMES,dartScore,DART_ORDER,shuffleScore,shuffleZone,SHUFFLE,pentaPoints,tipOpen,tipPoints,tipTotals,outcomeOf,matchStart,
-  OL_KEY,blankOlearys,sanitizeOlearys,recordActivity,recordPenta,TIP_POINTS} from './olearys-rules.mjs?v=2.21.1-xmas.15';
-import {makeWorld,addBody,stepWorld,moving,drain} from './olearys-physics.mjs?v=2.21.1-xmas.15';
-import {OL_COLORS as C,FBK_MATCHES,FBK_SOURCE} from './olearys-data.mjs?v=2.21.1-xmas.15';
+  OL_KEY,blankOlearys,sanitizeOlearys,recordActivity,recordPenta,TIP_POINTS} from './olearys-rules.mjs?v=2.21.1-xmas.16';
+import {makeWorld,addBody,stepWorld,moving,drain} from './olearys-physics.mjs?v=2.21.1-xmas.16';
+import {OL_COLORS as C,FBK_MATCHES,FBK_SOURCE} from './olearys-data.mjs?v=2.21.1-xmas.16';
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rnd=(a,b)=>a+Math.random()*(b-a);

@@ -46,7 +46,7 @@ const until=async(fn,max=60)=>{const t0=Date.now();while(Date.now()-t0<max*1000)
 // Tomtekön (2.21.1-xmas.16): öppna kassan, låt passet sluta med 13 serverade tomtar (en stjärna) och lämna ordern. Returnerar om spelet öppnades.
 const kioskWin=async()=>{const ok=await until(()=>!!window.KarlstadDebug.journey().xmas.kiosk?.isOpen,10);if(!ok)return false;
   await ev(()=>{const k=window.KarlstadDebug.journey().xmas.kiosk;k.start();const g=k._game();g.state.served=13;g.state.score=2600;g.end();});await wait(500);
-  await ev(()=>document.querySelector('.kr-card .kr-go')?.click());await wait(300);return true;};
+  await ev(()=>document.querySelector('.kr-layer .kr-card .kr-go')?.click());await wait(300);return true;};
 const snap=()=>ev(()=>window.KarlstadDebug.journey().xmas.hunt.snapshot());
 // Sök och hitta (introduktionen, rundorna, fri julvandring) är utan pilar till paketen. Testet går som en spelare som följer spåren: till närmaste ej plockade paket (i små steg genom spelets egen
 // fångstlogik), och väntar på nästa tappade hög när inget finns. Stannar när fasen inte längre är "collect" (målet nått). Läser också av var varje ny hög hamnade (avstånd mellan högarna).
@@ -217,6 +217,8 @@ await ev(()=>window.KarlstadDebug.use());await wait(700);await shot('19-cervera'
 const items=await ev(()=>window.KarlstadDebug.journey().places.run?.items.map(i=>({x:i.x,z:i.z})));
 for(const it of items||[]){await tp(it.x,it.z,0,-8,700);}
 await tp(c.x,c.z,c.yaw,-4,600);await ev(()=>window.KarlstadDebug.use());await wait(1000);
+// 2.21.1-xmas.16: efter porslinet kommer Duka julbordet; stängs här (spelet prövas i kiosk.mjs)
+await until(()=>!!window.KarlstadDebug.journey().xmas.tableGame?.isOpen,6);await ev(()=>document.querySelector('.tm-layer .kr-close')?.click());await wait(500);
 check('E4 Cervera: Tomtarnas fikabord ger stämpel',await ev(()=>!!window.KarlstadDebug.journey().xmas.save.state.stamps.cervera));
 // E4c: in och ut genom butiksfronten till fots. Provet går med små steg (som på en riktig enhet med 60 bilder per sekund; i den här webbläsaren är stegen annars stora och hoppar över
 // en smal spärr) genom spelets egen rörelse och kollision (tryMove), över hela fronten, i båda riktningar. Förut fanns en osynlig, 10 cm tjock vägg tvärs över fronten.

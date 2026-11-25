@@ -676,3 +676,18 @@ Versionsnyckeln är `2.21.1-xmas.15` (89 filer, `tools/set-version.mjs`).
 **Publicerat 2026-11-25 efter användarens ja:** `dpl_Bb8jCW9P5At18CurGfvNT5hdAM3B` (`target: production`, omdeploy av förhandsvisningen `dpl_2Tmzv8tg8FEZQdXcKfxeo2RAKjnn`, commit `c4035e6`, READY efter ca 12 s, tilldelad `karlstad-julklappsjakten.vercel.app`, `aliasError: null`).
 Efter: produktionsadressens `/api/build-info` visar `environment: production` och commit `c4035e6`; `version.json` visar `2.21.1-xmas.15`.
 **Återställning:** xmas.14 `dpl_6v9ysM8vdZ1v4c3ZjYkatSmVAq96` (Vercel → Deployments → Instant Rollback). xmas.14 gör om dagens lista över platser med paket till en textrad och tappar `recent` nästa gång den sparar (då kan dagens paket ges igen); rekordtiderna blir kvar.
+
+### 2.21.1-xmas.16: roligare butiksutmaningar; inga länkar till grundspelet eller Julkalendern; Sista rundan och Löfbergs-kiosken borta
+
+Användarens önskan 2026-11-25: menyn i julversionen ska inte länka till det vanliga Karlstad-spelet (utan jul, 2.21.2 på karlstad-city-visual-twin.vercel.app) eller till Julkalendern (den avvaktar);
+O'Learys-utmaningen med HEMGÅNG · FANSEN HIT och Löfbergs Kaffekraft-skylten på torget ska bort (sparas till sommarspelet); butiksutmaningarna ska bli mycket roligare och mer spelvärda (Pressbyrån var för trist och enkel).
+
+| Ändring | Var |
+|---|---|
+| **TOMTEKÖN** på Pressbyrån: tomtar köar vid disken med en pratbubbla (2–5 varor), tålamod som rinner ut (långsammare bakåt i kön), kombo och JULRUSH, tre liv, 75 sekunder, takten ökar. Specialkunder: Glömske Gösta (bubblan försvinner, kika kostar tålamod), Bråttom-Britt (halva tålamodet, dubbla poängen), Tomtemor (ändrar sig efter första varan), Påtårs-Per (samma sak två gånger), Guldtomten (tre gånger poängen). Hyllan flyttas om var femte tomte. Stjärnor vid 12, 21 och 30 serverade (inställt med simulerade spelare: långsam ofta en, vanlig två, snabb tre). Minst en stjärna lämnar ordern: stämpel, poäng och leveransen till tomten utanför som förut. | `xmas/kiosk-rush.mjs`, `xmas/kiosk-rush.js`, `xmas/xmas-places.mjs`, `xmas/xmas-boot.js`, `place-quests.mjs` (`markExternal`/`finishExternal`, inert utan flaggan) |
+| **DUKA JULBORDET** på Cervera, efter porslinsjakten: Rut dukar bordet en kort stund, sedan dukar man ur minnet (tryck på en sak och sedan på platsen). Tre bord med 3, 5 och 7 saker, kortare titt-tid och lockbeten. En stjärna per bord som blir klart i tid med högst ett fel. Därefter julens resultatkort som förut. | `xmas/table-memory.mjs`, `xmas/table-memory.js`, `xmas/xmas-boot.js` |
+| Butiksspelen ger 8 XP per stjärna, högst fyra belönade omgångar om dagen (`meta.onShopGame`). Rekorden sparas i egna nycklar (`karlstad-xmas:kiosk:1`, `karlstad-xmas:julbordet:1`). | `xmas/xmas-meta.mjs`, `xmas/xmas-meta-config.mjs` |
+| Ingen väg till grundspelet: knapparna "Tillbaka till Karlstad-spelet" i startvyn, julmenyn och pausmenyn och `goBase` är borttagna. Inga länkar till Julkalendern (startvyn, julmenyn, luckrutan på resultatkortet), och lottraden nämner inte kalendern. Själva kalendersidan finns kvar men länkas inte. `tools/xmas-flow/switch.mjs` (byte till grundspelet) är borttagen. | `index.html`, `xmas/xmas-ui.js`, `xmas/xmas-boot.js`, `xmas/xmas-meta-ui.js` |
+| Sista rundans vakt, HEMGÅNG-zon, skylt, banlinjer och laddplattor samt FIKAPANIK-skylten döljs i julversionen; Löfbergs Kaffekraft-kiosken på torget döljs och går inte att använda. Koden finns kvar för grundspelet och sommarspelet. | `last-round.js`, `journey-view.js` (`hideStation`) |
+
+Versionsnyckeln är `2.21.1-xmas.16` (91 filer). Villkorstexten för dragningen (`xmas-draw-text.mjs`) nämner fortfarande Julkalenderns luckor som lottkälla; den ändras när villkoren slutligen bestäms (uppgift 4).

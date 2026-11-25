@@ -2,10 +2,10 @@
 // Ren modul utan I/O (används av api/xmas-draw.mjs och testas utan nät). Personuppgifter: namn, kontakt och lottkoder, och inget annat. Inga IP-adresser sparas.
 // Lotter ligger på spelarens enhet och går att fabricera av den som kan koden (XMAS-SPELDESIGN.md, avsnitt 6). Servern avvisar därför inget som bara "ser mycket ut", men flaggar det
 // (flags) så att en människa kontrollerar vinnaren före utlämning. Det som avvisas är det som är trasigt: fel format, för många koder, ingen bekräftelse.
-import {PRIZE,MAX_TICKETS,TICKETS,SEASON} from './xmas-meta-config.mjs?v=2.21.1-xmas.15';
-import {validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.15';
-import {cleanName,cleanContact,contactKind,entryOpen} from './xmas-draw-client.mjs?v=2.21.1-xmas.15';
-import {sha256} from './xmas-hash.mjs?v=2.21.1-xmas.15';
+import {PRIZE,MAX_TICKETS,TICKETS,SEASON} from './xmas-meta-config.mjs?v=2.21.1-xmas.16';
+import {validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.16';
+import {cleanName,cleanContact,contactKind,entryOpen} from './xmas-draw-client.mjs?v=2.21.1-xmas.16';
+import {sha256} from './xmas-hash.mjs?v=2.21.1-xmas.16';
 
 export const MAX_BODY=24000; // tecken i förfrågan som JSON
 export const CONTACT_FIELD=/^[^\u0000-\u001f\u007f]*$/;

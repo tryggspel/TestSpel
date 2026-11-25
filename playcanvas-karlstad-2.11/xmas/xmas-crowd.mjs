@@ -5,9 +5,9 @@
 // Hur de hittar: ett gångnät (rutnät med 3,5 m mellan punkterna) över den öppna ytan, där varje punkt och varje länk håller avstånd till allt som står där. Mellan två platser går man
 // den kortaste vägen i nätet (bredden först), med en liten sidoförskjutning per person så att alla inte går på samma linje. Ingen fysik: figurerna kolliderar inte med spelaren,
 // men kliver åt sidan om spelaren kommer för nära.
-import {OPEN,TRUCKS,TRUCK,LANE,LOT,LOT_TREES,STAGE,BOOTH,COTTAGE,FIRES,TABLES,POLES,marketColliders} from './xmas-market-data.mjs?v=2.21.1-xmas.15';
-import {STALLS,STALL,xmasColliders} from './xmas-decor-data.mjs?v=2.21.1-xmas.15';
-import {TREE,TORGET_PROPS} from './xmas-layout.mjs?v=2.21.1-xmas.15';
+import {OPEN,TRUCKS,TRUCK,LANE,LOT,LOT_TREES,STAGE,BOOTH,COTTAGE,FIRES,TABLES,POLES,marketColliders} from './xmas-market-data.mjs?v=2.21.1-xmas.16';
+import {STALLS,STALL,xmasColliders} from './xmas-decor-data.mjs?v=2.21.1-xmas.16';
+import {TREE,TORGET_PROPS} from './xmas-layout.mjs?v=2.21.1-xmas.16';
 
 export const CROWD=Object.freeze({
   cell:3.5,clearance:1.0,           // gångnätet: avstånd mellan punkterna och minsta fria avstånd till rutor och föremål

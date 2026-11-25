@@ -1,11 +1,11 @@
 // Julklappsjakten: egen sparning (julstämplar, rekord, summor och inställningar). Egen nyckel, så grundspelets sparfiler aldrig berörs.
 // Alltid fail-soft: utan lagring (privat läge, blockerad) spelas spelet ändå, bara utan att något sparas.
-import {SAVE_KEY,STAMPS,WEATHER_ORDER,titleFor} from './xmas-config.mjs?v=2.21.1-xmas.15';
-import {RUSH_COUNT,RUSH_MAX,starsFor} from './xmas-rushes.mjs?v=2.21.1-xmas.15';
-import {cleanName,cleanFriends,mergeFriend} from './xmas-board.mjs?v=2.21.1-xmas.15';
-import {ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.15';
-import {LIGHT_MODES} from './xmas-light.mjs?v=2.21.1-xmas.15';
-import {blankTermos,sanitizeTermos,recordTermos,termosToday} from './xmas-termos.mjs?v=2.21.1-xmas.15';
+import {SAVE_KEY,STAMPS,WEATHER_ORDER,titleFor} from './xmas-config.mjs?v=2.21.1-xmas.16';
+import {RUSH_COUNT,RUSH_MAX,starsFor} from './xmas-rushes.mjs?v=2.21.1-xmas.16';
+import {cleanName,cleanFriends,mergeFriend} from './xmas-board.mjs?v=2.21.1-xmas.16';
+import {ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.16';
+import {LIGHT_MODES} from './xmas-light.mjs?v=2.21.1-xmas.16';
+import {blankTermos,sanitizeTermos,recordTermos,termosToday} from './xmas-termos.mjs?v=2.21.1-xmas.16';
 
 const STAMP_IDS=new Set(STAMPS.map(s=>s.id));
 const MAXP=9999999;

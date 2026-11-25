@@ -36,6 +36,7 @@ export const XP=Object.freeze({
   termosMin:15,termosGoal:60,daily:80,
   guide:10,  // 2.21.1-xmas.14: julguiden, första gången man läser om ett julbord eller en julmarknad (en gång per ställe)
   platsjakt:70, // Platsjakten: dagens plats hittad i tid (en gång per dag)
+  shopStar:8,shopDay:4, // butiksspelen: 8 XP per stjärna, högst fyra belönade omgångar om dagen
   activity:12,activityDay:8,pentaMax:50 // O'Learys: en avslutad aktivitet ger 12 XP, femkampen poängen/10 (högst 50); högst åtta belöningar om dagen. FBK-tipset ger aldrig XP.
 });
 

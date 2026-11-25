@@ -2,8 +2,8 @@
 // Gömställena är grundspelets egna termosplatser (explore-places.mjs: FX_THERMOS), som redan är kontrollerade mot spelets karta (minst 1,1 m fritt, på verkliga gator och stigar).
 // En gåta pekar ut området; "varmt" och "glödhett" leder sista biten. Efter en stund står områdets namn i uppdragsraden, och ännu senare visar pilen vägen till området.
 // Alla spelare har samma gömställe samma dag. Två dagar i rad ligger aldrig i samma område. Schemat för erbjudanden och QR-rader ligger i xmas-daily-config.mjs.
-import {FX_THERMOS} from '../explore-places.mjs?v=2.21.1-xmas.15';
-import {DAILY,DAILY_HUNTS} from './xmas-daily-config.mjs?v=2.21.1-xmas.15';
+import {FX_THERMOS} from '../explore-places.mjs?v=2.21.1-xmas.16';
+import {DAILY,DAILY_HUNTS} from './xmas-daily-config.mjs?v=2.21.1-xmas.16';
 
 const near=(list,max=720)=>list.map(([x,z])=>({x,z})).filter(p=>Math.hypot(p.x,p.z)<max).sort((a,b)=>Math.hypot(a.x,a.z)-Math.hypot(b.x,b.z));
 // Områdena: namn, gåta (pekar ut området, inte platsen) och gömställena (närmast Torget först).

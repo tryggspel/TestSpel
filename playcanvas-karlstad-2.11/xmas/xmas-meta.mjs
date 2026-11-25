@@ -3,11 +3,11 @@
 // Egen sparning (karlstad-xmas:meta:1), skild från julspelets (karlstad-xmas:save:1) som Julkalendern läser: den här modulen ändrar aldrig den och kalendern ändrar aldrig den här.
 // Alla belöningar delas ut av den här modulen och bara en gång: en lucka, en söndag, en gömd julklapp eller en kod kan inte ge samma sak två gånger, hur man än laddar om eller rör klockan.
 // Tiden är svensk kalenderdag (Europe/Stockholm). Spelet och kalendern räknar likadant (tests/xmas-meta.test.mjs jämför dem).
-import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,ORNAMENT_POLICY,FIRST_ORNAMENT,MISSIONS,MISSION_TIERS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,QR_CODES,COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.15';
-import {makeTicket,validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.15';
-import {codeHash,pinHash,normalizeCode} from './xmas-hash.mjs?v=2.21.1-xmas.15';
-import {HIDDEN_SPOTS,hintsShown} from './xmas-hidden.mjs?v=2.21.1-xmas.15';
-import {sanitizePlatsjakt,PLATSJAKT,RECENT_KEEP} from './xmas-platsjakt.mjs?v=2.21.1-xmas.15';
+import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,ORNAMENT_POLICY,FIRST_ORNAMENT,MISSIONS,MISSION_TIERS,STREAK,CALENDAR,ADVENT,TICKETS,MAX_TICKETS,HIDDEN,QR_CODES,COUPONS} from './xmas-meta-config.mjs?v=2.21.1-xmas.16';
+import {makeTicket,validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.16';
+import {codeHash,pinHash,normalizeCode} from './xmas-hash.mjs?v=2.21.1-xmas.16';
+import {HIDDEN_SPOTS,hintsShown} from './xmas-hidden.mjs?v=2.21.1-xmas.16';
+import {sanitizePlatsjakt,PLATSJAKT,RECENT_KEEP} from './xmas-platsjakt.mjs?v=2.21.1-xmas.16';
 
 export const META_KEY='karlstad-xmas:meta:1';
 const ORN_BY_ID=new Map(ORNAMENTS.map(o=>[o.id,o]));
@@ -40,12 +40,12 @@ export function levelFor(xp,levels=LEVELS){
 }
 
 // ── Sparning ─────────────────────────────────────────────────────────────────────────────────────────────────────
-const blankDay=()=>({runs:0,clears:0,packages:0,bonus:0,chain:0,fast:0,areas:[],hidden:0,zombies:0,rush:0,termos:0,termosRuns:0,termosGoal:false,daily:false,ol:0,meter:0,first:false,gift:false,done:{},pick:[]});
+const blankDay=()=>({runs:0,clears:0,packages:0,bonus:0,chain:0,fast:0,areas:[],hidden:0,zombies:0,rush:0,termos:0,termosRuns:0,termosGoal:false,daily:false,ol:0,shop:0,meter:0,first:false,gift:false,done:{},pick:[]});
 export const blankMeta=()=>({v:1,xp:0,lv:1,dry:0,orn:{},seen:{},tickets:[],meter:0,days:{},streak:{cur:0,best:0,last:'',freezes:0,got:{}},cal:{doors:{},advent:{}},hidden:{},qr:{},daily:{},guide:{},platsjakt:{best:{},won:{},recent:[]},coupons:[],draw:{sent:[],at:0},tried:{intro:false,zombies:false,rush:false,termos:false},welcomed:false,first:''});
 
 function sanitizeDay(r){
   const d=blankDay();if(!isObj(r))return d;
-  for(const k of ['runs','clears','packages','bonus','chain','hidden','zombies','rush','meter','termosRuns','ol'])d[k]=num(r[k],9999);
+  for(const k of ['runs','clears','packages','bonus','chain','hidden','zombies','rush','meter','termosRuns','ol','shop'])d[k]=num(r[k],9999);
   d.termos=num(r.termos,999999);d.termosGoal=!!r.termosGoal;d.daily=!!r.daily;
   d.fast=num(r.fast,99999);d.first=!!r.first;d.gift=!!r.gift;
   d.areas=Array.isArray(r.areas)?[...new Set(r.areas.filter(a=>typeof a==='string'&&/^[a-z0-9-]{1,30}$/.test(a)))].slice(0,12):[];
@@ -453,6 +453,13 @@ export class XmasMeta{
     const day=dayOf(when),d=this._day(day);if(d.ol>=XP.activityDay)return null;
     const R=this._reward();d.ol++;
     this._xp(R,penta?Math.min(XP.pentaMax,Math.round(num(points,500)/10)):XP.activity,penta?'Femkampen':"O'Learys");
+    return this._finish(R,day);
+  }
+  // Butiksspelen (2.21.1-xmas.16): Tomtekön på Pressbyrån och Duka julbordet på Cervera. XP.shopStar per stjärna, högst XP.shopDay belönade omgångar om dagen (alla butiksspel tillsammans).
+  onShopGame({id='',stars=0}={},when=this.clock()){
+    const st=Math.max(0,Math.min(3,Math.floor(Number(stars)||0)));if(!st||!/^[a-z0-9-]{1,30}$/.test(String(id)))return null;
+    const day=dayOf(when),d=this._day(day);if(d.shop>=XP.shopDay)return null;
+    const R=this._reward();d.shop++;this._xp(R,XP.shopStar*st,id==='julbordet'?'Duka julbordet':'Tomtekön');
     return this._finish(R,day);
   }
   dailyFound(when=this.clock()){return Object.prototype.hasOwnProperty.call(this.state.daily,dayOf(when));}

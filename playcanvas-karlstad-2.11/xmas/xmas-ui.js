@@ -1,20 +1,20 @@
 // Julklappsjakten: gränssnittet. Startvyn, fortsättningsmenyn och resultatkortet är vanliga paneler i index.html; HUD:en och pausmenyns
 // tillägg byggs här med textContent (aldrig HTML-strängar med data). Små mål: knappar är minst 52 px höga och spelvärlden syns ovanför.
 // JulRushen använder samma HUD: tempo och klockan i raden överst (stapeln är tiden till nästa paket), liv som hjärtan, poäng, kombo och gåvorna som små brickor.
-import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.15';
-import {LIGHT_MODES,LIGHT_LABEL} from './xmas-light.mjs?v=2.21.1-xmas.15';
-import {goalFor as termosGoalFor,goalProgress as termosGoalProgress} from './xmas-termos.mjs?v=2.21.1-xmas.15';
-import {dailyFor,untilTomorrow} from './xmas-daily.mjs?v=2.21.1-xmas.15';
-import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.15';
-import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.15';
-import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.15';
-import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.15';
-import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.15';
-import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.15';
-import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.15';
-import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.15';
-import {createMetaUi} from './xmas-meta-ui.js?v=2.21.1-xmas.15';
-import {PRIZE} from './xmas-meta-config.mjs?v=2.21.1-xmas.15';
+import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.16';
+import {LIGHT_MODES,LIGHT_LABEL} from './xmas-light.mjs?v=2.21.1-xmas.16';
+import {goalFor as termosGoalFor,goalProgress as termosGoalProgress} from './xmas-termos.mjs?v=2.21.1-xmas.16';
+import {dailyFor,untilTomorrow} from './xmas-daily.mjs?v=2.21.1-xmas.16';
+import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.16';
+import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.16';
+import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.16';
+import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.16';
+import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.16';
+import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.16';
+import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.16';
+import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.16';
+import {createMetaUi} from './xmas-meta-ui.js?v=2.21.1-xmas.16';
+import {PRIZE} from './xmas-meta-config.mjs?v=2.21.1-xmas.16';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 export const mmss=s=>{const n=Math.max(0,Math.round(s));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};

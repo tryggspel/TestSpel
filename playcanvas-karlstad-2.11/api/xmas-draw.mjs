@@ -2,7 +2,7 @@
 // Sparar en anmälan per kontaktuppgift i ett PRIVAT Vercel Blob-lager (access:'private': inga publika adresser). Samma kontakt som skickar in fler lotter slås ihop med sin tidigare anmälan.
 // Kräver miljövariabeln BLOB_READ_WRITE_TOKEN (skapas när lagret kopplas till projektet) och att PRIZE.ready är sant i xmas/xmas-meta-config.mjs. Annars svarar funktionen 503 och spelet visar bara lotterna.
 // All kontroll ligger i xmas/xmas-draw-server.mjs (ren modul, testad utan nät). Här finns bara det som rör HTTP och lagringen. Inget loggas som innehåller personuppgifter, och IP-adresser sparas aldrig.
-import {validateBody,mergeEntry,entryPath,MAX_BODY} from '../xmas/xmas-draw-server.mjs?v=2.21.1-xmas.15';
+import {validateBody,mergeEntry,entryPath,MAX_BODY} from '../xmas/xmas-draw-server.mjs?v=2.21.1-xmas.16';
 
 // Enkel spärr i minnet mot en som skickar om och om igen (gäller per instans, så det är ett skydd mot misstag och slarv, inte mot en beslutsam angripare).
 const hits=new Map();
