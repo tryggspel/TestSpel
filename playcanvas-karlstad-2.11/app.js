@@ -1,32 +1,33 @@
-import './xmas/xmas-storage-install.mjs?v=2.21.1-xmas.12'; // julgrenen: egen sparning, måste utvärderas före alla andra moduler
+import './xmas/xmas-storage-install.mjs?v=2.21.1-xmas.13'; // julgrenen: egen sparning, måste utvärderas före alla andra moduler
 import * as pc from 'https://cdn.jsdelivr.net/npm/playcanvas@2.22.4/build/playcanvas.mjs';
-import {createLastRound} from './last-round.js?v=2.21.1-xmas.12';
-import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.21.1-xmas.12';
-import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.21.1-xmas.12';
-import {createCityArchitecture,createInfill,coreContourBuildings,ComicMesh} from './city-architecture.js?v=2.21.1-xmas.12';
-import {installSnow,SNOW_MATERIALS,WINTER_SKY} from './xmas/xmas-snow.mjs?v=2.21.1-xmas.12';
-import {xmasColliders} from './xmas/xmas-decor-data.mjs?v=2.21.1-xmas.12';
-import {createCityEnvironment} from './city-environment.mjs?v=2.21.1-xmas.12';
-import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.21.1-xmas.12';
-import {ColliderGrid} from './collider-grid.mjs?v=2.21.1-xmas.12';
-import {partnerColliders} from './places-space.mjs?v=2.21.1-xmas.12';
-import {onVastraBron} from './city-water.mjs?v=2.21.1-xmas.12';
-import {createRiverArchitecture} from './river-architecture.js?v=2.21.1-xmas.12';
-import {createMallArchitecture} from './mall-architecture.js?v=2.21.1-xmas.12';
-import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.21.1-xmas.12';
-import {createParkArchitecture} from './park-architecture.js?v=2.21.1-xmas.12';
-import {atKil,KIL} from './scenic-transit.js?v=2.21.1-xmas.12';
-import {registerBridges,onBridge} from './bridges.mjs?v=2.21.1-xmas.12';
-import {createOuterCity,OUTER_AREAS} from './outer-city.js?v=2.21.1-xmas.12';
-import {createOrrholmen} from './orrholmen.js?v=2.21.1-xmas.12';
-import {moveSteps,TURBO} from './explore-fun.mjs?v=2.21.1-xmas.12';
-import {createSouthCity} from './city-south.js?v=2.21.1-xmas.12';
-import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage,OUTER_WATER,outerWaterBlocked} from './city-south-space.mjs?v=2.21.1-xmas.12';
-import {waterBlocked} from './park-space.mjs?v=2.21.1-xmas.12';
-import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.21.1-xmas.12';
-import {createAudioEngine} from './audio-engine.mjs?v=2.21.1-xmas.12';
-import {createXmasMusic} from './xmas/xmas-music.js?v=2.21.1-xmas.12';
-import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.21.1-xmas.12';
+import {createLastRound} from './last-round.js?v=2.21.1-xmas.13';
+import {FpsLook, wrapYaw,oneThumbIntent,stickSprint} from './fps-controls.mjs?v=2.21.1-xmas.13';
+import {cityBuildings,infillBuildings,IDENTITY_IDS} from './city-geography.mjs?v=2.21.1-xmas.13';
+import {createCityArchitecture,createInfill,coreContourBuildings,ComicMesh} from './city-architecture.js?v=2.21.1-xmas.13';
+import {installSnow,SNOW_MATERIALS,WINTER_SKY} from './xmas/xmas-snow.mjs?v=2.21.1-xmas.13';
+import {xmasColliders} from './xmas/xmas-decor-data.mjs?v=2.21.1-xmas.13';
+import {marketColliders} from './xmas/xmas-market-data.mjs?v=2.21.1-xmas.13';
+import {createCityEnvironment} from './city-environment.mjs?v=2.21.1-xmas.13';
+import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.21.1-xmas.13';
+import {ColliderGrid} from './collider-grid.mjs?v=2.21.1-xmas.13';
+import {partnerColliders} from './places-space.mjs?v=2.21.1-xmas.13';
+import {onVastraBron} from './city-water.mjs?v=2.21.1-xmas.13';
+import {createRiverArchitecture} from './river-architecture.js?v=2.21.1-xmas.13';
+import {createMallArchitecture} from './mall-architecture.js?v=2.21.1-xmas.13';
+import {MallWalk,MALL_BUILDING_IDS,MALL_ENTRANCES,mallPassage,mallGroundBlocked,splitMallWall} from './mall-space.mjs?v=2.21.1-xmas.13';
+import {createParkArchitecture} from './park-architecture.js?v=2.21.1-xmas.13';
+import {atKil,KIL} from './scenic-transit.js?v=2.21.1-xmas.13';
+import {registerBridges,onBridge} from './bridges.mjs?v=2.21.1-xmas.13';
+import {createOuterCity,OUTER_AREAS} from './outer-city.js?v=2.21.1-xmas.13';
+import {createOrrholmen} from './orrholmen.js?v=2.21.1-xmas.13';
+import {moveSteps,TURBO} from './explore-fun.mjs?v=2.21.1-xmas.13';
+import {createSouthCity} from './city-south.js?v=2.21.1-xmas.13';
+import {SOUTH_IDS,footprintContains,southWaterBlocked,mariebergBlocked,southPassage,OUTER_WATER,outerWaterBlocked} from './city-south-space.mjs?v=2.21.1-xmas.13';
+import {waterBlocked} from './park-space.mjs?v=2.21.1-xmas.13';
+import {GAME_VERSION,DEBUG,PERF} from './build-info.mjs?v=2.21.1-xmas.13';
+import {createAudioEngine} from './audio-engine.mjs?v=2.21.1-xmas.13';
+import {createXmasMusic} from './xmas/xmas-music.js?v=2.21.1-xmas.13';
+import {createPerfProbe,mountPerfOverlay} from './perf-probe.mjs?v=2.21.1-xmas.13';
 
 installSnow(ComicMesh); // julgrenen: snön är ett färgfilter på stadens geometri (ingen extra yta)
 const canvas=document.getElementById('game');
@@ -498,6 +499,7 @@ function addBuildings(osm,environment,outerData={}){
   try{for(const c of partnerColliders(colliders))colliders.push(c);}catch(e){console.error('[Partner places skipped]',e);}
   // julgrenen: granen och marknadsstånden är fasta föremål (före rutnätet byggs, så att färdväg och fångst ser samma värld)
   try{for(const c of xmasColliders())colliders.push(c);}catch(e){console.error('[Jul] kollisionsobjekt hoppades över',e);}
+  try{for(const c of marketColliders())colliders.push(c);}catch(e){console.error('[Jul] julmarknadens kollisionsobjekt hoppades över',e);}
   colliderGrid=new ColliderGrid(colliders);southGate=colliders.filter(b=>b.osm===80868525);
   const infillGraphics=createInfill(pc,app,infill,admitted),river=createRiverArchitecture(pc,app);
   const geometry=createCityArchitecture(pc,app,admitted,infill),environmentGraphics=createCityEnvironment(pc,app,environment),south=createSouthCity(pc,app,admitted);

@@ -1,10 +1,10 @@
-import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.21.1-xmas.12';
-import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.21.1-xmas.12';
-import {visualTwinFaceYaw} from './visual-twin.mjs?v=2.21.1-xmas.12';
-import {PHOTO_REFERENCE_PROFILES,photoReferenceFaceYaw,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.21.1-xmas.12';
-import {IDENTITY_IDS,SHOP_IDS,LANDMARKS} from './city-geography.mjs?v=2.21.1-xmas.12';
-import {MALL_CORRIDORS} from './mall-space.mjs?v=2.21.1-xmas.12';
-import {TORGET_AUDIT_IDS} from './city-architecture.js?v=2.21.1-xmas.12';
+import {KUNGSGATAN_PROFILES} from './kungsgatan-reference.mjs?v=2.21.1-xmas.13';
+import {INNERSTAD_PROFILES,referenceFaceYaw} from './innerstad-reference.mjs?v=2.21.1-xmas.13';
+import {visualTwinFaceYaw} from './visual-twin.mjs?v=2.21.1-xmas.13';
+import {PHOTO_REFERENCE_PROFILES,photoReferenceFaceYaw,photoReferenceFaceYaws} from './photo-reference-pass3.mjs?v=2.21.1-xmas.13';
+import {IDENTITY_IDS,SHOP_IDS,LANDMARKS} from './city-geography.mjs?v=2.21.1-xmas.13';
+import {MALL_CORRIDORS} from './mall-space.mjs?v=2.21.1-xmas.13';
+import {TORGET_AUDIT_IDS} from './city-architecture.js?v=2.21.1-xmas.13';
 const ink='#253d40',cream='#fff0c8';
 const palettes=[['#eeb985','#d88c67','#ae4e45'],['#a7c7b4','#789e91','#367c75'],['#dec5a0','#b29a7e','#70568a'],['#c4b6d7','#9886b7','#a85159']];
 // 2.11.21: fallback panels stay enabled only on unclaimed/secondary walls; curated reference fronts keep ownership.

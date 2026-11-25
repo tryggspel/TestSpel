@@ -1,8 +1,8 @@
 // Gömda julklappar: tjugo platser runt om i Karlstad, hämtade ur grundspelets skattjakt (explore-places.mjs: TREASURES), som redan är kontrollerade mot spelets karta. Namn, ledtråd och plats kommer därifrån,
 // så att julbygget aldrig har en egen kopia som kan glida isär. De tre skatterna inne i Mitt i City tas inte med (de ligger inomhus och julbygget har sin egen miljö där).
 // Ren modul: ingen DOM, ingen spelmotor. Ordningen är närmast Torget först: ledtrådarna släpps i den ordningen (hintsShown) och de första är de lättaste att nå.
-import {TREASURES} from '../explore-places.mjs?v=2.21.1-xmas.12';
-import {HIDDEN} from './xmas-meta-config.mjs?v=2.21.1-xmas.12';
+import {TREASURES} from '../explore-places.mjs?v=2.21.1-xmas.13';
+import {HIDDEN} from './xmas-meta-config.mjs?v=2.21.1-xmas.13';
 
 export const HIDDEN_IDS=Object.freeze([
   't-tingvalla','t-bron','t-klockan','t-perrong','t-lofbergs','t-museiparken','t-ros','t-ccc','t-damm','t-skeppet',

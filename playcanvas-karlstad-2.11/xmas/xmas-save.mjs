@@ -1,9 +1,10 @@
 // Julklappsjakten: egen sparning (julstämplar, rekord, summor och inställningar). Egen nyckel, så grundspelets sparfiler aldrig berörs.
 // Alltid fail-soft: utan lagring (privat läge, blockerad) spelas spelet ändå, bara utan att något sparas.
-import {SAVE_KEY,STAMPS,WEATHER_ORDER,titleFor} from './xmas-config.mjs?v=2.21.1-xmas.12';
-import {RUSH_COUNT,RUSH_MAX,starsFor} from './xmas-rushes.mjs?v=2.21.1-xmas.12';
-import {cleanName,cleanFriends,mergeFriend} from './xmas-board.mjs?v=2.21.1-xmas.12';
-import {ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.12';
+import {SAVE_KEY,STAMPS,WEATHER_ORDER,titleFor} from './xmas-config.mjs?v=2.21.1-xmas.13';
+import {RUSH_COUNT,RUSH_MAX,starsFor} from './xmas-rushes.mjs?v=2.21.1-xmas.13';
+import {cleanName,cleanFriends,mergeFriend} from './xmas-board.mjs?v=2.21.1-xmas.13';
+import {ZOMBIE_MAX} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.13';
+import {LIGHT_MODES} from './xmas-light.mjs?v=2.21.1-xmas.13';
 
 const STAMP_IDS=new Set(STAMPS.map(s=>s.id));
 const MAXP=9999999;
@@ -12,7 +13,7 @@ const num=(v,max,fallback=0)=>Number.isFinite(Number(v))?Math.max(0,Math.min(max
 export const blankRush=()=>({cleared:0,stars:{},best:{},bestStreak:0});
 // zombies: framstegen i Tomtezombies ({cleared: högsta klarade nivå, best:{n:{points,seconds,packages}}}), se xmas-zombie-levels.mjs.
 export const blankZombies=()=>({cleared:0,best:{}});
-export const blankSave=()=>({v:1,stamps:{},records:{},totals:{packages:0,bonus:0,points:0,runs:0},opts:{weather:'full'},intro:{done:false},rush:blankRush(),zombies:blankZombies(),name:'',friends:[]});
+export const blankSave=()=>({v:1,stamps:{},records:{},totals:{packages:0,bonus:0,points:0,runs:0},opts:{weather:'full',light:'auto'},intro:{done:false},rush:blankRush(),zombies:blankZombies(),name:'',friends:[]});
 
 export function sanitizeSave(raw){
   const out=blankSave();
@@ -25,6 +26,7 @@ export function sanitizeSave(raw){
   const t=raw.totals||{};
   out.totals={packages:Math.floor(num(t.packages,9999999)),bonus:Math.floor(num(t.bonus,9999999)),points:Math.floor(num(t.points,99999999)),runs:Math.floor(num(t.runs,9999999))};
   out.opts.weather=WEATHER_ORDER.includes(raw.opts?.weather)?raw.opts.weather:'full';
+  out.opts.light=LIGHT_MODES.includes(raw.opts?.light)?raw.opts.light:'auto';
   out.intro.done=!!raw.intro?.done||!!out.stamps.intro;
   const r=raw.rush&&typeof raw.rush==='object'?raw.rush:{};
   out.rush.cleared=Math.floor(num(r.cleared,RUSH_MAX));out.rush.bestStreak=Math.floor(num(r.bestStreak,RUSH_MAX));
@@ -108,6 +110,9 @@ export class XmasSave{
   removeFriend(id){const n=this.state.friends.length;this.state.friends=this.state.friends.filter(f=>f.id!==id);if(this.state.friends.length!==n){this.dirty=true;this.save();return true;}return false;}
   setWeather(level){if(!WEATHER_ORDER.includes(level))return false;this.state.opts.weather=level;this.dirty=true;this.save();return true;}
   get weather(){return this.state.opts.weather;}
+  // Ljuset: 'auto' (efter klockan i Karlstad), 'dag', 'skymning' eller 'kvall' (xmas-light.mjs).
+  setLight(mode){if(!LIGHT_MODES.includes(mode))return false;this.state.opts.light=mode;this.dirty=true;this.save();return true;}
+  get light(){return this.state.opts.light;}
   get introDone(){return !!this.state.intro.done;}
   title(){return titleFor(this.state.totals.points);}
   reset(){this.state=blankSave();this.save();}

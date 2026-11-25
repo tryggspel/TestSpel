@@ -1,17 +1,18 @@
 // Julklappsjakten: gränssnittet. Startvyn, fortsättningsmenyn och resultatkortet är vanliga paneler i index.html; HUD:en och pausmenyns
 // tillägg byggs här med textContent (aldrig HTML-strängar med data). Små mål: knappar är minst 52 px höga och spelvärlden syns ovanför.
 // JulRushen använder samma HUD: tempo och klockan i raden överst (stapeln är tiden till nästa paket), liv som hjärtan, poäng, kombo och gåvorna som små brickor.
-import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.12';
-import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.12';
-import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.12';
-import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.12';
-import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.12';
-import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.12';
-import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.12';
-import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.12';
-import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.12';
-import {createMetaUi} from './xmas-meta-ui.js?v=2.21.1-xmas.12';
-import {PRIZE} from './xmas-meta-config.mjs?v=2.21.1-xmas.12';
+import {STAMPS,WEATHER,WEATHER_ORDER,titleFor,TITLES} from './xmas-config.mjs?v=2.21.1-xmas.13';
+import {LIGHT_MODES,LIGHT_LABEL} from './xmas-light.mjs?v=2.21.1-xmas.13';
+import {drawXmasStamp} from './xmas-art.js?v=2.21.1-xmas.13';
+import {nextRound} from './xmas-rounds.mjs?v=2.21.1-xmas.13';
+import {RUSH} from './xmas-rush.mjs?v=2.21.1-xmas.13';
+import {RUSHES,rushDef,goalText,nextRush,isUnlocked,totalStars,starText,RUSH_COUNT,RUSH_MAX} from './xmas-rushes.mjs?v=2.21.1-xmas.13';
+import {leaderboard,encodeChallenge,challengeUrl,shareText,cleanName,NAME_MAX} from './xmas-board.mjs?v=2.21.1-xmas.13';
+import {zombieLevel,nextZombieLevel} from './xmas-zombie-levels.mjs?v=2.21.1-xmas.13';
+import {SANDGRUND,sandgrundNote} from './xmas-sandgrund.mjs?v=2.21.1-xmas.13';
+import {BOAT,boatNote} from './xmas-marieberg.mjs?v=2.21.1-xmas.13';
+import {createMetaUi} from './xmas-meta-ui.js?v=2.21.1-xmas.13';
+import {PRIZE} from './xmas-meta-config.mjs?v=2.21.1-xmas.13';
 
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 export const mmss=s=>{const n=Math.max(0,Math.round(s));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');};
@@ -374,15 +375,19 @@ export function createXmasUi({save,meta=null,mount=document.getElementById('roun
   // ── Pausmenyns tillägg: vädereffekter och vägen tillbaka ───────────────────────────────────────────────────────
   const pauseBox=el('div','xmas-pause');
   const weatherBtn=el('button','round-secondary');weatherBtn.type='button';weatherBtn.id='xmasWeatherBtn';
+  const lightBtn=el('button','round-secondary');lightBtn.type='button';lightBtn.id='xmasLightBtn';
   const modeBtn=el('button','round-secondary','JULMENY');modeBtn.type='button';modeBtn.id='xmasMenuBtn';
   const backBtn=el('button','round-tertiary','← Tillbaka till Karlstad-spelet');backBtn.type='button';backBtn.id='xmasBackPause';
-  pauseBox.append(weatherBtn,modeBtn,backBtn);
+  pauseBox.append(weatherBtn,lightBtn,modeBtn,backBtn);
   const resume=pauseCard?.querySelector('#roundResume');if(pauseCard)pauseCard.insertBefore(pauseBox,resume||pauseCard.firstChild);
   function renderWeather(level=save.weather){weatherBtn.textContent='VÄDEREFFEKTER: '+WEATHER[level].label;weatherBtn.setAttribute('aria-label','Vädereffekter: '+WEATHER[level].label+'. Tryck för att byta.');}
   weatherBtn.addEventListener('click',()=>{const next=WEATHER_ORDER[(WEATHER_ORDER.indexOf(save.weather)+1)%WEATHER_ORDER.length];fx.setWeather(next);renderWeather(next);});
+  // Ljuset: efter klockan i Karlstad (mörkt från ungefär 15.30 i december) eller fast dag, skymning eller kväll.
+  function renderLight(mode=save.light){const l=LIGHT_LABEL[mode]||LIGHT_LABEL.auto;lightBtn.textContent='LJUS: '+l;lightBtn.setAttribute('aria-label','Ljus: '+l+'. Tryck för att byta.');}
+  lightBtn.addEventListener('click',()=>{const next=LIGHT_MODES[(LIGHT_MODES.indexOf(save.light)+1)%LIGHT_MODES.length];fx.setLight?.(next);renderLight(next);});
   modeBtn.addEventListener('click',()=>fx.openMenu());
   backBtn.addEventListener('click',()=>fx.goBase());
-  renderWeather();
+  renderWeather();renderLight();
 
   // ── Knappar ────────────────────────────────────────────────────────────────────────────────────────────────────
   const on=(id,fn)=>{const b=$(id);if(b)b.addEventListener('click',fn);};
@@ -400,7 +405,7 @@ export function createXmasUi({save,meta=null,mount=document.getElementById('roun
   on('xmasSandgrund',()=>fx.sandgrund());on('xmasBoat',()=>fx.boat());on('xmasContinueIntro',()=>fx.intro());on('xmasRound',()=>fx.round());on('xmasShops',()=>fx.shops());on('xmasFree',()=>fx.free());on('xmasContinueMenu',()=>fx.openMenu());on('xmasContinueBack',()=>fx.goBase());
   on('xmasResultContinue',()=>resultMode==='hunt-next'?fx.round():resultMode==='rush'?fx.marathon():resultMode==='rush-next'?fx.rushNext():resultMode==='rush-again'?fx.rushAgain():resultMode==='rush-done'?fx.openRush():resultMode==='fail'?fx.zombiesAgain():resultMode==='zombies-next'?fx.zombiesNext():resultMode==='zombies-done'?fx.openMenu():resultMode==='place'?fx.placeResume():fx.openContinue());
   on('xmasResultFree',()=>resultMode==='rush'||resultMode==='fail'||resultMode==='place'||resultMode.startsWith('zombies')?fx.openMenu():resultMode.startsWith('rush-')?fx.openRush():fx.free());
-  return {hud,showGoal,showPill,setProgress,setCombo,setMode,setZombieLevel,setVitals,setRush,hitHearts,tick,showHud,showResult,renderStart,renderContinue,renderWeather,renderRush,renderBoard,renderChallenge,renderLink,placeDoor,selectedRush,
+  return {hud,showGoal,showPill,setProgress,setCombo,setMode,setZombieLevel,setVitals,setRush,hitHearts,tick,showHud,showResult,renderStart,renderContinue,renderWeather,renderLight,renderRush,renderBoard,renderChallenge,renderLink,placeDoor,selectedRush,
     get meta(){return mui;},
     get goalText(){return goal.textContent;},get progressText(){return count.textContent;}};
 }

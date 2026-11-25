@@ -1,6 +1,6 @@
 // 2.11: Västra bron, stenvalvsbro över Klarälvens västra löp. Ett statiskt batch.
-import {ComicMesh} from './city-architecture.js?v=2.21.1-xmas.12';
-import {VASTRA_BRON} from './city-water.mjs?v=2.21.1-xmas.12';
+import {ComicMesh} from './city-architecture.js?v=2.21.1-xmas.13';
+import {VASTRA_BRON} from './city-water.mjs?v=2.21.1-xmas.13';
 export function riverMesh(){
   // Västra bron: stenvalvsbro. Brobanan ligger i marknivå (ingen trappa i kollisionen);
   // bröstvärn och valvkanter ger silhuetten.

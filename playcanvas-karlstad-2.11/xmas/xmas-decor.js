@@ -2,13 +2,15 @@
 // ComicMesh) och slås ihop till få ritanrop: granen, stånden, små granar och presenter i en mesh, ljusen i tre (som blinkar var för sig),
 // stjärnan i en. Tomtar, tomtefönster och snöfall är bildkort och en enda dynamisk mesh. Inga ljuskällor, ingen fysik och inga nya ytor
 // som kan flimra; snön på marken och taken är ett färgfilter (xmas-snow.mjs) som redan är aktivt när stadens byggnader skapas.
-import {ComicMesh} from '../city-architecture.js?v=2.21.1-xmas.12';
-import {TREE} from './xmas-layout.mjs?v=2.21.1-xmas.12';
-import {STALLS,STALL,FIRS,TOMTE_SPOTS,ARCH,facadeSpots,stringBulbs,FACADE,SCENES} from './xmas-decor-data.mjs?v=2.21.1-xmas.12';
-import {WEATHER} from './xmas-config.mjs?v=2.21.1-xmas.12';
-import {createSnowfall} from './xmas-snowfall.js?v=2.21.1-xmas.12';
-import {drawWindowAtlas,WINDOW_CELL,WINDOW_STYLES} from './xmas-art.js?v=2.21.1-xmas.12';
-import {hash32} from './xmas-sprites.js?v=2.21.1-xmas.12';
+import {ComicMesh} from '../city-architecture.js?v=2.21.1-xmas.13';
+import {TREE} from './xmas-layout.mjs?v=2.21.1-xmas.13';
+import {STALLS,STALL,FIRS,TOMTE_SPOTS,ARCH,facadeSpots,stringBulbs,FACADE,SCENES} from './xmas-decor-data.mjs?v=2.21.1-xmas.13';
+import {WEATHER} from './xmas-config.mjs?v=2.21.1-xmas.13';
+import {createSnowfall} from './xmas-snowfall.js?v=2.21.1-xmas.13';
+import {drawWindowAtlas,WINDOW_CELL,WINDOW_STYLES} from './xmas-art.js?v=2.21.1-xmas.13';
+import {hash32} from './xmas-sprites.js?v=2.21.1-xmas.13';
+import {buildMarket,createMarketLife} from './xmas-market.js?v=2.21.1-xmas.13';
+import {createCrowdView} from './xmas-crowd-view.js?v=2.21.1-xmas.13';
 
 const TAU=Math.PI*2;
 const BULB_COLORS=Object.freeze({A:['#ff4d4d','#ff8fb1','#ff7a3d'],B:['#fff2a8','#ffe27a','#ffd1a0'],C:['#7dffb0','#7fd2ff','#b9a8ff']});
@@ -164,8 +166,12 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
   const decorRoot=new pc.Entity('Julmiljö');root.addChild(decorRoot);
   const vertexMat=(name,{cull=pc.CULLFACE_NONE}={})=>{const m=new pc.StandardMaterial();m.name=name;m.useLighting=false;m.diffuse.set(0,0,0);m.emissive.set(1,1,1);m.emissiveVertexColor=true;m.cull=cull;m.update();return m;};
   const staticMat=vertexMat('Jul fast'),lightMats={A:vertexMat('Jul ljus A'),B:vertexMat('Jul ljus B'),C:vertexMat('Jul ljus C')},starMat=vertexMat('Jul stjärna');
+  // 2.21.1-xmas.13: fönster och lyktglas som alltid lyser, och glaset i insamlingens glasbur (genomskinligt)
+  const lampMat=vertexMat('Jul lyktor och fönster'),glassMat=vertexMat('Jul glas');glassMat.opacity=.3;glassMat.blendType=pc.BLEND_NORMAL;glassMat.depthWrite=false;glassMat.update();
+  // bright: material som lyser lika starkt i skymning och kväll (ljus, lyktor, skyltar, effekter); dim: genomskinliga bildkort som ändå ska tonas (folk, tomtar). Se xmas-light.js.
+  const bright=new Set([lightMats.A,lightMats.B,lightMats.C,starMat,lampMat]),dim=new Set();
   const keep=ComicMesh.snow;ComicMesh.snow=null; // julens egna föremål har egna färger (och egen snö); filtret är till för stadens ytor
-  const S=new ComicMesh(true),L=new Lights(FACADE.bulbCap+260),T=new ComicMesh(true),stats={bulbs:0,strings:0,windows:0,roofs:0};
+  const S=new ComicMesh(true),L=new Lights(FACADE.bulbCap+260+900),T=new ComicMesh(true),G=new ComicMesh(true),GL=new ComicMesh(true),stats={bulbs:0,strings:0,windows:0,roofs:0};
   const scenes=SCENES.map(sc=>({sc,S:new ComicMesh(true),L:new Lights(260),root:null,on:false})); // julscenerna: egna meshar som bara ritas när man är i närheten
   let facade={strings:[],windows:[],roofs:[]};
   try{
@@ -173,6 +179,7 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
     for(let i=0;i<FIRS.length;i++)buildFir(S,L,FIRS[i],i);
     for(let i=0;i<STALLS.length;i++)buildStall(S,L,STALLS[i],i);
     buildArch(S,L);
+    try{buildMarket(S,L,G,GL);}catch(e){console.error('[Jul] julmarknaden hoppades över',e);}
     for(const o of scenes)buildScene(o.S,o.L,o.sc);
     // ljus på granen: tre ringar per etage, tre grupper som blinkar för sig
     TIERS.forEach((t,ti)=>{for(let k=0;k<12;k++){const a=k/12*TAU+ti*.5,fy=t.y+t.h*.42+((k%2)*.25),rr=t.r*(1-(fy-t.y)/t.h)+.12;L.add('ABC'[k%3],TREE.x+Math.cos(a)*rr,fy,TREE.z+Math.sin(a)*rr,.2,k+ti);}});
@@ -183,6 +190,8 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
   const place=(ent,name)=>{ent.name=name;decorRoot.addChild(ent);return ent;};
   place(S.finish(pc,app,'Julmiljö · granar, stånd och presenter',staticMat),'Julmiljö · fast');
   for(const g of ['A','B','C'])place(L.mesh[g].finish(pc,app,'Julljus '+g,lightMats[g]),'Julljus '+g);
+  if(G.positions.length)place(G.finish(pc,app,'Julmarknaden · lyktor och fönster',lampMat),'Julmarknaden · lyktor');
+  if(GL.positions.length)place(GL.finish(pc,app,'Julmarknaden · glas',glassMat),'Julmarknaden · glas');
   // Julscenerna: en egen entitet per plats, påslagen bara när spelaren är inom `visible` meter, med samma material och därmed samma blinkande ljus
   for(const o of scenes){
     const sc=o.sc,root=new pc.Entity(sc.name+' jul');root.enabled=false;decorRoot.addChild(root);o.root=root;
@@ -207,6 +216,11 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
 
   // ── Tomtar och tomtefönster (pooler) ─────────────────────────────────────────────────────────────────────────────
   const POOL_G=4,POOL_R=2,POOL_T=POOL_G+POOL_R,POOL_W=5,groundSpots=TOMTE_SPOTS,roofSpots=facade.roofs;
+  for(const row of sprites.tomteMaterials)for(const m of row)dim.add(m);
+  // Julmarknadens liv (skyltar, lågor, sken, ånga, scenens skärm, räkneverket) och folkmassan. Fail-soft: går något fel här fortsätter julmiljön utan.
+  let market=null,crowd=null;
+  try{market=createMarketLife(pc,host,{root:decorRoot,texture,sprites},{bright,lite:()=>auto});}catch(e){console.error('[Jul] marknadens liv hoppades över',e);}
+  try{crowd=createCrowdView(pc,host,{root:decorRoot,texture},{lite:()=>auto,dim});}catch(e){console.error('[Jul] folklivet hoppades över',e);}
   const tPool=Array.from({length:POOL_T},(_,i)=>({e:place(sprites.spriteEntity('Tomte '+i,sprites.tomteMaterials[0][0],1.35,2,{enabled:false}),'Tomte '+i),id:'',v:-1,f:-1,roof:i>=POOL_G}));
   const winTex=texture((c)=>drawWindowAtlas(c),WINDOW_CELL.w*WINDOW_STYLES.length,WINDOW_CELL.h);
   const winMats=WINDOW_STYLES.map((_,i)=>sprites.spriteMaterial(winTex,{tiling:[1/WINDOW_STYLES.length,1],offset:[i/WINDOW_STYLES.length,0],alphaTest:.1}));
@@ -257,6 +271,8 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
       const gs=4.2*(1+.08*Math.sin(now/600)*w.decor);starGlow.setLocalScale(gs,gs,1);
     }
     if(auto===0)starGlow.setEulerAngles(0,Math.atan2(host.camera.getPosition().x-TREE.x,host.camera.getPosition().z-TREE.z)*180/Math.PI,0);
+    if(market)try{market.update(p,now,dt);}catch(e){console.error('[Jul] marknaden',e);market=null;}
+    if(crowd)try{crowd.update(p,now,dt);}catch(e){console.error('[Jul] folklivet',e);crowd=null;}
     if(now-lastPick>260){lastPick=now;pick(p);}
     for(const slot of tPool){
       if(!slot.id)continue;const s=slot.spot,v=((s.v??0)+6)%6,f=Math.floor(now/(520+(hash32(slot.id)%5)*90))%2;
@@ -266,7 +282,7 @@ export function createXmasDecor(pc,host,{root,texture,labelTex,indoors=null,para
     snow.update(dt,true);
   }
   setWeather(params?.weather||'full');
-  return {update,setWeather,setAuto,get auto(){return auto;},decorRoot,snow,facade,scenes,
-    snapshot:()=>({weather,auto,flakes:snow.shown,tomte:tShown,windows:wShown,bulbs:stats.bulbs,strings:stats.strings,facadeWindows:stats.windows,facadeRoofs:stats.roofs,stalls:STALLS.length,firs:FIRS.length,scenes:scenes.map(o=>({name:o.sc.name,on:o.on,firs:o.sc.firs.length})),decor:WEATHER[weather].decor}),
+  return {update,setWeather,setAuto,get auto(){return auto;},decorRoot,snow,facade,scenes,bright,dim,get market(){return market;},get crowd(){return crowd;},
+    snapshot:()=>({weather,auto,flakes:snow.shown,tomte:tShown,windows:wShown,bulbs:stats.bulbs,strings:stats.strings,facadeWindows:stats.windows,facadeRoofs:stats.roofs,stalls:STALLS.length,firs:FIRS.length,scenes:scenes.map(o=>({name:o.sc.name,on:o.on,firs:o.sc.firs.length})),decor:WEATHER[weather].decor,market:market?market.snapshot():null,crowd:crowd?crowd.snapshot():null}),
     drawCalls:()=>3+1+1+3+2+signs.length+tShown+wShown+(snow.shown?1:0)};
 }

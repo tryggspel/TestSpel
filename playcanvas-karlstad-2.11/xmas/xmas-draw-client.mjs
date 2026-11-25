@@ -1,7 +1,7 @@
 // Anmälan till dragningen (klientens del): datumtext, kontroll av formuläret, förfrågan till servern (api/xmas-draw.mjs) och tolkning av svaret. Ren modul: fetch skickas in, så att allt går att testa.
 // Servern kontrollerar samma saker igen (xmas-draw-server.mjs): klienten är bara till för att ge ett vänligt felmeddelande.
-import {PRIZE,MAX_TICKETS} from './xmas-meta-config.mjs?v=2.21.1-xmas.12';
-import {validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.12';
+import {PRIZE,MAX_TICKETS} from './xmas-meta-config.mjs?v=2.21.1-xmas.13';
+import {validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.13';
 
 const WEEKDAYS=['söndag','måndag','tisdag','onsdag','torsdag','fredag','lördag'];
 const MONTHS=['januari','februari','mars','april','maj','juni','juli','augusti','september','oktober','november','december'];
