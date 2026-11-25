@@ -34,7 +34,9 @@ export const XP=Object.freeze({
   dupe:15,hidden:60,mission:Object.freeze({easy:40,medium:60,hard:80}),code:30,
   // 2.21.1-xmas.13: Termosjakten (räknas som klarad vid minst termosMin termosar; dagsmålet ger termosGoal en gång per dag) och dagens julklappsjakt (daily, en gång per dag)
   termosMin:15,termosGoal:60,daily:80,
-  guide:10   // 2.21.1-xmas.14: julguiden, första gången man läser om ett julbord eller en julmarknad (en gång per ställe)
+  guide:10,  // 2.21.1-xmas.14: julguiden, första gången man läser om ett julbord eller en julmarknad (en gång per ställe)
+  platsjakt:70, // Platsjakten: dagens plats hittad i tid (en gång per dag)
+  activity:12,activityDay:8,pentaMax:50 // O'Learys: en avslutad aktivitet ger 12 XP, femkampen poängen/10 (högst 50); högst åtta belöningar om dagen. FBK-tipset ger aldrig XP.
 });
 
 // ── Julgranen: 24 prydnader ───────────────────────────────────────────────────────────────────────────────────────

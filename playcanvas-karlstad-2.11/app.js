@@ -7,6 +7,7 @@ import {createCityArchitecture,createInfill,coreContourBuildings,ComicMesh} from
 import {installSnow,SNOW_MATERIALS,WINTER_SKY} from './xmas/xmas-snow.mjs?v=2.21.1-xmas.14';
 import {xmasColliders} from './xmas/xmas-decor-data.mjs?v=2.21.1-xmas.14';
 import {marketColliders} from './xmas/xmas-market-data.mjs?v=2.21.1-xmas.14';
+import {venueColliders,inVenue} from './xmas/olearys-data.mjs?v=2.21.1-xmas.14';
 import {createCityEnvironment} from './city-environment.mjs?v=2.21.1-xmas.14';
 import {INNERSTAD_REFERENCE_IDS} from './innerstad-reference.mjs?v=2.21.1-xmas.14';
 import {ColliderGrid} from './collider-grid.mjs?v=2.21.1-xmas.14';
@@ -500,6 +501,7 @@ function addBuildings(osm,environment,outerData={}){
   // julgrenen: granen och marknadsstånden är fasta föremål (före rutnätet byggs, så att färdväg och fångst ser samma värld)
   try{for(const c of xmasColliders())colliders.push(c);}catch(e){console.error('[Jul] kollisionsobjekt hoppades över',e);}
   try{for(const c of marketColliders())colliders.push(c);}catch(e){console.error('[Jul] julmarknadens kollisionsobjekt hoppades över',e);}
+  try{for(const c of venueColliders())colliders.push(c);}catch(e){console.error("[Jul] O'Learys kollisionsobjekt hoppades över",e);}
   colliderGrid=new ColliderGrid(colliders);southGate=colliders.filter(b=>b.osm===80868525);
   const infillGraphics=createInfill(pc,app,infill,admitted),river=createRiverArchitecture(pc,app);
   const geometry=createCityArchitecture(pc,app,admitted,infill),environmentGraphics=createCityEnvironment(pc,app,environment),south=createSouthCity(pc,app,admitted);
@@ -513,9 +515,13 @@ function addBuildings(osm,environment,outerData={}){
 function blocked(x,z){
   if(atKil({x,z}))return !(x>KIL.x-48&&x<KIL.x+48&&z>KIL.z-4&&z<KIL.z+24);
   const remote=mariebergBlocked(x,z);if(remote!==null)return remote;
+  if(inVenue({x,z},1))return collidersBlock(x,z); // O'Learys-lokalen ligger långt utanför kartan: bara väggar och inredning, ingen vattenkoll
   if((waterBlocked(x,z)||(southWaterBlocked(x,z)&&!onVastraBron(x,z))||outerWaterBlocked(x,z))&&!onBridge(x,z))return true;
   if(southPassage(x,z,southGate))return false;
   if(mallPassage(x,z))return mallGroundBlocked(x,z);
+  return collidersBlock(x,z);
+}
+function collidersBlock(x,z){
   for(const c of colliderGrid?colliderGrid.near(x,z,PLAYER_RADIUS+.5):colliders){
     if(x+PLAYER_RADIUS<=c.minx||x-PLAYER_RADIUS>=c.maxx||z+PLAYER_RADIUS<=c.minz||z-PLAYER_RADIUS>=c.maxz)continue;
     if(c.precise){if(footprintContains(x,z,c.polygon)||footprintContains(x+.42,z,c.polygon)||footprintContains(x-.42,z,c.polygon)||footprintContains(x,z+.42,c.polygon)||footprintContains(x,z-.42,c.polygon))return true;continue;}

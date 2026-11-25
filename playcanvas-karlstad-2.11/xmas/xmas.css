@@ -424,3 +424,51 @@ body.xmas-cozy .round-card .episode-label{color:#9fe3c0}
 .xmas-guide-card .xgc-li{flex:1;min-width:0;display:grid;gap:2px}
 .xmas-guide-card .xgc-li b{font:800 14px system-ui}.xmas-guide-card .xgc-li span{font:500 12px/1.3 system-ui;color:#c3d1ba}
 .xmas-guide-card .xgc-go{min-height:40px!important;padding:6px 12px!important;width:auto!important;margin:0!important}
+/* O'Learys (xmas.14): knappen vid dörrarna och stationerna, och spelfönstret */
+.ol-prompt{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 232px);z-index:43;display:flex;align-items:center;gap:10px;max-width:min(92vw,420px);padding:11px 16px;border:2px solid #d5b56a;border-radius:14px;background:linear-gradient(180deg,#1a6a45,#0d3a25);color:#f3ead2;font:900 15px/1.2 system-ui;letter-spacing:.02em;box-shadow:0 6px 18px #0009;cursor:pointer}
+.ol-prompt[hidden]{display:none}
+.ol-prompt .olp-kind{font:italic 900 14px Georgia,serif;color:#d5b56a}
+.ol-prompt.later{opacity:.75;cursor:default}
+body.xmas-venue .xmas-guide-near{display:none}
+.ol-layer{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;background:radial-gradient(120% 80% at 50% 0%,#1a6a45 0%,#0d3a25 55%,#061a10 100%);color:#f3ead2;font-family:system-ui,sans-serif}
+.ol-layer[hidden]{display:none}
+.ol-head{display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 10px;border-bottom:2px solid #d5b56a55}
+.ol-brand{font:italic 900 22px Georgia,serif;color:#f3ead2;text-shadow:0 2px 0 #0008}
+.ol-title{flex:1;font:900 14px system-ui;letter-spacing:.12em;color:#d5b56a;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ol-close{width:40px;height:40px;border-radius:50%;border:2px solid #d5b56a;background:#0d3a25;color:#f3ead2;font:900 18px system-ui;cursor:pointer}
+.ol-stage{position:relative;flex:1;min-height:0}
+.ol-canvas{position:absolute;inset:0;display:block}
+.ol-flash{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) scale(.8);opacity:0;pointer-events:none;font:900 42px/1 system-ui;color:#fff;text-shadow:0 3px 0 #0d3a25,0 0 18px #d5b56a;white-space:nowrap}
+.ol-flash.on{animation:olFlash 1.2s ease-out}
+@keyframes olFlash{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+.ol-panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,calc(100% - 28px));max-height:calc(100% - 20px);overflow:auto;padding:18px 18px 14px;border:2px solid #d5b56a;border-radius:16px;background:#0b2a1bf2;box-shadow:0 10px 30px #000a;text-align:center}
+.ol-panel[hidden]{display:none}
+.ol-panel h3{margin:4px 0 8px;font:900 22px system-ui;letter-spacing:.04em;color:#d5b56a}
+.ol-panel p{margin:8px 0;font:500 14px/1.45 system-ui;color:#f3ead2}
+.ol-panel .ol-big{font:900 34px system-ui;color:#fff}
+.ol-rows{display:grid;gap:4px;margin:8px 0}.ol-row{display:flex;justify-content:space-between;padding:6px 10px;border-radius:8px;background:#ffffff10;font:700 13px system-ui}
+.ol-foot{padding:8px 14px calc(env(safe-area-inset-bottom,0px) + 10px);border-top:2px solid #d5b56a33;display:flex;align-items:center;gap:10px}
+.ol-msg{flex:1;font:600 13px/1.35 system-ui;color:#e6dcbf}
+.ol-btns{display:flex;gap:8px}
+.ol-btn{min-height:46px;padding:10px 16px;margin:6px 4px 0;border:2px solid #d5b56a;border-radius:12px;background:linear-gradient(180deg,#e0c27a,#c49c48);color:#0d3a25;font:900 14px system-ui;letter-spacing:.04em;cursor:pointer}
+.ol-btn.ghost{background:transparent;color:#f3ead2}
+.ol-tips{text-align:left}.ol-note{font-size:12px!important;color:#cfd8c4!important}.ol-total{font:900 15px system-ui!important;color:#d5b56a!important}
+.ol-match{margin:8px 0;padding:10px;border:1px solid #d5b56a55;border-radius:12px;background:#ffffff0a}
+.ol-mh{font:800 11px system-ui;letter-spacing:.08em;color:#d5b56a}.ol-mt{font:900 15px system-ui;margin:3px 0 6px}.ol-mr,.ol-mn{font:600 12px system-ui;color:#e6dcbf}.ol-mn{opacity:.75}
+.ol-picks{display:flex;gap:8px}.ol-pick{flex:1;min-height:42px;border:2px solid #d5b56a;border-radius:10px;background:#0d3a25;color:#f3ead2;font:900 18px system-ui;cursor:pointer}.ol-pick.on{background:#d5b56a;color:#0d3a25}
+.ol-score{display:flex;align-items:center;gap:6px;margin-top:8px;font:700 12px system-ui;flex-wrap:wrap}.ol-sl{opacity:.8}.ol-step{display:inline-flex;align-items:center;gap:4px}.ol-step b{min-width:18px;text-align:center}
+.ol-mini{width:32px;height:32px;border-radius:8px;border:1px solid #d5b56a;background:#0d3a25;color:#f3ead2;font:900 16px system-ui;cursor:pointer}
+body.ol-open #roundOverlay,body.ol-open .ol-prompt,body.ol-open .xmas-guide-near{visibility:hidden}
+.ol-fade{position:fixed;inset:0;z-index:80;background:#061a10;opacity:0;pointer-events:none;transition:opacity .28s}
+.ol-fade.on{opacity:1}
+.xmas-card .xmas-olearys{border-color:#d5b56a;background:linear-gradient(180deg,#1a6a45,#0d3a25);color:#f3ead2;min-height:52px}
+/* Platsjakten (xmas.14): bilden, klockan och korten */
+.pj-card .pj-photo{margin:10px 0;border:3px solid #ffd77a;border-radius:10px;overflow:hidden;background:#0b1f15;line-height:0}
+.pj-card .pj-photo img{width:100%;height:auto;display:block}
+.pj-card .pj-photo.small{max-width:260px;margin:8px auto}
+.pj-hud{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 112px);z-index:41;display:flex;align-items:center;gap:10px;padding:6px 12px 6px 6px;border:2px solid #ffd77a;border-radius:14px;background:#1d2b27f2;color:#fffbe9;box-shadow:0 6px 18px #0008}
+.pj-hud[hidden]{display:none}
+.pj-hud .pj-thumb{width:64px;height:40px;object-fit:cover;border-radius:8px;border:1px solid #ffd77a88;cursor:pointer}
+.pj-hud .pj-hudtext{display:grid;line-height:1.05}.pj-hud .pj-lab{font:900 10px system-ui;letter-spacing:.12em;color:#ffd77a}.pj-hud .pj-clock{font:900 26px system-ui;font-variant-numeric:tabular-nums}
+.pj-hud.urgent{border-color:#ff6f59;animation:pjPulse .8s infinite alternate}.pj-hud.urgent .pj-clock{color:#ff9a88}
+@keyframes pjPulse{to{box-shadow:0 0 18px #ff6f59aa}}

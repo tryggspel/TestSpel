@@ -7,6 +7,7 @@ import {LEVELS,XP,ORNAMENTS,RARITIES,ORNAMENT_ODDS,ORNAMENT_POLICY,FIRST_ORNAMEN
 import {makeTicket,validTicket} from './xmas-ticket.mjs?v=2.21.1-xmas.14';
 import {codeHash,pinHash,normalizeCode} from './xmas-hash.mjs?v=2.21.1-xmas.14';
 import {HIDDEN_SPOTS,hintsShown} from './xmas-hidden.mjs?v=2.21.1-xmas.14';
+import {sanitizePlatsjakt} from './xmas-platsjakt.mjs?v=2.21.1-xmas.14';
 
 export const META_KEY='karlstad-xmas:meta:1';
 const ORN_BY_ID=new Map(ORNAMENTS.map(o=>[o.id,o]));
@@ -39,12 +40,12 @@ export function levelFor(xp,levels=LEVELS){
 }
 
 // ── Sparning ─────────────────────────────────────────────────────────────────────────────────────────────────────
-const blankDay=()=>({runs:0,clears:0,packages:0,bonus:0,chain:0,fast:0,areas:[],hidden:0,zombies:0,rush:0,termos:0,termosRuns:0,termosGoal:false,daily:false,meter:0,first:false,gift:false,done:{},pick:[]});
-export const blankMeta=()=>({v:1,xp:0,lv:1,dry:0,orn:{},seen:{},tickets:[],meter:0,days:{},streak:{cur:0,best:0,last:'',freezes:0,got:{}},cal:{doors:{},advent:{}},hidden:{},qr:{},daily:{},guide:{},coupons:[],draw:{sent:[],at:0},tried:{intro:false,zombies:false,rush:false,termos:false},welcomed:false,first:''});
+const blankDay=()=>({runs:0,clears:0,packages:0,bonus:0,chain:0,fast:0,areas:[],hidden:0,zombies:0,rush:0,termos:0,termosRuns:0,termosGoal:false,daily:false,ol:0,meter:0,first:false,gift:false,done:{},pick:[]});
+export const blankMeta=()=>({v:1,xp:0,lv:1,dry:0,orn:{},seen:{},tickets:[],meter:0,days:{},streak:{cur:0,best:0,last:'',freezes:0,got:{}},cal:{doors:{},advent:{}},hidden:{},qr:{},daily:{},guide:{},platsjakt:{best:{},won:{}},coupons:[],draw:{sent:[],at:0},tried:{intro:false,zombies:false,rush:false,termos:false},welcomed:false,first:''});
 
 function sanitizeDay(r){
   const d=blankDay();if(!isObj(r))return d;
-  for(const k of ['runs','clears','packages','bonus','chain','hidden','zombies','rush','meter','termosRuns'])d[k]=num(r[k],9999);
+  for(const k of ['runs','clears','packages','bonus','chain','hidden','zombies','rush','meter','termosRuns','ol'])d[k]=num(r[k],9999);
   d.termos=num(r.termos,999999);d.termosGoal=!!r.termosGoal;d.daily=!!r.daily;
   d.fast=num(r.fast,99999);d.first=!!r.first;d.gift=!!r.gift;
   d.areas=Array.isArray(r.areas)?[...new Set(r.areas.filter(a=>typeof a==='string'&&/^[a-z0-9-]{1,30}$/.test(a)))].slice(0,12):[];
@@ -78,6 +79,7 @@ export function sanitizeMeta(raw){
   if(isObj(c.doors))for(let n=1;n<=24;n++)if(c.doors[n]===true)out.cal.doors[n]=true;
   if(isObj(c.advent))for(const a of ADVENT)if(c.advent[a.id]===true)out.cal.advent[a.id]=true;
   if(isObj(raw.hidden))for(const [id,day] of Object.entries(raw.hidden))if(SPOT_IDS.has(id))out.hidden[id]=dayOk(day)?day:'';
+  out.platsjakt=sanitizePlatsjakt(raw.platsjakt);
   if(isObj(raw.guide))for(const [id,day] of Object.entries(raw.guide).slice(0,60))if(/^[a-z0-9-]{1,30}$/.test(id))out.guide[id]=dayOk(day)?day:'';
   if(isObj(raw.daily))for(const day of Object.keys(raw.daily).filter(dayOk).sort().slice(-60))out.daily[day]=num(raw.daily[day],4102444800000);
   if(isObj(raw.qr))for(const [id,day] of Object.entries(raw.qr))if(/^[a-z0-9-]{1,40}$/.test(id))out.qr[id]=dayOk(day)?day:'';
@@ -427,6 +429,28 @@ export class XmasMeta{
   onGuide(id,when=this.clock()){
     const st=this.state;if(typeof id!=='string'||!/^[a-z0-9-]{1,30}$/.test(id)||Object.prototype.hasOwnProperty.call(st.guide,id))return null;
     const day=dayOf(when),R=this._reward();st.guide[id]=day;this._xp(R,XP.guide,'Julguiden');
+    return this._finish(R,day);
+  }
+  // Platsjakten (xmas-platsjakt.mjs): platsen hittad på seconds sekunder. Bästa tiden sparas alltid; belöningen (reward: {xp, orn, coupon, tickets}) en gång per dag.
+  // Returnerar {R (belöningen eller null om dagens redan är tagen), best (true = ny bästa tid)}.
+  onPlatsjakt(place,seconds,reward={},when=this.clock()){
+    const st=this.state,P=st.platsjakt,day=dayOf(when),sec=Math.round(Math.max(0,Number(seconds)||0)*10)/10;
+    if(typeof place!=='string'||!/^[a-z0-9-]{1,30}$/.test(place))return {R:null,best:false};
+    const prev=P.best[place],best=!(prev>0)||sec<prev;if(best)P.best[place]=sec;
+    let R=null;
+    if(!Object.prototype.hasOwnProperty.call(P.won,day)){
+      P.won[day]=place;const d=this._day(day);R=this._reward();
+      this._give(R,{xp:reward.xp??XP.platsjakt,orn:reward.orn||'rare',tickets:reward.tickets||0,coupon:reward.coupon,src:'daily'},{day,label:'Platsjakten',odds:'dailyGift'});
+      R.notable=true;this._missions(R,day,d);R=this._finish(R,day);
+    }else this.save();
+    return {R,best};
+  }
+  platsjaktWon(when=this.clock()){return Object.prototype.hasOwnProperty.call(this.state.platsjakt.won,dayOf(when));}
+  // O'Learys (olearys-games.js): en avslutad aktivitet eller femkamp. Högst XP.activityDay belöningar om dagen. null när dagens tak är nått.
+  onActivity({id='',points=0,penta=false}={},when=this.clock()){
+    const day=dayOf(when),d=this._day(day);if(d.ol>=XP.activityDay)return null;
+    const R=this._reward();d.ol++;
+    this._xp(R,penta?Math.min(XP.pentaMax,Math.round(num(points,500)/10)):XP.activity,penta?'Femkampen':"O'Learys");
     return this._finish(R,day);
   }
   dailyFound(when=this.clock()){return Object.prototype.hasOwnProperty.call(this.state.daily,dayOf(when));}

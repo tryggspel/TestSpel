@@ -441,6 +441,8 @@ export function createXmasUi({save,meta=null,mount=document.getElementById('roun
 
   // ── Knappar ────────────────────────────────────────────────────────────────────────────────────────────────────
   const on=(id,fn)=>{const b=$(id);if(b)b.addEventListener('click',fn);};
+  on('xmasPlatsjakt',()=>fx.platsjakt?.());on('xmasPlatsjaktGo',()=>fx.platsjakt?.());
+  on('xmasOlearys',()=>fx.olearys?.());on('xmasOlearysGo',()=>fx.olearys?.());
   on('xmasGuide',()=>fx.guideList?.());on('xmasGuideGo',()=>fx.guideList?.());
   on('xmasTermos',()=>fx.termos());on('xmasTermosGo',()=>fx.termos());on('xmasDaily',()=>fx.daily());on('xmasDailyGo',()=>fx.daily());
   on('xmasCozy',()=>fx.cozy());on('xmasZombies',()=>fx.zombies());on('xmasRushStart',()=>fx.openRush());on('xmasRushGo',()=>fx.openRush());on('xmasBack',()=>fx.goBase());
