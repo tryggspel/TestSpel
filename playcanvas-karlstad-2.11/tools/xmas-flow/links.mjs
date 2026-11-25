@@ -246,7 +246,7 @@ async function playHunt(g,maxSec=420){
   check('T5 rutan har en knapp till Julmenyn och ingen länk till kalendern (2.21.1-xmas.16)',!!d&&/JULMENYN/.test(d.menu)&&!d.cal,d&&d.menu+' '+d.cal);
   await g.ev(()=>document.getElementById('xmasDoor')?.scrollIntoView({block:'center'}));await g.shot('l04-lucka-klar');
   const bh=await g.ev(()=>[...document.querySelectorAll('#xmasDoor button,#xmasDoor a')].map(e=>Math.round(e.getBoundingClientRect().height)));
-  check('T6 knapparna i rutan är minst 44 px höga',bh.length===2&&bh.every(h=>h>=44),bh.join('/'));
+  check('T6 knappen i rutan (JULMENYN; kalenderlänken är borttagen i xmas.16) är minst 44 px hög',bh.length===1&&bh.every(h=>h>=44),bh.join('/'));
   await g.click('xmasDoorMenu');await g.wait(800);
   check('T7 knappen öppnar Julmenyn (där resten av Julspelet finns) och rutan försvinner',await g.vis('round-xmas-continue')&&(await g.door())===null);
   await g.ctx.close();
