@@ -607,3 +607,12 @@ Inga verkliga namn på evenemang, företag, artister eller insamlingar används 
 
 Grundspelets filer: `app.js` (två rader: import och `marketColliders` efter julens kollisionsrutor), `index.html` (menyn: TERMOSJAKTEN och DAGENS JULKLAPPSJAKT överst i båda julmenyerna, Julklappsjakten under), `julkalender/doors.mjs` och `julkalender/README.md` (lucka 24: "åtta av tolv julstämplar").
 Fasadmodulerna för Kungsgatan 14, 16 och 18 är orörda.
+
+**Verifierat på 2.21.1-xmas.13 (2026-11-25):** enhetstesterna **745 av 745**. Webbläsarflödena i Chromium (mjukvaruritad grafik):
+`termos.mjs` **19 OK** (Termosjakten: start, termosar i stället för paket, bot som plockar, resultatkort, sparning, insamlingens räkneverk, EN RUNDA TILL, menyns rader; dagens julklappsjakt: start vid stugan, gåta, pil till området efter 220 s, GLÖDHET, hittad, belöning en gång; ljusknappen),
+`meta.mjs` **67 OK**, `links.mjs` **49 OK**, `rush.mjs` **41 OK** och `flow.mjs` **59 OK**, inga fel i konsolen.
+`flow.mjs` hade först två avvikelser (L2 och E3). Båda var testets tidtagning: E3 föll också på xmas.12 med samma test, och L2 mätte från när testet var klart med sina anrop i stället för från när högen tog slut. Mätningarna är rättade, och därefter var alla 59 OK.
+Skärmbilder i dag-, skymnings- och kvällsljus (`shots.mjs`): 63–140 ritanrop per vy på Torget i kvällsljus.
+
+**Inte provat:** bildfrekvensen på en riktig telefon med julmarknaden, folklivet och ljuset (mjukvaruritningen säger inget om det; prestandavakten glesar ut folklivet om det går trögt); hur de tända fönstren ser ut i Safari på iPhone;
+om dagsmålen, gåtorna och tiderna för hjälpen är lagom för människor; att förhandsvisningen öppnas utan Vercel-inloggning; CI på GitHub (GitHub-kopplingen var nere i sessionen). **Produktionen är oförändrad (xmas.12)**: xmas.13 publiceras först efter ett uttryckligt ja.
