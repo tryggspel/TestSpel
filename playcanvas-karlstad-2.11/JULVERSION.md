@@ -691,3 +691,11 @@ O'Learys-utmaningen med HEMGÅNG · FANSEN HIT och Löfbergs Kaffekraft-skylten 
 | Sista rundans vakt, HEMGÅNG-zon, skylt, banlinjer och laddplattor samt FIKAPANIK-skylten döljs i julversionen; Löfbergs Kaffekraft-kiosken på torget döljs och går inte att använda. Koden finns kvar för grundspelet och sommarspelet. | `last-round.js`, `journey-view.js` (`hideStation`) |
 
 Versionsnyckeln är `2.21.1-xmas.16` (91 filer). Villkorstexten för dragningen (`xmas-draw-text.mjs`) nämner fortfarande Julkalenderns luckor som lottkälla; den ändras när villkoren slutligen bestäms (uppgift 4).
+
+**Verifierat på 2.21.1-xmas.16 (2026-11-25):** enhetstesterna **771 av 771** (Tomteköns regler och svårighet med simulerade spelare, Duka julbordet, motorns krok, XP för butiksspelen).
+Webbläsarflödena i Chromium: `kiosk.mjs` **16 OK** (inga länkar till grundspelet eller Julkalendern; ingen HEMGÅNG-skylt, vakt eller Löfbergs-kiosk på torget; Tomtekön öppnas vid Pressbyrån, spelas med riktiga tryck, fel vara, kombo, slutkort, ordern lämnas och tomten utanför väntar; stänga avbryter; Cervera: porslinsjakten, Duka julbordet i tre bord med riktiga tryck, tre stjärnor, XP och resultatkortet),
+`flow.mjs` **60 OK**, `links.mjs` **49 OK**, `missions.mjs` **31 OK**, `meta.mjs` **67 OK**, `termos.mjs` **19 OK**, `platsjakt.mjs` **20 OK**, `olearys.mjs` **22 OK**, `julguide.mjs` **11 OK**, `guide.mjs` **56 OK**, inga fel i konsolen.
+Två testförväntningar ändrades för att kalenderlänken är borttagen (T5, T6), och `guide.mjs` S3 valde ibland en spårpunkt nära högen (där raden rätteligen säger JULKLAPPARNA NÄRA!); den väljer nu en punkt utanför radien.
+
+**Inte provat:** Tomtekön och Duka julbordet med fingret på en riktig telefon (svårighet och tryckytor), och om människor tycker att de är roliga.
+**Produktionen är oförändrad (xmas.15)**: xmas.16 publiceras först efter ett nytt uttryckligt ja.
